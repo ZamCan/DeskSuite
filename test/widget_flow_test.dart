@@ -67,6 +67,8 @@ void main() {
     await tester.tap(find.byKey(const Key('create-design')));
     await settleIo(tester);
     expect(find.byKey(const Key('design-canvas')), findsOneWidget);
+    expect(find.text('Stamp'), findsOneWidget);
+    expect(find.text('Signature'), findsOneWidget);
     await tester.tap(find.byKey(const Key('add-text')));
     await tester.pump();
     expect(find.textContaining('TEXT SELECTED'), findsOneWidget);
