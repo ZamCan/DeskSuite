@@ -343,7 +343,7 @@ class _SignaturePainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
     for (final stroke in <List<Offset>>[
       ...strokes,
-      if (current != null) current!,
+      if (current case final currentStroke?) currentStroke,
     ]) {
       if (stroke.isEmpty) continue;
       final path = Path()..moveTo(stroke.first.dx, stroke.first.dy);
