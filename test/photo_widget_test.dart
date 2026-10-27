@@ -251,7 +251,11 @@ void main() {
             matching: find.byType(Image),
           ),
         );
-        return (image.image as MemoryImage).bytes;
+        final provider = image.image;
+        final source = provider is ResizeImage
+            ? provider.imageProvider
+            : provider;
+        return (source as MemoryImage).bytes;
       }
 
       final before = Uint8List.fromList(previewBytes());
