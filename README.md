@@ -68,7 +68,7 @@ CI-generated APKs without a configured persistent production signing key are val
 
 The core design editor and local project storage do not require a network service. Project files are stored in app-private storage; uninstalling the app or clearing its data may remove them. Export editable project copies for backup. Physical printer availability and platform file dialogs depend on the operating system.
 
-See [architecture](docs/ARCHITECTURE.md), [development](docs/DEVELOPMENT.md), [roadmap](docs/ROADMAP.md), [file formats](docs/FILE_FORMATS.md), [printing](docs/PRINTING.md), and [privacy/security](docs/PRIVACY_AND_SECURITY.md).
+See [architecture](docs/ARCHITECTURE.md), [engineering baseline audit](docs/engineering/BASELINE_AUDIT.md), [engine selection strategy](docs/engineering/ENGINE_SELECTION.md), [development](docs/DEVELOPMENT.md), [roadmap](docs/ROADMAP.md), [file formats](docs/FILE_FORMATS.md), [printing](docs/PRINTING.md), and [privacy/security](docs/PRIVACY_AND_SECURITY.md).
 
 ## Licence
 
