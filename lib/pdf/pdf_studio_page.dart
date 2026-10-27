@@ -219,7 +219,7 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
                     ],
                   )
                 : PdfEditorView(
-                    key: ValueKey('pdf-editor-${_sourceName}'),
+                    key: ValueKey('pdf-editor-$_sourceName'),
                     bytes: _source!,
                     onSave: _saveEditedCopy,
                   ),
