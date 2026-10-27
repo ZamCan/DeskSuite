@@ -80,7 +80,7 @@ jobs:
           cat > AppDir/desksuite.desktop <<'EOF'
           [Desktop Entry]
           Name=DeskSuite
-          Exec=desksuite
+          Exec=AppRun
           Icon=desksuite
           Type=Application
           Categories=Office;Graphics;
