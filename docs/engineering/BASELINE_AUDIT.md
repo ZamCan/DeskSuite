@@ -47,3 +47,31 @@ Direct SDK/package licence notices are in [THIRD_PARTY_NOTICES.md](../../THIRD_P
 ## Release gate and staging
 
 The first bounded priority is a complete, honest image/document-output workflow that reuses existing engines and keeps source files intact. Then extend capture/scan/OCR or PDF capabilities only with a real engine and validation. Keep `main` and the application ID unchanged. No feature or release gate becomes complete merely because code, a button or an artifact exists. See [roadmap](../ROADMAP.md), [development](../DEVELOPMENT.md), [privacy](../PRIVACY_AND_SECURITY.md), and [file formats](../FILE_FORMATS.md).
+
+## Status on 2026-10-28: what has changed since this baseline
+
+The matrix above is preserved as the historical Phase A record. It described the
+tree at `20d99a0`; it is no longer a description of `main`. This section is the
+current, evidence-linked state of the same capabilities. Nothing here is claimed
+from a screen existing: each row names the implementation and the tests that
+exercise it.
+
+| Capability | Baseline said | Now | Evidence |
+| --- | --- | --- | --- |
+| Camera capture | Absent | **Partial**: `CameraGateway` seam with a real `image_picker`-backed implementation, capture + lost-capture recovery, no in-app preview or manual exposure/flash controls. | `lib/document_scan/camera_gateway.dart`, `test/scan_studio_widget_test.dart` |
+| Document scanning | Absent | **Implemented on the host**: corner editing, projective correction, rotate/flip, grayscale and adaptive B&W cleanup with before/after compare, multipage ordering, draft recovery. | `lib/document_scan/*`, `test/scan_processor_test.dart`, `test/scan_studio_widget_test.dart`, `test/scan_draft_store_test.dart` |
+| OCR / searchable PDF | Absent | **Implemented, Android-native**: Tesseract4Android 4.9.0 via `OcrChannel.kt`, bundled `eng`+`swa` models, editable review with confidence feedback, TXT/DOCX export and a verified invisible text layer. Not exercised on a device from this environment. | `lib/ocr/*`, `android/.../OcrChannel.kt`, `test/ocr_page_test.dart`, `test/searchable_pdf_test.dart` |
+| Office support | Absent | **Implemented for content, not layout**: DOCX/XLSX/PPTX/ODT/ODS/ODP/RTF/TXT/HTML reading, PDF/TXT/CSV/ODT/ODS writing, per-route fidelity, and text editing of an opened document. Fonts, images, charts and layout are not preserved. | `lib/office/*`, `test/office_engine_test.dart`, `test/office_convert_page_test.dart`, `test/office_content_editor_page_test.dart`, [OFFICE_SUPPORT.md](OFFICE_SUPPORT.md) |
+| PDF page operations | Absent | **Absent on `main`** — an existing PDF cannot yet be split, merged, rotated or exported as images, and the conversion catalogue says so explicitly instead of offering a dead route. | `lib/workspace/conversion_catalog.dart` |
+| Image processing | Partial | **Implemented**: bounded decode, crop, rotate, flip, exact-pixel resize with explicit aspect behaviour, JPEG quality, speck removal, compare and undo. | `lib/images/photo_processor.dart`, `test/photo_widget_test.dart`, `test/sample_assets_test.dart` |
+| Conversion registry | Absent | **Implemented**: every route declares engine, fidelity and limits; content is validated by container, not extension. | `lib/workspace/conversion_catalog.dart`, `lib/office/office_engine.dart`, `test/conversion_catalog_test.dart` |
+| Onboarding and tutorials | Absent | **Implemented**: first-run guide, sample library, and tutorial cards that open the real pipelines. | `lib/workspace/getting_started_page.dart`, `assets/samples/*`, `test/welcome_guide_test.dart`, `test/sample_assets_test.dart` |
+| App identity | Partial | **Implemented**: adaptive + legacy launcher icons, splash, in-app D+S mark; regeneration documented. | `docs/engineering/BRAND_ASSETS.md`, `android/app/src/main/res/**` |
+| Release build and signing | Absent | **Not yet activated**: the signing pipeline exists as `ci/android-testing-and-release.yml.example` because this work's GitHub token has no `workflow` scope; the active workflow validates but does not sign. No APK has been built or installed from this environment. | [CI.md](../CI.md) |
+| Cloud | Absent | **Absent**, and not advertised. | — |
+| Stationery business tools | Starter only | **Partial**: local catalogue, stock and one-unit sales. Payments, receipts, suppliers, expenses and reporting are still missing, which the business screen says in plain words. | `lib/business/inventory.dart`, `lib/legacy_studios.dart` |
+
+Host verification at `main` on 2026-10-28: `flutter analyze` clean and
+`flutter test --concurrency=1` **156/156 passed**. That is host evidence for the
+Dart engines and widgets only; it does not verify Android, a physical camera, a
+printer or a signed install.
