@@ -158,7 +158,9 @@ void main() {
       await tapVisible(tester, find.byKey(const Key('scan-import')));
       await waitIo(tester);
       expect(find.textContaining('1 of 8 pages'), findsOneWidget);
-      await waitForEnabledButton(tester, find.byKey(const Key('scan-crop')));
+      await reveal(tester, find.byKey(const Key('scan-crop')));
+      await reveal(tester, find.byKey(const Key('scan-crop')));
+    await waitForEnabledButton(tester, find.byKey(const Key('scan-crop')));
       await tapVisible(tester, find.byKey(const Key('scan-crop')));
       await waitIo(tester, until: find.text('Adjust page corners'));
       expect(find.text('Adjust page corners'), findsOneWidget);
@@ -472,10 +474,12 @@ void main() {
       await waitIo(tester);
       expect(find.byKey(const Key('scan-add-recovered')), findsOneWidget);
       await tapVisible(tester, find.byKey(const Key('scan-add-recovered')));
+      await reveal(tester, find.byKey(const Key('scan-camera')));
       await waitForEnabledButton(tester, find.byKey(const Key('scan-camera')));
       expect(find.textContaining('1 of 8 pages'), findsOneWidget);
       expect(find.byKey(const Key('scan-add-recovered')), findsNothing);
       await tapVisible(tester, find.byKey(const Key('scan-camera')));
+      await reveal(tester, find.byKey(const Key('scan-pdf')));
       await waitForEnabledButton(tester, find.byKey(const Key('scan-pdf')));
       expect(find.textContaining('2 of 8 pages'), findsOneWidget);
       expect((await tester.runAsync(store.load))!, hasLength(2));
