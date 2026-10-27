@@ -258,7 +258,7 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
   }
 
   String _baseName(String value) {
-    final leaf = value.split(RegExp(r'[/\\\\]')).last;
+    final leaf = value.split(RegExp(r'[/\\]')).last;
     final dot = leaf.lastIndexOf('.');
     final withoutExtension = dot > 0 ? leaf.substring(0, dot) : leaf;
     final safe = withoutExtension
