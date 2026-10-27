@@ -6,6 +6,7 @@ import '../design/editor_screen.dart';
 import 'file_gateway.dart';
 import 'new_design_dialog.dart';
 import 'project_repository.dart';
+import 'photo_studio_screen.dart';
 import 'workspace_widgets.dart';
 
 class WorkspaceScreen extends StatefulWidget {
@@ -173,6 +174,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         WorkspaceSection.workspace => _workspace(),
                         WorkspaceSection.projects => _projectPage(),
                         WorkspaceSection.settings => _settings(),
+                        WorkspaceSection.photoStudio => PhotoStudioScreen(files: widget.files),
                       },
                     ),
                   ],
@@ -206,6 +208,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 WorkspaceSection.workspace => 'Workspace',
                 WorkspaceSection.projects => 'Files & Projects',
                 WorkspaceSection.settings => 'Settings',
+                WorkspaceSection.photoStudio => 'Photo Studio',
               },
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
