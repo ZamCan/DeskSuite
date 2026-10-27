@@ -45,19 +45,6 @@ class WorkspaceSidebar extends StatelessWidget {
         onTap: () => onNavigate(value),
       ),
     );
-    Widget planned(IconData icon, String label) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: ListTile(
-        dense: true,
-        enabled: false,
-        leading: Icon(icon, size: 20),
-        title: Text(label),
-        trailing: const Text(
-          'PLANNED',
-          style: TextStyle(fontSize: 9, letterSpacing: .7),
-        ),
-      ),
-    );
     return Material(
       color: scheme.surface,
       child: ListView(
