@@ -7,6 +7,8 @@ import 'package:desksuite/workspace/project_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/reveal.dart';
+
 class NoFiles implements FileGateway {
   @override
   Future<Uint8List?> pickImage() async => null;
@@ -51,6 +53,8 @@ void main() {
       await tester.tap(find.byTooltip('Open navigation'));
       await tester.pumpAndSettle();
       expect(find.text('Photo Studio'), findsOneWidget);
+      // Planned studios are listed below available tools in the drawer list.
+      await reveal(tester, find.text('PLANNED'));
       expect(find.text('PLANNED'), findsWidgets);
       await tester.tap(find.text('Settings'));
       await tester.pumpAndSettle();

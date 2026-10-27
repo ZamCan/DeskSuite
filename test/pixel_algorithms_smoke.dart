@@ -1,3 +1,8 @@
+// Standalone smoke check: run with `dart test/pixel_algorithms_smoke.dart`.
+// It imports the library relatively because it is executed as a script,
+// not through the package resolution used by `flutter test`.
+// ignore_for_file: avoid_relative_lib_imports, avoid_print
+
 // Standalone, dependency-free pixel-engine smoke check:
 //   dart test/pixel_algorithms_smoke.dart
 // This does not replace Flutter widget tests, image-codec tests, or device tests.

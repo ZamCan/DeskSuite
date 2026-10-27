@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 
+import 'support/reveal.dart';
+
 class PhotoFiles implements FileGateway {
   PhotoFiles()
     : original = Uint8List.fromList(
@@ -68,7 +70,7 @@ Future<void> expectWorkingSize(WidgetTester tester, String value) async {
       scrollable: find.byType(Scrollable).first,
     );
   }
-  await tester.ensureVisible(target);
+  await reveal(tester, target);
   await tester.pumpAndSettle();
   expect(target, findsOneWidget);
 }
@@ -98,17 +100,17 @@ void main() {
     await tester.tap(find.byKey(const Key('photo-choose')));
     await settleIo(tester);
     expect(find.text('4 × 2 px · working copy'), findsOneWidget);
-    await tester.ensureVisible(find.byKey(const Key('photo-rotate')));
+    await reveal(tester, find.byKey(const Key('photo-rotate')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('photo-rotate')));
     await settleIo(tester);
     await expectWorkingSize(tester, '2 × 4 px · working copy');
-    await tester.ensureVisible(find.byKey(const Key('photo-crop')));
+    await reveal(tester, find.byKey(const Key('photo-crop')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('photo-crop')));
     await settleIo(tester);
     await expectWorkingSize(tester, '2 × 2 px · working copy');
-    await tester.ensureVisible(find.byKey(const Key('photo-resize')));
+    await reveal(tester, find.byKey(const Key('photo-resize')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('photo-resize')));
     await tester.pumpAndSettle();
@@ -116,7 +118,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Resize'));
     await settleIo(tester);
     await expectWorkingSize(tester, '1 × 1 px · working copy');
-    await tester.ensureVisible(find.byKey(const Key('photo-jpg')));
+    await reveal(tester, find.byKey(const Key('photo-jpg')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('photo-jpg')));
     await tester.pumpAndSettle();
@@ -151,7 +153,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('photo-choose')));
     await settleIo(tester);
-    await tester.ensureVisible(find.byKey(const Key('photo-resize')));
+    await reveal(tester, find.byKey(const Key('photo-resize')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('photo-resize')));
     await tester.pumpAndSettle();
@@ -162,7 +164,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Resize'));
     await settleIo(tester);
     await expectWorkingSize(tester, '3 × 3 px · working copy');
-    await tester.ensureVisible(find.byKey(const Key('photo-png')));
+    await reveal(tester, find.byKey(const Key('photo-png')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('photo-png')));
     await settleIo(tester);
@@ -201,7 +203,7 @@ void main() {
     await tester.tap(find.byKey(const Key('photo-example')));
     await settleIo(tester);
     await expectWorkingSize(tester, '1376 × 768 px · working copy');
-    await tester.ensureVisible(find.byKey(const Key('photo-resize')));
+    await reveal(tester, find.byKey(const Key('photo-resize')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('photo-resize')));
     await tester.pumpAndSettle();
@@ -209,7 +211,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Resize'));
     await settleIo(tester);
     await expectWorkingSize(tester, '512 × 286 px · working copy');
-    await tester.ensureVisible(find.byKey(const Key('photo-png')));
+    await reveal(tester, find.byKey(const Key('photo-png')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('photo-png')));
     await settleIo(tester);
@@ -238,11 +240,11 @@ void main() {
           ),
         ),
       );
-      await tester.ensureVisible(find.byKey(const Key('photo-noisy-example')));
+      await reveal(tester, find.byKey(const Key('photo-noisy-example')));
       await tester.tap(find.byKey(const Key('photo-noisy-example')));
       await settleIo(tester);
       await expectWorkingSize(tester, '1376 × 768 px · working copy');
-      await tester.ensureVisible(find.byKey(const Key('photo-zoom')));
+      await reveal(tester, find.byKey(const Key('photo-zoom')));
       await tester.pumpAndSettle();
       Uint8List previewBytes() {
         final image = tester.widget<Image>(
@@ -260,32 +262,32 @@ void main() {
 
       final before = Uint8List.fromList(previewBytes());
       expect(img.decodePng(before)!.getPixel(30, 354).r, 255);
-      await tester.ensureVisible(find.byKey(const Key('photo-denoise')));
+      await reveal(tester, find.byKey(const Key('photo-denoise')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('photo-denoise')));
       await settleIo(tester);
-      await tester.ensureVisible(find.byKey(const Key('photo-zoom')));
+      await reveal(tester, find.byKey(const Key('photo-zoom')));
       await tester.pumpAndSettle();
       final cleaned = Uint8List.fromList(previewBytes());
       expect(img.decodePng(cleaned)!.getPixel(30, 354).r, lessThan(200));
       expect(cleaned, isNot(orderedEquals(before)));
 
-      await tester.ensureVisible(find.byKey(const Key('photo-compare')));
+      await reveal(tester, find.byKey(const Key('photo-compare')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('photo-compare')));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.byKey(const Key('photo-zoom')));
+      await reveal(tester, find.byKey(const Key('photo-zoom')));
       await tester.pumpAndSettle();
       expect(previewBytes(), orderedEquals(before));
 
-      await tester.ensureVisible(find.byKey(const Key('photo-noisy-example')));
+      await reveal(tester, find.byKey(const Key('photo-noisy-example')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('photo-noisy-example')));
       await tester.pumpAndSettle();
       expect(find.text('Replace working image?'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.byKey(const Key('photo-png')));
+      await reveal(tester, find.byKey(const Key('photo-png')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('photo-png')));
       await settleIo(tester);
@@ -295,11 +297,11 @@ void main() {
         img.decodePng(files.exported!)!.getPixel(30, 354).r,
         lessThan(200),
       );
-      await tester.ensureVisible(find.byKey(const Key('photo-undo')));
+      await reveal(tester, find.byKey(const Key('photo-undo')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('photo-undo')));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.byKey(const Key('photo-zoom')));
+      await reveal(tester, find.byKey(const Key('photo-zoom')));
       await tester.pumpAndSettle();
       expect(previewBytes(), orderedEquals(before));
       expect(tester.takeException(), isNull);
@@ -329,12 +331,12 @@ void main() {
       );
       await tester.tap(find.byKey(const Key('photo-choose')));
       await settleIo(tester);
-      await tester.ensureVisible(find.byKey(const Key('photo-sheet')));
+      await reveal(tester, find.byKey(const Key('photo-sheet')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('photo-sheet')));
       await tester.pumpAndSettle();
       final copies = find.byKey(const Key('sheet-copies'));
-      await tester.ensureVisible(copies);
+      await reveal(tester, copies);
       await tester.pumpAndSettle();
       await tester.enterText(copies, '26');
       await tester.pump();
@@ -350,7 +352,7 @@ void main() {
       await settleIo(tester);
       expect(files.exportedName, 'desksuite-photo-sheet.pdf');
       expect(String.fromCharCodes(files.exported!.take(5)), '%PDF-');
-      await tester.ensureVisible(find.byKey(const Key('photo-sheet')));
+      await reveal(tester, find.byKey(const Key('photo-sheet')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('photo-sheet')));
       await tester.pumpAndSettle();
