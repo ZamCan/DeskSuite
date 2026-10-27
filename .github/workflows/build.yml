@@ -42,6 +42,7 @@ jobs:
           cache: true
       - run: flutter create --project-name desksuite --org com.zamcan.desksuite --platforms=android,ios,windows,linux .
       - run: flutter pub get
+      - run: dart format lib test
       - run: flutter analyze
       - run: flutter build windows --release
       - shell: pwsh
@@ -66,10 +67,38 @@ jobs:
       - run: flutter pub get
       - run: flutter build linux --release
       - run: tar -czf desksuite-linux-x64.tar.gz -C build/linux/x64/release/bundle .
+      - name: Assemble AppImage directory
+        run: |
+          mkdir -p AppDir/usr
+          cp -a build/linux/x64/release/bundle/. AppDir/usr/
+          cat > AppDir/AppRun <<'EOF'
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "$0")")"
+          exec "$HERE/usr/desksuite" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+          cat > AppDir/desksuite.desktop <<'EOF'
+          [Desktop Entry]
+          Name=DeskSuite
+          Exec=desksuite
+          Icon=desksuite
+          Type=Application
+          Categories=Office;Graphics;
+          Comment=Offline-first creative and productivity workspace
+          Terminal=false
+          EOF
+          cat > AppDir/desksuite.svg <<'EOF'
+          <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="26" fill="#292B29"/><path d="M30 32h68v64H30z" fill="none" stroke="#F7F5EF" stroke-width="8"/><path d="M44 48h40M44 64h40M44 80h25" stroke="#B56B45" stroke-width="7" stroke-linecap="round"/></svg>
+          EOF
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
+          chmod +x appimagetool
+          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool AppDir desksuite-x86_64.AppImage
       - uses: actions/upload-artifact@v4
         with:
           name: desksuite-linux-x64
-          path: desksuite-linux-x64.tar.gz
+          path: |
+            desksuite-linux-x64.tar.gz
+            desksuite-x86_64.AppImage
           if-no-files-found: error
   ios:
     name: iOS unsigned validation build
