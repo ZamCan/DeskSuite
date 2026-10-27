@@ -159,8 +159,7 @@ void main() {
       await waitIo(tester);
       expect(find.textContaining('1 of 8 pages'), findsOneWidget);
       await reveal(tester, find.byKey(const Key('scan-crop')));
-      await reveal(tester, find.byKey(const Key('scan-crop')));
-    await waitForEnabledButton(tester, find.byKey(const Key('scan-crop')));
+      await waitForEnabledButton(tester, find.byKey(const Key('scan-crop')));
       await tapVisible(tester, find.byKey(const Key('scan-crop')));
       await waitIo(tester, until: find.text('Adjust page corners'));
       expect(find.text('Adjust page corners'), findsOneWidget);
@@ -413,6 +412,7 @@ void main() {
     await waitIo(tester);
     await tapVisible(tester, find.byKey(const Key('scan-import')));
     await waitIo(tester);
+    await reveal(tester, find.byKey(const Key('scan-crop')));
     await waitForEnabledButton(tester, find.byKey(const Key('scan-crop')));
     await tapVisible(tester, find.byKey(const Key('scan-crop')));
     await waitIo(tester, until: find.text('Adjust page corners'));
