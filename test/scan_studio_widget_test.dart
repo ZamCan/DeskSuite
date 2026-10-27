@@ -12,6 +12,9 @@ import 'package:desksuite/images/photo_processor.dart';
 import 'package:desksuite/workspace/file_gateway.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'support/reveal.dart';
+
 import 'package:image/image.dart' as img;
 
 class ScanFiles implements FileGateway {
@@ -44,7 +47,15 @@ class ScanCamera implements CameraGateway {
   Future<Uint8List?> retrieveLostCapture() async => bytes;
 }
 
-Future<void> waitIo(WidgetTester tester, {int rounds = 25}) async {
+Future<void> waitIo(
+  WidgetTester tester, {
+  int rounds = 25,
+  Finder? until,
+}) async {
+  if (until != null) {
+    await settleUntil(tester, until);
+    return;
+  }
   for (var i = 0; i < rounds; i++) {
     await tester.pump(const Duration(milliseconds: 30));
     await tester.runAsync(
@@ -120,6 +131,7 @@ void main() {
       await waitIo(tester);
       expect(find.textContaining('1 of 8 pages'), findsOneWidget);
       await tapVisible(tester, find.byKey(const Key('scan-crop')));
+      await waitIo(tester, until: find.text('Adjust page corners'));
       expect(find.text('Adjust page corners'), findsOneWidget);
       await tester.drag(
         find.byKey(const Key('corner-0')),
@@ -371,6 +383,7 @@ void main() {
     await tapVisible(tester, find.byKey(const Key('scan-import')));
     await waitIo(tester);
     await tapVisible(tester, find.byKey(const Key('scan-crop')));
+    await waitIo(tester, until: find.text('Adjust page corners'));
     expect(find.text('Adjust page corners'), findsOneWidget);
     expect(find.byKey(const Key('corner-0')), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -407,6 +420,7 @@ void main() {
     await tapVisible(tester, find.byKey(const Key('scan-import')));
     await waitIo(tester);
     await tapVisible(tester, find.byKey(const Key('scan-crop')));
+    await waitIo(tester, until: find.byKey(const Key('apply-corners')));
     expect(find.byKey(const Key('apply-corners')), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tapVisible(tester, find.byKey(const Key('apply-corners')));

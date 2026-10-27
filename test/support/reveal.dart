@@ -41,3 +41,28 @@ Future<void> reveal(
   }
   fail('Could not reveal the target widget after scrolling.');
 }
+
+/// Pumps and yields to real asynchronous work until [target] appears or the
+/// wall-clock budget expires.
+///
+/// Image decoding and isolates take different amounts of real time on different
+/// operating systems, so a fixed number of pump rounds is not a reliable wait.
+Future<void> settleUntil(
+  WidgetTester tester,
+  Finder target, {
+  Duration timeout = const Duration(seconds: 30),
+  int stepMs = 30,
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (DateTime.now().isBefore(deadline)) {
+    await tester.pump(Duration(milliseconds: stepMs));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 5)),
+    );
+    if (target.evaluate().isNotEmpty) {
+      await tester.pump();
+      return;
+    }
+  }
+  fail('Timed out after ${timeout.inSeconds}s waiting for a widget to appear.');
+}

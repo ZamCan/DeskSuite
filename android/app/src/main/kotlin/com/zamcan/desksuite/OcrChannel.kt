@@ -54,7 +54,7 @@ class OcrChannel(private val context: Context) : MethodChannel.MethodCallHandler
     /** Releases the native engine and the worker thread. */
     fun close() {
         try {
-            engine?.end()
+            engine?.recycle()
         } catch (_: Throwable) {
             // The engine may already be released by the native layer.
         }
@@ -158,14 +158,14 @@ class OcrChannel(private val context: Context) : MethodChannel.MethodCallHandler
     private fun obtainEngine(language: String): TessBaseAPI {
         engine?.let { existing ->
             if (engineLanguages == language) return existing
-            existing.end()
+            existing.recycle()
             engine = null
         }
         ensureModels(language.split('+'))
         val directory = tessdataRoot()
         val created = TessBaseAPI()
         if (!created.init(directory.absolutePath, language)) {
-            created.end()
+            created.recycle()
             throw RecognitionException(
                 "model",
                 "The offline OCR model for '$language' could not be loaded."
