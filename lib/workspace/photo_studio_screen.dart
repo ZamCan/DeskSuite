@@ -36,7 +36,9 @@ class _PhotoStudioScreenState extends State<PhotoStudioScreen> {
   }
 
   void _message(String value) {
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
+    }
   }
 
   Future<void> _pick() async {
@@ -144,7 +146,9 @@ class _PhotoStudioScreenState extends State<PhotoStudioScreen> {
             throw StateError('Unsupported output format.'),
         },
       );
-      if (saved) _message('Edited image exported. Your original file was not changed.');
+      if (saved) {
+        _message('Edited image exported. Your original file was not changed.');
+      }
     } catch (error) {
       if (mounted) setState(() => _error = '$error');
     } finally {
