@@ -75,6 +75,9 @@ Future<void> tapVisible(WidgetTester tester, Finder finder) async {
   }
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
+  // A control that is disabled because a page is still being processed ignores
+  // the tap, and the caller then waits for a result that cannot arrive yet.
+  await settleUntilEnabled(tester, finder);
   await tester.tap(finder);
   // A running indeterminate progress indicator cannot settle until real I/O
   // completes; give routes time to animate and let callers wait for I/O.
@@ -442,7 +445,12 @@ void main() {
       await waitIo(tester);
       expect(find.byKey(const Key('scan-add-recovered')), findsOneWidget);
       await tapVisible(tester, find.byKey(const Key('scan-add-recovered')));
-      await waitIo(tester);
+      // The banner disappears only when the recovered page has really been
+      // added and saved, so wait for that instead of counting pump rounds.
+      await settleUntilGone(
+        tester,
+        find.byKey(const Key('scan-add-recovered')),
+      );
       expect(find.textContaining('1 of 8 pages'), findsOneWidget);
       expect(find.byKey(const Key('scan-add-recovered')), findsNothing);
       await tapVisible(tester, find.byKey(const Key('scan-camera')));
