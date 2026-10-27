@@ -18,6 +18,7 @@ The active app entry point is the modular creative editor from the reconciled cr
 - Export bounded PNG and single-page raster PDF output at selected DPI, with source-image resolution warnings.
 - Add editable date-aware visual stamps (DRAFT, APPROVED, PAID, RECEIVED, CONFIDENTIAL, COPY, VOID) and custom stamp labels.
 - Draw a finger/stylus signature into a transparent image layer; reposition and resize it like other design objects. This is a visual signature, not cryptographic signing.
+- Hand off selected PDF, Word, Excel, PowerPoint, OpenDocument, text and image files (up to 50 MB) to a compatible installed Android app. DeskSuite does not modify the original through this handoff.
 - Local-only project storage and platform file-picker boundary, with automated host tests for document, repository, export and widget flows.
 
 ### Preserved prototype capabilities to migrate into modular screens
