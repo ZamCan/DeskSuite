@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -110,11 +108,13 @@ class _ImageToolsScreenState extends State<ImageToolsScreen> {
     final extension = _format == ImageOutputFormat.png ? 'png' : 'jpg';
     try {
       final saved = await widget.files.save(
-        name: '${_sourceName}_${width}x${height}.$extension',
+        name: '${_sourceName}_${width}x$height.$extension',
         bytes: bytes,
         mimeType: _format == ImageOutputFormat.png ? 'image/png' : 'image/jpeg',
       );
-      if (saved) _message('Saved resized image. The source file was left unchanged.');
+      if (saved) {
+        _message('Saved resized image. The source file was left unchanged.');
+      }
     } catch (error) {
       _message('Could not save image: $error');
     }
