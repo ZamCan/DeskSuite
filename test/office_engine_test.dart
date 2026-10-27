@@ -50,6 +50,16 @@ void main() {
       expect(detected.detail, contains('cannot be read'));
     });
 
+    test('writable flags match real built-in output formats', () {
+      expect(OfficeFormat.docx.isWritable, isFalse);
+      expect(OfficeFormat.xlsx.isWritable, isFalse);
+      expect(OfficeFormat.pptx.isWritable, isFalse);
+      expect(OfficeFormat.odt.isWritable, isTrue);
+      expect(OfficeFormat.ods.isWritable, isTrue);
+      expect(OfficeFormat.pdf.isWritable, isTrue);
+      expect(OfficeFormat.txt.isWritable, isTrue);
+    });
+
     test('rejects empty, random and unsupported packages', () {
       expect(() => detectOfficeFile(Uint8List(0)), throwsFormatException);
       expect(
