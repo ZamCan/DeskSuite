@@ -73,11 +73,18 @@ Future<void> tapVisible(WidgetTester tester, Finder finder) async {
       maxScrolls: 25,
     );
   }
-  await tester.ensureVisible(finder);
-  await tester.pumpAndSettle();
   // A control that is disabled because a page is still being processed ignores
   // the tap, and the caller then waits for a result that cannot arrive yet.
+  // Waiting first also settles the layout: the busy row disappears, the list
+  // changes height, and a position measured before that is already stale.
   await settleUntilEnabled(tester, finder);
+  await tester.ensureVisible(finder);
+  // pumpAndSettle never returns while an indeterminate progress animation is
+  // running, and its default budget is ten minutes; pump a bounded number of
+  // frames instead, which is enough for a route or dialog animation.
+  for (var i = 0; i < 6; i++) {
+    await tester.pump(const Duration(milliseconds: 60));
+  }
   await tester.tap(finder);
   // A running indeterminate progress indicator cannot settle until real I/O
   // completes; give routes time to animate and let callers wait for I/O.
