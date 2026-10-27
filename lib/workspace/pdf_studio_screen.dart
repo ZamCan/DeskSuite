@@ -64,7 +64,7 @@ class _PdfStudioScreenState extends State<PdfStudioScreen> {
         document.addPage(pw.Page(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(24),
-          build: (context) => Center(
+          build: (context) => pw.Center(
             child: pw.Image(image, fit: _fitToPage ? pw.BoxFit.contain : pw.BoxFit.fill),
           ),
         ));
@@ -130,7 +130,7 @@ class _PdfStudioScreenState extends State<PdfStudioScreen> {
                 leading: ClipRRect(borderRadius: BorderRadius.circular(6), child: Image.memory(_pages[i], width: 52, height: 66, fit: BoxFit.cover, errorBuilder: (_, _, _) => const SizedBox(width: 52, height: 66, child: Icon(Icons.broken_image_outlined)))),
                 title: Text('Page ${i + 1}'),
                 subtitle: Text('${(_pages[i].length / 1024).toStringAsFixed(1)} KB image'),
-                trailing: Wrap(mainAxisSize: MainAxisSize.min, children: [
+                trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                   IconButton(tooltip: 'Move up', onPressed: _busy || i == 0 ? null : () => _move(i, -1), icon: const Icon(Icons.arrow_upward)),
                   IconButton(tooltip: 'Move down', onPressed: _busy || i == _pages.length - 1 ? null : () => _move(i, 1), icon: const Icon(Icons.arrow_downward)),
                   IconButton(tooltip: 'Remove page', onPressed: _busy ? null : () => setState(() => _pages.removeAt(i)), icon: const Icon(Icons.close)),
