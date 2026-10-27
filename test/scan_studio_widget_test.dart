@@ -64,6 +64,49 @@ Future<void> waitIo(
   }
 }
 
+Future<void> revealWithoutSettling(
+  WidgetTester tester,
+  Finder finder,
+) async {
+  if (finder.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(
+      finder,
+      220,
+      scrollable: find.byType(Scrollable).first,
+    );
+  }
+  await tester.ensureVisible(finder);
+  await tester.pump(const Duration(milliseconds: 50));
+}
+
+Future<void> waitForEnabledButton(
+  WidgetTester tester,
+  Finder finder, {
+  Duration timeout = const Duration(seconds: 30),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  var lastState = 'target not found';
+  while (DateTime.now().isBefore(deadline)) {
+    if (finder.evaluate().isNotEmpty) {
+      final widget = tester.widget<Widget>(finder);
+      final enabled = switch (widget) {
+        FilledButton button => button.onPressed != null,
+        OutlinedButton button => button.onPressed != null,
+        TextButton button => button.onPressed != null,
+        ElevatedButton button => button.onPressed != null,
+        _ => false,
+      };
+      lastState = '${widget.runtimeType}, enabled=$enabled';
+      if (enabled) return;
+    }
+    await tester.pump(const Duration(milliseconds: 30));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 10)),
+    );
+  }
+  fail('Timed out waiting for the button to become enabled ($lastState; busy indicator: ${find.bySemanticsLabel('Processing or saving page').evaluate().length}; save error: ${find.textContaining('Draft could not be saved').evaluate().length}).');
+}
+
 Future<void> tapVisible(WidgetTester tester, Finder finder) async {
   if (finder.evaluate().isEmpty) {
     await tester.scrollUntilVisible(
@@ -130,6 +173,8 @@ void main() {
       await tapVisible(tester, find.byKey(const Key('scan-import')));
       await waitIo(tester);
       expect(find.textContaining('1 of 8 pages'), findsOneWidget);
+      await reveal(tester, find.byKey(const Key('scan-crop')));
+      await waitForEnabledButton(tester, find.byKey(const Key('scan-crop')));
       await tapVisible(tester, find.byKey(const Key('scan-crop')));
       await waitIo(tester, until: find.text('Adjust page corners'));
       expect(find.text('Adjust page corners'), findsOneWidget);
@@ -382,6 +427,8 @@ void main() {
     await waitIo(tester);
     await tapVisible(tester, find.byKey(const Key('scan-import')));
     await waitIo(tester);
+    await reveal(tester, find.byKey(const Key('scan-crop')));
+    await waitForEnabledButton(tester, find.byKey(const Key('scan-crop')));
     await tapVisible(tester, find.byKey(const Key('scan-crop')));
     await waitIo(tester, until: find.text('Adjust page corners'));
     expect(find.text('Adjust page corners'), findsOneWidget);
@@ -442,11 +489,13 @@ void main() {
       await waitIo(tester);
       expect(find.byKey(const Key('scan-add-recovered')), findsOneWidget);
       await tapVisible(tester, find.byKey(const Key('scan-add-recovered')));
-      await waitIo(tester);
+      await revealWithoutSettling(tester, find.byKey(const Key('scan-camera')));
+      await waitForEnabledButton(tester, find.byKey(const Key('scan-camera')));
       expect(find.textContaining('1 of 8 pages'), findsOneWidget);
       expect(find.byKey(const Key('scan-add-recovered')), findsNothing);
       await tapVisible(tester, find.byKey(const Key('scan-camera')));
-      await waitIo(tester);
+      await revealWithoutSettling(tester, find.byKey(const Key('scan-pdf')));
+      await waitForEnabledButton(tester, find.byKey(const Key('scan-pdf')));
       expect(find.textContaining('2 of 8 pages'), findsOneWidget);
       expect((await tester.runAsync(store.load))!, hasLength(2));
       expect(tester.takeException(), isNull);
