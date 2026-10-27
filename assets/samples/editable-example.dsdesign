@@ -1,0 +1,72 @@
+{
+  "format": "desksuite.design",
+  "version": 1,
+  "id": "sample_editable_letter",
+  "name": "Example editable letter",
+  "widthMm": 210,
+  "heightMm": 297,
+  "updatedAt": "2026-10-14T00:00:00.000Z",
+  "backgroundColor": 4294967295,
+  "elements": [
+    {
+      "id": "heading",
+      "kind": "text",
+      "x": 22,
+      "y": 22,
+      "width": 166,
+      "height": 24,
+      "rotation": 0,
+      "color": 4280751908,
+      "opacity": 1,
+      "text": "EXAMPLE LETTER",
+      "fontSizePt": 24,
+      "bold": true,
+      "textAlignment": "left"
+    },
+    {
+      "id": "recipient",
+      "kind": "text",
+      "x": 22,
+      "y": 57,
+      "width": 166,
+      "height": 24,
+      "rotation": 0,
+      "color": 4280751908,
+      "opacity": 1,
+      "text": "To: Workshop Coordinator",
+      "fontSizePt": 12,
+      "bold": false,
+      "textAlignment": "left"
+    },
+    {
+      "id": "body",
+      "kind": "text",
+      "x": 22,
+      "y": 90,
+      "width": 166,
+      "height": 24,
+      "rotation": 0,
+      "color": 4280751908,
+      "opacity": 1,
+      "text": "This is fictional practice text. Edit this design and export a copy.",
+      "fontSizePt": 12,
+      "bold": false,
+      "textAlignment": "left"
+    },
+    {
+      "id": "closing",
+      "kind": "text",
+      "x": 22,
+      "y": 165,
+      "width": 166,
+      "height": 24,
+      "rotation": 0,
+      "color": 4280751908,
+      "opacity": 1,
+      "text": "Yours faithfully,\nAsha Example",
+      "fontSizePt": 12,
+      "bold": false,
+      "textAlignment": "left"
+    }
+  ]
+}
