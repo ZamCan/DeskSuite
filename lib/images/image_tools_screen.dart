@@ -20,7 +20,7 @@ class _ImageToolsScreenState extends State<ImageToolsScreen> {
   final _service = ImageProcessingService();
   Uint8List? _source;
   Uint8List? _output;
-  String _sourceName = 'image';
+  final String _sourceName = 'image';
   ImageDimensions? _sourceDimensions;
   int? _outputWidth;
   int? _outputHeight;
@@ -51,7 +51,6 @@ class _ImageToolsScreenState extends State<ImageToolsScreen> {
       setState(() {
         _source = bytes;
         _sourceDimensions = dimensions;
-        _sourceName = 'image';
         _width.text = dimensions.width.toString();
         _height.text = dimensions.height.toString();
         _output = null;
