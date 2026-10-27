@@ -34,7 +34,7 @@ flutter build apk --debug
 
 An ARM64 debug APK was built in the development environment with `flutter build apk --debug --target-platform=android-arm64 --split-per-abi`; the output is `build/app/outputs/flutter-apk/app-arm64-v8a-debug.apk`. This development-signed file is not a production release. On a connected compatible Android device, install it with `adb install -r build/app/outputs/flutter-apk/app-arm64-v8a-debug.apk` or run with `flutter run`; those device operations remain unverified. The temporary debug signing key is not a production identity, and a separately generated key cannot update the app without migration or removal of the prior installation.
 
-See [development](docs/DEVELOPMENT.md), [architecture](docs/ARCHITECTURE.md), [file formats](docs/FILE_FORMATS.md), [printing](docs/PRINTING.md), and [privacy and security](docs/PRIVACY_AND_SECURITY.md).
+See [development](docs/DEVELOPMENT.md), [architecture](docs/ARCHITECTURE.md), [file formats](docs/FILE_FORMATS.md), [printing](docs/PRINTING.md), and [privacy and security](docs/PRIVACY_AND_SECURITY.md), and [CI status](docs/CI.md).
 
 ## Data ownership and limits
 
