@@ -22,6 +22,7 @@ class _PdfStudioScreenState extends State<PdfStudioScreen> {
   final ImageProcessingService _imageEngine = const ImageProcessingService();
   bool _busy = false;
   bool _fitToPage = true;
+  static const int _maxTotalPageBytes = 64 * 1024 * 1024;
   String? _error;
 
   Future<void> _addPage() async {
@@ -33,6 +34,11 @@ class _PdfStudioScreenState extends State<PdfStudioScreen> {
       // predictable embedded image format, including GIF/BMP inputs.
       final normalized = _imageEngine.rotate(source: bytes, degrees: 0, outputFormat: DeskImageFormat.png).bytes;
       if (!mounted) return;
+      final totalBytes = _pages.fold<int>(0, (total, page) => total + page.length);
+      if (totalBytes + normalized.length > _maxTotalPageBytes) {
+        setState(() => _error = 'The PDF image set exceeds the 64 MB working limit. Export fewer or smaller pages.');
+        return;
+      }
       setState(() {
         _pages.add(normalized);
         _error = null;
