@@ -20,15 +20,15 @@ flutter test
 flutter build apk --release
 ```
 
-If the Termux environment does not have a compatible Flutter SDK and Android SDK configured, do not try to substitute only Java/Gradle: DeskSuite is a Flutter application and needs Flutter's Android build toolchain. In that case, use the Android APK artifact from the pull request's successful GitHub Actions run.
+If the Termux environment does not have a compatible Flutter SDK and Android SDK configured, do not try to substitute only Java/Gradle: DeskSuite is a Flutter application and needs Flutter's Android build toolchain. In that case, use the `app-debug.apk` from the `desksuite-android` artifact in the pull request's successful GitHub Actions run. CI's debug signing key is runner-generated, so this artifact is for a first-time test install; it is not guaranteed to update an existing installation or a later CI build. If Android reports a signature mismatch, do not uninstall an existing app before exporting data and deciding which signing identity to keep.
 
 ## Install on the Android phone
 
-When the APK has been built successfully, install it with ADB from the connected computer/Termux environment:
+When the APK has been built successfully, install the debug APK with ADB from the connected computer/Termux environment:
 
 ```sh
 adb devices
-adb install -r build/app/outputs/flutter-apk/app-release.apk
+adb install -r build/app/outputs/flutter-apk/app-debug.apk
 ```
 
 If Android rejects the update because the signatures differ, do not uninstall immediately if you need the current app's private data. Preserve/export any important files, then decide whether to keep the existing install or install the new build as a fresh app. ADB install success is not proof that camera, file picker, PDF editor, OCR, printing or recovery all work correctly on the device.
