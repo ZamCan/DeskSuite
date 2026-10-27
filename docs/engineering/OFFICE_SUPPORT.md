@@ -22,8 +22,8 @@ user installs:
 | Path | Availability | Fidelity |
 | --- | --- | --- |
 | Built-in reader (`lib/office/office_reader.dart`) | Always, no network | Text, headings, emphasis, tables, sheet values. Layout is **not** reproduced. |
-| Built-in writers (`lib/office/office_pdf.dart`, `office_writer.dart`) | Always | Real PDF with selectable text; real ODT/ODS packages; UTF-8 TXT; CSV. |
-| Content editor (`lib/office/office_content_editor_page.dart`) | Always for readable formats | Edits readable paragraphs and table cells, then exports a new content-level ODT/ODS/PDF/TXT/CSV copy. Does not retain full layout or unsupported objects. |
+| Built-in writers (`lib/office/office_pdf.dart`, `office_writer.dart`) | Always | Genuine minimal OOXML DOCX/XLSX and ODT/ODS packages; real PDF with selectable text; UTF-8 TXT; CSV. These are content-level writers, not full-layout round-trip writers. |
+| Content editor (`lib/office/office_content_editor_page.dart`) | Always for readable formats | Edits readable paragraphs and table cells, then exports a new content-level DOCX/XLSX/ODT/ODS/PDF/TXT/CSV copy. Does not retain full layout or unsupported objects. |
 | External engine (`ExternalOfficeEngine`) | Only when detected | Renders the original layout. |
 
 LibreOffice **is** packaged for Termux (`pkg install libreoffice`, currently
@@ -82,7 +82,7 @@ These are covered by tests, including a 4100-part archive.
 
 ## Tests
 
-`test/office_engine_test.dart` (29 tests) builds **genuine** DOCX, XLSX, PPTX,
+`test/office_engine_test.dart` (31 tests) builds **genuine** DOCX, XLSX, PPTX,
 ODT and ODS packages in memory, then asserts:
 
 - container detection ignores misleading extensions;
