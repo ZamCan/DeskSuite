@@ -143,7 +143,7 @@ class _WorkspacePageState extends State<WorkspacePage>{
       const SizedBox(height:12),const Text('From first idea\\nto finished print.',style:TextStyle(color:Colors.white,fontSize:29,height:1.12,fontWeight:FontWeight.w700)),
       const SizedBox(height:18),FilledButton(onPressed:()=>widget.onNavigate(1),child:const Text('Start a design')),
     ])),
-    const SizedBox(height:26),const Text('Workspaces',style:TextStyle(fontSize:20,fontWeight:FontWeight.w750)),const SizedBox(height:12),
+    const SizedBox(height:26),const Text('Workspaces',style:TextStyle(fontSize:20,fontWeight:FontWeight.w700)),const SizedBox(height:12),
     LayoutBuilder(builder:(context,c){
       final cols=c.maxWidth>760?3:c.maxWidth>500?2:1;
       final entries=<({String title,String detail,IconData icon,int page})>[
@@ -157,7 +157,7 @@ class _WorkspacePageState extends State<WorkspacePage>{
         Icon(e.icon,color:accent,size:28),const SizedBox(width:12),Expanded(child:Column(mainAxisAlignment:MainAxisAlignment.center,crossAxisAlignment:CrossAxisAlignment.start,children:[Text(e.title,style:const TextStyle(fontWeight:FontWeight.w700)),Text(e.detail,style:const TextStyle(color:muted,fontSize:12))])),
       ]))))).toList());
     }),
-    const SizedBox(height:24),const Text('Recent designs',style:TextStyle(fontSize:20,fontWeight:FontWeight.w750)),
+    const SizedBox(height:24),const Text('Recent designs',style:TextStyle(fontSize:20,fontWeight:FontWeight.w700)),
     if(recent.isEmpty) const Padding(padding:EdgeInsets.all(20),child:Text('Your saved designs will appear here.',style:TextStyle(color:muted)))
     else ...recent.take(6).map((p)=>ListTile(leading:const Icon(Icons.insert_drive_file_outlined,color:accent),title:Text(p.name),subtitle:Text(p.items.length.toString()+' objects'),onTap:()=>widget.onOpen(p))),
   ]));
@@ -210,7 +210,7 @@ class _EditorPageState extends State<EditorPage>{
   Future<void> exportPdf({bool print=false})async{
     setState(()=>busy=true);try{
       final doc=pw.Document();doc.addPage(pw.Page(pageFormat:PdfPageFormat(p.width*.75,p.height*.75,marginAll:0),build:(_)=>pw.Container(color:PdfColors.white,child:pw.Stack(children:[
-        for(final e in p.items)pw.Positioned(left:(e['x'] as num).toDouble()*.75,top:(e['y'] as num).toDouble()*.75,width:(e['w'] as num).toDouble()*.75,height:(e['h'] as num).toDouble()*.75,child:pdfItem(e)),
+        for(final e in p.items) pw.Positioned(left:(e['x'] as num).toDouble()*.75,top:(e['y'] as num).toDouble()*.75,child:pw.SizedBox(width:(e['w'] as num).toDouble()*.75,height:(e['h'] as num).toDouble()*.75,child:pdfItem(e))),
       ]))));
       final bytes=await doc.save();if(print){await Printing.layoutPdf(onLayout:(_)async=>bytes);}else{final safe=p.name.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'),'_');final path=await LocalStore.export(safe+'.pdf',bytes);if(path!=null&&mounted)note('PDF exported.');}
     }catch(e){if(mounted)note('PDF export failed: '+e.toString());}finally{if(mounted)setState(()=>busy=false);}
@@ -298,10 +298,29 @@ class _BusinessPageState extends State<BusinessPage>{
     const Text('Business & POS',style:TextStyle(fontSize:30,fontWeight:FontWeight.w800)),const SizedBox(height:8),const Text('Offline product catalogue and stock tracking.',style:TextStyle(color:muted)),const SizedBox(height:18),
     Row(children:[Expanded(child:Metric(label:'Products',value:products.length.toString(),icon:Icons.inventory_2_outlined)),const SizedBox(width:10),Expanded(child:Metric(label:'Units sold',value:sold.toString(),icon:Icons.shopping_bag_outlined))]),
     const SizedBox(height:10),Metric(label:'Stock value at listed prices',value:'TZS '+(stockValue/100).toStringAsFixed(2),icon:Icons.payments_outlined),const SizedBox(height:20),
-    Row(children:[const Expanded(child:Text('Product catalogue',style:TextStyle(fontSize:20,fontWeight:FontWeight.w750))),FilledButton.icon(onPressed:addProduct,icon:const Icon(Icons.add,size:18),label:const Text('Add product'))]),
+    Row(children:[const Expanded(child:Text('Product catalogue',style:TextStyle(fontSize:20,fontWeight:FontWeight.w700))),FilledButton.icon(onPressed:addProduct,icon:const Icon(Icons.add,size:18),label:const Text('Add product'))]),
     const SizedBox(height:10),if(!loaded)const LinearProgressIndicator() else if(products.isEmpty)const EmptyState(icon:Icons.inventory_2_outlined,title:'No products yet',detail:'Add a product to start a local catalogue.') else ...products.map((p)=>Card(child:ListTile(leading:const Icon(Icons.inventory_2_outlined,color:accent),title:Text(p['name'] as String),subtitle:Text('TZS '+((p['priceMinor'] as int)/100).toStringAsFixed(2)+' · Stock: '+p['stock'].toString()),trailing:IconButton(onPressed:(p['stock'] as int)>0?()=>sell(p):null,icon:const Icon(Icons.point_of_sale_outlined))))),
     const SizedBox(height:14),const InfoNote(text:'Starter module only: payment records, refunds, suppliers, receipts, audit history and transaction-safe accounting are still to be engineered.'),
   ]);}
 }
 class Metric extends StatelessWidget{const Metric({super.key,required this.label,required this.value,required this.icon});final String label,value;final IconData icon;@override Widget build(BuildContext context)=>Card(child:Padding(padding:const EdgeInsets.all(15),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Icon(icon,color:accent),const SizedBox(height:10),Text(value,style:const TextStyle(fontSize:22,fontWeight:FontWeight.w800)),const SizedBox(height:4),Text(label,style:const TextStyle(color:muted,fontSize:12))])));}
 class InfoNote extends StatelessWidget{const InfoNote({super.key,required this.text});final String text;@override Widget build(BuildContext context)=>Container(padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:const Color(0xFFF0EAE0),borderRadius:BorderRadius.circular(14)),child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[const Icon(Icons.info_outline,color:accent,size:19),const SizedBox(width:10),Expanded(child:Text(text,style:const TextStyle(color:ink,fontSize:12,height:1.5)))]));}
+
+
+class EmptyState extends StatelessWidget {
+  const EmptyState({super.key, required this.icon, required this.title, required this.detail});
+  final IconData icon;
+  final String title;
+  final String detail;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 26),
+    child: Column(children: [
+      Icon(icon, size: 34, color: muted),
+      const SizedBox(height: 10),
+      Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+      const SizedBox(height: 6),
+      Text(detail, textAlign: TextAlign.center, style: const TextStyle(color: muted, height: 1.4)),
+    ]),
+  );
+}
