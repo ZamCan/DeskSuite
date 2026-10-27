@@ -19,6 +19,19 @@
 - [ ] Windows/Linux/iOS plugins, generated desktop runners, packaging and OS-specific paths.
 - [ ] System print scaling, colour, real margins and ID-photo requirements.
 
+## Implemented in this source (2026-10-27)
+
+- **Offline OCR** for English and English+Kiswahili with Tesseract 5 through
+  Tesseract4Android; editable review, low-confidence warning, TXT and DOCX
+  export, and a searchable PDF whose invisible text layer is verified in tests.
+- **Office reading and conversion**: DOCX, XLSX, PPTX, ODT, ODS, ODP, RTF, TXT
+  and HTML → PDF, TXT, CSV, ODT or ODS, with per-route fidelity and limits, a
+  bounded package reader and an optional LibreOffice seam. See
+  [office support](engineering/OFFICE_SUPPORT.md).
+- PDF output now embeds a Unicode font so accents, dashes and smart quotes are
+  not dropped.
+- `flutter test` 152 passing; `flutter analyze` clean.
+
 ## Not implemented / next slices
 
 - [ ] Full suite backup, restore, migrations and cross-ID import for notes/catalogue, with crash and storage-full tests.

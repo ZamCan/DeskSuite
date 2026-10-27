@@ -10,11 +10,17 @@ The in-app **Conversion routes** catalogue (`lib/workspace/conversion_catalog.da
 | `.dsdesign` → PNG or one-page image PDF | DeskSuite canvas, `image`/`pdf`; Creative Studio | Flattened raster result, not editable or selectable text. PNG/PDF geometry uses configured page size and resolution; maximum 16 MP and 8192 px per side. Export an editable `.dsdesign` separately if needed. | `export_test.dart`, `workflow_integration_test.dart`; native save/print services unverified. |
 | DeskSuite Notes → UTF-8 TXT | Notes editor; `lib/legacy_studios.dart` | Exports the local note, not arbitrary document extraction or rich formatting. | `test/notes_storage_test.dart` covers storage/failure behavior; file export is a native boundary needing device verification. |
 
+| Image / photo → reviewed text, TXT, DOCX or searchable PDF | Tesseract 5.5.1 via Tesseract4Android (offline, Apache-2.0) + `lib/ocr/`; Text extraction | On-device recognition with English and Kiswahili models. Words carry confidence; low-confidence words are flagged. The searchable PDF keeps the page image and adds an invisible per-word text layer. Tables, multi-column layouts and handwriting are **not** reconstructed. Recognition of 24 MP / 4000 px inputs is refused. | `ocr_engine_test`, `ocr_exports_test`, `searchable_pdf_test` (inflates the PDF content stream and asserts each recognized word is present), `ocr_image_prep_test` (EXIF orientation, downsampling), `ocr_page_test`. Native recognition quality on hardware is unverified. |
+| Office document → PDF, TXT, CSV, ODT or ODS | `lib/office/`; Document converter | Reads DOCX, XLSX, PPTX, ODT, ODS, ODP, RTF, TXT and HTML. Output carries text, headings, emphasis, tables and sheet values; layout, images, fonts, macros and complex objects are not reproduced. Legacy `.doc/.xls/.ppt` need an installed LibreOffice. See [office support](engineering/OFFICE_SUPPORT.md). | `office_engine_test` (28 tests over real generated packages), `office_convert_page_test`. Fidelity on real Office files is unverified. |
+
 ## Explicitly unavailable
 
-- Image/PDF → OCR text or searchable PDF; no OCR engine or text layer is integrated.
+- Existing PDF → image, merge, split, reorder, edit, read or compressed PDF.
 - Existing PDF → image, merge, split, reorder, edit, read or compressed PDF. The scanner reorders **its own image pages**, not imported PDF pages.
-- DOCX/XLSX/PPTX/ODT/ODS/ODP conversion, PDF-to-Office, arbitrary HTML-to-PDF or arbitrary-document-to-text extraction.
+- DOCX/XLSX/PPTX **layout-faithful** conversion. The built-in engine preserves
+  content, not layout; pixel-accurate rendering requires an installed LibreOffice.
+- Writing DOCX/XLSX/PPTX from the converter (only ODT/ODS/PDF/TXT/CSV are written).
+- PDF-to-Office conversion, macros, form fields and digital signatures.
 - Structural PDF optimization, target-file-size guarantees, batch conversion and cloud conversions.
 - Image percentage, DPI/physical-size resampling, advanced compression presets or metadata controls.
 

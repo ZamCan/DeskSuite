@@ -1,6 +1,6 @@
 /// Explicit, bounded conversion routes. A null target is intentionally not
 /// actionable; the catalogue must never imply an unavailable engine exists.
-enum ConversionTarget { photos, scans, projects, design, notes }
+enum ConversionTarget { photos, scans, projects, design, notes, text, office }
 
 class ConversionRoute {
   const ConversionRoute({
@@ -42,16 +42,23 @@ const conversionRoutes = <ConversionRoute>[
     target: ConversionTarget.notes,
   ),
   ConversionRoute(
-    title: 'Images or PDFs → extracted text / searchable PDF',
-    detail: 'Unavailable: an OCR engine and a searchable text layer have not been integrated.',
+    title: 'Images → extracted text / searchable PDF',
+    detail:
+        'Text extraction runs on the device. Edit the recognized words, then '
+        'export TXT, DOCX or a searchable PDF. Tables, columns and handwriting '
+        'are not reconstructed.',
+    target: ConversionTarget.text,
   ),
   ConversionRoute(
     title: 'Existing PDF → images, edited pages or compressed PDF',
     detail: 'Unavailable: DeskSuite does not import or modify existing PDFs.',
   ),
   ConversionRoute(
-    title: 'DOCX, XLSX, PPTX and other office conversions',
+    title: 'DOCX, XLSX, PPTX, ODT, ODS, ODP, RTF → PDF, TXT, CSV, ODT, ODS',
     detail:
-        'Unavailable: there is no Office document import or conversion engine.',
+        'Reads office documents on the device and writes a content PDF, text, '
+        'CSV or a real OpenDocument copy. Layout, images and exact fonts are '
+        'not reproduced. Legacy .doc/.xls/.ppt need an installed office engine.',
+    target: ConversionTarget.office,
   ),
 ];

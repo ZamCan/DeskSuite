@@ -1,7 +1,111 @@
-# Continuous integration
+# Continuous integration and release builds
 
-The pre-existing active [build matrix](../.github/workflows/build.yml) from main commit `b2d22cb` is preserved unchanged. It runs on pushes/PRs to `main` or manual dispatch, uses floating action tags and Flutter stable, and attempts Android, Windows, Linux and unsigned iOS validation builds. All four jobs invoke host tests; desktop/iOS generate their own runners. The Linux job downloads an AppImage tool without a pinned digest. **No successful run of this integrated commit is claimed.**
+The active workflow is [`.github/workflows/build.yml`](../.github/workflows/build.yml).
+It runs on pushes and pull requests to `main` and on manual dispatch, with
+`cancel-in-progress` so superseded runs stop.
 
-The workflow's direct release builds provide no signing credentials. With the checked-in Android scaffold's intentional no-debug-key fallback, release output may be unsigned or the job may fail; it is not a production artifact. Desktop/iOS jobs call `flutter create`, which can rewrite the lockfile, and jobs format rather than checking the existing tree. Review and revise the workflow, pinned action versions/tool checksums, signing approach and artifacts before relying on CI. Do not put keys in the repository.
+## What each job does
 
-[`ci/host-checks.yml.example`](../ci/host-checks.yml.example) is an **inactive proposal**, not an active GitHub workflow. It pins action revisions and the Flutter version used for host validation, checks formatting and analysis, and runs the host suite sequentially. It does not build/sign/upload target artifacts. A maintainer must review it and place it under `.github/workflows/` with appropriate workflow-write permission; verify an actual run and retain the existing matrix deliberately rather than overwriting it blindly. The previous push attempt was rejected for insufficient workflow scope, so this integration does not modify active workflow files.
+### `android` — Android testing and release
+
+1. `flutter pub get`
+2. `dart format --output=none --set-exit-if-changed lib test` — **checks**, it
+   does not rewrite the tree.
+3. `flutter analyze`
+4. `dart test/pixel_algorithms_smoke.dart` — the standalone pixel-engine check.
+5. `flutter test --concurrency=1` — the full host suite.
+6. `flutter build apk --debug` — always produced. This APK is debug-signed and
+   installable for testing; it is never a distribution artifact.
+7. Release build, signed **only when the repository secrets below exist**:
+   - the keystore is decoded into `$RUNNER_TEMP` (outside the repository), and
+     `android/key.properties` is written from secrets for the duration of the
+     job;
+   - `flutter build apk --release` and `flutter build appbundle --release`;
+   - `apksigner verify --print-certs` must succeed, and every expected artifact
+     must be non-empty.
+8. Without secrets the same release commands run but the artifacts are uploaded
+   under `desksuite-android-release-unsigned`, with a workflow warning. An
+   unsigned artifact must not be distributed.
+
+Artifacts: `desksuite-android-debug`, plus either
+`desksuite-android-release-signed` or `desksuite-android-release-unsigned`.
+
+### `windows`, `linux`, `ios`
+
+Validation jobs. They generate their own platform runners with
+`flutter create`, restore `test/widget_test.dart`, run the same format check,
+analysis and host tests, then build. iOS is unsigned: it validates compilation
+only and is not a store-ready IPA. The Linux job also packages a tarball and an
+AppImage.
+
+## Release signing
+
+**Never commit a keystore, `key.properties`, or any password to the repository.**
+`android/app/build.gradle.kts` reads `android/key.properties` only when that file
+exists; there is no debug-key fallback for release builds.
+
+Create the key once, on a trusted machine (JDK `keytool`):
+
+```bash
+keytool -genkeypair -v \
+  -keystore desksuite-release.jks \
+  -alias desksuite \
+  -keyalg RSA -keysize 4096 -validity 10000 \
+  -dname "CN=DeskSuite, O=ZamCan, C=TZ"
+```
+
+Then encode it for the secret:
+
+```bash
+base64 -w0 desksuite-release.jks > desksuite-release.jks.b64
+```
+
+Add these **repository secrets** (Settings → Secrets and variables → Actions):
+
+| Secret | Contents |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | base64 of `desksuite-release.jks` |
+| `ANDROID_KEYSTORE_PASSWORD` | the store password |
+| `ANDROID_KEY_ALIAS` | the key alias, e.g. `desksuite` |
+| `ANDROID_KEY_PASSWORD` | the key password |
+
+Keep an offline backup of the keystore and its passwords. **Losing them means
+future builds cannot update an installed app**: Android rejects an update signed
+with a different key. Every release must use the same identity, which is why the
+workflow reads one fixed keystore from secrets and never generates a key.
+
+If the keystore exists and CI builds have already shipped with a different
+identity, that mismatch must be resolved deliberately (the app ID would have to
+change) rather than silently.
+
+## Offline / Termux builds
+
+`tools/build-android.sh` runs the same gates locally (format check, analysis,
+full host suite) and then builds an APK. A release build from the script requires
+`android/key.properties` with `storeFile`, `storePassword`, `keyAlias` and
+`keyPassword` pointing at a keystore outside version control:
+
+```bash
+bash tools/build-android.sh debug   # installable, debug-signed
+bash tools/build-android.sh release # requires android/key.properties
+```
+
+## What CI does not prove
+
+A green workflow proves that the Dart code formats, analyses, passes host tests,
+and that the Android/native/desktop toolchains compile the project. It does **not**
+prove:
+
+- camera capture, file pickers, sharing or printing on a real device;
+- OCR accuracy or scanner quality on photographs;
+- memory, battery or frame performance on a phone;
+- that LibreOffice-driven conversions work.
+
+Record those results from a real installation, not from CI.
+
+## Known build-size notes
+
+The APK carries native OCR libraries per ABI and two language models
+(≈6.3 MB of tessdata) plus a subsettable font. App Bundles let Play deliver only
+the matching ABI; a universal direct APK is larger. Measure the actual artifacts
+rather than estimating.

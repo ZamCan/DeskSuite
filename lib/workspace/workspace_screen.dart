@@ -333,6 +333,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                                       _navigate(WorkspaceSection.scans),
                                   onPhoto: () =>
                                       _navigate(WorkspaceSection.photos),
+                                  onText: () =>
+                                      _navigate(WorkspaceSection.text),
+                                  onOffice: () =>
+                                      _navigate(WorkspaceSection.office),
                                   onEditableExample: _openEditableExample,
                                 )
                               : const SizedBox.shrink(),
@@ -350,6 +354,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                                           WorkspaceSection.design,
                                         ConversionTarget.notes =>
                                           WorkspaceSection.notes,
+                                        ConversionTarget.text =>
+                                          WorkspaceSection.text,
+                                        ConversionTarget.office =>
+                                          WorkspaceSection.office,
                                       }),
                                 )
                               : const SizedBox.shrink(),

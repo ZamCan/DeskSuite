@@ -7,10 +7,14 @@ class GettingStartedPage extends StatelessWidget {
     super.key,
     required this.onScan,
     required this.onPhoto,
+    required this.onText,
+    required this.onOffice,
     required this.onEditableExample,
   });
   final VoidCallback onScan;
   final VoidCallback onPhoto;
+  final VoidCallback onText;
+  final VoidCallback onOffice;
   final VoidCallback onEditableExample;
 
   @override
@@ -27,6 +31,30 @@ class GettingStartedPage extends StatelessWidget {
         'Practise with fictional examples. The same local engines work on images you choose. No account is required.',
       ),
       const SizedBox(height: 20),
+      _GuideCard(
+        key: const Key('guide-extract-text'),
+        icon: Icons.text_snippet_outlined,
+        title: 'Extract text from a scan',
+        description:
+            'In Text extraction, choose an image or the sample letter, run the '
+            'offline recognizer, correct the words, then save TXT, DOCX or a '
+            'searchable PDF. Tables and handwriting are not reconstructed.',
+        button: 'Open text extraction',
+        onPressed: onText,
+      ),
+      const SizedBox(height: 12),
+      _GuideCard(
+        key: const Key('guide-convert-office'),
+        icon: Icons.sync_alt_rounded,
+        title: 'Convert an office document',
+        description:
+            'In Document converter, open a DOCX, XLSX, PPTX, ODT, ODS, ODP or '
+            'RTF file and save a PDF, text, CSV or OpenDocument copy. Each route '
+            'states what is preserved and what is lost.',
+        button: 'Open document converter',
+        onPressed: onOffice,
+      ),
+      const SizedBox(height: 12),
       _GuideCard(
         icon: Icons.auto_fix_high,
         title: 'Clean a shadowed page',
@@ -90,6 +118,7 @@ class GettingStartedPage extends StatelessWidget {
 
 class _GuideCard extends StatelessWidget {
   const _GuideCard({
+    super.key,
     required this.icon,
     required this.title,
     required this.description,

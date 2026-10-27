@@ -25,6 +25,51 @@ The app keeps one private scan draft on the device, including page order and ori
 
 The Photo working copy is not restored after the app closes. Export it to keep it. Image input is limited to 8 MiB, 12 megapixels and 8192 pixels per side; intermediate encoded files are limited to 16 MiB. The scan draft is limited to 8 pages, 24 megapixels and 32 MiB of processed images (64 MiB for private draft assets). Device memory may be more restrictive.
 
+## Extract text from a photo or scan
+
+1. Open the menu → **Text extraction**. The first card tells you whether the
+   offline recognizer is ready on this build. If it is not, the screen says so
+   instead of showing an empty result.
+2. Choose **Choose image**, or **Use sample letter** to practise. Large images
+   are prepared automatically: the real format is verified, EXIF orientation is
+   applied and the image is scaled to a 2600 px long edge. The exact size the
+   recognizer sees is what the searchable PDF uses.
+3. Pick a language: **English** or **English + Kiswahili**, then **Extract text**.
+   Recognition runs on the device; nothing is uploaded and no account is needed.
+4. Review the text in the editable field. The summary shows the word count and
+   the mean confidence; if many words were scored low, a warning asks you to
+   check them against the image. Correct anything the recognizer misread.
+5. Export: **Save TXT** (UTF-8), **Save DOCX** (a real Word document with one
+   paragraph per line) or **Searchable PDF** (the page image plus an invisible
+   text layer you can select and search). **Copy** puts the reviewed text on the
+   clipboard. Each export goes to a destination you choose; your original image
+   is untouched.
+
+Limits you should know: columns, tables and handwriting are not reconstructed —
+the text comes out in the recognizer's reading order. The DOCX is a text-flow
+document, not a reproduction of the page. The searchable PDF is an image with a
+text layer, not an editable PDF. Very large images (over 24 MP or 4000 px) are
+refused; recognition accuracy on poor photographs is not guaranteed.
+
+## Convert an office document
+
+1. Open the menu → **Document converter**. Choose a file, or **Use sample
+   document** if a sample is bundled in this build.
+2. Check the **Detected** row. Detection reads the real container, so a `.docx`
+   that is really an ODT is reported as ODT and a renamed file is never trusted.
+3. Only routes this build can really run are listed, each with its fidelity. For
+   example a DOCX offers PDF, TXT and ODT output; a legacy `.doc` offers nothing
+   unless an office engine is installed, and the screen says so.
+4. Choose a route and select **Convert**. Review the output name, format, size,
+   the engine used and the "What changed" notes.
+5. Select **Save output**. The source file is never modified.
+
+What is preserved: paragraph text and order, headings, bold/italic, table rows
+and cells, sheet names and values, slide text. What is not: exact fonts, layout,
+images, charts, macros, comments, text boxes, number formats and page size (A4 is
+used). Layout-faithful rendering needs an installed LibreOffice, which DeskSuite
+does not bundle; see the office support notes in the engineering documentation.
+
 ## Practise without your own files
 
 - **Getting started → Clean a shadowed page**: open Scan & assemble, choose **Try an example → Shadowed field notes**, preview each cleanup method and compare the text and colored chart before applying. The sample is intentionally degraded, not an official document.

@@ -13,7 +13,7 @@ permissions:
   contents: read
 jobs:
   android:
-    name: Android APK and AAB
+    name: Android testing and release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,14 +22,75 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: dart format lib test
-      - run: flutter analyze
-      - run: flutter test
-      - run: flutter build apk --release
-      - run: flutter build appbundle --release
-      - uses: actions/upload-artifact@v4
+      - name: Formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Static analysis
+        run: flutter analyze
+      - name: Standalone pixel-engine smoke check
+        run: dart test/pixel_algorithms_smoke.dart
+      - name: Host tests
+        run: flutter test --concurrency=1
+      - name: Build debug APK (installable testing artifact)
+        run: flutter build apk --debug
+      - name: Check for release signing secrets
+        id: signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No ANDROID_KEYSTORE_BASE64 secret. Release APK/AAB will be unsigned validation builds and must not be distributed."
+          fi
+      - name: Configure release signing
+        if: steps.signing.outputs.available == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_PASSWORD:-}" ] || [ -z "${KEY_ALIAS:-}" ] || [ -z "${KEY_PASSWORD:-}" ]; then
+            echo "::error::Signing secrets are incomplete. Set ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD."
+            exit 1
+          fi
+          # Written outside the repository tree so no key material can be committed.
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/desksuite-release.jks"
+          cat > android/key.properties <<EOF
+          storeFile=$RUNNER_TEMP/desksuite-release.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+          echo "Release signing configured from repository secrets."
+      - name: Build signed release APK and AAB
+        if: steps.signing.outputs.available == 'true'
+        run: |
+          set -euo pipefail
+          flutter build apk --release
+          flutter build appbundle --release
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)"
+          "$APKSIGNER" verify --print-certs build/app/outputs/flutter-apk/app-release.apk
+          for entry in build/app/outputs/flutter-apk/*.apk build/app/outputs/bundle/release/*.aab; do
+            [ -s "$entry" ] || { echo "::error::Missing artifact: $entry"; exit 1; }
+          done
+      - name: Build unsigned validation APK and AAB
+        if: steps.signing.outputs.available != 'true'
+        run: |
+          flutter build apk --release
+          flutter build appbundle --release
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
         with:
-          name: desksuite-android
+          name: desksuite-android-debug
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.signing.outputs.available == 'true' && 'desksuite-android-release-signed' || 'desksuite-android-release-unsigned' }}
           path: |
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
@@ -46,7 +107,7 @@ jobs:
       - run: flutter create --project-name desksuite --org com.zamcan.desksuite --platforms=windows .
       - run: git checkout -- test/widget_test.dart
       - run: flutter pub get
-      - run: dart format lib test
+      - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
       - run: flutter test
       - run: flutter build windows --release

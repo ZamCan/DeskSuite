@@ -10,6 +10,49 @@ The same actual pixel functions processed the bundled synthetic examples using l
 
 DartPad's Flutter **3.47.8** analyzer reported no issues when the new scan dialog and scanner UI were composed with local-interface stubs, and separately for the Photo Studio UI, photo processor and document cleanup wrapper with codec/interface stubs. The new/modified Dart files were formatted using the same service's Dart 3.13.7 formatter. These checks can catch syntax and many Flutter API mistakes, but the stubs do **not** verify the real `image` codec, plugin bindings, isolates, storage, navigation, layout, or the complete project. The new `document_cleanup_test.dart`, `document_cleanup_dialog_test.dart`, `image_cleanup_test.dart`, sample and widget integration tests are **written but have not run** under Flutter. Run them and the complete suite on the owner's existing toolchain; do not infer a release or device pass.
 
+## OCR and office work: real runs on 2026-10-27
+
+Environment: Flutter 3.47.8 / Dart 3.13.7 on a Linux host. These are host test
+results, **not** Android, camera, device-memory or recognition-quality evidence.
+
+- First execution of the document-workflow suite exposed **5 failures**: four in
+  `photo_widget_test.dart` and one in `navigation_test.dart`. Every one was the
+  same harness defect — `WidgetController.ensureVisible` was called on a key
+  inside a lazy `ListView` that had not built that child yet. Added
+  `test/support/reveal.dart` and routed the call sites through it. The
+  assertions themselves were unchanged. Suite then passed 87.
+- The OCR work added `lib/ocr/` and a native `OcrChannel`. `flutter test` now
+  reports **152 passed**. New tests: `ocr_engine_test` (8), `ocr_exports_test`
+  (9), `searchable_pdf_test` (7), `ocr_image_prep_test` (4), `ocr_page_test`
+  (5), `office_engine_test` (28), `office_convert_page_test` (4).
+- `searchable_pdf_test` inflates the generated PDF's Flate content streams and
+  asserts that every recognized word appears in the page content, that exactly
+  one page and one embedded image XObject exist, and that page order is kept.
+- `office_engine_test` builds genuine DOCX/XLSX/PPTX/ODT/ODS packages in memory,
+  asserts their content is read correctly, round-trips written ODT/ODS back
+  through the reader, verifies generated PDFs begin with `%PDF-` and contain page
+  objects, and checks the package limits with a 4100-part archive.
+- `dart test/pixel_algorithms_smoke.dart` still passes (40 randomized images).
+- `flutter analyze` reports no issues; `dart format --set-exit-if-changed` is
+  clean.
+
+Bug fixes found by these runs, not by inspection:
+
+- `pw.Positioned` in the `pdf` package takes no `width`/`height`.
+- Every generated DOCX carried a spurious empty final paragraph.
+- ZIP-based office detection could not work from a byte scan, because archive
+  entries are compressed; the container must be opened and its parts inspected.
+- The built-in PDF font (Helvetica) silently dropped em dashes and other
+  non-WinAnsi glyphs; PDFs now embed a Noto Sans subset.
+- The RTF reader skipped the entire document because its skip pattern matched an
+  inner `{\fonttbl` group from the outer brace.
+- `TessBaseAPI` has no `end()`; the Android job failed to compile until the call
+  was changed to `recycle()`.
+
+Not verified by any of this: recognition accuracy, native camera or Tesseract
+behaviour, memory use on a real phone, LibreOffice invocation, or any Android
+build/install. No APK was produced in this environment.
+
 ## Earlier host checks performed on 2026-10-27
 
 Environment for the recorded runs: Flutter 3.47.8 / Dart 3.13.7 on a Linux host; sequential tests (`--concurrency=1`). These are host tests, **not** Android installation, native plugin, printer, or release verification.

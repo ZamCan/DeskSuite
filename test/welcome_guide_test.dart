@@ -7,6 +7,8 @@ import 'package:desksuite/workspace/project_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/reveal.dart';
+
 class WelcomeFiles implements FileGateway {
   @override
   Future<Uint8List?> pickImage() async => null;
@@ -70,7 +72,12 @@ void main() {
       );
       await waitIo(tester);
       expect(find.text('Getting started'), findsWidgets);
+      // The guide is a lazy list; the new text-extraction and converter cards
+      // sit above the cleanup card.
+      await reveal(tester, find.text('Clean a shadowed page'));
       expect(find.text('Clean a shadowed page'), findsOneWidget);
+      await reveal(tester, find.text('Extract text from a scan'));
+      expect(find.text('Extract text from a scan'), findsOneWidget);
       await tester.scrollUntilVisible(
         find.text('Make a multipage image PDF'),
         200,
