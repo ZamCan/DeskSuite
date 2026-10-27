@@ -3,7 +3,7 @@ include: package:flutter_lints/flutter.yaml
 linter:
   rules:
     avoid_print: true
-    prefer_const_constructors: true
+    prefer_const_constructors: false
     prefer_final_locals: true
     require_trailing_commas: false
     prefer_interpolation_to_compose_strings: false
