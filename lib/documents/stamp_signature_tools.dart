@@ -130,7 +130,7 @@ class _StampDialogState extends State<_StampDialog> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '$label${_includeDate ? '\n${StampSpec._month(now.month)} ${now.day.toString().padLeft(2, '0')} ${now.year}' : ''}',
+                    '$label${_includeDate ? '\n${now.day.toString().padLeft(2, '0')} ${StampSpec._month(now.month)} ${now.year}' : ''}',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: _selected.color,
@@ -368,7 +368,5 @@ class _SignaturePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SignaturePainter oldDelegate) =>
-      !identical(oldDelegate.strokes, strokes) ||
-      !identical(oldDelegate.current, current);
+  bool shouldRepaint(covariant _SignaturePainter oldDelegate) => true;
 }
