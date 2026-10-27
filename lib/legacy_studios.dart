@@ -6,6 +6,7 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -733,7 +734,11 @@ class _PhotoPageState extends State<PhotoPage> {
   late final Future<PhotoResult> Function(PhotoRequest) process =
       widget.processor ?? processPhotoInBackground;
   PhotoResult? photo;
+  PhotoResult? original;
+  PhotoResult? undoPhoto;
   bool busy = false;
+  bool showingOriginal = false;
+  bool isExample = false;
 
   void note(String value) {
     if (mounted) {
@@ -748,12 +753,69 @@ class _PhotoPageState extends State<PhotoPage> {
       final bytes = await files.pickImage();
       if (bytes == null) return;
       final result = await process(PhotoRequest(bytes, PhotoAction.inspect));
-      if (mounted) setState(() => photo = result);
+      if (mounted) {
+        setState(() {
+          photo = result;
+          original = result;
+          undoPhoto = null;
+          showingOriginal = false;
+          isExample = false;
+        });
+      }
     } catch (error) {
-      note('Could not open image: $error');
+      note(
+        error is FormatException
+            ? error.message
+            : 'Could not open image. Try a supported file.',
+      );
     } finally {
       if (mounted) setState(() => busy = false);
     }
+  }
+
+  Future<void> loadExample() async {
+    if (busy) return;
+    setState(() => busy = true);
+    try {
+      final data = await rootBundle.load('assets/samples/practice-photo.jpg');
+      final result = await process(
+        PhotoRequest(
+          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+          PhotoAction.inspect,
+        ),
+      );
+      if (mounted) {
+        setState(() {
+          photo = result;
+          original = result;
+          undoPhoto = null;
+          showingOriginal = false;
+          isExample = true;
+        });
+      }
+    } catch (_) {
+      note('Could not load the example image. Try again.');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  void undo() {
+    if (undoPhoto == null || busy) return;
+    setState(() {
+      photo = undoPhoto;
+      undoPhoto = null;
+      showingOriginal = false;
+    });
+  }
+
+  void reset() {
+    if (original == null || photo == null || busy) return;
+    setState(() {
+      undoPhoto = photo;
+      photo = original;
+      showingOriginal = false;
+    });
   }
 
   Future<void> apply(
@@ -775,9 +837,17 @@ class _PhotoPageState extends State<PhotoPage> {
           keepAspect: keepAspect,
         ),
       );
-      if (mounted) setState(() => photo = result);
+      if (mounted) {
+        setState(() {
+          undoPhoto = current;
+          photo = result;
+          showingOriginal = false;
+        });
+      }
     } catch (error) {
-      note('Image processing failed: $error');
+      note(
+        error is FormatException ? error.message : 'Image processing failed. Your previous working copy is unchanged.',
+      );
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -820,14 +890,65 @@ class _PhotoPageState extends State<PhotoPage> {
           quality: quality,
         ),
       );
+      if (!mounted) return;
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Review ${jpeg ? 'JPEG' : 'PNG'} output'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.memory(
+                  output.bytes,
+                  height: 150,
+                  fit: BoxFit.contain,
+                  cacheWidth: math.min(output.width, 800),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '${output.width} × ${output.height} pixels · ${output.bytes.length} bytes',
+                ),
+                if (original != null)
+                  Text(
+                    'Original: ${original!.width} × ${original!.height} pixels · ${original!.bytes.length} bytes',
+                  ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Choose a new destination to keep your source file. The final size shown is measured after encoding.',
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              key: const Key('photo-save-copy'),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Save a copy'),
+            ),
+          ],
+        ),
+      );
+      if (confirm != true) return;
       final saved = await files.save(
         name: jpeg ? 'desksuite-photo.jpg' : 'desksuite-photo.png',
         bytes: output.bytes,
         mimeType: jpeg ? 'image/jpeg' : 'image/png',
       );
-      if (saved) note('Image exported. Your original file was not changed.');
+      if (saved) {
+        note('Image exported. Verify the saved copy in an image viewer.');
+      }
     } catch (error) {
-      note('Could not export image: $error');
+      note(
+        error is FormatException
+            ? error.message
+            : 'Could not export image. Try another destination.',
+      );
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -911,7 +1032,7 @@ class _PhotoPageState extends State<PhotoPage> {
       ),
       const SizedBox(height: 8),
       const Text(
-        'Work on a local copy; the source image is never changed.',
+        'Edit a local copy; choose a new destination when exporting to preserve your source.',
         style: TextStyle(color: muted),
       ),
       const SizedBox(height: 20),
@@ -948,6 +1069,13 @@ class _PhotoPageState extends State<PhotoPage> {
                         icon: const Icon(Icons.upload_file),
                         label: const Text('Choose image'),
                       ),
+                      const SizedBox(height: 6),
+                      TextButton.icon(
+                        key: const Key('photo-example'),
+                        onPressed: busy ? null : loadExample,
+                        icon: const Icon(Icons.school_outlined),
+                        label: const Text('Try a sample image'),
+                      ),
                     ],
                   ),
                 ),
@@ -955,10 +1083,13 @@ class _PhotoPageState extends State<PhotoPage> {
             : Padding(
                 padding: const EdgeInsets.all(12),
                 child: Image.memory(
-                  photo!.bytes,
+                  (showingOriginal ? original! : photo!).bytes,
                   height: 300,
                   fit: BoxFit.contain,
-                  cacheWidth: math.min(photo!.width, 1200),
+                  cacheWidth: math.min(
+                    (showingOriginal ? original! : photo!).width,
+                    1200,
+                  ),
                   errorBuilder: (_, _, _) =>
                       const Text('Image preview unavailable.'),
                 ),
@@ -967,6 +1098,18 @@ class _PhotoPageState extends State<PhotoPage> {
       if (photo != null) ...[
         const SizedBox(height: 10),
         Text('${photo!.width} × ${photo!.height} px · working copy'),
+        if (original != null)
+          Text(
+            'Original: ${original!.width} × ${original!.height} px · ${detectPhotoFormat(original!.bytes).name.toUpperCase()} · ${original!.bytes.length} bytes',
+          ),
+        if (showingOriginal)
+          const Text(
+            'Previewing original; edits and exports use the working copy.',
+          ),
+        if (isExample)
+          const Text(
+            'Example: try Resize, enter a width such as 512 px, review the result, then save a new copy.',
+          ),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
@@ -977,6 +1120,25 @@ class _PhotoPageState extends State<PhotoPage> {
               onPressed: busy ? null : pick,
               icon: const Icon(Icons.upload_file),
               label: const Text('Choose another'),
+            ),
+            OutlinedButton(
+              key: const Key('photo-compare'),
+              onPressed: busy
+                  ? null
+                  : () => setState(() => showingOriginal = !showingOriginal),
+              child: Text(
+                showingOriginal ? 'Show working copy' : 'Compare original',
+              ),
+            ),
+            OutlinedButton(
+              key: const Key('photo-undo'),
+              onPressed: busy || undoPhoto == null ? null : undo,
+              child: const Text('Undo last edit'),
+            ),
+            OutlinedButton(
+              key: const Key('photo-reset'),
+              onPressed: busy ? null : reset,
+              child: const Text('Reset'),
             ),
             OutlinedButton.icon(
               key: const Key('photo-rotate'),
@@ -1032,7 +1194,7 @@ class _PhotoPageState extends State<PhotoPage> {
         ),
       const SizedBox(height: 14),
       const InfoNote(
-        text: 'PNG, JPEG and WebP input; first frame only. Import is limited to 8 MB and 12 megapixels. JPEG exports flatten transparency onto white. Photo sheets are a layout aid, not an ID-compliance check. Automatic background removal is not implemented.',
+        text: 'PNG, JPEG and WebP input; first frame only. Import is limited to 8 MB and 12 megapixels. The working copy is not restored after closing: export it to keep it. JPEG flattens transparency onto white. Photo sheets do not certify ID compliance.',
       ),
     ],
   );
@@ -1086,6 +1248,7 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
       height.text =
           '${math.max(1, (widget.height * n / widget.width).round())}';
     }
+    setState(() {});
   }
 
   @override
@@ -1112,6 +1275,7 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: 'Height (pixels)'),
               validator: validateSide,
+              onChanged: (_) => setState(() {}),
             ),
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
@@ -1122,7 +1286,17 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
                 if (keepAspect) updateHeight(width.text);
               },
             ),
-            const Text('Output is limited to 12 megapixels.'),
+            const Text(
+              'Keep aspect ratio preserves proportions. Turn it off to force exact width and height, which may distort the image. Output is limited to 12 megapixels.',
+            ),
+            if ((int.tryParse(width.text) ?? 0) > widget.width ||
+                (int.tryParse(height.text) ?? 0) > widget.height)
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: Text(
+                  'Enlargement adds interpolated pixels, not new detail.',
+                ),
+              ),
           ],
         ),
       ),

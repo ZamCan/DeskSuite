@@ -59,7 +59,23 @@ Future<void> settleIo(WidgetTester tester) async {
   }
 }
 
+Future<void> expectWorkingSize(WidgetTester tester, String value) async {
+  final target = find.text(value);
+  if (target.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(
+      target,
+      -250,
+      scrollable: find.byType(Scrollable).first,
+    );
+  }
+  await tester.ensureVisible(target);
+  await tester.pumpAndSettle();
+  expect(target, findsOneWidget);
+}
+
 void main() {
+  setUpAll(() => WidgetController.hitTestWarningShouldBeFatal = true);
+  tearDownAll(() => WidgetController.hitTestWarningShouldBeFatal = false);
   testWidgets('photo import, rotate, crop, resize and real JPEG export', (
     tester,
   ) async {
@@ -83,30 +99,127 @@ void main() {
     await settleIo(tester);
     expect(find.text('4 × 2 px · working copy'), findsOneWidget);
     await tester.ensureVisible(find.byKey(const Key('photo-rotate')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('photo-rotate')));
     await settleIo(tester);
-    expect(find.text('2 × 4 px · working copy'), findsOneWidget);
+    await expectWorkingSize(tester, '2 × 4 px · working copy');
     await tester.ensureVisible(find.byKey(const Key('photo-crop')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('photo-crop')));
     await settleIo(tester);
-    expect(find.text('2 × 2 px · working copy'), findsOneWidget);
+    await expectWorkingSize(tester, '2 × 2 px · working copy');
     await tester.ensureVisible(find.byKey(const Key('photo-resize')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('photo-resize')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('photo-width')), '1');
     await tester.tap(find.widgetWithText(FilledButton, 'Resize'));
     await settleIo(tester);
-    expect(find.text('1 × 1 px · working copy'), findsOneWidget);
+    await expectWorkingSize(tester, '1 × 1 px · working copy');
     await tester.ensureVisible(find.byKey(const Key('photo-jpg')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('photo-jpg')));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Export JPG').last);
+    await settleIo(tester);
+    expect(find.text('Review JPEG output'), findsOneWidget);
+    expect(find.textContaining('bytes'), findsWidgets);
+    await tester.tap(find.byKey(const Key('photo-save-copy')));
     await settleIo(tester);
     expect(files.exportedName, 'desksuite-photo.jpg');
     expect(files.exported!.take(2), [0xff, 0xd8]);
     expect(files.original, orderedEquals(untouched));
     expect(tester.takeException(), isNull);
   });
+  testWidgets('exact dimensions require an explicit aspect-ratio choice', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final files = PhotoFiles();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PhotoPage(
+            files: files,
+            processor: (request) async => processPhoto(request),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('photo-choose')));
+    await settleIo(tester);
+    await tester.ensureVisible(find.byKey(const Key('photo-resize')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('photo-resize')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Keep aspect ratio'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('photo-width')), '3');
+    await tester.enterText(find.byKey(const Key('photo-height')), '3');
+    await tester.tap(find.widgetWithText(FilledButton, 'Resize'));
+    await settleIo(tester);
+    await expectWorkingSize(tester, '3 × 3 px · working copy');
+    await tester.ensureVisible(find.byKey(const Key('photo-png')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('photo-png')));
+    await settleIo(tester);
+    expect(find.text('Review PNG output'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('photo-save-copy')));
+    await settleIo(tester);
+    final decoded = img.decodePng(files.exported!)!;
+    expect([decoded.width, decoded.height], [3, 3]);
+    expect(
+      files.original,
+      orderedEquals(
+        Uint8List.fromList(img.encodePng(img.Image(width: 4, height: 2))),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sample resize and export use the real photo engine', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final files = PhotoFiles();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PhotoPage(
+            files: files,
+            processor: (request) async => processPhoto(request),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('photo-example')));
+    await settleIo(tester);
+    await expectWorkingSize(tester, '1376 × 768 px · working copy');
+    await tester.ensureVisible(find.byKey(const Key('photo-resize')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('photo-resize')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('photo-width')), '512');
+    await tester.tap(find.widgetWithText(FilledButton, 'Resize'));
+    await settleIo(tester);
+    await expectWorkingSize(tester, '512 × 286 px · working copy');
+    await tester.ensureVisible(find.byKey(const Key('photo-png')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('photo-png')));
+    await settleIo(tester);
+    await tester.tap(find.byKey(const Key('photo-save-copy')));
+    await settleIo(tester);
+    final decoded = img.decodePng(files.exported!)!;
+    expect([decoded.width, decoded.height], [512, 286]);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'photo sheet validates capacity, exports a PDF and sends a print job',
     (tester) async {
