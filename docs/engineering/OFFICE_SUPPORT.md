@@ -23,6 +23,7 @@ user installs:
 | --- | --- | --- |
 | Built-in reader (`lib/office/office_reader.dart`) | Always, no network | Text, headings, emphasis, tables, sheet values. Layout is **not** reproduced. |
 | Built-in writers (`lib/office/office_pdf.dart`, `office_writer.dart`) | Always | Real PDF with selectable text; real ODT/ODS packages; UTF-8 TXT; CSV. |
+| Content editor (`lib/office/office_content_editor_page.dart`) | Always for readable formats | Edits readable paragraphs and table cells, then exports a new content-level ODT/ODS/PDF/TXT/CSV copy. Does not retain full layout or unsupported objects. |
 | External engine (`ExternalOfficeEngine`) | Only when detected | Renders the original layout. |
 
 LibreOffice **is** packaged for Termux (`pkg install libreoffice`, currently
@@ -95,9 +96,10 @@ ODT and ODS packages in memory, then asserts:
   silently accepted;
 - the source buffer is never mutated and output names are sanitised.
 
-`test/office_convert_page_test.dart` covers the screen: detection, route
-filtering, conversion, saving, the "no route available" state and an
-unrecognisable file.
+`test/office_convert_page_test.dart` covers detection, route filtering,
+conversion, saving and unavailable routes. `test/office_content_editor_page_test.dart`
+verifies that editing a genuine DOCX fixture and exporting ODT changes the
+exported content while leaving the source bytes unchanged.
 
 ## Not verified
 
