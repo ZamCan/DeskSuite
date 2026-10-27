@@ -54,3 +54,8 @@ app.*.map.json
 *.pfx
 *.apk
 *.aab
+.env.*
+*.jks
+*.keystore
+*.key
+key.properties
