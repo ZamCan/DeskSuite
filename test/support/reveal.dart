@@ -138,3 +138,38 @@ Future<void> settleUntilGone(
     'Timed out after ${timeout.inSeconds}s waiting for a widget to go away.',
   );
 }
+
+/// Runs real asynchronous work (file I/O, isolates) without ever hanging the
+/// test.
+///
+/// `tester.runAsync` waits for the whole callback, and a repository or store
+/// whose write queue was created in the fake-async zone will only finish that
+/// queue when the test pumps. Awaiting such a read inside `runAsync` therefore
+/// waits for something that cannot happen, which is how a Windows CI run sat
+/// until the ten-minute test timeout. Each attempt here is bounded in real time
+/// and the test pumps between attempts, so the queue drains and a genuine
+/// failure is reported in seconds instead of minutes.
+Future<T> settledIo<T>(
+  WidgetTester tester,
+  Future<T> Function() action, {
+  Duration perAttempt = const Duration(milliseconds: 500),
+  int attempts = 40,
+  String label = 'value',
+}) async {
+  Object? lastError;
+  for (var attempt = 0; attempt < attempts; attempt++) {
+    T? result;
+    await tester.runAsync(() async {
+      try {
+        result = await action().timeout(perAttempt);
+      } catch (error) {
+        lastError = error;
+      }
+    });
+    if (result != null) return result as T;
+    await tester.pump(Duration(milliseconds: 25));
+  }
+  fail(
+    'Could not read $label within ${attempts * perAttempt.inMilliseconds}ms: $lastError',
+  );
+}

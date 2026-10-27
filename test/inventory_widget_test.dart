@@ -153,8 +153,12 @@ void main() {
       await tester.ensureVisible(sell);
       await tester.tap(sell);
       await settleIo(tester);
-      final snapshot = await tester.runAsync(repo.load);
-      expect(snapshot!.products.single.stock, 0);
+      final snapshot = await settledIo(
+        tester,
+        repo.load,
+        label: 'the catalogue',
+      );
+      expect(snapshot.products.single.stock, 0);
       expect(snapshot.products.single.sold, 1);
       final sellButton = find.byWidgetPredicate(
         (widget) =>
