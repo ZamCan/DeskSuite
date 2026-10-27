@@ -12,6 +12,10 @@ DRAFT, APPROVED, PAID, RECEIVED, CONFIDENTIAL, COPY and VOID are available, with
 
 The user draws on a signature surface. The drawing is exported to a transparent PNG and inserted into the design. The user can move, resize, duplicate or delete it like other image layers. This is a **visual signature image**, not a cryptographic digital signature, identity verification or tamper-evident PDF signature.
 
+## Image resize and compression
+
+The workspace provides a local image tool for PNG/JPEG/WebP input that decodes and validates the image, resizes to requested pixel dimensions (or fits within a target box while preserving aspect ratio), then encodes PNG or JPEG. JPEG quality is adjustable; transparent pixels are composited over white for JPEG. Work runs in a background isolate. Inputs are bounded to 20 megapixels, outputs to 16 megapixels and 8192 pixels per side. The original is preserved and output is saved as a new file. This is not yet a full crop/filter/photo-editing studio or a general batch-processing pipeline.
+
 ## External file handoff
 
 The workspace includes an **Open with an app** action for PDF, Word, Excel, PowerPoint, OpenDocument, RTF, text, HTML and common image files up to 50 MB. Android receives the selected bytes in a bounded flow, writes them only to an app cache directory, and opens a chooser using a scoped FileProvider URI. The source file is not overwritten. A compatible installed application is required. This is an external handoff, not in-app Office/PDF editing.
