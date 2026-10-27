@@ -36,7 +36,7 @@ void main() {
       () => Future<void>.delayed(const Duration(milliseconds: 100)),
     );
     await tester.pump();
-    expect(find.text('DeskSuite'), findsWidgets);
+    expect(find.text('Workspace'), findsWidgets);
     expect(tester.takeException(), isNull);
     await tester.runAsync(() => dir.delete(recursive: true));
   });
