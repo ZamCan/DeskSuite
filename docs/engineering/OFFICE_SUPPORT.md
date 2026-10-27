@@ -82,7 +82,7 @@ These are covered by tests, including a 4100-part archive.
 
 ## Tests
 
-`test/office_engine_test.dart` (28 tests) builds **genuine** DOCX, XLSX, PPTX,
+`test/office_engine_test.dart` (29 tests) builds **genuine** DOCX, XLSX, PPTX,
 ODT and ODS packages in memory, then asserts:
 
 - container detection ignores misleading extensions;
