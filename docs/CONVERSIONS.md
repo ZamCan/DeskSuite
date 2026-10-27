@@ -15,8 +15,7 @@ The in-app **Conversion routes** catalogue (`lib/workspace/conversion_catalog.da
 
 ## Explicitly unavailable
 
-- Existing PDF → image, merge, split, reorder, edit, read or compressed PDF.
-- Existing PDF → image, merge, split, reorder, edit, read or compressed PDF. The scanner reorders **its own image pages**, not imported PDF pages.
+- Scanner page reordering applies to its own image draft. Existing PDFs are opened separately in PDF Studio using the pinned `dart_pdf_editor` engine; supported page and annotation operations are saved as a separate copy. Real-world PDF compatibility, complex/protected documents, performance and native file-provider behavior still require validation.
 - DOCX/XLSX/PPTX **layout-faithful** conversion. The built-in engine preserves
   content, not layout; pixel-accurate rendering requires an installed LibreOffice.
 - Writing DOCX/XLSX/PPTX from the converter (only ODT/ODS/PDF/TXT/CSV are written).
