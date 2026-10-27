@@ -21,6 +21,17 @@ void main() {
     expect(svg, contains('fill="#fbf8f1"'));
     expect(svg, contains('fill="#ed9a7a"'));
     expect(svg, contains('viewBox="0 0 512 512"'));
+
+    final pngData = await rootBundle.load('assets/brand/desksuite-mark.png');
+    final pngBytes = pngData.buffer.asUint8List(
+      pngData.offsetInBytes,
+      pngData.lengthInBytes,
+    );
+    final mark = img.decodePng(pngBytes);
+    expect(mark, isNotNull, reason: 'The transparent brand PNG must decode.');
+    expect(mark!.width, greaterThanOrEqualTo(512));
+    expect(mark.height, mark.width);
+    expect(mark.getPixel(0, 0).a, 0, reason: 'The master mark stays transparent.');
   });
 
   test(
