@@ -2,48 +2,47 @@
 
 **Create. Design. Print. Manage.**
 
-DeskSuite is an Android-first, offline-first Flutter application for editable graphic designs, local photo work, notes, print preparation, and a small stationery catalogue. Its Dart logic is shared with future Windows and Linux builds. This is a usable foundation—not a finished Canva/Office replacement, POS, or production release.
+DeskSuite is an Android-first, local-first Flutter workspace by ZamCan (Mussa Fikiri Ngwegelo). This repository is an actively developed foundation, **not a production-ready office suite**. The current document and image workflows have host-test evidence; native Android capture, storage, printing, signing and device behavior still need verification.
 
-## What works in this integration
+## What you can do in this source tree
 
-- **Creative Studio:** create a blank or poster-template canvas in physical dimensions; add and edit text, rectangles, ellipses and local images; move, resize, rotate, arrange, align, duplicate and delete; undo/redo; autosave/reopen; export an editable `.dsdesign`, PNG, or one-page PDF. Print through the system service. Limits and raster PDF caveats are in [file formats](docs/FILE_FORMATS.md) and [printing](docs/PRINTING.md).
-- **Existing designs:** the earlier `.dsproject` editor remains available. Earlier app-private files in the **same installation** are listed in Creative Studio and can be imported as new editable copies without overwriting the originals. The earlier editor uses **manual Save** and asks before discarding changes.
-- **Photos:** import a local PNG/JPEG/WebP, rotate, flip, centre-square crop, resize and export PNG/JPEG. Create a repeated-photo sheet with configurable physical dimensions, preview, PDF export and system-print handoff. This does not certify ID/passport compliance.
-- **Notes:** local plain-text autosave, write-failure feedback/retry and TXT export.
-- **Business starter:** local products, opening stock, record-one-unit counter, exact two-decimal amounts and JSON catalogue export. No payments, receipts, refunds, accounting or multi-device transactions.
-- **Print Studio:** generates an A4 check PDF and requests an OS print dialog. Printer services and physical output have not been verified on a device.
+- **Scan & assemble:** import PNG/JPEG/WebP or request an Android camera capture; manually adjust four page corners with true projective correction, choose known paper proportions, rotate and apply grayscale or fixed-threshold black-and-white. Reorder up to eight pages, reopen a local draft, and export ordered A4/US Letter **image-only PDFs** or individual PNG pages. Camera and file providers are not yet device-tested.
+- **Photo Studio:** first-frame PNG/JPEG/WebP input; rotate, flip, centre-square crop, fit-to-bounds or exact independent pixel resize; compare, undo/reset; review actual dimensions and byte size before PNG/JPEG export. JPEG flattens transparency to white. Optional repeated-photo sheet PDF/print handoff does not certify ID requirements.
+- **Creative Studio:** editable physical-size designs with text, shapes and images; arrange, edit, undo/redo, autosave/reopen, import/export `.dsdesign`, export PNG or a flattened one-page PDF. Earlier `.dsproject` files can be imported as new copies without automatically changing the source.
+- **Notes, Print and Business starter:** local plain-text notes and TXT export; A4 print-check PDF and OS print handoff; local products, opening stock, unit counter and JSON catalogue export. No accounting, payment or financial compliance claim.
+- **Getting started and Conversion routes:** a skippable introduction, revisitable fictional sample tutorials that call the real scan/photo/design engines, and an explicit catalogue of supported and unavailable routes. Bundled forms and names are fictional; the practice photo is synthetic.
 
-Core editing and processing require no account, paid API, analytics or network. App-private files are not encrypted by DeskSuite. Export editable projects, notes and the catalogue separately; **complete app backup/restore is not yet implemented**. Uninstalling or clearing data may remove private files.
+Processing is local, without an account, paid API, analytics or cloud requirement. App-private data is **not encrypted by DeskSuite**; uninstalling or clearing data can remove it. Export and independently verify important copies. There is no complete backup/restore.
 
-## Try the creative workflow
+## Important limits
 
-1. Open **Creative Studio → New design**, choose a name and page size.
-2. Add text, a shape or an image; select it and use **Edit object**, layers and undo/redo. Changes autosave; save failures expose Retry and a project-copy recovery option.
-3. Use **Export design** to save an editable copy, PNG or PDF, or open the system print dialog. Reopen projects from Creative Studio, Files & Projects or Workspace.
-4. To preserve important work, export `.dsdesign` copies to a user-controlled location and verify they can be imported before removing an installation.
+**No OCR, extracted text from arbitrary documents, searchable PDF, PDF reader/page editing, Office-format conversion, full document word processor, cloud sync or automatic edge detection is implemented.** Existing PDFs cannot be imported into the scanner. Native picker/camera/print access, process-death recovery, device accessibility, release signing and upgrades remain unverified. There is no claim of Acrobat, CamScanner, LibreOffice or Office parity.
+
+Images are bounded to 8 MiB input, 12 megapixels and 8192 pixels per side; scan output has additional page, byte and pixel limits. External file providers can allow a user to overwrite an existing file: choose a **new destination**. See [user guide](docs/USER_GUIDE.md), [conversion registry](docs/CONVERSIONS.md), [file formats](docs/FILE_FORMATS.md) and [privacy](docs/PRIVACY_AND_SECURITY.md).
+
+## Try the real workflows
+
+1. Open **Getting started** from navigation; choose the two-page report, perspective letter or synthetic photo exercise. The examples use the same processors as user files.
+2. In **Scan & assemble**, add images, select known page proportions if appropriate, use **Corners & correct**, reorder, then **Prepare PDF**. Save a copy and verify it in an external reader. This PDF is not searchable.
+3. In **Photo Studio**, choose an image and **Resize**. Keep aspect ratio to fit, or turn it off to force exact width and height. Export PNG/JPG, review actual encoded size, then save a copy.
+4. Open **Conversion routes** for supported operations and explicit unsupported routes.
+
+More detailed steps and recovery guidance: [user guide](docs/USER_GUIDE.md). Engineering evidence: [baseline audit](docs/engineering/BASELINE_AUDIT.md), [engine evaluation](docs/engineering/ENGINE_EVALUATION.md), [validation record](docs/engineering/VALIDATION.md), [architecture](docs/ARCHITECTURE.md), [roadmap](docs/ROADMAP.md) and [changelog](CHANGELOG.md).
 
 ## Develop and build locally
 
-Use the existing Flutter, JDK and Android SDK on your machine; this integration was host-tested with Flutter **3.47.8** and Dart **3.13.7**. Android scaffold is checked in, so do **not** regenerate it for a normal Android build.
+Use your **existing** Flutter, JDK and Android SDK installations. Recorded host checks used Flutter 3.47.8 / Dart 3.13.7. Android's checked-in Gradle 9.3.1 needs a compatible JDK and Android SDK; no Android toolchain was installed for this work. Check out the branch or import the supplied Git bundle if it has not been pushed, then:
 
 ```sh
-git clone https://github.com/ZamCan/DeskSuite.git
-cd DeskSuite
-# Check out the integration branch if it has not yet been merged:
-git checkout agent/unified-studios
-flutter pub get
+flutter pub get                     # use --offline when already cached
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze --no-pub
-flutter test --no-pub --concurrency=1 --reporter expanded
-bash tools/build-android.sh debug
+flutter test --no-pub --concurrency=1 --reporter expanded --timeout 120s
+bash tools/build-android.sh debug    # only with your existing Android toolchain
 ```
 
-The retained main workspace keeps its light/dark setting; the newly restored Photo, Notes, Print and Business pages currently use light surfaces for readability.
+A debug APK is for local testing only. For release use a stable private key and local `android/key.properties`, then verify the actual APK/AAB signatures, app ID and behavior on devices. See [development and signing](docs/DEVELOPMENT.md) and [CI](docs/CI.md). **No current signed artifact or installation has been verified.**
 
-The debug script produces `build/app/outputs/flutter-apk/app-debug.apk` **only after a successful local build**; it is debug-signed and not a production release. For a release, provision a private signing key outside Git and use `bash tools/build-android.sh release`. See [development](docs/DEVELOPMENT.md) for APK/AAB, signing, Termux, desktop, prerequisites and verification. No Android package was built for this integration in the current execution.
+The maintained Android application ID remains `com.zamcan.desksuite`. Older prototype builds with ID `com.zamcan.desksuite.desksuite` are separate installations with separate private data; different signing keys also prevent in-place updates. Export and verify backups before uninstalling or migrating.
 
-**Upgrade/data warning:** the current main-line Android ID remains `com.zamcan.desksuite`, matching the earlier creative-branch APK. Older prototype builds generated by the pre-merge `main` command used `com.zamcan.desksuite.desksuite`; these are separate apps with separate private data. Different signing keys also prevent in-place updates. Import discovery only works within the same Android app ID. Export and verify backups where the old app permits; some prototypes lack editable-project export. Do not uninstall assuming data will migrate.
-
-## Status and documentation
-
-Read [architecture](docs/ARCHITECTURE.md), [development](docs/DEVELOPMENT.md), [formats](docs/FILE_FORMATS.md), [printing](docs/PRINTING.md), [privacy/security](docs/PRIVACY_AND_SECURITY.md), [integration](docs/INTEGRATION.md), [CI](docs/CI.md), [roadmap and release gates](docs/ROADMAP.md), and the [changelog](CHANGELOG.md). Licences: [Apache-2.0](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md).
+Repository code: [Apache-2.0](LICENSE). Dependency and sample attribution: [third-party notices](THIRD_PARTY_NOTICES.md). Android native/transitive binary licences must still be reviewed for the actual release.

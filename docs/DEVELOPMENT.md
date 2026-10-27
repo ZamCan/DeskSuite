@@ -2,16 +2,16 @@
 
 ## Prerequisites
 
-Use your existing compatible Flutter SDK, Git, and platform toolchain. Host checks here used Flutter 3.47.8 / Dart 3.13.7. The lockfile currently requires Dart >=3.13 and Flutter >=3.41; `pubspec.yaml` declares broader minimums, which do **not** guarantee an older Flutter resolves the current lockfile. Android's checked-in Gradle 9.3.1 needs a compatible JDK (JDK 21 is a sensible choice) and an installed Android SDK. Validate with `flutter doctor -v`. Termux/Debian compatibility depends on your actual SDK, JVM and native binaries; diagnose failures locally rather than downloading duplicate toolchains blindly.
+Use your existing compatible Flutter SDK, Git, and platform toolchain. Host checks here used Flutter 3.47.8 / Dart 3.13.7. `pubspec.yaml` declares Dart >=3.13 and Flutter >=3.47; the lockfile must also resolve. Android's checked-in Gradle 9.3.1 needs a compatible JDK (JDK 21 is a sensible choice) and an installed Android SDK. Validate with `flutter doctor -v`. Termux/Debian compatibility depends on your actual SDK, JVM and native binaries; diagnose failures locally rather than downloading duplicate toolchains blindly.
 
 ```sh
 flutter pub get  # may need network the first time; use --offline if dependencies are cached
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze --no-pub
-flutter test --no-pub --concurrency=1 --reporter expanded --timeout 60s
+flutter test --no-pub --concurrency=1 --reporter expanded --timeout 120s
 ```
 
-Sequential tests avoid high peak memory on smaller systems. The most recent integrated host run is recorded in `CHANGELOG.md`; native plugin calls in host tests use fakes. No physical device or integrated APK/AAB was tested in that run.
+Sequential tests avoid high peak memory on smaller systems. The exact prior baseline and targeted runs are recorded in [engineering/VALIDATION.md](engineering/VALIDATION.md); native plugin calls in host tests use fakes. The complete suite after all document changes, physical devices and the current APK/AAB remain unverified.
 
 ## Android: debug, release and signing
 
