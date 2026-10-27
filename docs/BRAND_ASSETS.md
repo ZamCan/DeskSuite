@@ -22,4 +22,4 @@
 
 Run `python3 tools/generate_brand_assets.py` only in a development environment with Pillow and ImageMagick 7 installed. It regenerates Android vectors, density PNGs, splash XML and the transparent PNG from the SVG master. Review the generated diff before committing it.
 
-The `sample_assets_test.dart` suite checks that the canonical SVG is bundled and retains its identifying geometry and palette. Android CI validates resource compilation; a physical launcher/splash appearance check is still required on at least one Android 8+ device and one Android 13+ themed-icon device.
+The `tools/validate-brand-assets.py` script checks PNG headers/dimensions, SVG palette, Android density icons, adaptive/monochrome resources and splash references; Android and Linux CI run it. The `sample_assets_test.dart` suite checks that the canonical SVG and desktop icon are bundled and retain their identifying geometry and palette. Android CI validates resource compilation; a physical launcher/splash appearance check is still required on at least one Android 8+ device and one Android 13+ themed-icon device.
