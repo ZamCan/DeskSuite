@@ -27,7 +27,7 @@ Images are bounded to 8 MiB input, 12 megapixels and 8192 pixels per side; scan 
 3. In **Photo Studio**, choose an image and **Resize**. Keep aspect ratio to fit, or turn it off to force exact width and height. Export PNG/JPG, review actual encoded size, then save a copy.
 4. Open **Conversion routes** for supported operations and explicit unsupported routes.
 
-More detailed steps and recovery guidance: [user guide](docs/USER_GUIDE.md). Engineering evidence: [baseline audit](docs/engineering/BASELINE_AUDIT.md), [engine evaluation](docs/engineering/ENGINE_EVALUATION.md), [validation record](docs/engineering/VALIDATION.md), [architecture](docs/ARCHITECTURE.md), [roadmap](docs/ROADMAP.md) and [changelog](CHANGELOG.md).
+More detailed steps and recovery guidance: [user guide](docs/USER_GUIDE.md). Product-owner requirements: [master engineering directive](docs/engineering/MASTER_ENGINEERING_DIRECTIVE.md) and [additional instructions](docs/engineering/OWNER_INSTRUCTIONS.md). Engineering evidence: [current status](docs/engineering/CURRENT_STATUS.md), [baseline audit](docs/engineering/BASELINE_AUDIT.md), [engine evaluation](docs/engineering/ENGINE_EVALUATION.md), [validation record](docs/engineering/VALIDATION.md), [architecture](docs/ARCHITECTURE.md), [roadmap](docs/ROADMAP.md) and [changelog](CHANGELOG.md).
 
 ## Develop and build locally
 
