@@ -14,7 +14,7 @@
 ## Implemented, not fully validated
 
 - [ ] Local uneven-lighting / adaptive B&W document previews and selective photo-speck reduction, with realistic synthetic examples. Pixel cores passed a DDC/Node smoke check; Flutter codec, widget, integration and Android tests are still pending.
-- [ ] Native Android camera capture/recovery, file picking, saving, lifecycle/process death, actual printer discovery/output, adaptive icons/splash and accessibility on representative devices.
+- [ ] Native Android camera capture/recovery, file picking, saving, lifecycle/process death, actual printer discovery/output, adaptive/monochrome icons, splash and accessibility on representative devices.
 - [ ] Checked-in Android scaffold and external release-signing configuration: no integrated APK/AAB or device upgrade was built/tested in this execution.
 - [ ] Windows/Linux/iOS plugins, generated desktop runners, packaging and OS-specific paths.
 - [ ] System print scaling, colour, real margins and ID-photo requirements.
@@ -30,14 +30,15 @@
   [office support](engineering/OFFICE_SUPPORT.md).
 - PDF output now embeds a Unicode font so accents, dashes and smart quotes are
   not dropped.
-- `flutter test` 152 passing; `flutter analyze` clean.
+- Existing-PDF Studio is connected to workspace navigation and the conversion catalogue. Its selected editor dependency and separate-copy export have widget tests; broad real-file/device compatibility remains unverified.
+- Latest consolidated CI exposed one scan recovery → camera widget failure (170 tests passed before the failure). A follow-up guard fix is committed; re-run the full matrix before treating the branch as validated.
 
 ## Not implemented / next slices
 
 - [ ] Full suite backup, restore, migrations and cross-ID import for notes/catalogue, with crash and storage-full tests.
 - [ ] Transactional multi-instance database; complete POS, payment/refunds, sale lines, receipts, expense/profit reports and audit history.
-- [ ] Offline OCR with tested language data, editable extracted text and a verified searchable PDF text layer; automatic page detection.
-- [ ] Existing-PDF reader, search and page tools, PDF compression and accessible preview.
+- [ ] Automatic document edge detection with manual fallback; OCR recognition quality across real documents/languages.
+- [ ] Expand existing-PDF reader/editor validation, search/page operations, compression and accessible preview.
 - [ ] Rich document editor, spreadsheet/formulas and DOCX/XLSX interoperability, based on a tested and licensed real engine.
 - [ ] Advanced image editing, arbitrary crop/adjustments and optional local segmentation; no model downloads without consent.
 - [ ] Guides/snapping, professional vector/SVG tools, colour management, bleed/crop marks, imposition and printer calibration.
