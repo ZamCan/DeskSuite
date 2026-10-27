@@ -11,7 +11,7 @@ The in-app **Conversion routes** catalogue (`lib/workspace/conversion_catalog.da
 | DeskSuite Notes → UTF-8 TXT | Notes editor; `lib/legacy_studios.dart` | Exports the local note, not arbitrary document extraction or rich formatting. | `test/notes_storage_test.dart` covers storage/failure behavior; file export is a native boundary needing device verification. |
 
 | Image / photo → reviewed text, TXT, DOCX or searchable PDF | Tesseract 5.5.1 via Tesseract4Android (offline, Apache-2.0) + `lib/ocr/`; Text extraction | On-device recognition with English and Kiswahili models. Words carry confidence; low-confidence words are flagged. The searchable PDF keeps the page image and adds an invisible per-word text layer. Tables, multi-column layouts and handwriting are **not** reconstructed. Recognition of 24 MP / 4000 px inputs is refused. | `ocr_engine_test`, `ocr_exports_test`, `searchable_pdf_test` (inflates the PDF content stream and asserts each recognized word is present), `ocr_image_prep_test` (EXIF orientation, downsampling), `ocr_page_test`. Native recognition quality on hardware is unverified. |
-| Office document → edited ODT/ODS/PDF/TXT/CSV | `lib/office/office_content_editor_page.dart` + `office_reader.dart` and writers | The content editor can change readable paragraphs and table cells, then export a new content-level copy. It does not modify the source and does not preserve full Office layout, images, formulas, charts or macros. The converter also supports read-only content extraction and conversion. Legacy `.doc/.xls/.ppt` need an installed LibreOffice. See [office support](engineering/OFFICE_SUPPORT.md). | `office_engine_test`, `office_convert_page_test`, `office_content_editor_page_test`. Real-world Office fidelity and native device behavior remain unverified. |
+| Office document → edited DOCX/XLSX/ODT/ODS/PDF/TXT/CSV | `lib/office/office_content_editor_page.dart` + `office_reader.dart` and writers | The content editor can change readable paragraphs and table cells, then write a new genuine DOCX/XLSX/ODT/ODS/PDF/TXT/CSV content-level copy. It does not modify the source and does not preserve full Office layout, images, formulas, charts or macros. The converter also supports read-only content extraction and conversion. Legacy `.doc/.xls/.ppt` need an installed LibreOffice. See [office support](engineering/OFFICE_SUPPORT.md). | `office_engine_test`, `office_convert_page_test`, `office_content_editor_page_test`. Real-world Office fidelity and native device behavior remain unverified. |
 
 ## Explicitly unavailable
 
@@ -19,7 +19,7 @@ The in-app **Conversion routes** catalogue (`lib/workspace/conversion_catalog.da
 - Existing PDF → image, merge, split, reorder, edit, read or compressed PDF. The scanner reorders **its own image pages**, not imported PDF pages.
 - DOCX/XLSX/PPTX **layout-faithful** conversion. The built-in engine preserves
   content, not layout; pixel-accurate rendering requires an installed LibreOffice.
-- Writing DOCX/XLSX/PPTX from the converter (only ODT/ODS/PDF/TXT/CSV are written).
+- Layout-faithful DOCX/XLSX/PPTX conversion. The converter writes content-level outputs; the separate content editor can create DOCX/XLSX/ODT/ODS/PDF/TXT/CSV copies but does not preserve full layout.
 - PDF-to-Office conversion, macros, form fields and digital signatures.
 - Structural PDF optimization, target-file-size guarantees, batch conversion and cloud conversions.
 - Image percentage, DPI/physical-size resampling, advanced compression presets or metadata controls.
