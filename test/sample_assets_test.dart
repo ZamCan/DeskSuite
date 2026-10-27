@@ -15,6 +15,14 @@ void main() {
     return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
   }
 
+  test('bundled DeskSuite brand mark matches the product palette', () async {
+    final svg = await rootBundle.loadString('assets/brand/desksuite-mark.svg');
+    expect(svg, contains('aria-label="DeskSuite interlocking D and S mark"'));
+    expect(svg, contains('fill="#fbf8f1"'));
+    expect(svg, contains('fill="#ed9a7a"'));
+    expect(svg, contains('viewBox="0 0 512 512"'));
+  });
+
   test(
     'all bundled fictional samples decode and editable example imports',
     () async {
