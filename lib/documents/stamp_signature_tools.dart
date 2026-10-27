@@ -354,6 +354,12 @@ class _SignaturePainter extends CustomPainter {
   final List<List<Offset>> strokes;
   final List<Offset>? current;
 
+  Iterable<List<Offset>> get _visibleStrokes sync* {
+    yield* strokes;
+    final active = current;
+    if (active != null) yield active;
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
@@ -362,10 +368,7 @@ class _SignaturePainter extends CustomPainter {
       ..strokeWidth = 2.6
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
-    for (final stroke in <List<Offset>>[
-      ...strokes,
-      if (current case final currentStroke?) currentStroke,
-    ]) {
+    for (final stroke in _visibleStrokes) {
       if (stroke.isEmpty) continue;
       final path = Path()..moveTo(stroke.first.dx, stroke.first.dy);
       for (final point in stroke.skip(1)) {
