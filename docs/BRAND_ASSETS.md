@@ -4,6 +4,7 @@
 
 - `assets/brand/desksuite-mark.svg` is the master vector mark. Keep the open-page crease and interlocking D/S geometry intact.
 - `assets/brand/desksuite-mark.png` is the transparent raster export for previews and documents.
+- `assets/brand/desksuite-app-icon.svg` is the desktop/AppImage icon variant with the same mark over the warm ink background.
 - `lib/app/theme.dart` draws the same mark natively with `BrandMark`; this avoids adding a runtime SVG renderer.
 - `android/app/src/main/res/drawable/ic_launcher_foreground.xml` and `ic_launcher_monochrome.xml` are Android vector equivalents. The monochrome layer is for themed icons on Android 13+.
 - `mipmap-anydpi-v26/ic_launcher.xml` defines the adaptive icon; legacy density PNGs remain for older launchers. `drawable/launch_background.xml` and the Android 12+ launch theme use the same warm ink background.
