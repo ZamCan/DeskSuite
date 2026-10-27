@@ -180,11 +180,41 @@ class _PhotoStudioScreenState extends State<PhotoStudioScreen> {
         const SizedBox(height: 16),
         Container(
           constraints: const BoxConstraints(minHeight: 210, maxHeight: 430),
-          decoration: BoxDecoration(color: scheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(18), border: Border.all(color: scheme.outlineVariant)),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: scheme.outlineVariant),
+          ),
           alignment: Alignment.center,
           child: _working == null
-              ? const Padding(padding: EdgeInsets.all(32), child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.image_search_outlined, size: 42), SizedBox(height: 12), Text('Open a photo to begin')]))
-              : ClipRRect(borderRadius: BorderRadius.circular(18), child: InteractiveViewer(minScale: .5, maxScale: 5, child: Image.memory(_working!, fit: BoxFit.contain, gaplessPlayback: true, errorBuilder: (_, _, _) => const Padding(padding: EdgeInsets.all(24), child: Text('Preview could not be decoded.')))),
+              ? const Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.image_search_outlined, size: 42),
+                      SizedBox(height: 12),
+                      Text('Open a photo to begin'),
+                    ],
+                  ),
+                )
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: InteractiveViewer(
+                    minScale: .5,
+                    maxScale: 5,
+                    child: Image.memory(
+                      _working!,
+                      fit: BoxFit.contain,
+                      gaplessPlayback: true,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text('Preview could not be decoded.'),
+                      ),
+                    ),
+                  ),
+                ),
         ),
         if (info != null) ...[
           const SizedBox(height: 14),
