@@ -1,11 +1,19 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 import '../app/theme.dart';
 import '../design/design_document.dart';
 import '../design/editor_screen.dart';
+import '../document_scan/camera_gateway.dart';
+import '../document_scan/scan_studio_page.dart';
 import '../legacy_studios.dart' as legacy;
+import 'conversion_catalog.dart';
+import 'conversion_catalog_page.dart';
 import 'creative_studio_page.dart';
 import 'file_gateway.dart';
+import 'getting_started_page.dart';
 import 'new_design_dialog.dart';
 import 'project_repository.dart';
 import 'workspace_widgets.dart';
@@ -17,11 +25,15 @@ class WorkspaceScreen extends StatefulWidget {
     required this.files,
     required this.dark,
     required this.onDarkChanged,
+    this.camera,
+    this.cameraRecovery,
   });
   final ProjectRepository repository;
   final FileGateway files;
   final bool dark;
   final Future<void> Function(bool) onDarkChanged;
+  final CameraGateway? camera;
+  final Future<CameraRecovery>? cameraRecovery;
   @override
   State<WorkspaceScreen> createState() => _WorkspaceScreenState();
 }
@@ -33,11 +45,69 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   String? _listError;
   bool _loading = true;
   int _refreshVersion = 0;
+  bool _showWelcome = false;
+  Uint8List? _recoveredCapture;
 
   @override
   void initState() {
     super.initState();
     _refresh();
+    _loadWelcome();
+    widget.cameraRecovery?.then((result) {
+      if (!mounted) return;
+      if (result.bytes != null) {
+        setState(() {
+          _recoveredCapture = result.bytes;
+          _section = WorkspaceSection.scans;
+          _visited.add(WorkspaceSection.scans);
+        });
+      } else if (result.failed) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _message(
+            'The interrupted camera result could not be recovered. Check your camera app for a copy.',
+          );
+        });
+      }
+    });
+  }
+
+  Future<void> _loadWelcome() async {
+    try {
+      final seen = await widget.repository.readWelcomeSeen();
+      if (mounted) setState(() => _showWelcome = !seen);
+    } catch (_) {
+      // The workspace still opens if the optional preference cannot be read.
+    }
+  }
+
+  Future<void> _dismissWelcome({bool openGuide = false}) async {
+    setState(() => _showWelcome = false);
+    if (openGuide) _navigate(WorkspaceSection.guide);
+    try {
+      await widget.repository.writeWelcomeSeen();
+    } catch (_) {
+      _message(
+        'Could not save the welcome preference; it may appear again next time.',
+      );
+    }
+  }
+
+  Future<void> _openEditableExample() async {
+    try {
+      final data = await rootBundle.load(
+        'assets/samples/editable-example.dsdesign',
+      );
+      final bytes = data.buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      );
+      final document = await widget.repository.import(bytes);
+      if (mounted) await _openDocument(document);
+    } catch (_) {
+      _message(
+        'Could not open the example design. Try again or check local storage.',
+      );
+    }
   }
 
   Future<void> _refresh() async {
@@ -248,6 +318,39 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                             WorkspaceSection.business,
                             () => legacy.BusinessPage(files: widget.files),
                           ),
+                          _visited.contains(WorkspaceSection.scans)
+                              ? ScanStudioPage(
+                                  files: widget.files,
+                                  camera: widget.camera,
+                                  recoveredCapture: _recoveredCapture,
+                                )
+                              : const SizedBox.shrink(),
+                          _visited.contains(WorkspaceSection.guide)
+                              ? GettingStartedPage(
+                                  onScan: () =>
+                                      _navigate(WorkspaceSection.scans),
+                                  onPhoto: () =>
+                                      _navigate(WorkspaceSection.photos),
+                                  onEditableExample: _openEditableExample,
+                                )
+                              : const SizedBox.shrink(),
+                          _visited.contains(WorkspaceSection.conversions)
+                              ? ConversionCatalogPage(
+                                  onOpen: (target) =>
+                                      _navigate(switch (target) {
+                                        ConversionTarget.photos =>
+                                          WorkspaceSection.photos,
+                                        ConversionTarget.scans =>
+                                          WorkspaceSection.scans,
+                                        ConversionTarget.projects =>
+                                          WorkspaceSection.projects,
+                                        ConversionTarget.design =>
+                                          WorkspaceSection.design,
+                                        ConversionTarget.notes =>
+                                          WorkspaceSection.notes,
+                                      }),
+                                )
+                              : const SizedBox.shrink(),
                         ],
                       ),
                     ),
@@ -287,6 +390,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 WorkspaceSection.notes => 'Office Notes',
                 WorkspaceSection.printing => 'Print Studio',
                 WorkspaceSection.business => 'Business & POS',
+                WorkspaceSection.scans => 'Scan & assemble',
+                WorkspaceSection.guide => 'Getting started',
+                WorkspaceSection.conversions => 'Conversion routes',
               },
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -316,6 +422,46 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         WorkspaceWelcome(onCreate: () => _newDesign(), onImport: _import),
+        if (_showWelcome) ...[
+          const SizedBox(height: 16),
+          Card(
+            key: const Key('welcome-introduction'),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Welcome to DeskSuite',
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Create designs, prepare photos and assemble image PDFs locally. Explore examples or skip this introduction; no account is needed.',
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton(
+                        key: const Key('welcome-guide'),
+                        onPressed: () => _dismissWelcome(openGuide: true),
+                        child: const Text('Explore examples'),
+                      ),
+                      TextButton(
+                        key: const Key('welcome-skip'),
+                        onPressed: _dismissWelcome,
+                        child: const Text('Skip for now'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 34),
         Row(
           children: [

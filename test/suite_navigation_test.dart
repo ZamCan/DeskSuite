@@ -39,6 +39,15 @@ Future<void> navigate(WidgetTester tester, String label) async {
     of: find.byType(Drawer),
     matching: find.text(label),
   );
+  final drawerScroll = find
+      .descendant(of: find.byType(Drawer), matching: find.byType(Scrollable))
+      .first;
+  // The expanded navigation can extend beyond a compact phone's viewport.
+  await tester.drag(drawerScroll, const Offset(0, 1200));
+  await tester.pumpAndSettle();
+  if (item.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(item, 250, scrollable: drawerScroll);
+  }
   await tester.ensureVisible(item);
   await tester.pumpAndSettle();
   await tester.tap(item);
@@ -150,6 +159,14 @@ void main() {
         expect(find.text(label), findsWidgets);
         expect(tester.takeException(), isNull, reason: label);
       }
+      await navigate(tester, 'Conversion routes');
+      final photoRoute = find.byKey(const Key('conversion-photos'));
+      await tester.ensureVisible(photoRoute);
+      await tester.pumpAndSettle();
+      await tester.tap(photoRoute);
+      await settleIo(tester);
+      expect(find.text('Photo Studio'), findsWidgets);
+      expect(find.byKey(const Key('photo-choose')), findsOneWidget);
       await navigate(tester, 'Files & Projects');
       for (
         var i = 0;

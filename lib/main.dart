@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'app/theme.dart';
+import 'document_scan/camera_gateway.dart';
 import 'core/suite_paths.dart';
 
 import 'workspace/file_gateway.dart';
@@ -16,20 +19,32 @@ void main() {
 }
 
 class DeskSuiteApp extends StatefulWidget {
-  const DeskSuiteApp({super.key, this.repository, this.fileGateway});
+  const DeskSuiteApp({
+    super.key,
+    this.repository,
+    this.fileGateway,
+    this.cameraGateway,
+  });
   final ProjectRepository? repository;
   final FileGateway? fileGateway;
+  final CameraGateway? cameraGateway;
   @override
   State<DeskSuiteApp> createState() => _DeskSuiteAppState();
 }
 
 class _DeskSuiteAppState extends State<DeskSuiteApp> {
   late Future<ProjectRepository> _repository;
+  late final CameraGateway? _camera;
+  late final Future<CameraRecovery> _cameraRecovery;
   bool _dark = false;
 
   @override
   void initState() {
     super.initState();
+    _camera =
+        widget.cameraGateway ??
+        (Platform.isAndroid ? AndroidCameraGateway() : null);
+    _cameraRecovery = recoverCameraCapture(_camera);
     _repository = _initialize();
   }
 
@@ -93,6 +108,8 @@ class _DeskSuiteAppState extends State<DeskSuiteApp> {
           files: widget.fileGateway ?? NativeFileGateway(),
           dark: _dark,
           onDarkChanged: (value) => _setDark(repo, value),
+          camera: _camera,
+          cameraRecovery: _cameraRecovery,
         );
       },
     ),

@@ -12,6 +12,9 @@ enum WorkspaceSection {
   notes,
   printing,
   business,
+  scans,
+  guide,
+  conversions,
 }
 
 class WorkspaceSidebar extends StatelessWidget {
@@ -86,9 +89,19 @@ class WorkspaceSidebar extends StatelessWidget {
           _navLabel(context, 'WORKSPACE'),
           item(Icons.grid_view_rounded, 'Home', WorkspaceSection.workspace),
           item(
+            Icons.school_outlined,
+            'Getting started',
+            WorkspaceSection.guide,
+          ),
+          item(
             Icons.folder_open_outlined,
             'Files & Projects',
             WorkspaceSection.projects,
+          ),
+          item(
+            Icons.swap_horiz_rounded,
+            'Conversion routes',
+            WorkspaceSection.conversions,
           ),
           item(Icons.tune_rounded, 'Settings', WorkspaceSection.settings),
           const SizedBox(height: 24),
@@ -99,6 +112,11 @@ class WorkspaceSidebar extends StatelessWidget {
             WorkspaceSection.design,
           ),
           item(Icons.photo_outlined, 'Photo Studio', WorkspaceSection.photos),
+          item(
+            Icons.document_scanner_outlined,
+            'Scan & assemble',
+            WorkspaceSection.scans,
+          ),
           item(
             Icons.edit_note_outlined,
             'Office Notes',

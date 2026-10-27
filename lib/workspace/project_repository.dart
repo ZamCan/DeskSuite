@@ -226,4 +226,28 @@ class ProjectRepository {
       utf8.encode(jsonEncode({'darkMode': enabled})),
     );
   });
+
+  /// Separate versioned preference so onboarding never rewrites theme or
+  /// project data. A damaged preference merely shows the introduction again.
+  Future<bool> readWelcomeSeen() async {
+    await _tail;
+    final file = File('${root.path}${Platform.pathSeparator}welcome.json');
+    await recoverAtomicBackup(file);
+    if (!await file.exists()) return false;
+    try {
+      if (await file.length() > 4096) return false;
+      final value = jsonDecode(await file.readAsString());
+      return value is Map && value['version'] == 1 && value['seen'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> writeWelcomeSeen() => _enqueue(() async {
+    final file = File('${root.path}${Platform.pathSeparator}welcome.json');
+    await replaceFileAtomically(
+      file,
+      utf8.encode(jsonEncode({'version': 1, 'seen': true})),
+    );
+  });
 }
