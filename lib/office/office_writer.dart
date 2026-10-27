@@ -214,7 +214,7 @@ Uint8List writeXlsx(OfficeDocument document) {
   final sheets = <String, List<List<String>>>{};
   final usedNames = <String>{};
   String uniqueName(String raw) {
-    var base = raw.replaceAll(RegExp(r'[\\[\\]:*?/\\\\]'), '_').trim();
+    var base = raw.replaceAll(RegExp(r'[\[\]:*?/\\]'), '_').trim();
     if (base.isEmpty) base = 'Sheet';
     if (base.length > 31) base = base.substring(0, 31);
     var candidate = base;
