@@ -129,6 +129,8 @@ class _PhotoStudioScreenState extends State<PhotoStudioScreen> {
         DeskImageFormat.jpeg => 'jpg',
         DeskImageFormat.bmp => 'bmp',
         DeskImageFormat.gif => 'gif',
+        DeskImageFormat.webp || DeskImageFormat.unknown =>
+          throw StateError('Unsupported output format.'),
       };
       final saved = await widget.files.save(
         name: 'desksuite-photo.$extension',
@@ -138,6 +140,8 @@ class _PhotoStudioScreenState extends State<PhotoStudioScreen> {
           DeskImageFormat.jpeg => 'image/jpeg',
           DeskImageFormat.bmp => 'image/bmp',
           DeskImageFormat.gif => 'image/gif',
+          DeskImageFormat.webp || DeskImageFormat.unknown =>
+            throw StateError('Unsupported output format.'),
         },
       );
       if (saved) _message('Edited image exported. Your original file was not changed.');
