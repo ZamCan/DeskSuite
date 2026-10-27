@@ -1,6 +1,6 @@
 # Integration with concurrent `main` work
 
-On 2026-10-27, after development began from `86aa321`, the remote `main` advanced to `ee04d7d` with a separate Flutter foundation. It contains creative editing, Photo Studio, Notes, system printing, a starter product catalogue and stock decrement, an Android build script, and a desktop/iOS/Android workflow. Those commits remain on `main`; this branch intentionally does **not** overwrite them. This branch is based on the earlier commit and is not a merge of that work.
+On 2026-10-27, after development began from `86aa321`, the remote `main` advanced to `ee04d7d` with a separate Flutter foundation and subsequently to `d0bd941` with picker/CI changes. It contains creative editing, Photo Studio, Notes, system printing, a starter product catalogue and stock decrement, an Android build script, and a desktop/iOS/Android workflow. Those commits remain on `main`; this branch intentionally does **not** overwrite them. This branch is based on the earlier commit and is not a merge of that work.
 
 The current branch is a more fully tested creative-to-export slice, not a drop-in replacement for every prototype feature. Do not merge by choosing this branch's files wholesale: doing so would remove the other branch's available tools, build script and workflow. A safe integration should:
 
