@@ -50,6 +50,16 @@ void main() {
       expect(detected.detail, contains('cannot be read'));
     });
 
+    test('writable flags match real built-in output formats', () {
+      expect(OfficeFormat.docx.isWritable, isTrue);
+      expect(OfficeFormat.xlsx.isWritable, isTrue);
+      expect(OfficeFormat.pptx.isWritable, isFalse);
+      expect(OfficeFormat.odt.isWritable, isTrue);
+      expect(OfficeFormat.ods.isWritable, isTrue);
+      expect(OfficeFormat.pdf.isWritable, isTrue);
+      expect(OfficeFormat.txt.isWritable, isTrue);
+    });
+
     test('rejects empty, random and unsupported packages', () {
       expect(() => detectOfficeFile(Uint8List(0)), throwsFormatException);
       expect(
@@ -60,6 +70,64 @@ void main() {
         () => detectOfficeFile(odfNotAnOfficeDoc()),
         throwsFormatException,
       );
+    });
+  });
+
+  group('OOXML writers', () {
+    test('writes a genuine editable DOCX package and reads it back', () {
+      final document = OfficeDocument(
+        format: OfficeFormat.docx,
+        title: 'Edited invoice',
+        blocks: const [
+          OfficeBlock.paragraph('Edited by DeskSuite', headingLevel: 1),
+          OfficeBlock.paragraph('Bold note', bold: true),
+          OfficeBlock.cells(['Item', 'Qty'], header: true),
+          OfficeBlock.cells(['A4 paper', '2']),
+          OfficeBlock.pageBreak(),
+          OfficeBlock.paragraph('Appendix page'),
+        ],
+      );
+      final bytes = writeDocx(document);
+      expect(detectOfficeFile(bytes).format, OfficeFormat.docx);
+      final reopened = readOfficeDocument(bytes, fileName: 'edited.docx');
+      expect(reopened.plainText, contains('Edited by DeskSuite'));
+      expect(reopened.plainText, contains('Appendix page'));
+      final rows = reopened.blocks
+          .where((block) => block.kind == OfficeBlockKind.row)
+          .toList();
+      expect(rows, hasLength(2));
+      expect(rows.first.cells, ['Item', 'Qty']);
+      expect(rows.last.cells, ['A4 paper', '2']);
+      expect(
+        reopened.blocks.any((block) => block.kind == OfficeBlockKind.pageBreak),
+        isTrue,
+      );
+    });
+
+    test('writes a genuine XLSX package with multiple readable sheets', () {
+      final document = OfficeDocument(
+        format: OfficeFormat.xlsx,
+        title: 'Edited stock',
+        sheetNames: const ['Stock', 'Sales'],
+        blocks: const [
+          OfficeBlock.paragraph('Stock', bold: true),
+          OfficeBlock.cells(['Item', 'Qty'], header: true),
+          OfficeBlock.cells(['A4 paper', '12']),
+          OfficeBlock.paragraph('Sales', bold: true),
+          OfficeBlock.cells(['Item', 'Total'], header: true),
+          OfficeBlock.cells(['A4 paper', '3500']),
+        ],
+      );
+      final bytes = writeXlsx(document);
+      expect(detectOfficeFile(bytes).format, OfficeFormat.xlsx);
+      final reopened = readOfficeDocument(bytes, fileName: 'edited.xlsx');
+      expect(reopened.sheetNames, ['Stock', 'Sales']);
+      final rows = reopened.blocks
+          .where((block) => block.kind == OfficeBlockKind.row)
+          .toList();
+      expect(rows, hasLength(4));
+      expect(rows[1].cells, ['A4 paper', '12']);
+      expect(rows.last.cells, ['A4 paper', '3500']);
     });
   });
 

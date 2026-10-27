@@ -130,7 +130,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
   String readableError(Object error, String fallback) =>
       error is FormatException ? error.message : fallback;
 
-  Future<void> _persist() async {
+  Future<bool> _persist() async {
     try {
       final committed = await store!.save(List.of(pages));
       if (mounted) {
@@ -145,12 +145,14 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
           }
         });
       }
+      return true;
     } catch (_) {
       if (mounted) {
         setState(
           () => saveError = 'Draft could not be saved. Your current pages remain in memory: retry or export them before closing.',
         );
       }
+      return false;
     }
   }
 
@@ -175,7 +177,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
     }
   }
 
-  Future<void> _addBytes(Uint8List bytes, {bool fromRecovery = false}) async {
+  Future<bool> _addBytes(Uint8List bytes, {bool fromRecovery = false}) async {
     if (pages.length >= maxScanPages) {
       throw const FormatException(
         'Remove a page before adding another; the limit is 8.',
@@ -183,7 +185,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
     }
     final image = await processPhoto(PhotoRequest(bytes, PhotoAction.png));
     _checkCapacity([image]);
-    if (!mounted) return;
+    if (!mounted) return false;
     setState(() {
       pages = [...pages, ScanDraftPage(original: image, image: image)];
       selected = pages.length - 1;
@@ -194,7 +196,18 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
         recoveryPageId = pages.last.id;
       }
     });
-    await _persist();
+    final saved = await _persist();
+    if (fromRecovery && saved && mounted) {
+      // Clear the recovery entry only after the draft manifest is committed.
+      // This explicit post-save transition also avoids leaving camera actions
+      // disabled if the store returns normalized page objects.
+      setState(() {
+        recovered = null;
+        recoveryAdded = false;
+        recoveryPageId = null;
+      });
+    }
+    return saved;
   }
 
   Future<void> _import() async {

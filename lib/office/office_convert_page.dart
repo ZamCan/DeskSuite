@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import '../workspace/file_gateway.dart';
+import 'office_content_editor_page.dart';
 import 'office_engine.dart';
 import 'office_format.dart';
 
@@ -258,6 +259,25 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
                     label: 'Source preserved',
                     value: 'Yes — output is written to a new file you choose.',
                   ),
+                  if (_detected!.format.isReadable) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      key: const Key('office-open-content-editor'),
+                      onPressed: _busy || _source == null || _sourceName == null
+                          ? null
+                          : () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => OfficeContentEditorPage(
+                                    source: _source!,
+                                    sourceName: _sourceName!,
+                                    files: widget.files,
+                                  ),
+                                ),
+                              ),
+                      icon: const Icon(Icons.edit_note_outlined),
+                      label: const Text('Edit readable content'),
+                    ),
+                  ],
                 ],
               ],
             ),
