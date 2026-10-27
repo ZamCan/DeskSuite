@@ -88,13 +88,22 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
     }
   }
 
-  bool _hasPdfSignature(Uint8List bytes) =>
-      bytes.length >= 5 &&
-      bytes[0] == 0x25 &&
-      bytes[1] == 0x50 &&
-      bytes[2] == 0x44 &&
-      bytes[3] == 0x46 &&
-      bytes[4] == 0x2d;
+  bool _hasPdfSignature(Uint8List bytes) {
+    // PDF producers may place a short preamble before the header; the format
+    // permits the signature within the first 1024 bytes.
+    if (bytes.length < 5) return false;
+    final lastOffset = bytes.length < 1029 ? bytes.length - 5 : 1024;
+    for (var offset = 0; offset <= lastOffset; offset++) {
+      if (bytes[offset] == 0x25 &&
+          bytes[offset + 1] == 0x50 &&
+          bytes[offset + 2] == 0x44 &&
+          bytes[offset + 3] == 0x46 &&
+          bytes[offset + 4] == 0x2d) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   String _baseName(String name) {
     final leaf = name.split(RegExp(r'[/\\\\]')).last;
