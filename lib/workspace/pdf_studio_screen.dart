@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../image_engine/image_processing_service.dart';
 import 'file_gateway.dart';
 
 /// Offline multi-page PDF assembly from local images. This creates a new PDF;
@@ -18,6 +19,7 @@ class PdfStudioScreen extends StatefulWidget {
 
 class _PdfStudioScreenState extends State<PdfStudioScreen> {
   final List<Uint8List> _pages = [];
+  final ImageProcessingService _imageEngine = const ImageProcessingService();
   bool _busy = false;
   bool _fitToPage = true;
   String? _error;
@@ -27,8 +29,12 @@ class _PdfStudioScreenState extends State<PdfStudioScreen> {
     try {
       final bytes = await widget.files.pickImage();
       if (bytes == null || !mounted) return;
+      // Normalize supported inputs to PNG so the PDF writer receives a
+      // predictable embedded image format, including GIF/BMP inputs.
+      final normalized = _imageEngine.rotate(source: bytes, degrees: 0, outputFormat: DeskImageFormat.png).bytes;
+      if (!mounted) return;
       setState(() {
-        _pages.add(bytes);
+        _pages.add(normalized);
         _error = null;
       });
     } catch (error) {
