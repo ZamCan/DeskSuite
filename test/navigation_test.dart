@@ -31,7 +31,7 @@ Future<void> settleIo(WidgetTester tester) async {
 
 void main() {
   testWidgets(
-    'small phone navigation labels planned studios and persists theme',
+    'small phone navigation shows implemented tools and persists theme',
     (tester) async {
       tester.view.physicalSize = const Size(320, 640);
       tester.view.devicePixelRatio = 1;
@@ -50,8 +50,10 @@ void main() {
       await settleIo(tester);
       await tester.tap(find.byTooltip('Open navigation'));
       await tester.pumpAndSettle();
-      expect(find.text('Photo Studio'), findsOneWidget);
-      expect(find.text('PLANNED'), findsWidgets);
+      expect(find.text('Creative Studio'), findsOneWidget);
+      expect(find.text('Photo Studio'), findsNothing);
+      expect(find.text('PLANNED'), findsNothing);
+      expect(find.textContaining('date stamps'), findsOneWidget);
       await tester.tap(find.text('Settings'));
       await tester.pumpAndSettle();
       expect(find.text('Dark appearance'), findsOneWidget);
