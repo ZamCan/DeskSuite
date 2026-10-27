@@ -6,6 +6,7 @@ import '../design/editor_screen.dart';
 import 'file_gateway.dart';
 import 'new_design_dialog.dart';
 import 'external_file_opener.dart';
+import '../images/image_tools_screen.dart';
 import 'project_repository.dart';
 import 'workspace_widgets.dart';
 
@@ -113,6 +114,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     } catch (error) {
       _message('Could not import project: $error');
     }
+  }
+
+  Future<void> _openImageTools() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ImageToolsScreen(files: widget.files),
+      ),
+    );
   }
 
   Future<void> _openExternalFile() async {
@@ -313,6 +322,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     title: 'Open with an app',
                     subtitle: 'PDF, Word, Excel, PowerPoint and images',
                     onTap: _openExternalFile,
+                  ),
+                ),
+                SizedBox(
+                  width: width,
+                  child: StarterCard(
+                    icon: Icons.photo_size_select_large_outlined,
+                    eyebrow: 'IMAGE TOOLS',
+                    title: 'Resize & compress',
+                    subtitle: 'Set exact pixels and export PNG or JPEG',
+                    onTap: _openImageTools,
                   ),
                 ),
               ],
