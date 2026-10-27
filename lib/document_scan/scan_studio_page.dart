@@ -130,6 +130,12 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
   String readableError(Object error, String fallback) =>
       error is FormatException ? error.message : fallback;
 
+  // A recovered image remains visible until it has been committed to the draft.
+  // If a store normalizes page IDs, the recovery marker may lag behind the
+  // successful save; only an actual save error should keep camera capture blocked.
+  bool get _hasPendingRecovery =>
+      recovered != null && (!recoveryAdded || saveError != null);
+
   Future<bool> _persist() async {
     try {
       final committed = await store!.save(List.of(pages));
@@ -229,7 +235,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
   }
 
   Future<void> _capture() async {
-    if (busy || loading || widget.camera == null || recovered != null) return;
+    if (busy || loading || widget.camera == null || _hasPendingRecovery) return;
     setState(() => busy = true);
     try {
       final data = await widget.camera!.capture();
@@ -704,7 +710,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
           'Capture or import pages, correct and clean them, then save an image PDF. Originals are not changed automatically.',
         ),
         const SizedBox(height: 12),
-        if (recovered != null)
+        if (_hasPendingRecovery)
           Card(
             child: Padding(
               padding: const EdgeInsets.all(14),
@@ -781,7 +787,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
               OutlinedButton.icon(
                 key: const Key('scan-camera'),
                 onPressed:
-                    busy || loading || recovered != null || pages.length >= maxScanPages
+                    busy || loading || _hasPendingRecovery || pages.length >= maxScanPages
                     ? null
                     : _capture,
                 icon: const Icon(Icons.photo_camera_outlined),
