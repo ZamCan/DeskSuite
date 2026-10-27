@@ -28,6 +28,8 @@ Images are bounded to 8 MiB input, 12 megapixels and 8192 pixels per side; scan 
 3. In **Photo Studio**, choose **Try a noisy garden photo → Reduce isolated specks**. Pinch to zoom and compare with the original. Undo or export a separate copy. **Resize** also supports fit-to-bounds or exact independent dimensions.
 4. Open **Conversion routes** for supported operations and explicit unsupported routes. The new Flutter UI and native integrations still need the checks in the [validation record](docs/engineering/VALIDATION.md).
 
+Brand source, launcher/adaptive icon and splash resources are documented in the [brand asset guide](docs/BRAND_ASSETS.md).
+
 More detailed steps and recovery guidance: [user guide](docs/USER_GUIDE.md). Product-owner requirements: [master engineering directive](docs/engineering/MASTER_ENGINEERING_DIRECTIVE.md) and [additional instructions](docs/engineering/OWNER_INSTRUCTIONS.md). Engineering evidence: [current status](docs/engineering/CURRENT_STATUS.md), [baseline audit](docs/engineering/BASELINE_AUDIT.md), [engine evaluation](docs/engineering/ENGINE_EVALUATION.md), [validation record](docs/engineering/VALIDATION.md), [architecture](docs/ARCHITECTURE.md), [roadmap](docs/ROADMAP.md) and [changelog](CHANGELOG.md).
 
 ## Develop and build locally
