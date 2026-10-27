@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show compute;
 import 'package:image/image.dart' as img;
 
+import 'image_cleanup_pixels.dart';
+
 const int maxPhotoInputBytes = 8 * 1024 * 1024;
 const int maxPhotoWorkingBytes = 16 * 1024 * 1024;
 const int maxPhotoPixels = 12000000;
@@ -15,6 +17,7 @@ enum PhotoAction {
   flipHorizontal,
   resize,
   centerSquareCrop,
+  reduceImpulseNoise,
   png,
   jpeg,
 }
@@ -150,6 +153,22 @@ PhotoResult processPhoto(PhotoRequest request) {
         y: (image.height - size) ~/ 2,
         width: size,
         height: size,
+      );
+    case PhotoAction.reduceImpulseNoise:
+      if (image.width * image.height > maxNoiseReductionPixels) {
+        throw const FormatException(
+          'Noise reduction supports images up to 4 megapixels. Resize a working copy first.',
+        );
+      }
+      image = image.convert(
+        format: img.Format.uint8,
+        numChannels: 4,
+        noAnimation: true,
+      );
+      reduceImpulseNoiseRgbaInPlace(
+        image.toUint8List(),
+        image.width,
+        image.height,
       );
     case PhotoAction.resize:
       final requestedWidth = request.width;
