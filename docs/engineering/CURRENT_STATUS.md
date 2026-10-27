@@ -1,6 +1,6 @@
 # Master directive — current implementation status
 
-This is a status report for the current source, not a declaration that the overall directive or a release is complete. The full [master engineering directive](MASTER_ENGINEERING_DIRECTIVE.md) and [additional owner instructions](OWNER_INSTRUCTIONS.md) are preserved alongside it. The earlier [baseline audit](BASELINE_AUDIT.md) describes the starting state; [validation](VALIDATION.md) records actual host tests and remaining checks.
+This is a status report for the current source, not a declaration that the overall directive or a release is complete. The full [master engineering directive](MASTER_ENGINEERING_DIRECTIVE.md), [additional owner instructions](OWNER_INSTRUCTIONS.md) and [previous progress response](PROGRESS_HISTORY.md) are preserved alongside it. The earlier [baseline audit](BASELINE_AUDIT.md) describes the starting state; [validation](VALIDATION.md) records actual host tests and remaining checks.
 
 ## Acceptance workflows
 
