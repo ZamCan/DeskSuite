@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 
 import '../core/ids.dart';
+import '../documents/stamp_signature_tools.dart';
 import '../printing/design_export.dart';
 import '../workspace/file_gateway.dart';
 import '../workspace/project_repository.dart';
@@ -276,6 +277,72 @@ class _EditorScreenState extends State<EditorScreen> {
       );
     } catch (error) {
       _message('Could not import image: $error');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _addStamp() async {
+    final spec = await showStampDialog(context);
+    if (spec == null || !mounted) return;
+    final d = _controller.document;
+    try {
+      _controller.add(
+        DesignElement(
+          id: newId(),
+          kind: ElementKind.text,
+          x: d.widthMm * .1,
+          y: d.heightMm * .08,
+          width: d.widthMm * .8,
+          height: d.heightMm * (spec.includeDate ? .16 : .1),
+          text: spec.textAt(DateTime.now()),
+          fontSizePt: spec.includeDate ? 17 : 21,
+          bold: true,
+          color: spec.color.toARGB32(),
+          textAlignment: TextAlignment.center,
+        ),
+      );
+      _message('Stamp added as an editable layer. Move it into position.');
+    } catch (error) {
+      _message('Could not add stamp: $error');
+    }
+  }
+
+  Future<void> _addSignature() async {
+    final png = await showSignatureCaptureDialog(context);
+    if (png == null || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      final d = _controller.document;
+      final id = newId();
+      final provisional = DesignElement(
+        id: id,
+        kind: ElementKind.image,
+        x: d.widthMm * .1,
+        y: d.heightMm * .72,
+        width: d.widthMm * .55,
+        height: d.heightMm * .16,
+        imageBytes: png,
+      );
+      await _imageSync;
+      await _images.sync(d.copyWith(elements: [...d.elements, provisional]));
+      final image = _images.images[id]!;
+      final maxWidth = d.widthMm * .55;
+      final maxHeight = d.heightMm * .16;
+      final scale = math.min(maxWidth / image.width, maxHeight / image.height);
+      final width = image.width * scale;
+      final height = image.height * scale;
+      _controller.add(
+        provisional.copyWith(
+          x: d.widthMm * .1,
+          y: math.max(0, d.heightMm - height - d.heightMm * .08),
+          width: width,
+          height: height,
+        ),
+      );
+      _message('Signature added as an editable image layer.');
+    } catch (error) {
+      _message('Could not add signature: $error');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -877,6 +944,16 @@ class _EditorScreenState extends State<EditorScreen> {
                   icon: Icons.image_outlined,
                   label: 'Image',
                   onTap: _busy ? null : _addImage,
+                ),
+                EditorToolButton(
+                  icon: Icons.verified_outlined,
+                  label: 'Stamp',
+                  onTap: _busy ? null : _addStamp,
+                ),
+                EditorToolButton(
+                  icon: Icons.draw_outlined,
+                  label: 'Signature',
+                  onTap: _busy ? null : _addSignature,
                 ),
                 EditorToolButton(
                   icon: Icons.layers_outlined,
