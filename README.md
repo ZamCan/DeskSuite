@@ -2,60 +2,74 @@
 
 **Create. Design. Print. Manage.**
 
-DeskSuite is an offline-first creative and productivity workspace for editable graphic layouts, local photo processing, notes, print-ready PDF output, and stationery-shop product tracking.
+DeskSuite is an offline-first, Android-first creative workspace intended to grow into a combined design, photo, office, print and stationery-business suite.
 
-## Current implementation status
+## Current engineering baseline
 
-This is a real application foundation, not a claim of full Canva or Microsoft Office feature parity.
+The active app entry point is the modular creative editor from the reconciled creative-studio branch. The older single-file prototype from the previous `main` branch is preserved at [docs/archive/main-prototype.dart.txt](docs/archive/main-prototype.dart.txt) as a migration reference; it is not a second active application entry point.
 
-- Creative canvas: editable text, rectangles, circles, imported images, drag positioning, duplicate/delete, undo/redo.
-- Local projects: versioned JSON project files saved on-device.
-- PDF: export current design objects and open a supported system print dialog.
-- Photo tools: local import, rotate, flip, resize and JPEG export.
-- Office notes: local autosave and TXT export.
-- Print Studio: A4 PDF test sheet and print dialog.
-- Business starter: local product catalogue and simple stock decrement.
-- Not yet implemented: advanced design tools, automatic background removal, full DOCX/XLSX compatibility, complete POS/accounting/receipts, production-grade print management.
+### Active and automated-tested design slice
 
-## Platforms
+- Create physical-size layouts such as A4, A5, A3, business cards, square and custom dimensions.
+- Add and edit text, rectangles, ellipses and local PNG/JPEG/WebP images.
+- Select, drag, resize, rotate, duplicate, align, reorder and delete design layers.
+- Undo/redo within the current editor session.
+- Save and reopen versioned local design projects; import/export editable project copies.
+- Export bounded PNG and single-page raster PDF output at selected DPI, with source-image resolution warnings.
+- Local-only project storage and platform file-picker boundary, with automated host tests for document, repository, export and widget flows.
 
-Flutter provides a shared codebase for Android, iOS, Windows and Linux. Platform scaffolding is generated using Flutter tooling. iOS distribution requires Apple's signing and provisioning. A signed App Store release cannot be produced from Termux.
+### Preserved prototype capabilities to migrate into modular screens
 
-## Setup
+The earlier prototype included basic Photo tools, Notes, an A4 print-test sheet, a local product catalogue and stock decrement. Its source is preserved in the archive above. Those tools are **not yet integrated into the active modular navigation** and must be migrated with tests before being described as complete.
 
-Install a compatible Flutter stable SDK and platform toolchains.
+### Not yet implemented as production features
 
-    git clone https://github.com/ZamCan/DeskSuite.git
-    cd DeskSuite
-    flutter create --project-name desksuite --org com.zamcan.desksuite --platforms=android,ios,windows,linux .
-    flutter pub get
-    flutter analyze
-    flutter test
+- Canva-level templates, advanced vector tools, background removal and full photo editing.
+- Full DOCX/XLSX editing and spreadsheet formulas.
+- Passport-photo sheets, production print queues, imposition and printer-specific calibration.
+- Complete inventory/POS, receipts, accounting, expenses, payments and reporting.
+- Desktop release validation and signed iOS/App Store packaging.
 
-## Android APK
+## Repository structure
 
-    flutter build apk --release
+- `lib/design/`: document model, geometry, editor controller, renderer and editor UI.
+- `lib/workspace/`: workspace/navigation, local project repository, file gateway and project creation.
+- `lib/printing/`: bounded design-to-PNG/PDF export logic.
+- `android/`: checked-in Android Gradle runner.
+- `test/`: automated Flutter tests.
+- `tools/build-android.sh`: local Android build, analysis and test sequence.
+- `.github/workflows/build.yml`: GitHub Actions validation/build matrix.
 
-The APK is normally at build/app/outputs/flutter-apk/app-release.apk.
+## Build requirements
 
-## Desktop and iOS builds
+This is a Flutter/Dart project with an Android Gradle runner. **Gradle alone is not enough**: the Flutter SDK is required to compile Dart code and generate Flutter plugin registrants.
 
-    flutter build windows --release
-    flutter build linux --release
-    flutter build ios --release --no-codesign
+Requirements for a local Android build: compatible Flutter stable SDK, Dart bundled with Flutter, JDK 21, Android SDK/platform tools and accepted SDK licences. The checked-in Android project uses package ID `com.zamcan.desksuite`.
 
-Windows requires Windows and Visual Studio C++ tools. Linux requires desktop development libraries. iOS requires macOS and Xcode. The no-codesign iOS build is for validation, not an App Store-ready signed IPA. The Windows EXE must be distributed with its runtime files.
+```bash
+git clone https://github.com/ZamCan/DeskSuite.git
+cd DeskSuite
+bash tools/build-android.sh
+```
 
-## Termux
+The script runs dependency resolution, formatting, static analysis, tests and a release APK build. Expected output:
 
-Android builds under Termux depend on the installed Flutter, Java, Android SDK and filesystem setup. Check flutter doctor -v and the first meaningful build error before changing application code. The repository includes tools/build-android.sh to run formatting, analysis, tests and the release APK build in sequence. If the local toolchain cannot build, use GitHub Actions artifacts after the workflow passes.
+`build/app/outputs/flutter-apk/app-release.apk`
 
-## Offline data
+If Flutter is not installed, the script stops safely and points to [GitHub Actions](https://github.com/ZamCan/DeskSuite/actions) for a remote build. Download the Android artifact only after the relevant workflow completes successfully.
 
-Projects, notes and the initial product catalogue are stored in the app's local support directory. Core editing and image transformations do not call remote APIs. Export dialogs and printer availability depend on the operating system.
+## Cross-platform packaging
 
-See docs for architecture, roadmap, development, file formats/printing, and privacy/security.
+Flutter can share application code across Android, Windows, Linux and iOS, but each target still needs its own toolchain and validation. Windows builds require Windows/Visual Studio C++ tools; Linux builds require desktop development libraries; iOS builds require macOS/Xcode. An unsigned iOS build is validation only, not a store-ready IPA.
 
-## License
+CI-generated APKs without a configured persistent production signing key are validation builds, not a stable production upgrade channel. Do not publish them to Google Play or expect separate CI builds to update each other until signing is deliberately configured and verified.
 
-Apache License 2.0. See LICENSE.
+## Offline and data safety
+
+The core design editor and local project storage do not require a network service. Project files are stored in app-private storage; uninstalling the app or clearing its data may remove them. Export editable project copies for backup. Physical printer availability and platform file dialogs depend on the operating system.
+
+See [architecture](docs/ARCHITECTURE.md), [development](docs/DEVELOPMENT.md), [roadmap](docs/ROADMAP.md), [file formats](docs/FILE_FORMATS.md), [printing](docs/PRINTING.md), and [privacy/security](docs/PRIVACY_AND_SECURITY.md).
+
+## Licence
+
+Apache License 2.0. See [LICENSE](LICENSE).

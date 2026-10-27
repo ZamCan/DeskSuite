@@ -21,7 +21,6 @@ jobs:
         with:
           channel: stable
           cache: true
-      - run: flutter create --project-name desksuite --org com.zamcan.desksuite --platforms=android,ios,windows,linux .
       - run: flutter pub get
       - run: dart format lib test
       - run: flutter analyze
