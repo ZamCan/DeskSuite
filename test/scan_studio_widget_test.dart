@@ -64,6 +64,34 @@ Future<void> waitIo(
   }
 }
 
+/// Reads the draft store without ever hanging the test.
+///
+/// The store's read/write queue is created in the fake-async zone, so awaiting a
+/// read inside runAsync can deadlock on a slower machine: the future completes
+/// but its continuation is scheduled back into a zone that only advances on
+/// pump. This bounds each attempt in real time and reports a failure instead of
+/// letting the suite sit until the ten-minute test timeout.
+Future<List<ScanDraftPage>> readDraft(
+  WidgetTester tester,
+  ScanDraftStore store,
+) async {
+  Object? error;
+  for (var attempt = 0; attempt < 40; attempt++) {
+    List<ScanDraftPage>? pages;
+    await tester.runAsync(() async {
+      try {
+        pages = await store.load().timeout(const Duration(milliseconds: 500));
+      } catch (e) {
+        error = e;
+      }
+    });
+    if (pages != null) return pages!;
+    if (error is FormatException) throw error!;
+    await tester.pump(const Duration(milliseconds: 25));
+  }
+  fail('The scan draft could not be read back within 20 seconds: $error');
+}
+
 Future<void> tapVisible(WidgetTester tester, Finder finder) async {
   if (finder.evaluate().isEmpty) {
     await tester.scrollUntilVisible(
@@ -151,18 +179,18 @@ void main() {
       await tapVisible(tester, find.byKey(const Key('apply-corners')));
       await waitIo(tester);
       expect(find.text('Adjust page corners'), findsNothing);
-      final cropped = (await tester.runAsync(store.load))!.single.image;
+      final cropped = (await readDraft(tester, store)).single.image;
       final corner = img.decodePng(cropped.bytes)!.getPixel(0, 0);
       expect(corner.r > 0 || corner.g > 0, isTrue);
       expect(find.byKey(const Key('scan-undo')), findsOneWidget);
       await tapVisible(tester, find.byKey(const Key('scan-rotate')));
       await waitIo(tester);
-      final rotated = (await tester.runAsync(store.load))!.single.image;
+      final rotated = (await readDraft(tester, store)).single.image;
       expect([rotated.width, rotated.height], [cropped.height, cropped.width]);
       await tapVisible(tester, find.byKey(const Key('scan-reset')));
       await waitIo(tester);
-      final stored = await tester.runAsync(store.load);
-      expect(stored!.single.image.width, 80);
+      final stored = await readDraft(tester, store);
+      expect(stored.single.image.width, 80);
       expect(stored.single.image.height, 60);
       await tapVisible(tester, find.byKey(const Key('scan-pdf')));
       await waitIo(tester);
@@ -189,7 +217,7 @@ void main() {
       await tapVisible(tester, find.byKey(const Key('scan-samples')));
       await tapVisible(tester, find.byKey(const Key('sample-cleanup')));
       await waitIo(tester, rounds: 45);
-      final before = (await tester.runAsync(store.load))!.single;
+      final before = (await readDraft(tester, store)).single;
       final original = Uint8List.fromList(before.original.bytes);
 
       await tapVisible(tester, find.byKey(const Key('scan-cleanup')));
@@ -204,7 +232,7 @@ void main() {
       await waitIo(tester, rounds: 45);
       expect(find.byKey(const Key('cleanup-after-image')), findsOneWidget);
       expect(
-        (await tester.runAsync(store.load))!.single.image.bytes,
+        (await readDraft(tester, store)).single.image.bytes,
         orderedEquals(before.image.bytes),
       );
       await tapVisible(tester, find.byKey(const Key('cleanup-before')));
@@ -213,7 +241,7 @@ void main() {
       expect(find.byKey(const Key('cleanup-after-image')), findsOneWidget);
       await tapVisible(tester, find.byKey(const Key('cleanup-cancel')));
       expect(
-        (await tester.runAsync(store.load))!.single.image.bytes,
+        (await readDraft(tester, store)).single.image.bytes,
         orderedEquals(before.image.bytes),
       );
 
@@ -224,7 +252,7 @@ void main() {
       await waitIo(tester, rounds: 45);
       await tapVisible(tester, find.byKey(const Key('cleanup-use')));
       await waitIo(tester, rounds: 45);
-      final cleaned = (await tester.runAsync(store.load))!.single;
+      final cleaned = (await readDraft(tester, store)).single;
       expect(cleaned.original.bytes, orderedEquals(original));
       expect(cleaned.image.bytes, isNot(orderedEquals(before.image.bytes)));
       expect(img.decodePng(cleaned.image.bytes)!.getPixel(30, 400).r, 255);
@@ -239,13 +267,13 @@ void main() {
       await tapVisible(tester, find.byKey(const Key('scan-undo')));
       await waitIo(tester);
       expect(
-        (await tester.runAsync(store.load))!.single.image.bytes,
+        (await readDraft(tester, store)).single.image.bytes,
         orderedEquals(before.image.bytes),
       );
       await tapVisible(tester, find.byKey(const Key('scan-reset')));
       await waitIo(tester);
       expect(
-        (await tester.runAsync(store.load))!.single.image.bytes,
+        (await readDraft(tester, store)).single.image.bytes,
         orderedEquals(original),
       );
       expect(tester.takeException(), isNull);
@@ -265,12 +293,12 @@ void main() {
       await tapVisible(tester, find.byKey(const Key('sample-report')));
       await waitIo(tester, rounds: 45);
       expect(find.textContaining('2 of 8 pages'), findsOneWidget);
-      final initial = await tester.runAsync(store.load);
+      final initial = await readDraft(tester, store);
       expect(initial, hasLength(2));
       await tapVisible(tester, find.byKey(const Key('scan-move-down')));
       await waitIo(tester);
-      final moved = await tester.runAsync(store.load);
-      expect(moved!.first.id, initial!.last.id);
+      final moved = await readDraft(tester, store);
+      expect(moved.first.id, initial.last.id);
       await tapVisible(tester, find.byKey(const Key('scan-pdf')));
       await waitIo(tester, rounds: 45);
       expect(find.textContaining('2 page(s)'), findsOneWidget);
@@ -298,17 +326,17 @@ void main() {
     await waitIo(tester);
     await tapVisible(tester, find.byKey(const Key('scan-rotate')));
     await waitIo(tester, rounds: 45);
-    final before = await tester.runAsync(store.load);
+    final before = await readDraft(tester, store);
     expect(before, hasLength(2));
-    final editedId = before!.last.id;
+    final editedId = before.last.id;
     final editedBytes = Uint8List.fromList(before.last.image.bytes);
     expect(before.last.image.width, before.last.original.height);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpWidget(screen());
     await waitIo(tester, rounds: 45);
     expect(find.textContaining('2 of 8 pages'), findsOneWidget);
-    final reopened = await tester.runAsync(store.load);
-    expect(reopened!.map((page) => page.id), before.map((page) => page.id));
+    final reopened = await readDraft(tester, store);
+    expect(reopened.map((page) => page.id), before.map((page) => page.id));
     expect(reopened.last.id, editedId);
     expect(reopened.last.image.bytes, orderedEquals(editedBytes));
     expect(tester.takeException(), isNull);
@@ -341,7 +369,7 @@ void main() {
       find.textContaining('camera image is in the unsaved draft'),
       findsOneWidget,
     );
-    expect((await tester.runAsync(store.load)), isEmpty);
+    expect((await readDraft(tester, store)), isEmpty);
     await tapVisible(tester, find.text('Export recovered original'));
     await waitIo(tester);
     expect(files.exported, orderedEquals(original));
@@ -353,13 +381,13 @@ void main() {
       find.textContaining('camera image is in the unsaved draft'),
       findsNothing,
     );
-    final saved = await tester.runAsync(store.load);
+    final saved = await readDraft(tester, store);
     expect(saved, hasLength(1));
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpWidget(screen());
     await waitIo(tester);
     expect(find.textContaining('1 of 8 pages'), findsOneWidget);
-    expect((await tester.runAsync(store.load))!.single.id, saved!.single.id);
+    expect((await readDraft(tester, store)).single.id, saved.single.id);
     expect(files.imported, orderedEquals(original));
     expect(tester.takeException(), isNull);
   });
@@ -463,7 +491,7 @@ void main() {
       await tapVisible(tester, find.byKey(const Key('scan-camera')));
       await waitIo(tester);
       expect(find.textContaining('2 of 8 pages'), findsOneWidget);
-      expect((await tester.runAsync(store.load))!, hasLength(2));
+      expect((await readDraft(tester, store)), hasLength(2));
       expect(tester.takeException(), isNull);
     },
   );
