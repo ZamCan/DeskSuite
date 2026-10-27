@@ -287,14 +287,34 @@ class _EditorScreenState extends State<EditorScreen> {
     if (spec == null || !mounted) return;
     final d = _controller.document;
     try {
+      final stampWidth = switch (spec.placement) {
+        StampPlacement.topCenter || StampPlacement.bottomCenter => d.widthMm * .8,
+        _ => d.widthMm * .44,
+      };
+      final stampX = switch (spec.placement) {
+        StampPlacement.topLeft || StampPlacement.bottomLeft => d.widthMm * .06,
+        StampPlacement.topCenter || StampPlacement.bottomCenter =>
+          (d.widthMm - stampWidth) / 2,
+        StampPlacement.topRight || StampPlacement.bottomRight =>
+          d.widthMm - stampWidth - d.widthMm * .06,
+      };
+      final stampHeight = d.heightMm * (spec.includeDate ? .16 : .1);
+      final stampY = switch (spec.placement) {
+        StampPlacement.topLeft ||
+        StampPlacement.topCenter ||
+        StampPlacement.topRight => d.heightMm * .08,
+        StampPlacement.bottomLeft ||
+        StampPlacement.bottomCenter ||
+        StampPlacement.bottomRight => d.heightMm - stampHeight - d.heightMm * .08,
+      };
       _controller.add(
         DesignElement(
           id: newId(),
           kind: ElementKind.text,
-          x: d.widthMm * .1,
-          y: d.heightMm * .08,
-          width: d.widthMm * .8,
-          height: d.heightMm * (spec.includeDate ? .16 : .1),
+          x: stampX,
+          y: stampY,
+          width: stampWidth,
+          height: stampHeight,
           text: spec.textAt(DateTime.now()),
           fontSizePt: spec.includeDate ? 17 : 21,
           bold: true,
