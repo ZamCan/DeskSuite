@@ -82,30 +82,56 @@ class BrandMark extends StatelessWidget {
 class _BrandPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
+    final scale = size.width / 100;
+    canvas.save();
+    canvas.scale(scale, size.height / 100);
+
+    final paperPaint = Paint()
       ..color = const Color(0xfffff8ef)
-      ..strokeWidth = size.width * .1
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5.2
       ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-    final left = size.width * .31;
-    canvas.drawLine(
-      Offset(left, size.height * .27),
-      Offset(left, size.height * .73),
-      paint,
-    );
-    final path = Path()
-      ..moveTo(left, size.height * .27)
-      ..lineTo(size.width * .49, size.height * .27)
-      ..cubicTo(
-        size.width * .82,
-        size.height * .27,
-        size.width * .82,
-        size.height * .73,
-        size.width * .49,
-        size.height * .73,
-      )
-      ..lineTo(left, size.height * .73);
-    canvas.drawPath(path, paint);
+      ..strokeJoin = StrokeJoin.round;
+
+    // A folded page frames the joined D/S monogram.
+    final page = Path()
+      ..moveTo(24, 16)
+      ..lineTo(62, 16)
+      ..lineTo(78, 32)
+      ..lineTo(78, 84)
+      ..quadraticBezierTo(78, 88, 74, 88)
+      ..lineTo(28, 88)
+      ..quadraticBezierTo(24, 88, 24, 84)
+      ..close();
+    canvas.drawPath(page, paperPaint);
+    canvas.drawLine(const Offset(62, 16), const Offset(62, 32), paperPaint);
+    canvas.drawLine(const Offset(62, 32), const Offset(78, 32), paperPaint);
+
+    // D: a strong stem and rounded bowl.
+    final d = Path()
+      ..moveTo(35, 43)
+      ..lineTo(35, 70)
+      ..moveTo(35, 43)
+      ..lineTo(43, 43)
+      ..cubicTo(59, 43, 59, 70, 43, 70)
+      ..lineTo(35, 70);
+    canvas.drawPath(d, paperPaint);
+
+    // S: compact flowing stroke, visually linked to the D.
+    final s = Path()
+      ..moveTo(68, 47)
+      ..cubicTo(58, 39, 48, 48, 57, 54)
+      ..lineTo(66, 59)
+      ..cubicTo(76, 66, 66, 76, 56, 68);
+    final sPaint = Paint()
+      ..color = const Color(0xffffd6a2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5.2
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(s, sPaint);
+
+    canvas.restore();
   }
 
   @override
