@@ -359,6 +359,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                                           WorkspaceSection.text,
                                         ConversionTarget.office =>
                                           WorkspaceSection.office,
+                                         ConversionTarget.pdfStudio =>
+                                           WorkspaceSection.pdfStudio,
                                       }),
                                 )
                               : const SizedBox.shrink(),
