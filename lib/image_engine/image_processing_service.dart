@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:image/image.dart' as img;
@@ -74,11 +75,21 @@ class ImageProcessingService {
     }
     _quality(quality);
     final original = _decode(source);
+    var outputWidth = width;
+    var outputHeight = height;
+    if (preserveAspectRatio) {
+      final scale = math.min(
+        width / original.width,
+        height / original.height,
+      );
+      outputWidth = math.max(1, (original.width * scale).round());
+      outputHeight = math.max(1, (original.height * scale).round());
+    }
     final output = img.copyResize(
       original,
-      width: width,
-      height: height,
-      maintainAspect: preserveAspectRatio,
+      width: outputWidth,
+      height: outputHeight,
+      maintainAspect: false,
       interpolation: img.Interpolation.linear,
     );
     final warning =
