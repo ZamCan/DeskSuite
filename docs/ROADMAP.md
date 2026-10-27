@@ -1,23 +1,36 @@
-# DeskSuite roadmap
+# Capability status
 
-## Implemented in source
+Statuses refer to the current code. “Tested” means automated host Flutter tests unless a device is explicitly identified.
 
-- [x] Responsive Flutter application shell and warm neutral design.
-- [x] Basic editable canvas with text, shapes, image import and object movement.
-- [x] Undo/redo, duplicate/delete and local project serialization.
-- [x] Local image rotation, flipping, resizing and JPEG export.
-- [x] Local notes with autosave and TXT export.
-- [x] A4 PDF test sheet and print dialog.
-- [x] Local product catalogue and basic stock decrement.
+## Implemented and tested
 
-## Next engineering stages
+- Versioned structured design serialization and validation; unit and filesystem round trips.
+- Layer geometry, rotated hit tests, drag history, rotated aspect-preserving image resize, undo/redo and physical unit conversions.
+- Local atomic-save path, serialized writes, failed-write preservation, malformed-file reporting, import as a new project and recovery of a replacement backup (host filesystem tests).
+- Shared renderer, actual PNG/PDF generation, page dimension calculation and low-resolution calculation (host tests).
+- Phone-sized widget flow: create, edit text, add an image through a test picker, undo/redo, export through a test saver, close and reopen.
+- An engine workflow with Dart HTTP requests blocked during the test. This does not prove Android airplane-mode behaviour.
 
-- [ ] Run Flutter formatter, analyzer, tests and real target builds.
-- [ ] Canvas presets, custom dimensions, colour/font controls, guides, snapping, zoom/pan, alignment and templates.
-- [ ] Passport-photo sizing and print sheets, crop and colour controls, local background segmentation.
-- [ ] Structured document editor, CSV/spreadsheet grid, formula engine, DOCX/XLSX adapters and PDF page operations.
-- [ ] Physical print units, DPI validation, margins, bleed, crop marks, colour management and printer tests.
-- [ ] Transaction-safe POS, sales line items, payments, discounts, refunds, receipts, suppliers, expenses and audit history.
-- [ ] Database migrations, backup/restore, import validation and recovery tests.
-- [ ] Verify Android APK/AAB, Windows bundle, Linux bundle and unsigned iOS validation build.
-- [ ] Add AppImage packaging and document Apple signing requirements.
+## Implemented but not fully tested
+
+- Android runner and a debug APK have built; native picker/export integration, light/dark settings, shape and layer controls, and accessibility labels have host coverage, but no Android device or emulator has been exercised.
+- PDF is a single-page, full-bleed raster at the chosen physical page size. Actual physical printer output and printer margins are not tested.
+- Project save/recovery has host filesystem coverage, not hardware power-loss testing. History is session-only.
+
+## In progress
+
+- Android installation verification, device offline testing, accessibility and performance profiling.
+- Creative editor usability: additional direct manipulation, layout tools, image quality controls and broader format validation.
+
+## Not implemented
+
+- Dedicated Photo Studio, passport/ID sheets, cropping, adjustment filters or background removal.
+- Office documents, notes, spreadsheets/formulas, PDF import/merge/split, OCR, signatures.
+- Direct printer services, imposition, print queue, print presets or printer-specific calibration.
+- Business/POS, local database, products, stock, expenses, payments, receipts, profit reporting and integrated orders.
+- Bulk backup/restore, cloud sync, encryption, accounts, analytics, desktop runners and desktop releases.
+- A production-signed or store-ready release.
+
+## Concurrent prototype integration
+
+The repository's `main` gained separate Photo, Notes, Print and Business prototypes while this branch was developed. Their source and workflow are preserved on `main`, not included or tested in this branch. Reconcile those capabilities, storage paths and Android app identities before merging; see [INTEGRATION.md](INTEGRATION.md).

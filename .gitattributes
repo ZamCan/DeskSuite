@@ -1,0 +1,3 @@
+# Keep Windows batch launchers usable while storing normalized text in Git.
+*.bat text eol=crlf
+*.sh text eol=lf
