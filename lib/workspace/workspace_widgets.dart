@@ -29,19 +29,6 @@ class WorkspaceSidebar extends StatelessWidget {
         onTap: () => onNavigate(value),
       ),
     );
-    Widget planned(IconData icon, String label) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: ListTile(
-        dense: true,
-        enabled: false,
-        leading: Icon(icon, size: 20),
-        title: Text(label),
-        trailing: const Text(
-          'PLANNED',
-          style: TextStyle(fontSize: 9, letterSpacing: .7),
-        ),
-      ),
-    );
     return Material(
       color: scheme.surface,
       child: ListView(
@@ -83,25 +70,40 @@ class WorkspaceSidebar extends StatelessWidget {
           ),
           item(Icons.tune_rounded, 'Settings', WorkspaceSection.settings),
           const SizedBox(height: 24),
-          _navLabel(context, 'STUDIOS'),
+          _navLabel(context, 'AVAILABLE TOOLS'),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-            child: Row(
-              children: [
-                Icon(Icons.palette_outlined, size: 20, color: scheme.primary),
-                const SizedBox(width: 20),
-                const Text(
-                  'Creative Studio',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.palette_outlined, size: 20, color: scheme.primary),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            'Creative Studio',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Editable canvas, text and image layers, shapes, date stamps, drawn signatures, and PNG or raster-PDF export.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-          planned(Icons.photo_outlined, 'Photo Studio'),
-          planned(Icons.edit_note_outlined, 'Office Studio'),
-          planned(Icons.picture_as_pdf_outlined, 'PDF & Documents'),
-          planned(Icons.print_outlined, 'Print Studio'),
-          planned(Icons.storefront_outlined, 'Business & POS'),
           const SizedBox(height: 24),
           Padding(
             padding: const EdgeInsets.all(24),
