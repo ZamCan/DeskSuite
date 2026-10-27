@@ -5,6 +5,7 @@ import '../design/design_document.dart';
 import '../design/editor_screen.dart';
 import 'file_gateway.dart';
 import 'new_design_dialog.dart';
+import 'external_file_opener.dart';
 import 'project_repository.dart';
 import 'workspace_widgets.dart';
 
@@ -111,6 +112,19 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       await _openDocument(doc);
     } catch (error) {
       _message('Could not import project: $error');
+    }
+  }
+
+  Future<void> _openExternalFile() async {
+    try {
+      final opened = await ExternalFileOpener().pickAndOpen();
+      if (opened) {
+        _message(
+          'The original file was handed to a compatible installed app. DeskSuite did not modify it.',
+        );
+      }
+    } catch (error) {
+      _message('Could not open this file in another app: $error');
     }
   }
 
@@ -289,6 +303,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     title: 'Import a project',
                     subtitle: 'Open a .dsdesign file',
                     onTap: _import,
+                  ),
+                ),
+                SizedBox(
+                  width: width,
+                  child: StarterCard(
+                    icon: Icons.open_in_new_rounded,
+                    eyebrow: 'OPEN EXTERNALLY',
+                    title: 'Open with an app',
+                    subtitle: 'PDF, Word, Excel, PowerPoint and images',
+                    onTap: _openExternalFile,
                   ),
                 ),
               ],
