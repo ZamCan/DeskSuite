@@ -82,8 +82,10 @@ class ImageProcessingService {
         width / original.width,
         height / original.height,
       );
-      outputWidth = math.max(1, (original.width * scale).round());
-      outputHeight = math.max(1, (original.height * scale).round());
+      final scaledWidth = (original.width * scale).round();
+      final scaledHeight = (original.height * scale).round();
+      outputWidth = scaledWidth < 1 ? 1 : scaledWidth;
+      outputHeight = scaledHeight < 1 ? 1 : scaledHeight;
     }
     final output = img.copyResize(
       original,
