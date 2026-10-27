@@ -3,6 +3,8 @@
 Statuses refer to the current code. “Tested” means automated host Flutter tests unless a device is explicitly identified.
 
 ## Implemented and tested
+- Editable visual stamp layers with optional placement date and custom labels; unit tests cover date formatting.
+- Finger/stylus signature capture to transparent PNG, inserted as a normal image layer on the design canvas.
 
 - Versioned structured design serialization and validation; unit and filesystem round trips.
 - Layer geometry, rotated hit tests, drag history, rotated aspect-preserving image resize, undo/redo and physical unit conversions.
@@ -25,7 +27,8 @@ Statuses refer to the current code. “Tested” means automated host Flutter te
 ## Not implemented
 
 - Dedicated Photo Studio, passport/ID sheets, cropping, adjustment filters or background removal.
-- Office documents, notes, spreadsheets/formulas, PDF import/merge/split, OCR, signatures.
+- Office documents, notes, spreadsheets/formulas, PDF import/merge/split and OCR.
+- Visual stamps/signatures inside imported documents and cryptographic digital signatures.
 - Direct printer services, imposition, print queue, print presets or printer-specific calibration.
 - Business/POS, local database, products, stock, expenses, payments, receipts, profit reporting and integrated orders.
 - Bulk backup/restore, cloud sync, encryption, accounts, analytics, desktop runners and desktop releases.
