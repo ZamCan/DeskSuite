@@ -1,6 +1,6 @@
 /// Explicit, bounded conversion routes. A null target is intentionally not
 /// actionable; the catalogue must never imply an unavailable engine exists.
-enum ConversionTarget { photos, scans, projects, design, notes, text, office }
+enum ConversionTarget { photos, scans, projects, design, notes, text, office, pdfStudio }
 
 class ConversionRoute {
   const ConversionRoute({
@@ -50,8 +50,19 @@ const conversionRoutes = <ConversionRoute>[
     target: ConversionTarget.text,
   ),
   ConversionRoute(
-    title: 'Existing PDF → images, edited pages or compressed PDF',
-    detail: 'Unavailable: DeskSuite does not import or modify existing PDFs.',
+    title: 'Existing PDF → read, annotate and manage pages',
+    detail:
+        'PDF Studio opens an existing PDF in the local editor. Use supported '
+        'page tools, text/ink annotations, stamps and form controls, then save '
+        'a separate edited copy. Complex or protected files still need testing.',
+    target: ConversionTarget.pdfStudio,
+  ),
+  ConversionRoute(
+    title: 'DOCX/XLSX/PPTX → layout-faithful PDF',
+    detail:
+        'Unavailable in the built-in content renderer. Pixel-accurate Office '
+        'rendering needs a separately installed compatible office engine; '
+        'DeskSuite does not bundle or silently download one.',
   ),
   ConversionRoute(
     title: 'DOCX, XLSX, PPTX, ODT, ODS, ODP, RTF → PDF, TXT, CSV, ODT, ODS',
