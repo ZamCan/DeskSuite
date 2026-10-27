@@ -25,7 +25,7 @@ class ProcessedImage {
 }
 
 class ImageProcessingService {
-  static const int maxInputPixels = 40000000;
+  static const int maxInputPixels = 20000000;
   static const int maxOutputPixels = 16000000;
   static const int maxOutputSide = 8192;
 
@@ -36,7 +36,7 @@ class ImageProcessingService {
       throw const FormatException('This image format is not supported or the file is damaged.');
     }
     if (decoded.width * decoded.height > maxInputPixels) {
-      throw const FormatException('The image exceeds the 40-megapixel processing limit.');
+      throw const FormatException('The image exceeds the 20-megapixel processing limit.');
     }
     return ImageDimensions(decoded.width, decoded.height);
   }
