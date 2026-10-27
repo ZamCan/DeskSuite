@@ -1,7 +1,16 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// Release signing is supplied locally and is never committed.
+val signingPropertiesFile = rootProject.file("key.properties")
+val signingProperties = Properties()
+if (signingPropertiesFile.isFile) {
+    signingPropertiesFile.inputStream().use { signingProperties.load(it) }
 }
 
 android {
@@ -28,10 +37,23 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (signingPropertiesFile.isFile) {
+            create("release") {
+                keyAlias = signingProperties.getProperty("keyAlias")
+                keyPassword = signingProperties.getProperty("keyPassword")
+                storePassword = signingProperties.getProperty("storePassword")
+                storeFile = signingProperties.getProperty("storeFile")?.let { file(it) }
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // Release signing is intentionally not configured. Supply signing
-            // credentials outside version control for a production release.
+            if (signingPropertiesFile.isFile) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+            // Without a release key there is no debug-signing fallback.
         }
     }
 }

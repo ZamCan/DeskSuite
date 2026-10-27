@@ -3,7 +3,16 @@ import 'package:flutter/material.dart';
 import '../app/theme.dart';
 import 'project_repository.dart';
 
-enum WorkspaceSection { workspace, projects, settings }
+enum WorkspaceSection {
+  workspace,
+  projects,
+  settings,
+  design,
+  photos,
+  notes,
+  printing,
+  business,
+}
 
 class WorkspaceSidebar extends StatelessWidget {
   const WorkspaceSidebar({
@@ -84,24 +93,24 @@ class WorkspaceSidebar extends StatelessWidget {
           item(Icons.tune_rounded, 'Settings', WorkspaceSection.settings),
           const SizedBox(height: 24),
           _navLabel(context, 'STUDIOS'),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-            child: Row(
-              children: [
-                Icon(Icons.palette_outlined, size: 20, color: scheme.primary),
-                const SizedBox(width: 20),
-                const Text(
-                  'Creative Studio',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
+          item(
+            Icons.palette_outlined,
+            'Creative Studio',
+            WorkspaceSection.design,
           ),
-          planned(Icons.photo_outlined, 'Photo Studio'),
-          planned(Icons.edit_note_outlined, 'Office Studio'),
+          item(Icons.photo_outlined, 'Photo Studio', WorkspaceSection.photos),
+          item(
+            Icons.edit_note_outlined,
+            'Office Notes',
+            WorkspaceSection.notes,
+          ),
           planned(Icons.picture_as_pdf_outlined, 'PDF & Documents'),
-          planned(Icons.print_outlined, 'Print Studio'),
-          planned(Icons.storefront_outlined, 'Business & POS'),
+          item(Icons.print_outlined, 'Print Studio', WorkspaceSection.printing),
+          item(
+            Icons.storefront_outlined,
+            'Business & POS',
+            WorkspaceSection.business,
+          ),
           const SizedBox(height: 24),
           Padding(
             padding: const EdgeInsets.all(24),

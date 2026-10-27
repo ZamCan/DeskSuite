@@ -69,6 +69,10 @@ void main() {
     () async {
       await repository.writeDarkMode(true);
       expect(await ProjectRepository(temp).readDarkMode(), isTrue);
+      final settings = File('${temp.path}/settings.json');
+      await settings.rename('${settings.path}.bak');
+      expect(await ProjectRepository(temp).readDarkMode(), isTrue);
+      expect(await settings.exists(), isTrue);
       final doc = DesignDocument.blank(
         name: 'Delete',
         widthMm: 100,

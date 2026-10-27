@@ -1,0 +1,101 @@
+import 'dart:typed_data';
+
+import 'package:desksuite/images/photo_processor.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:image/image.dart' as img;
+
+void main() {
+  Uint8List source() {
+    final image = img.Image(width: 4, height: 2, numChannels: 4);
+    for (var y = 0; y < 2; y++) {
+      for (var x = 0; x < 4; x++) {
+        image.setPixelRgba(x, y, x < 2 ? 255 : 0, 0, x >= 2 ? 255 : 0, 255);
+      }
+    }
+    return Uint8List.fromList(img.encodePng(image));
+  }
+
+  test(
+    'inspect, rotate, flip, crop and aspect-preserving resize pixels locally',
+    () {
+      final initial = processPhoto(PhotoRequest(source(), PhotoAction.inspect));
+      expect([initial.width, initial.height], [4, 2]);
+      final rotated = processPhoto(
+        PhotoRequest(initial.bytes, PhotoAction.rotate90),
+      );
+      expect([rotated.width, rotated.height], [2, 4]);
+      final flipped = processPhoto(
+        PhotoRequest(initial.bytes, PhotoAction.flipHorizontal),
+      );
+      final flippedImage = img.decodePng(flipped.bytes)!;
+      expect(flippedImage.getPixel(0, 0).b, 255);
+      expect(flippedImage.getPixel(3, 0).r, 255);
+      final crop = processPhoto(
+        PhotoRequest(initial.bytes, PhotoAction.centerSquareCrop),
+      );
+      expect([crop.width, crop.height], [2, 2]);
+      final resized = processPhoto(
+        PhotoRequest(initial.bytes, PhotoAction.resize, width: 2, height: 2),
+      );
+      expect([resized.width, resized.height], [2, 1]);
+      final stretched = processPhoto(
+        PhotoRequest(
+          initial.bytes,
+          PhotoAction.resize,
+          width: 2,
+          height: 2,
+          keepAspect: false,
+        ),
+      );
+      expect([stretched.width, stretched.height], [2, 2]);
+    },
+  );
+
+  test('converts to real PNG/JPEG, flattening transparency on white', () {
+    final transparent = img.Image(width: 3, height: 2, numChannels: 4);
+    img.fill(transparent, color: img.ColorRgba8(0, 0, 0, 0));
+    final sourceBytes = Uint8List.fromList(img.encodePng(transparent));
+    final jpg = processPhoto(
+      PhotoRequest(sourceBytes, PhotoAction.jpeg, quality: 90),
+    );
+    expect(jpg.bytes.take(2), [0xff, 0xd8]);
+    final decoded = img.decodeJpg(jpg.bytes)!;
+    expect([decoded.width, decoded.height], [3, 2]);
+    expect(decoded.getPixel(0, 0).r, greaterThan(240));
+    final png = processPhoto(PhotoRequest(jpg.bytes, PhotoAction.png));
+    expect(png.bytes.take(8), [137, 80, 78, 71, 13, 10, 26, 10]);
+    expect(img.decodePng(png.bytes), isNotNull);
+  });
+
+  test('rejects damaged data, invalid output and excessive input before processing', () {
+    expect(
+      () => processPhoto(
+        PhotoRequest(Uint8List.fromList([1, 2, 3]), PhotoAction.inspect),
+      ),
+      throwsFormatException,
+    );
+    expect(
+      () => processPhoto(
+        PhotoRequest(Uint8List(maxPhotoInputBytes + 1), PhotoAction.inspect),
+      ),
+      throwsFormatException,
+    );
+    expect(
+      () => processPhoto(
+        PhotoRequest(
+          source(),
+          PhotoAction.resize,
+          width: 8192,
+          height: 8192,
+          keepAspect: false,
+        ),
+      ),
+      throwsFormatException,
+    );
+    expect(
+      () =>
+          processPhoto(PhotoRequest(source(), PhotoAction.jpeg, quality: 101)),
+      throwsFormatException,
+    );
+  });
+}

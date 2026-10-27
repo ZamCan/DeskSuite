@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../app/theme.dart';
 import '../design/design_document.dart';
 import '../design/editor_screen.dart';
+import '../legacy_studios.dart' as legacy;
+import 'creative_studio_page.dart';
 import 'file_gateway.dart';
 import 'new_design_dialog.dart';
 import 'project_repository.dart';
@@ -26,9 +28,11 @@ class WorkspaceScreen extends StatefulWidget {
 
 class _WorkspaceScreenState extends State<WorkspaceScreen> {
   WorkspaceSection _section = WorkspaceSection.workspace;
+  final _visited = <WorkspaceSection>{WorkspaceSection.workspace};
   ProjectList? _list;
   String? _listError;
   bool _loading = true;
+  int _refreshVersion = 0;
 
   @override
   void initState() {
@@ -37,9 +41,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   }
 
   Future<void> _refresh() async {
+    final version = ++_refreshVersion;
     try {
       final list = await widget.repository.list();
-      if (mounted) {
+      if (mounted && version == _refreshVersion) {
         setState(() {
           _list = list;
           _listError = null;
@@ -47,7 +52,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         });
       }
     } catch (error) {
-      if (mounted) {
+      if (mounted && version == _refreshVersion) {
         setState(() {
           _listError = '$error';
           _loading = false;
@@ -145,8 +150,53 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   void _navigate(WorkspaceSection value, {bool closeDrawer = false}) {
     if (closeDrawer) Navigator.of(context).pop();
-    setState(() => _section = value);
+    setState(() {
+      _section = value;
+      _visited.add(value);
+    });
+    if (value == WorkspaceSection.workspace ||
+        value == WorkspaceSection.projects) {
+      _refresh();
+    }
   }
+
+  Widget _lightStudio(Widget child) {
+    final theme = deskTheme(Brightness.light);
+    return Theme(
+      data: theme,
+      child: ColoredBox(color: theme.scaffoldBackgroundColor, child: child),
+    );
+  }
+
+  Future<void> _openEarlierProject(legacy.Project project) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _lightStudio(legacy.EditorPage(project: project)),
+      ),
+    );
+    await _refresh();
+  }
+
+  Future<void> _openEarlierStudio() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _lightStudio(
+          Scaffold(
+            appBar: AppBar(title: const Text('Earlier Creative Studio')),
+            body: legacy.CreativePage(
+              onCreate: () => _openEarlierProject(legacy.Project()),
+              onOpen: _openEarlierProject,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _visitedStudio(WorkspaceSection section, Widget Function() create) =>
+      _visited.contains(section)
+      ? _lightStudio(create())
+      : const SizedBox.shrink();
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -169,11 +219,37 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     _topBar(wide),
                     const Divider(height: 1),
                     Expanded(
-                      child: switch (_section) {
-                        WorkspaceSection.workspace => _workspace(),
-                        WorkspaceSection.projects => _projectPage(),
-                        WorkspaceSection.settings => _settings(),
-                      },
+                      child: IndexedStack(
+                        index: _section.index,
+                        children: [
+                          _workspace(),
+                          _projectPage(),
+                          _settings(),
+                          _visited.contains(WorkspaceSection.design)
+                              ? CreativeStudioPage(
+                                  repository: widget.repository,
+                                  files: widget.files,
+                                  onEarlierEditor: _openEarlierStudio,
+                                )
+                              : const SizedBox.shrink(),
+                          _visitedStudio(
+                            WorkspaceSection.photos,
+                            () => legacy.PhotoPage(files: widget.files),
+                          ),
+                          _visitedStudio(
+                            WorkspaceSection.notes,
+                            () => const legacy.NotesPage(),
+                          ),
+                          _visitedStudio(
+                            WorkspaceSection.printing,
+                            () => const legacy.PrintPage(),
+                          ),
+                          _visitedStudio(
+                            WorkspaceSection.business,
+                            () => legacy.BusinessPage(files: widget.files),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -206,6 +282,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 WorkspaceSection.workspace => 'Workspace',
                 WorkspaceSection.projects => 'Files & Projects',
                 WorkspaceSection.settings => 'Settings',
+                WorkspaceSection.design => 'Creative Studio',
+                WorkspaceSection.photos => 'Photo Studio',
+                WorkspaceSection.notes => 'Office Notes',
+                WorkspaceSection.printing => 'Print Studio',
+                WorkspaceSection.business => 'Business & POS',
               },
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -355,7 +436,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             children: [
               SwitchListTile(
                 title: const Text('Dark appearance'),
-                subtitle: const Text('Change the workspace theme.'),
+                subtitle: const Text(
+                  'Theme for workspace and design. Other studios currently use light surfaces.',
+                ),
                 value: widget.dark,
                 onChanged: (value) async {
                   try {

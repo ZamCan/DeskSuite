@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:desksuite/design/design_document.dart';
-import 'package:desksuite/main.dart';
+import 'package:desksuite/workspace/creative_studio_page.dart';
 import 'package:desksuite/workspace/file_gateway.dart';
 import 'package:desksuite/workspace/project_repository.dart';
 import 'package:flutter/material.dart';
@@ -62,7 +62,11 @@ void main() {
       final repo = FailingRepository(dir);
       final files = CapturingFiles();
       await tester.pumpWidget(
-        DeskSuiteApp(repository: repo, fileGateway: files),
+        MaterialApp(
+          home: Scaffold(
+            body: CreativeStudioPage(repository: repo, files: files),
+          ),
+        ),
       );
       await settleIo(tester);
       await tester.tap(find.byKey(const Key('new-design')));
@@ -71,8 +75,16 @@ void main() {
       await settleIo(tester);
       repo.failWrites = true;
       await tester.tap(find.byKey(const Key('add-text')));
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pump();
+      await tester.pump();
+      expect(
+        find.text('Changes are not saved'),
+        findsOneWidget,
+        reason: 'Backgrounding flushes without waiting for the debounce timer',
+      );
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await settleIo(tester);
-      expect(find.text('Changes are not saved'), findsOneWidget);
       await tester.tap(find.byTooltip('Back to workspace'));
       await settleIo(tester);
       expect(find.text('Changes could not be saved'), findsOneWidget);

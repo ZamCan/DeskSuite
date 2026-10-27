@@ -55,11 +55,15 @@ class NativeFileGateway implements FileGateway {
     required String name,
     required Uint8List bytes,
     required String mimeType,
-  }) async =>
-      await FilePicker.saveFile(
-        fileName: name,
-        bytes: bytes,
-        mimeType: mimeType,
-      ) !=
-      null;
+  }) async {
+    if (name.isEmpty || name.contains('/') || name.contains('\\')) {
+      throw const FormatException('Invalid export file name.');
+    }
+    return await FilePicker.saveFile(
+          fileName: name,
+          bytes: bytes,
+          mimeType: mimeType,
+        ) !=
+        null;
+  }
 }

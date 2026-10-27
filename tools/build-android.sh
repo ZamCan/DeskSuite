@@ -1,67 +1,41 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-ROOT="$(cd "$(dirname "\${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+fail() { printf '\nDeskSuite build stopped: %s\n' "$1" >&2; exit 1; }
 
-fail() {
-  printf '\nDeskSuite build stopped: %s\n' "$1" >&2
-  exit 1
-}
-
-command -v git >/dev/null 2>&1 || fail "Git is required."
-if ! command -v flutter >/dev/null 2>&1; then
-  cat >&2 <<'MSG'
-
-Flutter SDK is not installed in this Termux environment.
-Gradle alone cannot compile DeskSuite's Dart/Flutter application sources.
-
-You can either:
-  1. Install a compatible Flutter SDK and then rerun this script; or
-  2. Push the integrated source to GitHub, open:
-     https://github.com/ZamCan/DeskSuite/actions
-     and download the desksuite-android artifact from a successful run.
-
-No files have been deleted or reset by this check.
-MSG
-  exit 2
+MODE="${1:-debug}"
+[[ "$MODE" == debug || "$MODE" == release ]] || fail "Use: bash tools/build-android.sh [debug|release]"
+command -v flutter >/dev/null 2>&1 || fail "Flutter is not on PATH; check your existing installation with flutter doctor -v."
+command -v java >/dev/null 2>&1 || fail "Java is not on PATH; use a JDK compatible with the checked-in Gradle wrapper."
+[[ -d android ]] || fail "The checked-in Android project is missing. Restore it from Git."
+if [[ "$MODE" == release && ! -s android/key.properties ]]; then
+  fail "A release requires local android/key.properties and a private signing key. See docs/DEVELOPMENT.md; never commit signing credentials. For a test build use: bash tools/build-android.sh debug"
 fi
-command -v java >/dev/null 2>&1 || fail "Java is not installed or is not on PATH."
 
-printf '\n== DeskSuite Android build ==\n'
-printf 'Repository: %s\n' "$ROOT"
+printf '\n== DeskSuite Android %s build ==\nRepository: %s\n' "$MODE" "$ROOT"
 flutter --version
 java -version
-
-if [[ ! -d android ]]; then
-  printf '\nAndroid platform files are missing; generating Android scaffolding...\n'
-  flutter create --project-name desksuite --org com.zamcan.desksuite --platforms=android .
-fi
-
 printf '\n== Dependency resolution ==\n'
 flutter pub get
-
-printf '\n== Formatting ==\n'
-dart format lib test
-
+printf '\n== Formatting check ==\n'
+dart format --output=none --set-exit-if-changed lib test
 printf '\n== Static analysis ==\n'
-flutter analyze
-
-printf '\n== Tests ==\n'
-flutter test
-
-printf '\n== Release APK ==\n'
-flutter build apk --release
-
-APK="$ROOT/build/app/outputs/flutter-apk/app-release.apk"
-[[ -s "$APK" ]] || fail "Flutter reported a build without producing the expected APK."
-
-printf '\nAPK built successfully:\n%s\n' "$APK"
-printf 'Size: '
-du -h "$APK" | awk '{print $1}'
-
+flutter analyze --no-pub
+printf '\n== Host tests ==\n'
+flutter test --no-pub --concurrency=1
+printf '\n== Android APK (%s) ==\n' "$MODE"
+flutter build apk "--$MODE"
+APK="$ROOT/build/app/outputs/flutter-apk/app-$MODE.apk"
+[[ -s "$APK" ]] || fail "Flutter did not produce the expected APK: $APK"
+printf '\nAPK: %s\n' "$APK"
+if [[ "$MODE" == debug ]]; then
+  printf 'Debug-signed: for local testing only, not production distribution.\n'
+else
+  printf 'Verify the APK signature, package ID, device behavior and release gates before distribution.\n'
+fi
 if [[ -d /sdcard/Download ]]; then
-  mkdir -p /sdcard/Download
-  cp "$APK" /sdcard/Download/DeskSuite-release.apk
-  printf 'Copied a convenience copy to /sdcard/Download/DeskSuite-release.apk\n'
+  cp "$APK" "/sdcard/Download/DeskSuite-$MODE.apk"
+  printf 'Copied to /sdcard/Download/DeskSuite-%s.apk\n' "$MODE"
 fi

@@ -1,4 +1,6 @@
-# Reconciled branch integration
+# Integration history
+
+The following earlier record is historical; the later integration below restores live prototype modules.
 
 ## Integration record — 2026-10-27
 
@@ -34,3 +36,14 @@ The app uses Flutter/Dart. The Android runner is Gradle-based, but **Gradle alon
 4. Port Photo, Notes, Print and Business prototypes into separate modules with tests and explicit local-data migration.
 5. Configure and test a persistent release-signing key before promising install-over updates or publishing.
 6. Only then consider moving the integration into `main`; do not force-push either source branch.
+
+
+## Subsequent unified-studios integration — 2026-10-27
+
+After the above merge, `main` advanced to `b2d22cb`. This branch starts from that exact commit, preserving its modular workspace, Files & Projects, dark setting, Android application ID `com.zamcan.desksuite`, and active CI workflow. It restores the archived prototype's Photo, Notes, Print, Business and earlier editor as actual navigation destinations, with bounded processing, persistence/error handling and host tests. Other restored studios use light surfaces even when the current workspace is dark.
+
+Main's current editable project root is `getApplicationDocumentsDirectory()/DeskSuite`; it remains the active root. Earlier prototype notes, products and `.dsproject` files use `getApplicationSupportDirectory()/desksuite`. The design browser discovers earlier files under that support root **within the same installation** and imports a new copy into the current root, leaving the source unchanged. Existing current designs and theme settings remain in place.
+
+An older pre-merge prototype created from `--org com.zamcan.desksuite` and project name `desksuite` would use `com.zamcan.desksuite.desksuite`, whereas current main and the experimental creative APK use `com.zamcan.desksuite`. Different Android IDs have isolated private data; different signing keys also block in-place updates. Export and verify user-accessible backups before replacing or uninstalling anything. Some old prototypes have no editable export button; preserve their installations and use an appropriate verified device backup or authorized debug-access method rather than assuming recovery. No cross-ID migration is implemented.
+
+The existing CI workflow is unmodified. Local host checks passed; no integrated APK/AAB, GitHub Actions run, actual printer or device upgrade is claimed.

@@ -124,8 +124,29 @@ void main() {
       reason: 'Export should complete without error',
     );
     expect(latin1.decode(files.exported!.sublist(0, 5)), '%PDF-');
+    final backButton = find.byWidgetPredicate(
+      (widget) => widget is IconButton && widget.tooltip == 'Back to workspace',
+    );
+    for (var i = 0; i < 100; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 10)),
+      );
+      if (tester.widget<IconButton>(backButton).onPressed != null) break;
+    }
+    expect(tester.widget<IconButton>(backButton).onPressed, isNotNull);
     await tester.tap(find.byTooltip('Back to workspace'));
     await settleIo(tester);
+    for (
+      var i = 0;
+      i < 150 && find.text('Studio poster').evaluate().isEmpty;
+      i++
+    ) {
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 10)),
+      );
+    }
     expect(find.text('Studio poster'), findsOneWidget);
     final projects = await tester.runAsync(() => repo.list());
     expect(projects!.projects.length, 1);

@@ -1,12 +1,14 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 
 import 'app/theme.dart';
+import 'core/suite_paths.dart';
+
 import 'workspace/file_gateway.dart';
 import 'workspace/project_repository.dart';
 import 'workspace/workspace_screen.dart';
+
+export 'legacy_studios.dart'
+    show Project, EditorPage, PhotoPage, NotesPage, PrintPage, BusinessPage;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,11 +36,7 @@ class _DeskSuiteAppState extends State<DeskSuiteApp> {
   Future<ProjectRepository> _initialize() async {
     final repo =
         widget.repository ??
-        ProjectRepository(
-          Directory(
-            '${(await getApplicationDocumentsDirectory()).path}${Platform.pathSeparator}DeskSuite',
-          ),
-        );
+        ProjectRepository(await designRoot(), legacyRoot: await suiteRoot());
     final dark = await repo.readDarkMode();
     if (mounted) setState(() => _dark = dark);
     return repo;

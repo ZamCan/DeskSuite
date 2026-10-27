@@ -1,38 +1,57 @@
-# Development and release
+# Development and local builds
 
-## Toolchain
+## Prerequisites
 
-- Flutter 3.47.8 / Dart 3.13.7 (stable release tag).
-- JDK 21; Android SDK platform 36 and build-tools 36.0.0; SDK licences accepted.
-- Android min API 24; app ID `com.zamcan.desksuite`.
-- The Android Gradle wrapper is checked in. Its Gradle 9.3.1 distribution has a SHA-256 checksum in `android/gradle/wrapper/gradle-wrapper.properties`.
-- `pubspec.lock` pins resolved dependencies. No keys, SDK paths, tokens or signing configuration belong in Git.
-
-Set `JAVA_HOME`, `ANDROID_HOME` and `PATH` according to your local SDK installation, then:
+Use your existing compatible Flutter SDK, Git, and platform toolchain. Host checks here used Flutter 3.47.8 / Dart 3.13.7. The lockfile currently requires Dart >=3.13 and Flutter >=3.41; `pubspec.yaml` declares broader minimums, which do **not** guarantee an older Flutter resolves the current lockfile. Android's checked-in Gradle 9.3.1 needs a compatible JDK (JDK 21 is a sensible choice) and an installed Android SDK. Validate with `flutter doctor -v`. Termux/Debian compatibility depends on your actual SDK, JVM and native binaries; diagnose failures locally rather than downloading duplicate toolchains blindly.
 
 ```sh
-flutter doctor -v
-flutter pub get
+flutter pub get  # may need network the first time; use --offline if dependencies are cached
 dart format --output=none --set-exit-if-changed lib test
-flutter analyze
-flutter test --reporter expanded
-flutter build apk --debug
+flutter analyze --no-pub
+flutter test --no-pub --concurrency=1 --reporter expanded --timeout 60s
 ```
 
-If an Android SDK component is missing, install it using Android Studio or `sdkmanager`; accept licences with `flutter doctor --android-licenses`. Gradle may request an NDK during the first build. Debug builds need Android's `INTERNET` permission for Flutter tooling; this app has no implemented network service.
+Sequential tests avoid high peak memory on smaller systems. The most recent integrated host run is recorded in `CHANGELOG.md`; native plugin calls in host tests use fakes. No physical device or integrated APK/AAB was tested in that run.
 
-The final debug build was also run specifically for 64-bit ARM:
+## Android: debug, release and signing
+
+`android/` is checked in and has application ID `com.zamcan.desksuite`. Do not rerun `flutter create` for normal Android builds. The script can be invoked from any directory:
 
 ```sh
-flutter build apk --debug --target-platform=android-arm64 --split-per-abi --no-pub --android-project-arg=kotlin.compiler.execution.strategy=in-process
+bash tools/build-android.sh debug
+# Or, after setting up private release signing:
+bash tools/build-android.sh release
+# Optional AAB after the same signing setup:
+flutter build appbundle --release
 ```
 
-`build/app/outputs/flutter-apk/app-arm64-v8a-debug.apk` was produced and verified with `apksigner`; it targets API 24+ and only the arm64 ABI. Install only after connecting a compatible device: `adb devices`, then `adb install -r build/app/outputs/flutter-apk/app-arm64-v8a-debug.apk`. Installation and operation have not been verified because no Android device/emulator was attached. The temporary debug keystore is not part of the repository; a different signing key cannot update this install. Export projects before any uninstall.
+The script resolves declared Dart dependencies, checks formatting and analysis, runs host tests, builds one APK, and optionally copies it to `/sdcard/Download` when that directory exists. The debug APK uses the local debug key and is **for testing only**. The script requires a nonempty `android/key.properties` for its release mode. Direct Gradle/Flutter release builds without signing configuration can be unsigned or fail; do not treat either as a distributable release.
 
-For a release, configure a real release keystore and signing process outside this repository, review third-party licences and permissions, run device/airplane-mode/print tests, and create a reproducible release pipeline. Release signing is intentionally not configured; the debug key must not be used as a production identity.
+For release signing, follow Flutter/Android's signing documentation using your own existing keystore. Keep the key and `android/key.properties` outside version control. The checked-in Gradle configuration reads these keys (use an absolute `storeFile` path):
 
-## Tests and constraints
+```properties
+storeFile=/absolute/path/to/private-keystore.jks
+storePassword=YOUR_PRIVATE_VALUE
+keyAlias=YOUR_ALIAS
+keyPassword=YOUR_PRIVATE_VALUE
+```
 
-Tests under `test/` cover domain history and geometry, project files and failure cases, raster/PDF rendering, a network-blocked core workflow, and a phone-sized widget workflow with fake platform pickers. They do not simulate every native Android plugin, hardware printer or actual app installation.
+Do not paste real values into source, logs or chat. Back up the key securely; the same package ID **and** compatible signing identity are needed for in-place updates. Inspect the actual output and run the SDK's `apksigner verify --verbose --print-certs` against the APK; check AAB signing as appropriate. Verify version, install/upgrade, file access, offline workflows and printing on real devices before distributing.
 
-On memory-limited hosts, stop competing builds/tests and reduce Gradle concurrency. This repository sets one worker, a 768 MB Java heap and in-process Kotlin compilation. In the supplied 2 GB environment, two builds were killed by the host out-of-memory killer, and a smaller metaspace then caused a D8 metaspace error. Running without concurrent tests, using swap and increasing metaspace were the targeted mitigations; do not assume an unexplained daemon exit is a compiler error.
+Current main and the earlier creative APK use `com.zamcan.desksuite`; the pre-merge prototype generator command (`--org com.zamcan.desksuite` plus project `desksuite`) yields `com.zamcan.desksuite.desksuite`, a separate installation. No cross-ID automatic private-data migration exists. Export/reimport copies while the old app is still installed, where that old version permits it.
+
+## Desktop / iOS exploration
+
+Windows and Linux do not yet have checked-in platform runners here. Before generating them, commit or back up your work and lockfile; Flutter's generator in this environment rewrote `pubspec.lock` even with `--no-pub`. Restore the intended lockfile, inspect `git diff`, then resolve dependencies. Example **on an appropriate host**:
+
+```sh
+cp pubspec.lock pubspec.lock.before-platform-create
+flutter create --no-pub --project-name desksuite --org com.zamcan.desksuite --platforms=linux,windows .
+cp pubspec.lock.before-platform-create pubspec.lock && rm pubspec.lock.before-platform-create
+flutter pub get
+flutter build linux --release      # Linux desktop dependencies required
+# On Windows with Visual Studio C++ tooling instead:
+flutter build windows --release
+```
+
+These are instructions, not reported build results. Windows bundles need their runtime files; an AppImage requires additional packaging and testing. iOS requires macOS/Xcode and Apple provisioning; no iOS build was performed. Plugins and app-private storage must be validated per platform.

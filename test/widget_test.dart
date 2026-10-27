@@ -31,11 +31,12 @@ void main() {
     await tester.pumpWidget(
       DeskSuiteApp(repository: repo, fileGateway: _NoFiles()),
     );
-    await tester.pump();
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 100)),
-    );
-    await tester.pump();
+    for (var i = 0; i < 100 && find.text('Workspace').evaluate().isEmpty; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 10)),
+      );
+    }
     expect(find.text('Workspace'), findsWidgets);
     expect(tester.takeException(), isNull);
     await tester.runAsync(() => dir.delete(recursive: true));

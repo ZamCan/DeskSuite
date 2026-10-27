@@ -1,14 +1,17 @@
-# Files and compatibility
+# File formats and compatibility
 
-| Format | Current support | Notes |
+| Format | Implemented support | Important limitations |
 | --- | --- | --- |
-| `.dsdesign` | Create, autosave, reopen, import/export a copy | Version-1 UTF-8 JSON with `format: desksuite.design`, dimensions in mm, ordered objects, styles, and base64-embedded imported images. Import creates a new project ID. 32 MB maximum. |
-| `.dsproject` (earlier prototype) | Import as an editable copy | Earlier schema version 1 only; a logical unit becomes 25.4/96 mm, matching that editor's PDF page conversion. Layer order, text, shape colour, positions and eligible embedded images are retained; font rendering and circle appearance can differ. New limits apply, including 8 MB per image and 100 layers. Unknown layers are rejected rather than discarded. Import does not change the source. |
-| PNG / JPEG / WebP | Import as an image layer | Original bytes are copied into the project; original files are not overwritten. Each input is limited to 8 MB and 20 megapixels; unique decoded images are limited to 24 megapixels in total. First frame only for animated inputs. Device codec support can vary. |
-| PNG | Export | 150 or 300 dpi pixel dimensions calculated from page mm. PNG metadata is not guaranteed to encode physical dpi. |
-| PDF | Export | One page, same physical dimensions as the design; content is a flattened raster, not selectable text or vector art. 150/300 dpi. No PDF import/edit/merge. |
-| DOCX / XLSX / CSV / other | Not supported | Do not import as a project; originals are never modified by unsupported format handling. |
+| `.dsdesign` | Create, autosave, reopen, export/import an editable copy | Version 1 UTF-8 JSON (`format: desksuite.design`), physical page/object geometry in mm, ordered objects and base64-embedded images. Import gets a fresh ID. Maximum file 32 MiB, 100 objects, 4,000 characters per text object. |
+| `.dsproject` | Earlier manual-save editor; import a copy into the new editor | Earlier schema 1 is converted using 25.4/96 mm per logical unit. The source stays untouched. Unknown layers/unsupported or oversized data are rejected; font and circle rendering can differ. Same-installation private files are listed; different Android IDs are isolated. |
+| PNG/JPEG/WebP | Import into new canvas and Photo | Picker limit 8 MiB per input. Design image decode limit 20 MP each / 24 MP total unique decoded images. Photo limit 12 MP and 8192 px per side, 16 MiB processed PNG working data. First frame only; codec support varies by device. |
+| PNG | Photo export and new canvas export | New canvas export at 150 or 300 dpi; PNG physical-DPI metadata is not guaranteed. |
+| JPEG | Photo export | User-selectable quality; transparency flattened on white. Original file is never overwritten automatically. |
+| PDF | New canvas, photo-sheet export and system printing | New canvas PDF is one physical-size page with flattened raster content, not selectable text/vector output. Photo sheet is one page with repeated contain-fitted images. No PDF import, page editing or merge. |
+| TXT | Notes export | Plain UTF-8 text, not a rich document. |
+| JSON | Business catalogue export | A copy of product records; importing/restoring it in the UI is not implemented. Money is stored in integer hundredths; the UI currently labels amounts TZS and has no currency selector. |
+| DOCX, XLSX, CSV, SVG, others | Not implemented | Do not claim compatibility or modification of originals. |
 
-Export is bounded to 16 million pixels and 8192 pixels per side to reduce memory pressure. A4 at 300 dpi fits; A3 at 300 dpi exceeds the current 16 MP bound and must be exported at 150 dpi. These limits are safeguards, not guarantees against out-of-memory errors on every device. Imported files and project JSON are checked for sizes and unsupported versions; unrecognised or malformed projects are reported, not silently overwritten.
+Canvas export is capped at 16 million pixels and 8192 pixels per side; A4 at 300 dpi fits but A3 at 300 dpi does not. Limits reduce, but cannot eliminate, memory failures on every device. Malformed/over-limit inputs are rejected; OS pickers may cache before Dart validates a stream. See [printing](PRINTING.md) and [privacy/security](PRIVACY_AND_SECURITY.md).
 
-Earlier prototype projects are stored privately by that application and are **not** discovered automatically here. The user must obtain an accessible `.dsproject` copy, choose Import, and verify the result. If the earlier installation uses a different Android application ID, Android isolates its private files; this branch does not migrate data between apps. Keep the earlier app/data and backups until conversion has been verified.
+Export individual project/notes/catalogue copies to a user-controlled location and verify them. There is no complete suite backup/restore yet. Especially before uninstalling, changing app IDs or switching signing keys, keep the old installation and its data until the exported copies are verified.

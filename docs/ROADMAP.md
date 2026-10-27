@@ -1,36 +1,30 @@
-# Capability status
+# Roadmap and release gates
 
-Statuses refer to the current code. “Tested” means automated host Flutter tests unless a device is explicitly identified.
+## Implemented and host-tested
 
-## Implemented and tested
+- [x] Integrated live studios into the current main workspace while preserving existing settings, project roots and earlier data paths.
+- [x] Physically dimensioned editable design, text/shapes/images, arrangement, history, save/reopen, copy import/export, PNG and raster PDF.
+- [x] Non-destructive earlier project conversion and interrupted-replacement recovery.
+- [x] Local photo transformations and configurable one-page photo-sheet PDF.
+- [x] Notes save/error/retry and TXT export; starter catalogue/stock counters, exact minor units and JSON export.
+- [x] PDF physical-size and fake print-gateway behavior; sequential host suite, formatter and analyzer.
 
-- Versioned structured design serialization and validation; unit and filesystem round trips.
-- Layer geometry, rotated hit tests, drag history, rotated aspect-preserving image resize, undo/redo and physical unit conversions.
-- Local atomic-save path, serialized writes, failed-write preservation, malformed-file reporting, import as a new project and recovery of a replacement backup (host filesystem tests).
-- Shared renderer, actual PNG/PDF generation, page dimension calculation and low-resolution calculation (host tests).
-- Phone-sized widget flow: create, edit text, add an image through a test picker, undo/redo, export through a test saver, close and reopen.
-- An engine workflow with Dart HTTP requests blocked during the test. This does not prove Android airplane-mode behaviour.
+## Implemented, not fully validated
 
-## Implemented but not fully tested
+- [ ] Native Android file picking, saving, lifecycle/process death, actual printer discovery/output and accessibility on representative devices.
+- [ ] Checked-in Android scaffold and external release-signing configuration: no integrated APK/AAB or device upgrade was built/tested in this execution.
+- [ ] Windows/Linux/iOS plugins, generated desktop runners, packaging and OS-specific paths.
+- [ ] System print scaling, colour, real margins and ID-photo requirements.
 
-- Android runner and a debug APK have built; native picker/export integration, light/dark settings, shape and layer controls, and accessibility labels have host coverage, but no Android device or emulator has been exercised.
-- PDF is a single-page, full-bleed raster at the chosen physical page size. Actual physical printer output and printer margins are not tested.
-- Project save/recovery has host filesystem coverage, not hardware power-loss testing. History is session-only.
+## Not implemented / next slices
 
-## In progress
+- [ ] Full suite backup, restore, migrations and cross-ID import for notes/catalogue, with crash and storage-full tests.
+- [ ] Transactional multi-instance database; complete POS, payment/refunds, sale lines, receipts, expense/profit reports and audit history.
+- [ ] Rich document editor, spreadsheet/formulas, DOCX/XLSX interoperability and PDF page tools.
+- [ ] Advanced image editing, arbitrary crop/adjustments and optional local segmentation; no model downloads without consent.
+- [ ] Guides/snapping, professional vector/SVG tools, colour management, bleed/crop marks, imposition and printer calibration.
+- [ ] Full accessibility, localization, dark theme across the restored studios, performance and low-memory profiling.
 
-- Android installation verification, device offline testing, accessibility and performance profiling.
-- Creative editor usability: additional direct manipulation, layout tools, image quality controls and broader format validation.
+## Release gate: **not passed**
 
-## Not implemented
-
-- Dedicated Photo Studio, passport/ID sheets, cropping, adjustment filters or background removal.
-- Office documents, notes, spreadsheets/formulas, PDF import/merge/split, OCR, signatures.
-- Direct printer services, imposition, print queue, print presets or printer-specific calibration.
-- Business/POS, local database, products, stock, expenses, payments, receipts, profit reporting and integrated orders.
-- Bulk backup/restore, cloud sync, encryption, accounts, analytics, desktop runners and desktop releases.
-- A production-signed or store-ready release.
-
-## Concurrent prototype integration
-
-The repository's `main` gained separate Photo, Notes, Print and Business prototypes while this branch was developed. Their source and workflow are preserved on `main`, not included or tested in this branch. Reconcile those capabilities, storage paths and Android app identities before merging; see [INTEGRATION.md](INTEGRATION.md).
+Require a signed, reproducible Android release with stable package ID and key custody; real-device cold/offline/upgrade/process-death/storage-full tests; native file-picker and printer checks; verified backup/restore; dependency/licence and permissions review; accessibility/performance testing; and a reviewed CI run/artifact. A host test pass or a debug APK is not equivalent to these gates.

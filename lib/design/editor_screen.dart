@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../core/ids.dart';
 import '../printing/design_export.dart';
+import '../printing/print_gateway.dart';
 import '../workspace/file_gateway.dart';
 import '../workspace/project_repository.dart';
 import 'design_controller.dart';
@@ -20,15 +21,18 @@ class EditorScreen extends StatefulWidget {
     required this.document,
     required this.repository,
     required this.files,
+    this.printer,
   });
   final DesignDocument document;
   final ProjectRepository repository;
   final FileGateway files;
+  final PrintGateway? printer;
   @override
   State<EditorScreen> createState() => _EditorScreenState();
 }
 
-class _EditorScreenState extends State<EditorScreen> {
+class _EditorScreenState extends State<EditorScreen>
+    with WidgetsBindingObserver {
   late final DesignController _controller;
   final _images = DesignImageCache();
   final _view = TransformationController();
@@ -47,6 +51,7 @@ class _EditorScreenState extends State<EditorScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _controller = DesignController(widget.document, onChanged: _changed);
     _imageSync = _loadImages();
   }
@@ -159,8 +164,23 @@ class _EditorScreenState extends State<EditorScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      unawaited(_flush());
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _debounce?.cancel();
+    final snapshot = _pending;
+    if (snapshot != null) {
+      // Best effort only; abrupt process death can still interrupt a write.
+      unawaited(widget.repository.save(snapshot).catchError((Object _) {}));
+    }
     _controller.dispose();
     _view.dispose();
     unawaited(_imageSync.whenComplete(_images.dispose));
@@ -422,7 +442,15 @@ class _EditorScreenState extends State<EditorScreen> {
                   'Export',
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
-                subtitle: Text('Choose a file to save outside DeskSuite.'),
+                subtitle: Text('Save a file or open the system print dialog.'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.print_outlined),
+                title: const Text('Print using system dialog · 150 dpi'),
+                subtitle: const Text(
+                  'Printer services and margins vary by device',
+                ),
+                onTap: () => Navigator.pop(context, _ExportChoice.print150),
               ),
               ListTile(
                 leading: const Icon(Icons.picture_as_pdf_outlined),
@@ -475,7 +503,9 @@ class _EditorScreenState extends State<EditorScreen> {
       final doc = _controller.document;
       if (choice != _ExportChoice.project) {
         final dpi =
-            choice == _ExportChoice.pdf150 || choice == _ExportChoice.png150
+            choice == _ExportChoice.pdf150 ||
+                choice == _ExportChoice.png150 ||
+                choice == _ExportChoice.print150
             ? 150
             : 300;
         final lowest = lowestPlacedImageDpi(doc, _images.images);
@@ -496,7 +526,11 @@ class _EditorScreenState extends State<EditorScreen> {
                 ),
                 FilledButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Export anyway'),
+                  child: Text(
+                    choice == _ExportChoice.print150
+                        ? 'Print anyway'
+                        : 'Export anyway',
+                  ),
                 ),
               ],
             ),
@@ -521,25 +555,39 @@ class _EditorScreenState extends State<EditorScreen> {
           );
           extension = 'png';
           mime = 'image/png';
+        case _ExportChoice.print150:
         case _ExportChoice.pdf150:
         case _ExportChoice.pdf300:
           bytes = await renderPdf(
             doc,
             _images.images,
-            dpi: choice == _ExportChoice.pdf150 ? 150 : 300,
+            dpi: choice == _ExportChoice.pdf300 ? 300 : 150,
           );
           extension = 'pdf';
           mime = 'application/pdf';
       }
       final name = doc.name.trim().replaceAll(RegExp(r'[^a-zA-Z0-9 _-]'), '_');
-      final saved = await widget.files.save(
-        name: '${name.isEmpty ? 'design' : name}.$extension',
-        bytes: bytes,
-        mimeType: mime,
-      );
-      if (saved) _message('Export saved.');
+      if (choice == _ExportChoice.print150) {
+        final printed = await (widget.printer ?? const SystemPrintGateway())
+            .printPdf(
+              name: name.isEmpty ? 'design' : name,
+              bytes: bytes,
+              widthMm: doc.widthMm,
+              heightMm: doc.heightMm,
+            );
+        if (printed) _message('Print job sent to the system service.');
+      } else {
+        final saved = await widget.files.save(
+          name: '${name.isEmpty ? 'design' : name}.$extension',
+          bytes: bytes,
+          mimeType: mime,
+        );
+        if (saved) _message('Export saved.');
+      }
     } catch (error) {
-      _message('Export failed: $error');
+      _message(
+        '${choice == _ExportChoice.print150 ? 'Print' : 'Export'} failed: $error',
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -560,7 +608,7 @@ class _EditorScreenState extends State<EditorScreen> {
       appBar: AppBar(
         leading: IconButton(
           tooltip: 'Back to workspace',
-          onPressed: _requestClose,
+          onPressed: _busy ? null : _requestClose,
           icon: const Icon(Icons.arrow_back),
         ),
         titleSpacing: 0,
@@ -897,4 +945,4 @@ class _EditorScreenState extends State<EditorScreen> {
   );
 }
 
-enum _ExportChoice { pdf150, pdf300, png150, png300, project }
+enum _ExportChoice { print150, pdf150, pdf300, png150, png300, project }

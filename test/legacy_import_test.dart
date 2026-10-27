@@ -101,4 +101,30 @@ void main() {
       throwsFormatException,
     );
   });
+  test(
+    'finds earlier private files and imports a copy without deleting originals',
+    () async {
+      final root = await Directory.systemTemp.createTemp('desksuite_old_root_');
+      addTearDown(() => root.delete(recursive: true));
+      final folder = Directory('${root.path}/projects');
+      await folder.create();
+      final old = File('${folder.path}/1700000000000000.dsproject');
+      final oldBytes = utf8.encode(jsonEncode(legacy()));
+      await old.writeAsBytes(oldBytes);
+      final bad = File('${folder.path}/damaged.dsproject');
+      await bad.writeAsString('{oops');
+      final repo = ProjectRepository(root);
+      await old.rename('${old.path}.bak');
+      final list = await repo.listLegacy();
+      expect(await old.exists(), isTrue);
+      expect(list.projects.single.name, 'Earlier poster');
+      expect(list.unreadableFiles, ['damaged.dsproject']);
+      final copy = await repo.importLegacy(list.projects.single.id);
+      expect(copy.id, isNot(list.projects.single.id));
+      expect((await repo.load(copy.id)).elements.length, 3);
+      expect(await old.readAsBytes(), orderedEquals(oldBytes));
+      expect(await bad.readAsString(), '{oops');
+      await expectLater(repo.importLegacy('../escape'), throwsFormatException);
+    },
+  );
 }
