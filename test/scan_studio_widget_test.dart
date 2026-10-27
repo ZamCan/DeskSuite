@@ -167,6 +167,9 @@ void main() {
       await waitIo(tester);
       await tapVisible(tester, find.byKey(const Key('scan-import')));
       await waitIo(tester);
+      // The page count is the app's own signal that the draft was loaded; wait
+      // for it instead of assuming a fixed number of pumps was enough.
+      await settleUntil(tester, find.textContaining('1 of 8 pages'));
       expect(find.textContaining('1 of 8 pages'), findsOneWidget);
       await tapVisible(tester, find.byKey(const Key('scan-crop')));
       await waitIo(tester, until: find.text('Adjust page corners'));
@@ -292,6 +295,9 @@ void main() {
       await tapVisible(tester, find.byKey(const Key('scan-samples')));
       await tapVisible(tester, find.byKey(const Key('sample-report')));
       await waitIo(tester, rounds: 45);
+      // The page count is the app's own signal that the draft was loaded; wait
+      // for it instead of assuming a fixed number of pumps was enough.
+      await settleUntil(tester, find.textContaining('2 of 8 pages'));
       expect(find.textContaining('2 of 8 pages'), findsOneWidget);
       final initial = await readDraft(tester, store);
       expect(initial, hasLength(2));
@@ -334,6 +340,9 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpWidget(screen());
     await waitIo(tester, rounds: 45);
+    // The page count is the app's own signal that the draft was loaded; wait
+    // for it instead of assuming a fixed number of pumps was enough.
+    await settleUntil(tester, find.textContaining('2 of 8 pages'));
     expect(find.textContaining('2 of 8 pages'), findsOneWidget);
     final reopened = await readDraft(tester, store);
     expect(reopened.map((page) => page.id), before.map((page) => page.id));
@@ -386,6 +395,9 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpWidget(screen());
     await waitIo(tester);
+    // The page count is the app's own signal that the draft was loaded; wait
+    // for it instead of assuming a fixed number of pumps was enough.
+    await settleUntil(tester, find.textContaining('1 of 8 pages'));
     expect(find.textContaining('1 of 8 pages'), findsOneWidget);
     expect((await readDraft(tester, store)).single.id, saved.single.id);
     expect(files.imported, orderedEquals(original));
@@ -486,10 +498,16 @@ void main() {
         tester,
         find.byKey(const Key('scan-add-recovered')),
       );
+      // The page count is the app's own signal that the draft was loaded; wait
+      // for it instead of assuming a fixed number of pumps was enough.
+      await settleUntil(tester, find.textContaining('1 of 8 pages'));
       expect(find.textContaining('1 of 8 pages'), findsOneWidget);
       expect(find.byKey(const Key('scan-add-recovered')), findsNothing);
       await tapVisible(tester, find.byKey(const Key('scan-camera')));
       await waitIo(tester);
+      // The page count is the app's own signal that the draft was loaded; wait
+      // for it instead of assuming a fixed number of pumps was enough.
+      await settleUntil(tester, find.textContaining('2 of 8 pages'));
       expect(find.textContaining('2 of 8 pages'), findsOneWidget);
       expect((await readDraft(tester, store)), hasLength(2));
       expect(tester.takeException(), isNull);
