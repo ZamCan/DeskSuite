@@ -91,6 +91,7 @@ class ImageProcessingService {
     switch (format) {
       case ImageOutputFormat.png:
         output = Uint8List.fromList(img.encodePng(resized, level: 6));
+        break;
       case ImageOutputFormat.jpeg:
         final opaque = img.Image(
           width: resized.width,
@@ -102,6 +103,7 @@ class ImageProcessingService {
         output = Uint8List.fromList(
           img.encodeJpg(opaque, quality: jpegQuality),
         );
+        break;
     }
 
     if (output.isEmpty) throw StateError('The image encoder returned an empty file.');
