@@ -493,6 +493,8 @@ void main() {
       await waitIo(tester);
       expect(find.byKey(const Key('scan-add-recovered')), findsOneWidget);
       await tapReady(tester, const Key('scan-add-recovered'));
+      await revealWithoutSettling(tester, find.byKey(const Key('scan-camera')));
+      await waitForEnabledButton(tester, find.byKey(const Key('scan-camera')));
       expect(find.textContaining('1 of 8 pages'), findsOneWidget);
       expect(find.byKey(const Key('scan-add-recovered')), findsNothing);
       await tapReady(tester, const Key('scan-camera'));
