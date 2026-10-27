@@ -8,6 +8,8 @@ import 'package:desksuite/workspace/project_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/reveal.dart';
+
 class FakeFiles implements FileGateway {
   final Uint8List image = base64Decode(
     'iVBORw0KGgoAAAANSUhEUgAAABAAAAAMCAIAAADkharWAAAAF0lEQVR4nGPs2VLBQApgIkn1qIYRpAEADVwB0JlVGsIAAAAASUVORK5CYII=',
@@ -115,7 +117,10 @@ void main() {
     await tester.tap(find.byTooltip('Export design'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Print-ready PDF · 150 dpi'));
-    await settleIo(tester);
+    // The resolution check decodes the embedded image, so on a loaded runner it
+    // arrives later than any fixed number of pumps. Waiting for the warning is
+    // also an assertion that it appears at all.
+    await settleUntil(tester, find.text('Low-resolution image'));
     expect(find.text('Low-resolution image'), findsOneWidget);
     await tester.tap(find.text('Export anyway'));
     for (var i = 0; i < 150 && files.exported == null; i++) {
