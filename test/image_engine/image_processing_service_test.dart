@@ -6,6 +6,19 @@ import 'package:image/image.dart' as img;
 void main() {
   const service = ImageProcessingService();
   Uint8List sample() { final image = img.Image(width: 120, height: 80); img.fill(image, color: img.ColorRgb8(220, 80, 40)); return Uint8List.fromList(img.encodePng(image)); }
+  test('inspect identifies source file signature', () {
+    expect(service.inspect(sample()).format, DeskImageFormat.png);
+  });
+  test('unsupported output format is rejected', () {
+    expect(
+      () => service.rotate(
+        source: sample(),
+        degrees: 0,
+        outputFormat: DeskImageFormat.webp,
+      ),
+      throwsArgumentError,
+    );
+  });
   test('resize returns validated exact dimensions', () {
     final result = service.resize(source: sample(), width: 60, height: 40, preserveAspectRatio: false, outputFormat: DeskImageFormat.png);
     expect(result.metadata.width, 60); expect(result.metadata.height, 40); expect(img.decodeImage(result.bytes), isNotNull);
