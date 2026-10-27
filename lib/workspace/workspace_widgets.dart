@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../app/theme.dart';
 import 'project_repository.dart';
 
-enum WorkspaceSection { workspace, projects, settings }
+enum WorkspaceSection { workspace, projects, settings, photoStudio }
 
 class WorkspaceSidebar extends StatelessWidget {
   const WorkspaceSidebar({
@@ -97,7 +97,7 @@ class WorkspaceSidebar extends StatelessWidget {
               ],
             ),
           ),
-          planned(Icons.photo_outlined, 'Photo Studio'),
+          item(Icons.photo_outlined, 'Photo Studio', WorkspaceSection.photoStudio),
           planned(Icons.edit_note_outlined, 'Office Studio'),
           planned(Icons.picture_as_pdf_outlined, 'PDF & Documents'),
           planned(Icons.print_outlined, 'Print Studio'),
