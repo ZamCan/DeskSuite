@@ -22,6 +22,14 @@ void main() {
     expect(svg, contains('fill="#ed9a7a"'));
     expect(svg, contains('viewBox="0 0 512 512"'));
 
+    final appIcon = await rootBundle.loadString(
+      'assets/brand/desksuite-app-icon.svg',
+    );
+    expect(appIcon, contains('aria-label="DeskSuite app icon"'));
+    expect(appIcon, contains('<rect width="512" height="512" rx="112" fill="#292824"/>'));
+    expect(appIcon, contains('fill="#fbf8f1"'));
+    expect(appIcon, contains('fill="#ed9a7a"'));
+
     final pngData = await rootBundle.load('assets/brand/desksuite-mark.png');
     final pngBytes = pngData.buffer.asUint8List(
       pngData.offsetInBytes,
