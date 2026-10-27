@@ -49,6 +49,8 @@ jobs:
           channel: stable
           cache: true
       - run: flutter create --project-name desksuite --org com.zamcan.desksuite --platforms=windows .
+      - shell: pwsh
+        run: ./tools/generate-windows-icon.ps1
       - run: git checkout -- test/widget_test.dart
       - run: flutter pub get
       - run: dart format lib test
