@@ -24,13 +24,17 @@ jobs:
       - run: flutter pub get
       - run: dart format lib test
       - run: flutter analyze
-      - run: flutter test
+      - run: flutter test --concurrency=1 --reporter expanded --timeout 120s
+      # Always publish an installable local-test APK; release outputs may be unsigned
+      # unless the owner has explicitly configured release signing in the workflow.
+      - run: flutter build apk --debug
       - run: flutter build apk --release
       - run: flutter build appbundle --release
       - uses: actions/upload-artifact@v4
         with:
           name: desksuite-android
           path: |
+            build/app/outputs/flutter-apk/app-debug.apk
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
@@ -48,7 +52,7 @@ jobs:
       - run: flutter pub get
       - run: dart format lib test
       - run: flutter analyze
-      - run: flutter test
+      - run: flutter test --concurrency=1 --reporter expanded --timeout 120s
       - run: flutter build windows --release
       - shell: pwsh
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath desksuite-windows-x64.zip
@@ -72,7 +76,7 @@ jobs:
       - run: git checkout -- test/widget_test.dart
       - run: flutter pub get
       - run: flutter analyze
-      - run: flutter test
+      - run: flutter test --concurrency=1 --reporter expanded --timeout 120s
       - run: flutter build linux --release
       - run: tar -czf desksuite-linux-x64.tar.gz -C build/linux/x64/release/bundle .
       - name: Assemble AppImage directory
@@ -95,9 +99,7 @@ jobs:
           Comment=Offline-first creative and productivity workspace
           Terminal=false
           EOF
-          cat > AppDir/desksuite.svg <<'EOF'
-          <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="26" fill="#292B29"/><path d="M30 32h68v64H30z" fill="none" stroke="#F7F5EF" stroke-width="8"/><path d="M44 48h40M44 64h40M44 80h25" stroke="#B56B45" stroke-width="7" stroke-linecap="round"/></svg>
-          EOF
+          cp assets/brand/desksuite-app-icon.svg AppDir/desksuite.svg
           wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
           chmod +x appimagetool
           ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool AppDir desksuite-x86_64.AppImage
@@ -121,7 +123,7 @@ jobs:
       - run: git checkout -- test/widget_test.dart
       - run: flutter pub get
       - run: flutter analyze
-      - run: flutter test
+      - run: flutter test --concurrency=1 --reporter expanded --timeout 120s
       - run: flutter build ios --release --no-codesign
       - run: ditto -c -k --sequesterRsrc --keepParent build/ios/iphoneos/Runner.app desksuite-ios-unsigned-app.zip
       - uses: actions/upload-artifact@v4
