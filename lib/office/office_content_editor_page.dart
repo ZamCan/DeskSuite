@@ -10,7 +10,7 @@ import 'office_pdf.dart';
 import 'office_reader.dart';
 import 'office_writer.dart';
 
-enum OfficeEditOutput { pdf, odt, ods, txt, csv }
+enum OfficeEditOutput { pdf, docx, xlsx, odt, ods, txt, csv }
 
 /// A bounded, content-level editor for real office packages.
 ///
@@ -50,12 +50,14 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
   List<OfficeEditOutput> get _availableOutputs => _spreadsheet
       ? const [
           OfficeEditOutput.pdf,
+          OfficeEditOutput.xlsx,
           OfficeEditOutput.ods,
           OfficeEditOutput.csv,
           OfficeEditOutput.txt,
         ]
       : const [
           OfficeEditOutput.pdf,
+          OfficeEditOutput.docx,
           OfficeEditOutput.odt,
           OfficeEditOutput.txt,
         ];
@@ -88,10 +90,12 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
         _format = document.format;
         _title.text = document.title;
         _blocks = List.of(document.blocks);
-        _output = document.format == OfficeFormat.xlsx ||
-                document.format == OfficeFormat.ods
-            ? OfficeEditOutput.ods
-            : OfficeEditOutput.odt;
+        _output = switch (document.format) {
+          OfficeFormat.docx => OfficeEditOutput.docx,
+          OfficeFormat.xlsx => OfficeEditOutput.xlsx,
+          OfficeFormat.ods => OfficeEditOutput.ods,
+          _ => OfficeEditOutput.odt,
+        };
         _loading = false;
       });
     } catch (error) {
@@ -183,6 +187,14 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
           bytes = await buildOfficePdf(document);
           extension = 'pdf';
           mime = 'application/pdf';
+        case OfficeEditOutput.docx:
+          bytes = writeDocx(document);
+          extension = 'docx';
+          mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        case OfficeEditOutput.xlsx:
+          bytes = writeXlsx(document);
+          extension = 'xlsx';
+          mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         case OfficeEditOutput.odt:
           bytes = writeOdt(document);
           extension = 'odt';
