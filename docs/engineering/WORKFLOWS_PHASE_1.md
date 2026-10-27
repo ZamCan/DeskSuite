@@ -12,6 +12,10 @@ DRAFT, APPROVED, PAID, RECEIVED, CONFIDENTIAL, COPY and VOID are available, with
 
 The user draws on a signature surface. The drawing is exported to a transparent PNG and inserted into the design. The user can move, resize, duplicate or delete it like other image layers. This is a **visual signature image**, not a cryptographic digital signature, identity verification or tamper-evident PDF signature.
 
+## External file handoff
+
+The workspace includes an **Open with an app** action for PDF, Word, Excel, PowerPoint, OpenDocument, RTF, text, HTML and common image files up to 50 MB. Android receives the selected bytes in a bounded flow, writes them only to an app cache directory, and opens a chooser using a scoped FileProvider URI. The source file is not overwritten. A compatible installed application is required. This is an external handoff, not in-app Office/PDF editing.
+
 ## Current limits
 
 - Stamps and drawn signatures are added to DeskSuite design projects, not directly to imported PDF, DOCX, XLSX or PPTX files.
