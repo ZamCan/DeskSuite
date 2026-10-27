@@ -3,6 +3,7 @@
 Statuses refer to the current code. “Tested” means automated host Flutter tests unless a device is explicitly identified.
 
 ## Implemented and tested
+- Android external-file handoff for supported PDF, Office, OpenDocument, text, HTML and image extensions; the original file is passed read-only to a compatible installed app.
 - Editable visual stamp layers with optional placement date and custom labels; unit tests cover date formatting.
 - Finger/stylus signature capture to transparent PNG, inserted as a normal image layer on the design canvas.
 
