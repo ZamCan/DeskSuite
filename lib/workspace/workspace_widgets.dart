@@ -17,6 +17,7 @@ enum WorkspaceSection {
   conversions,
   // Appended last: IndexedStack children are indexed by this order.
   text,
+  office,
 }
 
 class WorkspaceSidebar extends StatelessWidget {
@@ -128,6 +129,11 @@ class WorkspaceSidebar extends StatelessWidget {
             Icons.text_snippet_outlined,
             'Text extraction',
             WorkspaceSection.text,
+          ),
+          item(
+            Icons.sync_alt_rounded,
+            'Document converter',
+            WorkspaceSection.office,
           ),
           planned(Icons.picture_as_pdf_outlined, 'PDF & Documents'),
           item(Icons.print_outlined, 'Print Studio', WorkspaceSection.printing),

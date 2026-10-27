@@ -10,6 +10,7 @@ import '../document_scan/camera_gateway.dart';
 import '../document_scan/scan_studio_page.dart';
 import '../legacy_studios.dart' as legacy;
 import '../ocr/text_extraction_page.dart';
+import '../office/office_convert_page.dart';
 import 'conversion_catalog.dart';
 import 'conversion_catalog_page.dart';
 import 'creative_studio_page.dart';
@@ -355,6 +356,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           _visited.contains(WorkspaceSection.text)
                               ? TextExtractionPage(files: widget.files)
                               : const SizedBox.shrink(),
+                          _visited.contains(WorkspaceSection.office)
+                              ? OfficeConvertPage(
+                                  picker: widget.files is DocumentPicker
+                                      ? widget.files as DocumentPicker
+                                      : const _NoDocumentPicker(),
+                                  files: widget.files,
+                                )
+                              : const SizedBox.shrink(),
                         ],
                       ),
                     ),
@@ -398,6 +407,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 WorkspaceSection.guide => 'Getting started',
                 WorkspaceSection.conversions => 'Conversion routes',
                 WorkspaceSection.text => 'Text extraction',
+                WorkspaceSection.office => 'Document converter',
               },
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -755,4 +765,13 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       ],
     );
   }
+}
+
+/// Used when an injected gateway has no document picker (as in most widget
+/// tests). Choosing a file then reports that the picker is unavailable instead
+/// of silently doing nothing.
+class _NoDocumentPicker implements DocumentPicker {
+  const _NoDocumentPicker();
+  @override
+  Future<PickedDocument?> pickDocument() async => null;
 }

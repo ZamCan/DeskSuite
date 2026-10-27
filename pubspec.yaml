@@ -19,6 +19,8 @@ dependencies:
   # Direct: OOXML (DOCX/XLSX/PPTX) parts are ZIP containers read and written by
   # lib/ocr and lib/office. It was previously only a transitive `pdf` dependency.
   archive: ^4.5.2
+  # Direct: office packages (DOCX/XLSX/PPTX/ODF) are XML; read/written here.
+  xml: ^7.0.1
 
 dev_dependencies:
   flutter_test:
@@ -30,3 +32,11 @@ flutter:
   assets:
     - assets/samples/
     - assets/tessdata/
+  fonts:
+    # Embedded so generated PDFs keep smart quotes, dashes, accents and
+    # non-Latin text instead of silently dropping glyphs. OFL-1.1.
+    - family: DeskSuiteSans
+      fonts:
+        - asset: assets/fonts/NotoSans-Regular.ttf
+        - asset: assets/fonts/NotoSans-Bold.ttf
+          weight: 700
