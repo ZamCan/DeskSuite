@@ -196,13 +196,13 @@ class _EditorPageState extends State<EditorPage>{
     var text='';
     if(kind=='text'){final c=TextEditingController(text:'Your headline');final v=await showDialog<String>(context:context,builder:(ctx)=>AlertDialog(title:const Text('Add text'),content:TextField(controller:c,autofocus:true),actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(ctx,c.text.trim()),child:const Text('Add'))]));if(v==null||v.isEmpty)return;text=v;}
     checkpoint();final e=<String,dynamic>{'id':DateTime.now().microsecondsSinceEpoch.toString(),'kind':kind,'text':text,'x':25.0+(p.items.length*11)%100,'y':30.0+(p.items.length*17)%180,'w':kind=='text'?250.0:110.0,'h':kind=='text'?65.0:100.0,'color':kind=='circle'?0xFFB56B45:0xFF292B29,'size':24.0};
-    setState(()=>{p.items.add(e),selected=e['id'] as String});
+    setState(() { p.items.add(e); selected = e['id'] as String; });
   }
   Future<void> addImage()async{
     final r=await FilePicker.platform.pickFiles(type:FileType.image,withData:true);if(r==null||r.files.isEmpty)return;final b=r.files.single.bytes;
     if(b==null||b.length>18*1024*1024){note('Unable to read the image or it exceeds 18 MB.');return;}
     checkpoint();final e=<String,dynamic>{'id':DateTime.now().microsecondsSinceEpoch.toString(),'kind':'image','text':r.files.single.name,'x':30.0,'y':80.0,'w':230.0,'h':160.0,'color':0xFF292B29,'size':24.0,'imageData':base64Encode(b)};
-    setState(()=>{p.items.add(e),selected=e['id'] as String});
+    setState(() { p.items.add(e); selected = e['id'] as String; });
   }
   Future<void> save()async{setState(()=>busy=true);try{p.updated=DateTime.now();await LocalStore.saveProject(p);if(mounted)note('Project saved on this device.');}catch(e){if(mounted)note('Save failed: '+e.toString());}finally{if(mounted)setState(()=>busy=false);}}
   Future<void> rename()async{final c=TextEditingController(text:p.name);final v=await showDialog<String>(context:context,builder:(ctx)=>AlertDialog(title:const Text('Design name'),content:TextField(controller:c),actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(ctx,c.text.trim()),child:const Text('Save'))]));if(v!=null&&v.isNotEmpty)setState(()=>p.name=v);}
@@ -227,7 +227,7 @@ class _EditorPageState extends State<EditorPage>{
       return Center(child:Container(width:p.width*scale,height:p.height*scale,color:Colors.white,child:Stack(children:[
         for(final e in p.items)Positioned(left:(e['x'] as num).toDouble()*scale,top:(e['y'] as num).toDouble()*scale,width:(e['w'] as num).toDouble()*scale,height:(e['h'] as num).toDouble()*scale,child:GestureDetector(
           onTap:()=>setState(()=>selected=e['id'] as String),onPanStart:(_){checkpoint();setState(()=>selected=e['id'] as String);},
-          onPanUpdate:(d)=>setState(()=>{e['x']=((e['x'] as num).toDouble()+d.delta.dx/scale).clamp(0.0,math.max(0,p.width-(e['w'] as num).toDouble())),e['y']=((e['y'] as num).toDouble()+d.delta.dy/scale).clamp(0.0,math.max(0,p.height-(e['h'] as num).toDouble()))}),
+          onPanUpdate:(d) { setState(() { e['x'] = ((e['x'] as num).toDouble()+d.delta.dx/scale).clamp(0.0,math.max(0,p.width-(e['w'] as num).toDouble())); e['y'] = ((e['y'] as num).toDouble()+d.delta.dy/scale).clamp(0.0,math.max(0,p.height-(e['h'] as num).toDouble())); }); },
           child:Container(decoration:BoxDecoration(border:selected==e['id']?Border.all(color:accent,width:1.5):null,color:e['kind']=='rect'?Color(e['color'] as int):Colors.transparent,shape:e['kind']=='circle'?BoxShape.circle:BoxShape.rectangle),clipBehavior:Clip.hardEdge,
             child:e['kind']=='text'?Align(alignment:Alignment.topLeft,child:Text(e['text'] as String,style:TextStyle(fontSize:(e['size'] as num).toDouble()*scale,color:Color(e['color'] as int),fontWeight:FontWeight.w700))):e['kind']=='image'&&e['imageData']!=null?Image.memory(base64Decode(e['imageData'] as String),fit:BoxFit.contain):null),
         )),
@@ -235,7 +235,7 @@ class _EditorPageState extends State<EditorPage>{
     })),
     if(selected!=null)Row(mainAxisAlignment:MainAxisAlignment.end,children:[
       TextButton.icon(onPressed:(){checkpoint();setState(()=>p.items.removeWhere((e)=>e['id']==selected));selected=null;},icon:const Icon(Icons.delete_outline),label:const Text('Delete')),
-      TextButton.icon(onPressed:(){final e=p.items.where((e)=>e['id']==selected).firstOrNull;if(e==null)return;checkpoint();final cp=Map<String,dynamic>.from(e);cp['id']=DateTime.now().microsecondsSinceEpoch.toString();cp['x']=((e['x'] as num).toDouble()+16).clamp(0,p.width-(e['w'] as num).toDouble());cp['y']=((e['y'] as num).toDouble()+16).clamp(0,p.height-(e['h'] as num).toDouble());setState(()=>{p.items.add(cp),selected=cp['id'] as String});},icon:const Icon(Icons.copy_outlined),label:const Text('Duplicate')),
+      TextButton.icon(onPressed:(){final e=p.items.where((e)=>e['id']==selected).firstOrNull;if(e==null)return;checkpoint();final cp=Map<String,dynamic>.from(e);cp['id']=DateTime.now().microsecondsSinceEpoch.toString();cp['x']=((e['x'] as num).toDouble()+16).clamp(0,p.width-(e['w'] as num).toDouble());cp['y']=((e['y'] as num).toDouble()+16).clamp(0,p.height-(e['h'] as num).toDouble());setState(() { p.items.add(cp); selected = cp['id'] as String; });},icon:const Icon(Icons.copy_outlined),label:const Text('Duplicate')),
     ]),
     if(busy)const LinearProgressIndicator(),
   ]));
@@ -284,7 +284,7 @@ class PrintPage extends StatelessWidget{
 class BusinessPage extends StatefulWidget{const BusinessPage({super.key});@override State<BusinessPage> createState()=>_BusinessPageState();}
 class _BusinessPageState extends State<BusinessPage>{
   List<Map<String,dynamic>> products=[];bool loaded=false;
-  @override void initState(){super.initState();LocalStore.read('products.json','[]').then((v){try{final a=jsonDecode(v) as List;if(mounted)setState(()=>{products=a.map((e)=>Map<String,dynamic>.from(e as Map)).toList(),loaded=true});}catch(_){if(mounted)setState(()=>loaded=true);}});}
+  @override void initState(){super.initState();LocalStore.read('products.json','[]').then((v){try{final a=jsonDecode(v) as List;if(mounted) setState(() { products = a.map((e)=>Map<String,dynamic>.from(e as Map)).toList(); loaded = true; });}catch(_){if(mounted)setState(()=>loaded=true);}});}
   void note(String s)=>ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));
   Future<void> persist()async=>LocalStore.write('products.json',jsonEncode(products));
   Future<void> addProduct()async{
@@ -293,7 +293,7 @@ class _BusinessPageState extends State<BusinessPage>{
     if(v==null||v['name']!.isEmpty)return;final p=double.tryParse(v['price']??'');final s=int.tryParse(v['stock']??'');if(p==null||p<0||s==null||s<0){note('Enter a valid price and stock.');return;}
     setState(()=>products.add({'id':DateTime.now().microsecondsSinceEpoch.toString(),'name':v['name'],'priceMinor':(p*100).round(),'stock':s,'sold':0}));await persist();
   }
-  Future<void> sell(Map<String,dynamic> item)async{final i=products.indexWhere((p)=>p['id']==item['id']);if(i<0||(products[i]['stock'] as int)<1){note('No stock available.');return;}setState(()=>{products[i]['stock']=(products[i]['stock'] as int)-1,products[i]['sold']=(products[i]['sold'] as int)+1});await persist();note('One unit recorded as sold. Payments and tax receipts are not tracked yet.');}
+  Future<void> sell(Map<String,dynamic> item)async{final i=products.indexWhere((p)=>p['id']==item['id']);if(i<0||(products[i]['stock'] as int)<1){note('No stock available.');return;}setState(() { products[i]['stock'] = (products[i]['stock'] as int)-1; products[i]['sold'] = (products[i]['sold'] as int)+1; });await persist();note('One unit recorded as sold. Payments and tax receipts are not tracked yet.');}
   @override Widget build(BuildContext context){final stockValue=products.fold<int>(0,(s,p)=>s+(p['priceMinor'] as int)*(p['stock'] as int));final sold=products.fold<int>(0,(s,p)=>s+(p['sold'] as int));return ListView(padding:const EdgeInsets.all(22),children:[
     const Text('Business & POS',style:TextStyle(fontSize:30,fontWeight:FontWeight.w800)),const SizedBox(height:8),const Text('Offline product catalogue and stock tracking.',style:TextStyle(color:muted)),const SizedBox(height:18),
     Row(children:[Expanded(child:Metric(label:'Products',value:products.length.toString(),icon:Icons.inventory_2_outlined)),const SizedBox(width:10),Expanded(child:Metric(label:'Units sold',value:sold.toString(),icon:Icons.shopping_bag_outlined))]),
