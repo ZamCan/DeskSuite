@@ -18,14 +18,19 @@ The active app entry point is the modular creative editor from the reconciled cr
 - Export bounded PNG and single-page raster PDF output at selected DPI, with source-image resolution warnings.
 - Local-only project storage and platform file-picker boundary, with automated host tests for document, repository, export and widget flows.
 
-### Preserved prototype capabilities to migrate into modular screens
+### Newly connected local Photo and PDF workflows
 
-The earlier prototype included basic Photo tools, Notes, an A4 print-test sheet, a local product catalogue and stock decrement. Its source is preserved in the archive above. Those tools are **not yet integrated into the active modular navigation** and must be migrated with tests before being described as complete.
+- **Photo Studio (first slice):** import and preview a local raster image, inspect dimensions and output size, rotate, resize with aspect ratio preserved, reset and export an edited copy as PNG/JPEG/BMP/GIF. The source is not overwritten.
+- **PDF Studio (first slice):** assemble up to 100 imported image pages into a new A4 multi-page PDF, reorder/remove pages and export locally.
+- These first workflows use the shared local image engine and have explicit byte/pixel limits. They are not yet camera-scanner, OCR, arbitrary-PDF-editing or professional color-managed photo-production replacements.
+
+The earlier prototype also included Notes, an A4 print-test sheet, a local product catalogue and stock decrement. Its source is preserved in the archive above; those business tools are not yet integrated into the active modular navigation.
 
 ### Not yet implemented as production features
 
+- Camera capture, document-edge detection, perspective correction, OCR/searchable PDFs and arbitrary existing-PDF editing.
 - Canva-level templates, advanced vector tools, background removal and full photo editing.
-- Full DOCX/XLSX editing and spreadsheet formulas.
+- Full DOCX/XLSX/PPTX/ODF editing and spreadsheet formulas.
 - Passport-photo sheets, production print queues, imposition and printer-specific calibration.
 - Complete inventory/POS, receipts, accounting, expenses, payments and reporting.
 - Desktop release validation and signed iOS/App Store packaging.
@@ -33,7 +38,8 @@ The earlier prototype included basic Photo tools, Notes, an A4 print-test sheet,
 ## Repository structure
 
 - `lib/design/`: document model, geometry, editor controller, renderer and editor UI.
-- `lib/workspace/`: workspace/navigation, local project repository, file gateway and project creation.
+- `lib/workspace/`: workspace/navigation, local project repository, file gateway, project creation, Photo Studio and PDF Studio.
+- `lib/image_engine/`: bounded local image inspection, transform and encoding service.
 - `lib/printing/`: bounded design-to-PNG/PDF export logic.
 - `android/`: checked-in Android Gradle runner.
 - `test/`: automated Flutter tests.
