@@ -9,6 +9,7 @@ import '../design/editor_screen.dart';
 import '../document_scan/camera_gateway.dart';
 import '../document_scan/scan_studio_page.dart';
 import '../legacy_studios.dart' as legacy;
+import '../ocr/text_extraction_page.dart';
 import 'conversion_catalog.dart';
 import 'conversion_catalog_page.dart';
 import 'creative_studio_page.dart';
@@ -351,6 +352,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                                       }),
                                 )
                               : const SizedBox.shrink(),
+                          _visited.contains(WorkspaceSection.text)
+                              ? TextExtractionPage(files: widget.files)
+                              : const SizedBox.shrink(),
                         ],
                       ),
                     ),
@@ -393,6 +397,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 WorkspaceSection.scans => 'Scan & assemble',
                 WorkspaceSection.guide => 'Getting started',
                 WorkspaceSection.conversions => 'Conversion routes',
+                WorkspaceSection.text => 'Text extraction',
               },
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

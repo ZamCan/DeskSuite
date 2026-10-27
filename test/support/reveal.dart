@@ -13,6 +13,7 @@ Future<void> reveal(
   Finder target, {
   int maxScrolls = 40,
   double step = 220,
+  Finder? within,
 }) async {
   await tester.pumpAndSettle();
   if (target.evaluate().isNotEmpty) {
@@ -20,7 +21,9 @@ Future<void> reveal(
     await tester.pumpAndSettle();
     return;
   }
-  final scrollables = find.byType(Scrollable);
+  final scrollables = within == null
+      ? find.byType(Scrollable)
+      : find.descendant(of: within, matching: find.byType(Scrollable));
   if (scrollables.evaluate().isEmpty) {
     fail('No scrollable found while revealing the target widget.');
   }

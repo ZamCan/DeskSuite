@@ -58,6 +58,12 @@ android {
     }
 }
 
+dependencies {
+    // Offline OCR engine (Apache-2.0). Ships native libraries per ABI together
+    // with Tesseract 5.5.1 and Leptonica 1.85.0; see THIRD_PARTY_NOTICES.md.
+    implementation("cz.adaptech.tesseract4android:tesseract4android:4.9.0")
+}
+
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17

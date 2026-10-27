@@ -15,6 +15,8 @@ enum WorkspaceSection {
   scans,
   guide,
   conversions,
+  // Appended last: IndexedStack children are indexed by this order.
+  text,
 }
 
 class WorkspaceSidebar extends StatelessWidget {
@@ -121,6 +123,11 @@ class WorkspaceSidebar extends StatelessWidget {
             Icons.edit_note_outlined,
             'Office Notes',
             WorkspaceSection.notes,
+          ),
+          item(
+            Icons.text_snippet_outlined,
+            'Text extraction',
+            WorkspaceSection.text,
           ),
           planned(Icons.picture_as_pdf_outlined, 'PDF & Documents'),
           item(Icons.print_outlined, 'Print Studio', WorkspaceSection.printing),

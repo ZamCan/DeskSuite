@@ -16,6 +16,9 @@ dependencies:
   pdf: 3.13.1
   image: ^4.5.4
   printing: ^5.14.2
+  # Direct: OOXML (DOCX/XLSX/PPTX) parts are ZIP containers read and written by
+  # lib/ocr and lib/office. It was previously only a transitive `pdf` dependency.
+  archive: ^4.5.2
 
 dev_dependencies:
   flutter_test:
@@ -26,3 +29,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/samples/
+    - assets/tessdata/

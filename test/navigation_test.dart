@@ -54,8 +54,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Photo Studio'), findsOneWidget);
       // Planned studios are listed below available tools in the drawer list.
-      await reveal(tester, find.text('PLANNED'));
+      final drawer = find.byType(Drawer);
+      await reveal(tester, find.text('PLANNED'), within: drawer);
       expect(find.text('PLANNED'), findsWidgets);
+      await reveal(tester, find.text('Settings'), within: drawer);
       await tester.tap(find.text('Settings'));
       await tester.pumpAndSettle();
       expect(find.text('Dark appearance'), findsOneWidget);
