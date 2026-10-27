@@ -229,10 +229,15 @@ Uint8List writeXlsx(OfficeDocument document) {
     return candidate;
   }
 
-  var current = uniqueName(document.sheetNames.isNotEmpty
-      ? document.sheetNames.first
-      : 'Sheet1');
-  sheets[current] = <List<String>>[];
+  if (document.sheetNames.isNotEmpty) {
+    for (final sheetName in document.sheetNames) {
+      final name = uniqueName(sheetName);
+      sheets[name] = <List<String>>[];
+    }
+  } else {
+    sheets[uniqueName('Sheet1')] = <List<String>>[];
+  }
+  var current = sheets.keys.first;
   for (final block in document.blocks) {
     if (block.kind == OfficeBlockKind.paragraph &&
         block.bold &&
