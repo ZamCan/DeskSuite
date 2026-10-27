@@ -56,9 +56,9 @@ class _PhotoStudioScreenState extends State<PhotoStudioScreen> {
         _workingInfo = metadata;
         _width.text = metadata.width.toString();
         _height.text = metadata.height.toString();
-        _format = metadata.format == DeskImageFormat.gif || metadata.format == DeskImageFormat.bmp
-            ? DeskImageFormat.jpeg
-            : metadata.format;
+        _format = supportedImageOutputFormats.contains(metadata.format)
+            ? metadata.format
+            : DeskImageFormat.jpeg;
       });
     } catch (error) {
       if (mounted) setState(() => _error = '$error');
@@ -245,9 +245,9 @@ class _PhotoStudioScreenState extends State<PhotoStudioScreen> {
             Text('Export copy', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
             DropdownButtonFormField<DeskImageFormat>(
-              value: _format,
+              initialValue: _format,
               decoration: const InputDecoration(labelText: 'File format', border: OutlineInputBorder()),
-              items: DeskImageFormat.values.map((format) => DropdownMenuItem(value: format, child: Text(format.name.toUpperCase()))).toList(),
+              items: supportedImageOutputFormats.map((format) => DropdownMenuItem(value: format, child: Text(format.name.toUpperCase()))).toList(),
               onChanged: _busy ? null : (value) { if (value != null) setState(() => _format = value); },
             ),
             if (_format == DeskImageFormat.jpeg) ...[
