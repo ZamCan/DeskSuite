@@ -33,7 +33,7 @@ Future<void> settleIo(WidgetTester tester) async {
 
 void main() {
   testWidgets(
-    'small phone navigation labels planned studios and persists theme',
+    'small phone navigation opens available studios and persists theme',
     (tester) async {
       tester.view.physicalSize = const Size(320, 640);
       tester.view.devicePixelRatio = 1;
@@ -53,11 +53,15 @@ void main() {
       await tester.tap(find.byTooltip('Open navigation'));
       await tester.pumpAndSettle();
       expect(find.text('Photo Studio'), findsOneWidget);
-      // Planned studios are listed below available tools in the drawer list.
       final drawer = find.byType(Drawer);
-      await reveal(tester, find.text('PLANNED'), within: drawer);
-      expect(find.text('PLANNED'), findsWidgets);
-      await reveal(tester, find.text('Settings'), within: drawer);
+      await reveal(tester, find.text('PDF Studio'), within: drawer);
+      expect(find.text('PDF Studio'), findsOneWidget);
+      await tester.tap(find.text('PDF Studio'));
+      await tester.pumpAndSettle();
+      expect(find.text('Read, mark up and edit existing PDFs'), findsOneWidget);
+      await tester.tap(find.byTooltip('Open navigation'));
+      await tester.pumpAndSettle();
+      await reveal(tester, find.text('Settings'), within: find.byType(Drawer));
       await tester.tap(find.text('Settings'));
       await tester.pumpAndSettle();
       expect(find.text('Dark appearance'), findsOneWidget);
