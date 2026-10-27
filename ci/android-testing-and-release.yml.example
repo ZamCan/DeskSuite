@@ -1,0 +1,192 @@
+name: DeskSuite build matrix
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: desksuite-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+jobs:
+  android:
+    name: Android testing and release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Static analysis
+        run: flutter analyze
+      - name: Standalone pixel-engine smoke check
+        run: dart test/pixel_algorithms_smoke.dart
+      - name: Host tests
+        run: flutter test --concurrency=1
+      - name: Build debug APK (installable testing artifact)
+        run: flutter build apk --debug
+      - name: Check for release signing secrets
+        id: signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No ANDROID_KEYSTORE_BASE64 secret. Release APK/AAB will be unsigned validation builds and must not be distributed."
+          fi
+      - name: Configure release signing
+        if: steps.signing.outputs.available == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_PASSWORD:-}" ] || [ -z "${KEY_ALIAS:-}" ] || [ -z "${KEY_PASSWORD:-}" ]; then
+            echo "::error::Signing secrets are incomplete. Set ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD."
+            exit 1
+          fi
+          # Written outside the repository tree so no key material can be committed.
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/desksuite-release.jks"
+          cat > android/key.properties <<EOF
+          storeFile=$RUNNER_TEMP/desksuite-release.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+          echo "Release signing configured from repository secrets."
+      - name: Build signed release APK and AAB
+        if: steps.signing.outputs.available == 'true'
+        run: |
+          set -euo pipefail
+          flutter build apk --release
+          flutter build appbundle --release
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)"
+          "$APKSIGNER" verify --print-certs build/app/outputs/flutter-apk/app-release.apk
+          for entry in build/app/outputs/flutter-apk/*.apk build/app/outputs/bundle/release/*.aab; do
+            [ -s "$entry" ] || { echo "::error::Missing artifact: $entry"; exit 1; }
+          done
+      - name: Build unsigned validation APK and AAB
+        if: steps.signing.outputs.available != 'true'
+        run: |
+          flutter build apk --release
+          flutter build appbundle --release
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: desksuite-android-debug
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.signing.outputs.available == 'true' && 'desksuite-android-release-signed' || 'desksuite-android-release-unsigned' }}
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+  windows:
+    name: Windows desktop bundle
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter create --project-name desksuite --org com.zamcan.desksuite --platforms=windows .
+      - run: git checkout -- test/widget_test.dart
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build windows --release
+      - shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath desksuite-windows-x64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desksuite-windows-x64
+          path: desksuite-windows-x64.zip
+          if-no-files-found: error
+  linux:
+    name: Linux desktop bundle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install Linux build dependencies
+        run: sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+      - run: flutter create --project-name desksuite --org com.zamcan.desksuite --platforms=linux .
+      - run: git checkout -- test/widget_test.dart
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build linux --release
+      - run: tar -czf desksuite-linux-x64.tar.gz -C build/linux/x64/release/bundle .
+      - name: Assemble AppImage directory
+        run: |
+          mkdir -p AppDir/usr
+          cp -a build/linux/x64/release/bundle/. AppDir/usr/
+          cat > AppDir/AppRun <<'EOF'
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "$0")")"
+          exec "$HERE/usr/desksuite" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+          cat > AppDir/desksuite.desktop <<'EOF'
+          [Desktop Entry]
+          Name=DeskSuite
+          Exec=AppRun
+          Icon=desksuite
+          Type=Application
+          Categories=Office;Graphics;
+          Comment=Offline-first creative and productivity workspace
+          Terminal=false
+          EOF
+          cat > AppDir/desksuite.svg <<'EOF'
+          <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="26" fill="#292B29"/><path d="M30 32h68v64H30z" fill="none" stroke="#F7F5EF" stroke-width="8"/><path d="M44 48h40M44 64h40M44 80h25" stroke="#B56B45" stroke-width="7" stroke-linecap="round"/></svg>
+          EOF
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
+          chmod +x appimagetool
+          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool AppDir desksuite-x86_64.AppImage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desksuite-linux-x64
+          path: |
+            desksuite-linux-x64.tar.gz
+            desksuite-x86_64.AppImage
+          if-no-files-found: error
+  ios:
+    name: iOS unsigned validation build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter create --project-name desksuite --org com.zamcan.desksuite --platforms=ios .
+      - run: git checkout -- test/widget_test.dart
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build ios --release --no-codesign
+      - run: ditto -c -k --sequesterRsrc --keepParent build/ios/iphoneos/Runner.app desksuite-ios-unsigned-app.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desksuite-ios-unsigned-validation
+          path: desksuite-ios-unsigned-app.zip
+          if-no-files-found: error

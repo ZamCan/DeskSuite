@@ -1,8 +1,25 @@
 # Continuous integration and release builds
 
-The active workflow is [`.github/workflows/build.yml`](../.github/workflows/build.yml).
-It runs on pushes and pull requests to `main` and on manual dispatch, with
-`cancel-in-progress` so superseded runs stop.
+## Two files, one reason
+
+The **active** workflow is [`.github/workflows/build.yml`](../.github/workflows/build.yml):
+it runs format, analysis and the host suite, then builds Android, Windows, Linux
+and unsigned iOS validation artifacts. It does **not** sign releases.
+
+The improved pipeline lives at
+[`ci/android-testing-and-release.yml.example`](../ci/android-testing-and-release.yml.example)
+and is **not active**. It could not be installed by the agent that wrote it: the
+GitHub token in use has no `workflow` scope, and GitHub rejects any push that
+touches `.github/workflows/` without it (`refusing to allow a Personal Access
+Token to create or update workflow ... without workflow scope`). This is the same
+restriction recorded in earlier work on this repository.
+
+**To activate it**, a maintainer with `workflow` scope (or the GitHub web editor)
+must replace `.github/workflows/build.yml` with that file. Its Android job does
+everything below. Until then, treat the current `build.yml` as validation only
+and do not distribute its release output.
+
+## The proposed `android` job (in the example file)
 
 ## What each job does
 
