@@ -64,6 +64,21 @@ Future<void> waitIo(
   }
 }
 
+Future<void> revealWithoutSettling(
+  WidgetTester tester,
+  Finder finder,
+) async {
+  if (finder.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(
+      finder,
+      220,
+      scrollable: find.byType(Scrollable).first,
+    );
+  }
+  await tester.ensureVisible(finder);
+  await tester.pump(const Duration(milliseconds: 50));
+}
+
 Future<void> waitForEnabledButton(
   WidgetTester tester,
   Finder finder, {
@@ -474,12 +489,12 @@ void main() {
       await waitIo(tester);
       expect(find.byKey(const Key('scan-add-recovered')), findsOneWidget);
       await tapVisible(tester, find.byKey(const Key('scan-add-recovered')));
-      await reveal(tester, find.byKey(const Key('scan-camera')));
+      await revealWithoutSettling(tester, find.byKey(const Key('scan-camera')));
       await waitForEnabledButton(tester, find.byKey(const Key('scan-camera')));
       expect(find.textContaining('1 of 8 pages'), findsOneWidget);
       expect(find.byKey(const Key('scan-add-recovered')), findsNothing);
       await tapVisible(tester, find.byKey(const Key('scan-camera')));
-      await reveal(tester, find.byKey(const Key('scan-pdf')));
+      await revealWithoutSettling(tester, find.byKey(const Key('scan-pdf')));
       await waitForEnabledButton(tester, find.byKey(const Key('scan-pdf')));
       expect(find.textContaining('2 of 8 pages'), findsOneWidget);
       expect((await tester.runAsync(store.load))!, hasLength(2));
