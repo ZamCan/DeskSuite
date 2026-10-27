@@ -64,32 +64,55 @@ Future<void> waitIo(
   }
 }
 
-/// Reads the draft store without ever hanging the test.
-///
-/// The store's read/write queue is created in the fake-async zone, so awaiting a
-/// read inside runAsync can deadlock on a slower machine: the future completes
-/// but its continuation is scheduled back into a zone that only advances on
-/// pump. This bounds each attempt in real time and reports a failure instead of
-/// letting the suite sit until the ten-minute test timeout.
-Future<List<ScanDraftPage>> readDraft(
+Future<void> revealWithoutSettling(
   WidgetTester tester,
-  ScanDraftStore store,
+  Finder finder,
 ) async {
-  Object? error;
-  for (var attempt = 0; attempt < 40; attempt++) {
-    List<ScanDraftPage>? pages;
-    await tester.runAsync(() async {
-      try {
-        pages = await store.load().timeout(const Duration(milliseconds: 500));
-      } catch (e) {
-        error = e;
-      }
-    });
-    if (pages != null) return pages!;
-    if (error is FormatException) throw error!;
-    await tester.pump(const Duration(milliseconds: 25));
+  if (finder.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(
+      finder,
+      220,
+      scrollable: find.byType(Scrollable).first,
+    );
   }
-  fail('The scan draft could not be read back within 20 seconds: $error');
+  await tester.ensureVisible(finder);
+  await tester.pump(const Duration(milliseconds: 50));
+}
+
+Future<void> waitForEnabledButton(
+  WidgetTester tester,
+  Finder finder, {
+  Duration timeout = const Duration(seconds: 30),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  var lastState = 'target not found';
+  while (DateTime.now().isBefore(deadline)) {
+    if (finder.evaluate().isNotEmpty) {
+      final widget = tester.widget<Widget>(finder);
+      final enabled = switch (widget) {
+        FilledButton button => button.onPressed != null,
+        OutlinedButton button => button.onPressed != null,
+        IconButton button => button.onPressed != null,
+        TextButton button => button.onPressed != null,
+        ElevatedButton button => button.onPressed != null,
+        _ => false,
+      };
+      lastState = '${widget.runtimeType}, enabled=$enabled';
+      if (enabled) return;
+    }
+    await tester.pump(const Duration(milliseconds: 30));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 10)),
+    );
+  }
+  fail('Timed out waiting for the button to become enabled ($lastState; busy indicator: ${find.bySemanticsLabel('Processing or saving page').evaluate().length}; save error: ${find.textContaining('Draft could not be saved').evaluate().length}).');
+}
+
+Future<void> tapReady(WidgetTester tester, Key key) async {
+  final finder = find.byKey(key);
+  await revealWithoutSettling(tester, finder);
+  await waitForEnabledButton(tester, finder);
+  await tapVisible(tester, finder);
 }
 
 Future<void> tapVisible(WidgetTester tester, Finder finder) async {
@@ -101,18 +124,8 @@ Future<void> tapVisible(WidgetTester tester, Finder finder) async {
       maxScrolls: 25,
     );
   }
-  // A control that is disabled because a page is still being processed ignores
-  // the tap, and the caller then waits for a result that cannot arrive yet.
-  // Waiting first also settles the layout: the busy row disappears, the list
-  // changes height, and a position measured before that is already stale.
-  await settleUntilEnabled(tester, finder);
   await tester.ensureVisible(finder);
-  // pumpAndSettle never returns while an indeterminate progress animation is
-  // running, and its default budget is ten minutes; pump a bounded number of
-  // frames instead, which is enough for a route or dialog animation.
-  for (var i = 0; i < 6; i++) {
-    await tester.pump(const Duration(milliseconds: 60));
-  }
+  await tester.pumpAndSettle();
   await tester.tap(finder);
   // A running indeterminate progress indicator cannot settle until real I/O
   // completes; give routes time to animate and let callers wait for I/O.
@@ -165,13 +178,10 @@ void main() {
       final untouched = Uint8List.fromList(files.imported);
       await tester.pumpWidget(screen());
       await waitIo(tester);
-      await tapVisible(tester, find.byKey(const Key('scan-import')));
+      await tapReady(tester, const Key('scan-import'));
       await waitIo(tester);
-      // The page count is the app's own signal that the draft was loaded; wait
-      // for it instead of assuming a fixed number of pumps was enough.
-      await settleUntil(tester, find.textContaining('1 of 8 pages'));
       expect(find.textContaining('1 of 8 pages'), findsOneWidget);
-      await tapVisible(tester, find.byKey(const Key('scan-crop')));
+      await tapReady(tester, const Key('scan-crop'));
       await waitIo(tester, until: find.text('Adjust page corners'));
       expect(find.text('Adjust page corners'), findsOneWidget);
       await tester.drag(
@@ -182,24 +192,24 @@ void main() {
       await tapVisible(tester, find.byKey(const Key('apply-corners')));
       await waitIo(tester);
       expect(find.text('Adjust page corners'), findsNothing);
-      final cropped = (await readDraft(tester, store)).single.image;
+      final cropped = (await tester.runAsync(store.load))!.single.image;
       final corner = img.decodePng(cropped.bytes)!.getPixel(0, 0);
       expect(corner.r > 0 || corner.g > 0, isTrue);
       expect(find.byKey(const Key('scan-undo')), findsOneWidget);
-      await tapVisible(tester, find.byKey(const Key('scan-rotate')));
+      await tapReady(tester, const Key('scan-rotate'));
       await waitIo(tester);
-      final rotated = (await readDraft(tester, store)).single.image;
+      final rotated = (await tester.runAsync(store.load))!.single.image;
       expect([rotated.width, rotated.height], [cropped.height, cropped.width]);
-      await tapVisible(tester, find.byKey(const Key('scan-reset')));
+      await tapReady(tester, const Key('scan-reset'));
       await waitIo(tester);
-      final stored = await readDraft(tester, store);
-      expect(stored.single.image.width, 80);
+      final stored = await tester.runAsync(store.load);
+      expect(stored!.single.image.width, 80);
       expect(stored.single.image.height, 60);
-      await tapVisible(tester, find.byKey(const Key('scan-pdf')));
+      await tapReady(tester, const Key('scan-pdf'));
       await waitIo(tester);
       expect(find.text('PDF ready to save'), findsOneWidget);
       expect(find.textContaining('does not contain OCR'), findsOneWidget);
-      await tapVisible(tester, find.byKey(const Key('scan-save-pdf')));
+      await tapReady(tester, const Key('scan-save-pdf'));
       await waitIo(tester);
       expect(files.name, 'desksuite-document.pdf');
       expect(String.fromCharCodes(files.exported!.take(5)), '%PDF-');
@@ -217,13 +227,13 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(screen());
       await waitIo(tester);
-      await tapVisible(tester, find.byKey(const Key('scan-samples')));
+      await tapReady(tester, const Key('scan-samples'));
       await tapVisible(tester, find.byKey(const Key('sample-cleanup')));
       await waitIo(tester, rounds: 45);
-      final before = (await readDraft(tester, store)).single;
+      final before = (await tester.runAsync(store.load))!.single;
       final original = Uint8List.fromList(before.original.bytes);
 
-      await tapVisible(tester, find.byKey(const Key('scan-cleanup')));
+      await tapReady(tester, const Key('scan-cleanup'));
       expect(find.byKey(const Key('cleanup-before-image')), findsOneWidget);
       expect(
         tester
@@ -235,7 +245,7 @@ void main() {
       await waitIo(tester, rounds: 45);
       expect(find.byKey(const Key('cleanup-after-image')), findsOneWidget);
       expect(
-        (await readDraft(tester, store)).single.image.bytes,
+        (await tester.runAsync(store.load))!.single.image.bytes,
         orderedEquals(before.image.bytes),
       );
       await tapVisible(tester, find.byKey(const Key('cleanup-before')));
@@ -244,39 +254,39 @@ void main() {
       expect(find.byKey(const Key('cleanup-after-image')), findsOneWidget);
       await tapVisible(tester, find.byKey(const Key('cleanup-cancel')));
       expect(
-        (await readDraft(tester, store)).single.image.bytes,
+        (await tester.runAsync(store.load))!.single.image.bytes,
         orderedEquals(before.image.bytes),
       );
 
-      await tapVisible(tester, find.byKey(const Key('scan-cleanup')));
+      await tapReady(tester, const Key('scan-cleanup'));
       await tapVisible(tester, find.byKey(const Key('cleanup-mode')));
       await tapVisible(tester, find.text('Adaptive black & white').last);
       await tapVisible(tester, find.byKey(const Key('cleanup-preview')));
       await waitIo(tester, rounds: 45);
       await tapVisible(tester, find.byKey(const Key('cleanup-use')));
       await waitIo(tester, rounds: 45);
-      final cleaned = (await readDraft(tester, store)).single;
+      final cleaned = (await tester.runAsync(store.load))!.single;
       expect(cleaned.original.bytes, orderedEquals(original));
       expect(cleaned.image.bytes, isNot(orderedEquals(before.image.bytes)));
       expect(img.decodePng(cleaned.image.bytes)!.getPixel(30, 400).r, 255);
       await tapVisible(tester, find.text('Export page PNG'));
       await waitIo(tester);
       expect(files.exported, orderedEquals(cleaned.image.bytes));
-      await tapVisible(tester, find.byKey(const Key('scan-pdf')));
+      await tapReady(tester, const Key('scan-pdf'));
       await waitIo(tester, rounds: 45);
-      await tapVisible(tester, find.byKey(const Key('scan-save-pdf')));
+      await tapReady(tester, const Key('scan-save-pdf'));
       await waitIo(tester);
       expect(String.fromCharCodes(files.exported!.take(5)), '%PDF-');
-      await tapVisible(tester, find.byKey(const Key('scan-undo')));
+      await tapReady(tester, const Key('scan-undo'));
       await waitIo(tester);
       expect(
-        (await readDraft(tester, store)).single.image.bytes,
+        (await tester.runAsync(store.load))!.single.image.bytes,
         orderedEquals(before.image.bytes),
       );
-      await tapVisible(tester, find.byKey(const Key('scan-reset')));
+      await tapReady(tester, const Key('scan-reset'));
       await waitIo(tester);
       expect(
-        (await readDraft(tester, store)).single.image.bytes,
+        (await tester.runAsync(store.load))!.single.image.bytes,
         orderedEquals(original),
       );
       expect(tester.takeException(), isNull);
@@ -292,23 +302,20 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(screen());
       await waitIo(tester);
-      await tapVisible(tester, find.byKey(const Key('scan-samples')));
+      await tapReady(tester, const Key('scan-samples'));
       await tapVisible(tester, find.byKey(const Key('sample-report')));
       await waitIo(tester, rounds: 45);
-      // The page count is the app's own signal that the draft was loaded; wait
-      // for it instead of assuming a fixed number of pumps was enough.
-      await settleUntil(tester, find.textContaining('2 of 8 pages'));
       expect(find.textContaining('2 of 8 pages'), findsOneWidget);
-      final initial = await readDraft(tester, store);
+      final initial = await tester.runAsync(store.load);
       expect(initial, hasLength(2));
-      await tapVisible(tester, find.byKey(const Key('scan-move-down')));
+      await tapReady(tester, const Key('scan-move-down'));
       await waitIo(tester);
-      final moved = await readDraft(tester, store);
-      expect(moved.first.id, initial.last.id);
-      await tapVisible(tester, find.byKey(const Key('scan-pdf')));
+      final moved = await tester.runAsync(store.load);
+      expect(moved!.first.id, initial!.last.id);
+      await tapReady(tester, const Key('scan-pdf'));
       await waitIo(tester, rounds: 45);
       expect(find.textContaining('2 page(s)'), findsOneWidget);
-      await tapVisible(tester, find.byKey(const Key('scan-save-pdf')));
+      await tapReady(tester, const Key('scan-save-pdf'));
       await waitIo(tester);
       expect(files.exported, isNotNull);
       expect(String.fromCharCodes(files.exported!.take(5)), '%PDF-');
@@ -325,27 +332,24 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(screen());
     await waitIo(tester);
-    await tapVisible(tester, find.byKey(const Key('scan-samples')));
+    await tapReady(tester, const Key('scan-samples'));
     await tapVisible(tester, find.byKey(const Key('sample-report')));
     await waitIo(tester, rounds: 45);
-    await tapVisible(tester, find.byKey(const Key('scan-move-down')));
+    await tapReady(tester, const Key('scan-move-down'));
     await waitIo(tester);
-    await tapVisible(tester, find.byKey(const Key('scan-rotate')));
+    await tapReady(tester, const Key('scan-rotate'));
     await waitIo(tester, rounds: 45);
-    final before = await readDraft(tester, store);
+    final before = await tester.runAsync(store.load);
     expect(before, hasLength(2));
-    final editedId = before.last.id;
+    final editedId = before!.last.id;
     final editedBytes = Uint8List.fromList(before.last.image.bytes);
     expect(before.last.image.width, before.last.original.height);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpWidget(screen());
     await waitIo(tester, rounds: 45);
-    // The page count is the app's own signal that the draft was loaded; wait
-    // for it instead of assuming a fixed number of pumps was enough.
-    await settleUntil(tester, find.textContaining('2 of 8 pages'));
     expect(find.textContaining('2 of 8 pages'), findsOneWidget);
-    final reopened = await readDraft(tester, store);
-    expect(reopened.map((page) => page.id), before.map((page) => page.id));
+    final reopened = await tester.runAsync(store.load);
+    expect(reopened!.map((page) => page.id), before.map((page) => page.id));
     expect(reopened.last.id, editedId);
     expect(reopened.last.image.bytes, orderedEquals(editedBytes));
     expect(tester.takeException(), isNull);
@@ -371,14 +375,14 @@ void main() {
     final original = Uint8List.fromList(files.imported);
     await tester.pumpWidget(screen(camera: ScanCamera(files.imported)));
     await waitIo(tester);
-    await tapVisible(tester, find.byKey(const Key('scan-camera')));
+    await tapReady(tester, const Key('scan-camera'));
     await waitIo(tester);
     expect(find.textContaining('Draft could not be saved'), findsOneWidget);
     expect(
       find.textContaining('camera image is in the unsaved draft'),
       findsOneWidget,
     );
-    expect((await readDraft(tester, store)), isEmpty);
+    expect((await tester.runAsync(store.load)), isEmpty);
     await tapVisible(tester, find.text('Export recovered original'));
     await waitIo(tester);
     expect(files.exported, orderedEquals(original));
@@ -390,16 +394,13 @@ void main() {
       find.textContaining('camera image is in the unsaved draft'),
       findsNothing,
     );
-    final saved = await readDraft(tester, store);
+    final saved = await tester.runAsync(store.load);
     expect(saved, hasLength(1));
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpWidget(screen());
     await waitIo(tester);
-    // The page count is the app's own signal that the draft was loaded; wait
-    // for it instead of assuming a fixed number of pumps was enough.
-    await settleUntil(tester, find.textContaining('1 of 8 pages'));
     expect(find.textContaining('1 of 8 pages'), findsOneWidget);
-    expect((await readDraft(tester, store)).single.id, saved.single.id);
+    expect((await tester.runAsync(store.load))!.single.id, saved!.single.id);
     expect(files.imported, orderedEquals(original));
     expect(tester.takeException(), isNull);
   });
@@ -430,9 +431,9 @@ void main() {
       ),
     );
     await waitIo(tester);
-    await tapVisible(tester, find.byKey(const Key('scan-import')));
+    await tapReady(tester, const Key('scan-import'));
     await waitIo(tester);
-    await tapVisible(tester, find.byKey(const Key('scan-crop')));
+    await tapReady(tester, const Key('scan-crop'));
     await waitIo(tester, until: find.text('Adjust page corners'));
     expect(find.text('Adjust page corners'), findsOneWidget);
     expect(find.byKey(const Key('corner-0')), findsOneWidget);
@@ -467,9 +468,9 @@ void main() {
       ),
     );
     await waitIo(tester);
-    await tapVisible(tester, find.byKey(const Key('scan-import')));
+    await tapReady(tester, const Key('scan-import'));
     await waitIo(tester);
-    await tapVisible(tester, find.byKey(const Key('scan-crop')));
+    await tapReady(tester, const Key('scan-crop'));
     await waitIo(tester, until: find.byKey(const Key('apply-corners')));
     expect(find.byKey(const Key('apply-corners')), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -491,25 +492,16 @@ void main() {
       );
       await waitIo(tester);
       expect(find.byKey(const Key('scan-add-recovered')), findsOneWidget);
-      await tapVisible(tester, find.byKey(const Key('scan-add-recovered')));
-      // The banner disappears only when the recovered page has really been
-      // added and saved, so wait for that instead of counting pump rounds.
-      await settleUntilGone(
-        tester,
-        find.byKey(const Key('scan-add-recovered')),
-      );
-      // The page count is the app's own signal that the draft was loaded; wait
-      // for it instead of assuming a fixed number of pumps was enough.
-      await settleUntil(tester, find.textContaining('1 of 8 pages'));
+      await tapReady(tester, const Key('scan-add-recovered'));
+      await revealWithoutSettling(tester, find.byKey(const Key('scan-camera')));
+      await waitForEnabledButton(tester, find.byKey(const Key('scan-camera')));
       expect(find.textContaining('1 of 8 pages'), findsOneWidget);
       expect(find.byKey(const Key('scan-add-recovered')), findsNothing);
-      await tapVisible(tester, find.byKey(const Key('scan-camera')));
-      await waitIo(tester);
-      // The page count is the app's own signal that the draft was loaded; wait
-      // for it instead of assuming a fixed number of pumps was enough.
-      await settleUntil(tester, find.textContaining('2 of 8 pages'));
+      await tapReady(tester, const Key('scan-camera'));
+      await revealWithoutSettling(tester, find.byKey(const Key('scan-pdf')));
+      await waitForEnabledButton(tester, find.byKey(const Key('scan-pdf')));
       expect(find.textContaining('2 of 8 pages'), findsOneWidget);
-      expect((await readDraft(tester, store)), hasLength(2));
+      expect((await tester.runAsync(store.load))!, hasLength(2));
       expect(tester.takeException(), isNull);
     },
   );
