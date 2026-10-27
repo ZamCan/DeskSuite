@@ -102,7 +102,8 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = 'This document could not be opened for content editing: $error';
+        _error =
+            'This document could not be opened for content editing: $error';
       });
     }
   }
@@ -115,7 +116,9 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
   }
 
   void _addTableRow() {
-    final existing = _blocks.where((block) => block.kind == OfficeBlockKind.row);
+    final existing = _blocks.where(
+      (block) => block.kind == OfficeBlockKind.row,
+    );
     final width = existing.isEmpty ? 1 : existing.last.cells.length;
     setState(() {
       _blocks.add(OfficeBlock.cells(List<String>.filled(width, '')));
@@ -167,8 +170,11 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
   Future<void> _export() async {
     if (_saving || _original == null) return;
     if (_blocks.isEmpty ||
-        _blocks.every((block) =>
-            block.kind == OfficeBlockKind.paragraph && block.text.trim().isEmpty)) {
+        _blocks.every(
+          (block) =>
+              block.kind == OfficeBlockKind.paragraph &&
+              block.text.trim().isEmpty,
+        )) {
       setState(() => _error = 'Add some readable content before exporting.');
       return;
     }
@@ -236,11 +242,13 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
   }
 
   String _plainText(OfficeDocument document) => document.blocks
-      .map((block) => switch (block.kind) {
-            OfficeBlockKind.paragraph => block.text,
-            OfficeBlockKind.row => block.cells.join('\t'),
-            OfficeBlockKind.pageBreak => '\n--- page break ---\n',
-          })
+      .map(
+        (block) => switch (block.kind) {
+          OfficeBlockKind.paragraph => block.text,
+          OfficeBlockKind.row => block.cells.join('\t'),
+          OfficeBlockKind.pageBreak => '\n--- page break ---\n',
+        },
+      )
       .join('\n');
 
   String _csvText(OfficeDocument document) {
@@ -264,7 +272,9 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
     final safe = withoutExtension
         .replaceAll(RegExp(r'[^A-Za-z0-9_-]+'), '-')
         .replaceAll(RegExp(r'^-+|-+$'), '');
-    return safe.isEmpty ? 'document' : safe.substring(0, safe.length > 64 ? 64 : safe.length);
+    return safe.isEmpty
+        ? 'document'
+        : safe.substring(0, safe.length > 64 ? 64 : safe.length);
   }
 
   @override
@@ -440,7 +450,9 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                block.header ? 'Table header / row ${index + 1}' : 'Table row ${index + 1}',
+                block.header
+                    ? 'Table header / row ${index + 1}'
+                    : 'Table row ${index + 1}',
                 style: theme.textTheme.labelLarge,
               ),
               const SizedBox(height: 8),
@@ -485,7 +497,9 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
           minLines: block.headingLevel > 0 ? 1 : 2,
           maxLines: block.headingLevel > 0 ? 2 : 6,
           style: block.headingLevel > 0
-              ? theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)
+              ? theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                )
               : theme.textTheme.bodyMedium,
           decoration: InputDecoration(
             labelText: block.headingLevel > 0
@@ -520,15 +534,15 @@ OfficeDocument _documentFromMap(Map<String, Object?> value) {
     final kind = OfficeBlockKind.values.byName(row['kind']! as String);
     return switch (kind) {
       OfficeBlockKind.paragraph => OfficeBlock.paragraph(
-          row['text'] as String? ?? '',
-          headingLevel: row['heading'] as int? ?? 0,
-          bold: row['bold'] as bool? ?? false,
-          italic: row['italic'] as bool? ?? false,
-        ),
+        row['text'] as String? ?? '',
+        headingLevel: row['heading'] as int? ?? 0,
+        bold: row['bold'] as bool? ?? false,
+        italic: row['italic'] as bool? ?? false,
+      ),
       OfficeBlockKind.row => OfficeBlock.cells(
-          (row['cells']! as List).cast<String>(),
-          header: row['header'] as bool? ?? false,
-        ),
+        (row['cells']! as List).cast<String>(),
+        header: row['header'] as bool? ?? false,
+      ),
       OfficeBlockKind.pageBreak => const OfficeBlock.pageBreak(),
     };
   }).toList();

@@ -12,6 +12,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import 'business/inventory.dart';
+import 'business/sale_receipt.dart';
 import 'core/local_file_store.dart';
 import 'core/atomic_file_store.dart' show recoverAtomicBackup;
 import 'core/ids.dart';
@@ -1743,9 +1744,22 @@ class PrintPage extends StatelessWidget {
 }
 
 class BusinessPage extends StatefulWidget {
-  const BusinessPage({super.key, this.repository, this.files});
+  const BusinessPage({
+    super.key,
+    this.repository,
+    this.files,
+    this.printer,
+    this.shopName = 'DeskSuite Stationery',
+  });
   final InventoryRepository? repository;
   final FileGateway? files;
+
+  /// Injected so a test can capture the receipt instead of opening the system
+  /// print dialog. Defaults to the real platform dialog.
+  final PrintGateway? printer;
+
+  /// Printed at the top of every receipt.
+  final String shopName;
   @override
   State<BusinessPage> createState() => _BusinessPageState();
 }
@@ -1833,11 +1847,44 @@ class _BusinessPageState extends State<BusinessPage> {
   Future<void> sell(InventoryProduct item) async {
     setState(() => busy = true);
     try {
-      final next = await repository.recordOneUnit(item.id);
-      if (mounted) setState(() => snapshot = next);
-      note('One unit recorded as sold. Payments and receipts are not tracked.');
+      final outcome = await repository.recordSale(id: item.id);
+      if (mounted) setState(() => snapshot = outcome.snapshot);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Sale recorded · ${outcome.receipt(shopName: widget.shopName).formattedTotal}',
+            ),
+            action: SnackBarAction(
+              label: 'Receipt',
+              onPressed: () => printReceipt(outcome),
+            ),
+          ),
+        );
+      }
     } catch (error) {
-      note('Could not update stock. No change was made: $error');
+      note('Could not record the sale. No change was made: $error');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  /// Renders the sale as a real A5 PDF and hands it to the print dialog.
+  Future<void> printReceipt(SaleOutcome outcome) async {
+    setState(() => busy = true);
+    try {
+      final receipt = outcome.receipt(shopName: widget.shopName);
+      final bytes = await buildReceiptPdf(receipt);
+      final printed = await (widget.printer ?? const SystemPrintGateway())
+          .printPdf(
+            bytes: bytes,
+            name: 'receipt-${receipt.receiptNumber}',
+            widthMm: 148,
+            heightMm: 210,
+          );
+      if (!printed) note('The print dialog was closed without printing.');
+    } catch (error) {
+      note('The receipt could not be prepared: $error');
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -1967,7 +2014,7 @@ class _BusinessPageState extends State<BusinessPage> {
         ],
         const SizedBox(height: 14),
         const InfoNote(
-          text: 'Starter only: unit counts are stored locally. Payments, refunds, suppliers, receipts, profit reports and transaction-safe accounting are not implemented.',
+          text: 'Sales are recorded on this device: stock goes down, the sale is kept in sales.json and a printable A5 receipt can be produced for each one. Still missing: multi-item baskets, refunds, supplier records, expenses, profit reports and tax-compliant invoicing.',
         ),
       ],
     );

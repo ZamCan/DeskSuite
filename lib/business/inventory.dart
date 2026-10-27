@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'sale_receipt.dart';
+
 import '../core/ids.dart';
 import '../core/local_file_store.dart';
 
@@ -95,15 +97,23 @@ class InventoryProduct {
     'sold': sold,
   };
 
-  InventoryProduct recordOneUnit() {
-    if (stock < 1) throw StateError('No stock available.');
-    if (sold == maxStockCount) throw StateError('Sold count is at its limit.');
+  InventoryProduct recordOneUnit() => recordUnits(1);
+
+  /// Sells [quantity] units. Refuses rather than leaving a negative stock.
+  InventoryProduct recordUnits(int quantity) {
+    if (quantity < 1 || quantity > maxSaleQuantity) {
+      throw const FormatException('Invalid sale quantity.');
+    }
+    if (stock < quantity) throw StateError('No stock available.');
+    if (sold + quantity > maxStockCount) {
+      throw StateError('Sold count would exceed its limit.');
+    }
     return InventoryProduct(
       id: id,
       name: name,
       priceMinor: priceMinor,
-      stock: stock - 1,
-      sold: sold + 1,
+      stock: stock - quantity,
+      sold: sold + quantity,
       extraFields: extraFields,
     );
   }
@@ -184,15 +194,95 @@ class InventoryRepository {
     return _save([...current.products, product]);
   });
 
-  Future<InventorySnapshot> recordOneUnit(String id) => _transaction(() async {
-    if (!isSafeId(id)) {
-      throw const FormatException('Invalid product identifier.');
+  /// Reads the sale log. A corrupt log is reported, never silently repaired by
+  /// overwriting it, because it is the shop's record of money taken.
+  Future<List<SaleRecord>> loadSales() async {
+    final text = await files.readText('sales.json', '[]');
+    try {
+      final decoded = jsonDecode(text);
+      if (decoded is! List || decoded.length > maxSalesRetained) {
+        throw const FormatException('Invalid sales log.');
+      }
+      return List.unmodifiable(
+        decoded.map(
+          (entry) =>
+              SaleRecord.fromJson(Map<String, dynamic>.from(entry as Map)),
+        ),
+      );
+    } on FormatException {
+      rethrow;
+    } catch (_) {
+      throw const FormatException('Invalid sales log.');
     }
-    final current = await load();
-    final index = current.products.indexWhere((p) => p.id == id);
-    if (index < 0) throw StateError('Product not found.');
-    final next = [...current.products];
-    next[index] = next[index].recordOneUnit();
-    return _save(next);
-  });
+  }
+
+  /// Records a sale: stock goes down, the sold counter goes up, and the sale is
+  /// appended to `sales.json` so a receipt can be reprinted later.
+  ///
+  /// The two files cannot be written in one atomic step. The stock file is
+  /// written first and restored if the sales log fails, so a failure never
+  /// leaves stock sold without a record.
+  Future<SaleOutcome> recordSale({required String id, int quantity = 1}) =>
+      _transaction(() async {
+        if (!isSafeId(id)) {
+          throw const FormatException('Invalid product identifier.');
+        }
+        final current = await load();
+        final index = current.products.indexWhere((p) => p.id == id);
+        if (index < 0) throw StateError('Product not found.');
+        final product = current.products[index];
+        final pending = List.of(await loadSales());
+        final next = [...current.products];
+        next[index] = product.recordUnits(quantity);
+
+        final previousText = current.encodeJson();
+        final snapshot = await _save(next);
+        final record = SaleRecord(
+          number:
+              (pending.isEmpty
+                  ? 0
+                  : pending
+                        .map((sale) => sale.number)
+                        .reduce((a, b) => a > b ? a : b)) +
+              1,
+          productId: product.id,
+          productName: product.name,
+          quantity: quantity,
+          unitPriceMinor: product.priceMinor,
+          soldAt: DateTime.now(),
+        );
+        final log = [...pending, record];
+        final retained = log.length > maxSalesRetained
+            ? log.sublist(log.length - maxSalesRetained)
+            : log;
+        try {
+          await files.writeText(
+            'sales.json',
+            jsonEncode(retained.map((sale) => sale.toJson()).toList()),
+          );
+        } catch (error) {
+          await files.writeText('products.json', previousText);
+          throw StateError('The sale was not recorded: $error');
+        }
+        return SaleOutcome(snapshot: snapshot, sale: record);
+      });
+
+  Future<InventorySnapshot> recordOneUnit(String id) async =>
+      (await recordSale(id: id)).snapshot;
+}
+
+/// The stock after a sale and the sale itself.
+class SaleOutcome {
+  const SaleOutcome({required this.snapshot, required this.sale});
+  final InventorySnapshot snapshot;
+  final SaleRecord sale;
+
+  /// The printable receipt for this sale.
+  SaleReceipt receipt({String shopName = 'DeskSuite Stationery'}) =>
+      SaleReceipt(
+        number: sale.number,
+        issuedAt: sale.soldAt,
+        shopName: shopName,
+        lines: [sale.toLine()],
+      );
 }

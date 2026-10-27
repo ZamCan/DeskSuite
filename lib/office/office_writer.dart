@@ -149,21 +149,27 @@ Uint8List writeDocx(OfficeDocument document) {
         final style = level > 0
             ? '<w:pPr><w:pStyle w:val="Heading$level"/></w:pPr>'
             : '';
-        body.write('<w:p>$style${_docxRuns(block.text, bold: block.bold, italic: block.italic)}</w:p>');
+        body.write(
+          '<w:p>$style${_docxRuns(block.text, bold: block.bold, italic: block.italic)}</w:p>',
+        );
       case OfficeBlockKind.row:
-        body.write('<w:tbl><w:tblPr><w:tblBorders>'
-            '<w:top w:val="single" w:sz="4" w:space="0" w:color="B7B7B7"/>'
-            '<w:left w:val="single" w:sz="4" w:space="0" w:color="B7B7B7"/>'
-            '<w:bottom w:val="single" w:sz="4" w:space="0" w:color="B7B7B7"/>'
-            '<w:right w:val="single" w:sz="4" w:space="0" w:color="B7B7B7"/>'
-            '<w:insideH w:val="single" w:sz="4" w:space="0" w:color="B7B7B7"/>'
-            '<w:insideV w:val="single" w:sz="4" w:space="0" w:color="B7B7B7"/>'
-            '</w:tblBorders></w:tblPr>');
+        body.write(
+          '<w:tbl><w:tblPr><w:tblBorders>'
+          '<w:top w:val="single" w:sz="4" w:space="0" w:color="B7B7B7"/>'
+          '<w:left w:val="single" w:sz="4" w:space="0" w:color="B7B7B7"/>'
+          '<w:bottom w:val="single" w:sz="4" w:space="0" w:color="B7B7B7"/>'
+          '<w:right w:val="single" w:sz="4" w:space="0" w:color="B7B7B7"/>'
+          '<w:insideH w:val="single" w:sz="4" w:space="0" w:color="B7B7B7"/>'
+          '<w:insideV w:val="single" w:sz="4" w:space="0" w:color="B7B7B7"/>'
+          '</w:tblBorders></w:tblPr>',
+        );
         body.write('<w:tr>');
         if (block.header) body.write('<w:trPr><w:tblHeader/></w:trPr>');
         for (final cell in block.cells) {
-          body.write('<w:tc><w:tcPr><w:tcW w:w="0" w:type="auto"/></w:tcPr>'
-              '<w:p>${_docxRuns(cell, bold: block.header)}</w:p></w:tc>');
+          body.write(
+            '<w:tc><w:tcPr><w:tcW w:w="0" w:type="auto"/></w:tcPr>'
+            '<w:p>${_docxRuns(cell, bold: block.header)}</w:p></w:tc>',
+          );
         }
         body.write('</w:tr></w:tbl>');
       case OfficeBlockKind.pageBreak:
@@ -172,7 +178,8 @@ Uint8List writeDocx(OfficeDocument document) {
   }
   if (document.blocks.isEmpty) body.write('<w:p/>');
   final entries = <String, String>{
-    '[Content_Types].xml': '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    '[Content_Types].xml':
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
 <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
 <Default Extension="xml" ContentType="application/xml"/>
@@ -187,22 +194,27 @@ Uint8List writeDocx(OfficeDocument document) {
 <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
 <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
 </Relationships>''',
-    'word/document.xml': '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    'word/document.xml':
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>$body<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>''',
-    'word/_rels/document.xml.rels': '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    'word/_rels/document.xml.rels':
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
 </Relationships>''',
-    'word/styles.xml': '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    'word/styles.xml':
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
 <w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:rPr><w:sz w:val="22"/></w:rPr></w:style>
 <w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:pPr><w:keepNext/></w:pPr><w:rPr><w:b/><w:sz w:val="34"/></w:rPr></w:style>
 <w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:rPr><w:b/><w:sz w:val="28"/></w:rPr></w:style>
 <w:style w:type="paragraph" w:styleId="Heading3"><w:name w:val="heading 3"/><w:basedOn w:val="Normal"/><w:rPr><w:b/><w:sz w:val="24"/></w:rPr></w:style>
 </w:styles>''',
-    'docProps/core.xml': '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    'docProps/core.xml':
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${_escape(document.title)}</dc:title><dc:creator>ZamCan</dc:creator><cp:lastModifiedBy>DeskSuite</cp:lastModifiedBy></cp:coreProperties>''',
-    'docProps/app.xml': '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    'docProps/app.xml':
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>DeskSuite</Application></Properties>''',
   };
   return _zipOfficeEntries(entries);
@@ -222,7 +234,8 @@ Uint8List writeXlsx(OfficeDocument document) {
     while (usedNames.contains(candidate.toLowerCase())) {
       final tail = '_$suffix';
       final prefixLength = 31 - tail.length;
-      candidate = '${base.substring(0, base.length > prefixLength ? prefixLength : base.length)}$tail';
+      candidate =
+          '${base.substring(0, base.length > prefixLength ? prefixLength : base.length)}$tail';
       suffix++;
     }
     usedNames.add(candidate.toLowerCase());
@@ -274,7 +287,8 @@ Uint8List writeXlsx(OfficeDocument document) {
   }
 
   final entries = <String, String>{
-    '[Content_Types].xml': '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    '[Content_Types].xml':
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
 <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
 <Default Extension="xml" ContentType="application/xml"/>
@@ -287,24 +301,35 @@ ${List.generate(sheets.length, (i) => '<Override PartName="/xl/worksheets/sheet$
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
 <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
 </Relationships>''',
-    'xl/workbook.xml': '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    'xl/workbook.xml':
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets.keys.toList().asMap().entries.map((entry) => '<sheet name="${_escape(entry.value)}" sheetId="${entry.key + 1}" r:id="rId${entry.key + 1}"/>').join()}</sheets></workbook>''',
-    'xl/_rels/workbook.xml.rels': '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    'xl/_rels/workbook.xml.rels':
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${List.generate(sheets.length, (i) => '<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>').join()}</Relationships>''',
-    'docProps/core.xml': '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    'docProps/core.xml':
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>${_escape(document.title)}</dc:title><dc:creator>ZamCan</dc:creator></cp:coreProperties>''',
   };
   var sheetIndex = 0;
   for (final entry in sheets.entries) {
     sheetIndex++;
     final rows = StringBuffer();
-    final contentRows = entry.value.isEmpty ? <List<String>>[<String>['']] : entry.value;
+    final contentRows = entry.value.isEmpty
+        ? <List<String>>[
+            <String>[''],
+          ]
+        : entry.value;
     for (var rowIndex = 0; rowIndex < contentRows.length; rowIndex++) {
       rows.write('<row r="${rowIndex + 1}">');
-      final row = contentRows[rowIndex].isEmpty ? <String>[''] : contentRows[rowIndex];
+      final row = contentRows[rowIndex].isEmpty
+          ? <String>['']
+          : contentRows[rowIndex];
       for (var colIndex = 0; colIndex < row.length; colIndex++) {
         final ref = '${columnName(colIndex + 1)}${rowIndex + 1}';
-        rows.write('<c r="$ref" t="inlineStr"><is><t xml:space="preserve">${_escape(row[colIndex])}</t></is></c>');
+        rows.write(
+          '<c r="$ref" t="inlineStr"><is><t xml:space="preserve">${_escape(row[colIndex])}</t></is></c>',
+        );
       }
       rows.write('</row>');
     }
@@ -324,7 +349,9 @@ String _docxRuns(String value, {bool bold = false, bool italic = false}) {
     if (bold) properties.write('<w:b/>');
     if (italic) properties.write('<w:i/>');
     final rPr = properties.isEmpty ? '' : '<w:rPr>$properties</w:rPr>';
-    result.write('<w:r>$rPr<w:t xml:space="preserve">${_escape(pieces[i])}</w:t></w:r>');
+    result.write(
+      '<w:r>$rPr<w:t xml:space="preserve">${_escape(pieces[i])}</w:t></w:r>',
+    );
   }
   return result.toString();
 }
