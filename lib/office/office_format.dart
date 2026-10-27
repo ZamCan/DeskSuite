@@ -43,6 +43,8 @@ enum OfficeFormat {
   /// Formats this build can write. Legacy binary and slide formats are absent
   /// on purpose: a converted copy must never be produced by renaming.
   bool get isWritable =>
+      this == OfficeFormat.docx ||
+      this == OfficeFormat.xlsx ||
       this == OfficeFormat.odt ||
       this == OfficeFormat.ods ||
       this == OfficeFormat.txt ||
