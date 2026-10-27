@@ -34,7 +34,7 @@ class EditorFiles implements FileGateway {
 }
 
 void main() {
-  testWidgets('edits real DOCX content and exports a new ODT package', (
+  testWidgets('edits real DOCX content and exports a new DOCX package', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(430, 950);
@@ -64,15 +64,15 @@ void main() {
     await tester.tap(find.byKey(const Key('office-editor-export')));
     await tester.pumpAndSettle();
 
-    expect(files.savedName, 'edited-invoice.odt');
+    expect(files.savedName, 'edited-invoice.docx');
     expect(
       files.savedMime,
-      'application/vnd.oasis.opendocument.text',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     );
     expect(files.savedBytes, isNotNull);
     final reopened = readOfficeDocument(
       files.savedBytes!,
-      fileName: 'edited-invoice.odt',
+      fileName: 'edited-invoice.docx',
     );
     expect(reopened.plainText, contains('Edited by DeskSuite'));
     expect(source, orderedEquals(original));
