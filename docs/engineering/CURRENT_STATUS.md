@@ -67,9 +67,11 @@ environment.
    for imported photo pages.
 3. PDF import: render pages, extract existing text, reorder/split/compress —
    the largest remaining gap for "Acrobat-style" workflows.
-4. Receipts, quotations and invoices on top of the existing inventory module so
-   the stationery-business section produces printable paperwork, not just stock
-   counts.
+4. **Done for sales:** `lib/business/sale_receipt.dart` turns a recorded sale into
+   a real A5 PDF receipt, and `InventoryRepository.recordSale` keeps a numbered
+   `sales.json` log so it can be reprinted. Next in this area: multi-item
+   baskets, quotations/invoices with customer details, refunds, supplier records
+   and expenses — none of which exist yet.
 
 ## Open agent branches and how each was judged
 

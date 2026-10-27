@@ -69,7 +69,7 @@ exercise it.
 | App identity | Partial | **Implemented**: adaptive + legacy launcher icons, splash, in-app D+S mark; regeneration documented. | `docs/engineering/BRAND_ASSETS.md`, `android/app/src/main/res/**` |
 | Release build and signing | Absent | **Not yet activated**: the signing pipeline exists as `ci/android-testing-and-release.yml.example` because this work's GitHub token has no `workflow` scope; the active workflow validates but does not sign. No APK has been built or installed from this environment. | [CI.md](../CI.md) |
 | Cloud | Absent | **Absent**, and not advertised. | — |
-| Stationery business tools | Starter only | **Partial**: local catalogue, stock and one-unit sales. Payments, receipts, suppliers, expenses and reporting are still missing, which the business screen says in plain words. | `lib/business/inventory.dart`, `lib/legacy_studios.dart` |
+| Stationery business tools | Starter only | **Partial**: local catalogue and stock; every sale is recorded to a numbered `sales.json` log and produces a real A5 PDF receipt that can be reprinted or printed. Baskets, refunds, suppliers, expenses, profit reporting and tax-compliant invoicing are still missing, and the screen says so. | `lib/business/inventory.dart`, `lib/business/sale_receipt.dart`, `lib/legacy_studios.dart`, `test/sale_receipt_test.dart`, `test/inventory_widget_test.dart` |
 
 Host verification at `main` on 2026-10-28: `flutter analyze` clean and
 `flutter test --concurrency=1` **156/156 passed**. That is host evidence for the

@@ -70,6 +70,26 @@ images, charts, macros, comments, text boxes, number formats and page size (A4 i
 used). Layout-faithful rendering needs an installed LibreOffice, which DeskSuite
 does not bundle; see the office support notes in the engineering documentation.
 
+## Sell something and print a receipt
+
+1. Open the menu → **Business & POS**. The screen lists your products with their
+   price and current stock; the header shows the stock value at listed prices.
+2. Choose **Add product**, enter a name, a price such as `125.50` and the opening
+   stock, then **Add**.
+3. Select the sale button on a product row to sell one unit. Stock goes down, the
+   sold counter goes up, the sale is written to `sales.json` on this device, and
+   a message shows the amount with a **Receipt** action.
+4. Choose **Receipt**. DeskSuite renders a real A5 PDF with your shop name,
+   receipt number, date and time, the item, quantity, unit price, line total and
+   grand total, then opens the system print dialog so you can print or save it.
+5. Receipt numbers are sequential and never reused, so a later sale cannot
+   overwrite an earlier one.
+
+What the receipt is not: the page itself says it is an internal sales receipt,
+not a tax invoice or a fiscal receipt. DeskSuite does not compute VAT, does not
+connect to a fiscal device, and does not manage refunds, suppliers or expenses
+yet. Selling more than the stock on hand is refused and changes nothing.
+
 ## Practise without your own files
 
 - **Getting started → Clean a shadowed page**: open Scan & assemble, choose **Try an example → Shadowed field notes**, preview each cleanup method and compare the text and colored chart before applying. The sample is intentionally degraded, not an official document.
