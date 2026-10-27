@@ -67,7 +67,7 @@ class ImageProcessingService {
       throw const FormatException('This image format is not supported or the file is damaged.');
     }
     if (source.width * source.height > maxInputPixels) {
-      throw const FormatException('The image exceeds the 40-megapixel processing limit.');
+      throw const FormatException('The image exceeds the 20-megapixel processing limit.');
     }
 
     var width = targetWidth;
@@ -106,7 +106,9 @@ class ImageProcessingService {
         break;
     }
 
-    if (output.isEmpty) throw StateError('The image encoder returned an empty file.');
+    if (output.isEmpty) {
+      throw StateError('The image encoder returned an empty file.');
+    }
     return ProcessedImage(
       bytes: output,
       width: width,
