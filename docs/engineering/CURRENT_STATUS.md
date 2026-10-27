@@ -89,3 +89,13 @@ before deciding.
 | `engineering/document-workflows-phase-1` (#2) | Earlier image tools, stamps, signatures and brand foundation. | **Historical.** Its content is largely present in `main` by another route; close it after a manual comparison rather than merging. |
 
 Nothing in this table is a claim that an unmerged branch works.
+
+
+## Consolidation branch additions — 2026-10-28
+
+The draft integration branch `integration/complete-product-android-ready` adds two bounded capabilities to this baseline:
+
+- **PDF Studio:** opens an existing PDF through the `dart_pdf_editor` package and exports edited bytes as a separate file. Package-level behavior is not equivalent to a claim of Acrobat parity; protected, malformed and complex PDFs need device testing.
+- **Creative Studio stamps/signatures:** editable text-layer stamps with presets/custom labels, optional captured date and six placements; drawn signatures are rasterized as transparent PNG image layers. These are visual marks, not cryptographic or legally certified signatures.
+
+The branch also imports the latest scan-widget async-readiness tests. All three additions remain behind the pull-request verification gate until the exact integration commit passes formatting, analysis, tests and Android release build. Main is not changed by this draft PR.
