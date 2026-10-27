@@ -103,6 +103,22 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
     }
   }
 
+  void _addParagraph() {
+    setState(() {
+      _blocks.add(const OfficeBlock.paragraph(''));
+      _status = null;
+    });
+  }
+
+  void _addTableRow() {
+    final existing = _blocks.where((block) => block.kind == OfficeBlockKind.row);
+    final width = existing.isEmpty ? 1 : existing.last.cells.length;
+    setState(() {
+      _blocks.add(OfficeBlock.cells(List<String>.filled(width, '')));
+      _status = null;
+    });
+  }
+
   void _updateParagraph(int index, String value) {
     final old = _blocks[index];
     setState(() {
@@ -357,6 +373,26 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
                       child: Text(_status!),
                     ),
                   ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      key: const Key('office-editor-add-paragraph'),
+                      onPressed: _saving ? null : _addParagraph,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add paragraph'),
+                    ),
+                    if (_spreadsheet)
+                      OutlinedButton.icon(
+                        key: const Key('office-editor-add-row'),
+                        onPressed: _saving ? null : _addTableRow,
+                        icon: const Icon(Icons.table_rows_outlined),
+                        label: const Text('Add table row'),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 10),
                 for (var index = 0; index < _blocks.length; index++)
                   _blockEditor(index, _blocks[index]),
