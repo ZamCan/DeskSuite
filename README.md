@@ -48,7 +48,7 @@ Windows requires Windows and Visual Studio C++ tools. Linux requires desktop dev
 
 ## Termux
 
-Android builds under Termux depend on the installed Flutter, Java, Android SDK and filesystem setup. Check flutter doctor -v and the first meaningful build error before changing application code. If the local toolchain cannot build, use GitHub Actions artifacts after the workflow passes.
+Android builds under Termux depend on the installed Flutter, Java, Android SDK and filesystem setup. Check flutter doctor -v and the first meaningful build error before changing application code. The repository includes tools/build-android.sh to run formatting, analysis, tests and the release APK build in sequence. If the local toolchain cannot build, use GitHub Actions artifacts after the workflow passes.
 
 ## Offline data
 
