@@ -106,7 +106,7 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
   }
 
   String _baseName(String name) {
-    final leaf = name.split(RegExp(r'[/\\\\]')).last;
+    final leaf = name.split(RegExp(r'[/\\]')).last;
     final dot = leaf.lastIndexOf('.');
     final value = dot > 0 ? leaf.substring(0, dot) : leaf;
     final safe = value
