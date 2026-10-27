@@ -19,15 +19,19 @@ class StampPreset {
   ];
 }
 
+enum StampPlacement { topLeft, topCenter, topRight, bottomLeft, bottomCenter, bottomRight }
+
 class StampSpec {
   const StampSpec({
     required this.label,
     required this.color,
     required this.includeDate,
+    this.placement = StampPlacement.topCenter,
   });
   final String label;
   final Color color;
   final bool includeDate;
+  final StampPlacement placement;
 
   String textAt(DateTime date) {
     final value = label.trim().toUpperCase();
@@ -58,6 +62,7 @@ class _StampDialogState extends State<_StampDialog> {
   StampPreset _selected = StampPreset.values.first;
   final TextEditingController _custom = TextEditingController();
   bool _includeDate = true;
+  StampPlacement _placement = StampPlacement.topCenter;
 
   @override
   void dispose() {
@@ -101,6 +106,21 @@ class _StampDialogState extends State<_StampDialog> {
               subtitle: const Text('The date is captured when the stamp is placed.'),
               value: _includeDate,
               onChanged: (value) => setState(() => _includeDate = value),
+            ),
+            DropdownButtonFormField<StampPlacement>(
+              initialValue: _placement,
+              decoration: const InputDecoration(labelText: 'Placement'),
+              items: const [
+                DropdownMenuItem(value: StampPlacement.topLeft, child: Text('Top left')),
+                DropdownMenuItem(value: StampPlacement.topCenter, child: Text('Top center')),
+                DropdownMenuItem(value: StampPlacement.topRight, child: Text('Top right')),
+                DropdownMenuItem(value: StampPlacement.bottomLeft, child: Text('Bottom left')),
+                DropdownMenuItem(value: StampPlacement.bottomCenter, child: Text('Bottom center')),
+                DropdownMenuItem(value: StampPlacement.bottomRight, child: Text('Bottom right')),
+              ],
+              onChanged: (value) {
+                if (value != null) setState(() => _placement = value);
+              },
             ),
             const SizedBox(height: 8),
             TextField(
@@ -162,6 +182,7 @@ class _StampDialogState extends State<_StampDialog> {
               label: label,
               color: _selected.color,
               includeDate: _includeDate,
+              placement: _placement,
             ),
           );
         },
