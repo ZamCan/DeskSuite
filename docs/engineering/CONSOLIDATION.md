@@ -17,10 +17,10 @@ flutter pub get
 dart format --set-exit-if-changed lib test
 flutter analyze
 flutter test
-flutter build apk --release
+flutter build apk --debug
 ```
 
-If the Termux environment does not have a compatible Flutter SDK and Android SDK configured, do not try to substitute only Java/Gradle: DeskSuite is a Flutter application and needs Flutter's Android build toolchain. In that case, use the `app-debug.apk` from the `desksuite-android` artifact in the pull request's successful GitHub Actions run. CI's debug signing key is runner-generated, so this artifact is for a first-time test install; it is not guaranteed to update an existing installation or a later CI build. If Android reports a signature mismatch, do not uninstall an existing app before exporting data and deciding which signing identity to keep.
+If the Termux environment does not have a compatible Flutter SDK and Android SDK configured, do not try to substitute only Java/Gradle: DeskSuite is a Flutter application and needs Flutter's Android build toolchain. A local debug build uses the persistent local debug keystore and is the preferred repeat-test path; do not use a runner-generated CI debug key as a permanent update signature. In that case, use the `app-debug.apk` from the `desksuite-android` artifact in the pull request's successful GitHub Actions run. CI's debug signing key is runner-generated, so this artifact is for a first-time test install; it is not guaranteed to update an existing installation or a later CI build. If Android reports a signature mismatch, do not uninstall an existing app before exporting data and deciding which signing identity to keep.
 
 ## Install on the Android phone
 
