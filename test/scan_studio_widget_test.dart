@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:desksuite/core/atomic_file_store.dart';
 import 'package:desksuite/document_scan/camera_gateway.dart';
+import 'package:desksuite/document_scan/document_cleanup.dart';
 import 'package:desksuite/document_scan/scan_draft_store.dart';
 import 'package:desksuite/document_scan/scan_pdf.dart';
 import 'package:desksuite/document_scan/scan_processor.dart';
@@ -99,6 +100,7 @@ void main() {
         storeFactory: () async => store,
         photoProcessor: (request) async => processPhoto(request),
         scanProcessor: (request) async => processScan(request),
+        cleanupProcessor: (request) async => processDocumentCleanup(request),
         pdfGenerator: createScanPdf,
       ),
     ),
@@ -149,6 +151,81 @@ void main() {
       expect(files.name, 'desksuite-document.pdf');
       expect(String.fromCharCodes(files.exported!.take(5)), '%PDF-');
       expect(files.imported, orderedEquals(untouched));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'shadowed example compares real cleanup, preserves draft until applied, and exports',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(screen());
+      await waitIo(tester);
+      await tapVisible(tester, find.byKey(const Key('scan-samples')));
+      await tapVisible(tester, find.byKey(const Key('sample-cleanup')));
+      await waitIo(tester, rounds: 45);
+      final before = (await tester.runAsync(store.load))!.single;
+      final original = Uint8List.fromList(before.original.bytes);
+
+      await tapVisible(tester, find.byKey(const Key('scan-cleanup')));
+      expect(find.byKey(const Key('cleanup-before-image')), findsOneWidget);
+      expect(
+        tester
+            .widget<FilledButton>(find.byKey(const Key('cleanup-use')))
+            .onPressed,
+        isNull,
+      );
+      await tapVisible(tester, find.byKey(const Key('cleanup-preview')));
+      await waitIo(tester, rounds: 45);
+      expect(find.byKey(const Key('cleanup-after-image')), findsOneWidget);
+      expect(
+        (await tester.runAsync(store.load))!.single.image.bytes,
+        orderedEquals(before.image.bytes),
+      );
+      await tapVisible(tester, find.byKey(const Key('cleanup-before')));
+      expect(find.byKey(const Key('cleanup-before-image')), findsOneWidget);
+      await tapVisible(tester, find.byKey(const Key('cleanup-after')));
+      expect(find.byKey(const Key('cleanup-after-image')), findsOneWidget);
+      await tapVisible(tester, find.byKey(const Key('cleanup-cancel')));
+      expect(
+        (await tester.runAsync(store.load))!.single.image.bytes,
+        orderedEquals(before.image.bytes),
+      );
+
+      await tapVisible(tester, find.byKey(const Key('scan-cleanup')));
+      await tapVisible(tester, find.byKey(const Key('cleanup-mode')));
+      await tapVisible(tester, find.text('Adaptive black & white').last);
+      await tapVisible(tester, find.byKey(const Key('cleanup-preview')));
+      await waitIo(tester, rounds: 45);
+      await tapVisible(tester, find.byKey(const Key('cleanup-use')));
+      await waitIo(tester, rounds: 45);
+      final cleaned = (await tester.runAsync(store.load))!.single;
+      expect(cleaned.original.bytes, orderedEquals(original));
+      expect(cleaned.image.bytes, isNot(orderedEquals(before.image.bytes)));
+      expect(img.decodePng(cleaned.image.bytes)!.getPixel(30, 400).r, 255);
+      await tapVisible(tester, find.text('Export page PNG'));
+      await waitIo(tester);
+      expect(files.exported, orderedEquals(cleaned.image.bytes));
+      await tapVisible(tester, find.byKey(const Key('scan-pdf')));
+      await waitIo(tester, rounds: 45);
+      await tapVisible(tester, find.byKey(const Key('scan-save-pdf')));
+      await waitIo(tester);
+      expect(String.fromCharCodes(files.exported!.take(5)), '%PDF-');
+      await tapVisible(tester, find.byKey(const Key('scan-undo')));
+      await waitIo(tester);
+      expect(
+        (await tester.runAsync(store.load))!.single.image.bytes,
+        orderedEquals(before.image.bytes),
+      );
+      await tapVisible(tester, find.byKey(const Key('scan-reset')));
+      await waitIo(tester);
+      expect(
+        (await tester.runAsync(store.load))!.single.image.bytes,
+        orderedEquals(original),
+      );
       expect(tester.takeException(), isNull);
     },
   );

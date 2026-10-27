@@ -739,6 +739,7 @@ class _PhotoPageState extends State<PhotoPage> {
   bool busy = false;
   bool showingOriginal = false;
   bool isExample = false;
+  bool isNoisyExample = false;
 
   void note(String value) {
     if (mounted) {
@@ -747,7 +748,32 @@ class _PhotoPageState extends State<PhotoPage> {
     }
   }
 
+  Future<bool> confirmReplace() async {
+    if (photo == null) return true;
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Replace working image?'),
+            content: const Text(
+              'Export the working copy first if you want to keep it. Replacing it does not change the imported source file.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Replace'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   Future<void> pick() async {
+    if (busy || !await confirmReplace() || !mounted) return;
     setState(() => busy = true);
     try {
       final bytes = await files.pickImage();
@@ -760,6 +786,7 @@ class _PhotoPageState extends State<PhotoPage> {
           undoPhoto = null;
           showingOriginal = false;
           isExample = false;
+          isNoisyExample = false;
         });
       }
     } catch (error) {
@@ -773,11 +800,15 @@ class _PhotoPageState extends State<PhotoPage> {
     }
   }
 
-  Future<void> loadExample() async {
-    if (busy) return;
+  Future<void> loadExample({bool noisy = false}) async {
+    if (busy || !await confirmReplace() || !mounted) return;
     setState(() => busy = true);
     try {
-      final data = await rootBundle.load('assets/samples/practice-photo.jpg');
+      final data = await rootBundle.load(
+        noisy
+            ? 'assets/samples/noisy-garden.png'
+            : 'assets/samples/practice-photo.jpg',
+      );
       final result = await process(
         PhotoRequest(
           data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
@@ -790,7 +821,8 @@ class _PhotoPageState extends State<PhotoPage> {
           original = result;
           undoPhoto = null;
           showingOriginal = false;
-          isExample = true;
+          isExample = !noisy;
+          isNoisyExample = noisy;
         });
       }
     } catch (_) {
@@ -1072,9 +1104,15 @@ class _PhotoPageState extends State<PhotoPage> {
                       const SizedBox(height: 6),
                       TextButton.icon(
                         key: const Key('photo-example'),
-                        onPressed: busy ? null : loadExample,
+                        onPressed: busy ? null : () => loadExample(),
                         icon: const Icon(Icons.school_outlined),
                         label: const Text('Try a sample image'),
+                      ),
+                      TextButton.icon(
+                        key: const Key('photo-noisy-example'),
+                        onPressed: busy ? null : () => loadExample(noisy: true),
+                        icon: const Icon(Icons.auto_fix_high),
+                        label: const Text('Try a noisy garden photo'),
                       ),
                     ],
                   ),
@@ -1082,16 +1120,24 @@ class _PhotoPageState extends State<PhotoPage> {
               )
             : Padding(
                 padding: const EdgeInsets.all(12),
-                child: Image.memory(
-                  (showingOriginal ? original! : photo!).bytes,
+                child: SizedBox(
                   height: 300,
-                  fit: BoxFit.contain,
-                  cacheWidth: math.min(
-                    (showingOriginal ? original! : photo!).width,
-                    1200,
+                  child: InteractiveViewer(
+                    key: const Key('photo-zoom'),
+                    maxScale: 6,
+                    child: Center(
+                      child: Image.memory(
+                        (showingOriginal ? original! : photo!).bytes,
+                        fit: BoxFit.contain,
+                        cacheWidth: math.min(
+                          (showingOriginal ? original! : photo!).width,
+                          1600,
+                        ),
+                        errorBuilder: (_, _, _) =>
+                            const Text('Image preview unavailable.'),
+                      ),
+                    ),
                   ),
-                  errorBuilder: (_, _, _) =>
-                      const Text('Image preview unavailable.'),
                 ),
               ),
       ),
@@ -1110,6 +1156,13 @@ class _PhotoPageState extends State<PhotoPage> {
           const Text(
             'Example: try Resize, enter a width such as 512 px, review the result, then save a new copy.',
           ),
+        if (isNoisyExample)
+          const Text(
+            'Synthetic garden with added black and white specks: reduce specks, pinch to zoom, then compare with the original.',
+          ),
+        const Text(
+          'Pinch the preview to inspect details. Reducing isolated specks can soften fine details; it does not remove blur, scratches or every kind of noise.',
+        ),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
@@ -1120,6 +1173,12 @@ class _PhotoPageState extends State<PhotoPage> {
               onPressed: busy ? null : pick,
               icon: const Icon(Icons.upload_file),
               label: const Text('Choose another'),
+            ),
+            OutlinedButton.icon(
+              key: const Key('photo-noisy-example'),
+              onPressed: busy ? null : () => loadExample(noisy: true),
+              icon: const Icon(Icons.school_outlined),
+              label: const Text('Noisy garden example'),
             ),
             OutlinedButton(
               key: const Key('photo-compare'),
@@ -1151,6 +1210,14 @@ class _PhotoPageState extends State<PhotoPage> {
               onPressed: busy ? null : () => apply(PhotoAction.flipHorizontal),
               icon: const Icon(Icons.flip),
               label: const Text('Flip'),
+            ),
+            FilledButton.tonalIcon(
+              key: const Key('photo-denoise'),
+              onPressed: busy
+                  ? null
+                  : () => apply(PhotoAction.reduceImpulseNoise),
+              icon: const Icon(Icons.auto_fix_high),
+              label: const Text('Reduce isolated specks'),
             ),
             OutlinedButton.icon(
               key: const Key('photo-resize'),
@@ -1194,7 +1261,7 @@ class _PhotoPageState extends State<PhotoPage> {
         ),
       const SizedBox(height: 14),
       const InfoNote(
-        text: 'PNG, JPEG and WebP input; first frame only. Import is limited to 8 MB and 12 megapixels. The working copy is not restored after closing: export it to keep it. JPEG flattens transparency onto white. Photo sheets do not certify ID compliance.',
+        text: 'PNG, JPEG and WebP input; first frame only. Import is limited to 8 MB and 12 megapixels. Speck reduction is limited to 4 megapixels and leaves transparent areas and image borders unchanged. The working copy is not restored after closing: export it to keep it. JPEG flattens transparency onto white. Photo sheets do not certify ID compliance.',
       ),
     ],
   );

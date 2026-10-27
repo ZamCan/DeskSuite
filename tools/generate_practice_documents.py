@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Generate fictional example documents. Requires Pillow, NumPy and DejaVu Sans.
 
-The separately provided practice-photo.jpg is a reviewed synthetic image and is
-not recreated by this deterministic script. Run from the repository root.
+The separately provided practice-photo.jpg and garden-clean-photo.jpg are
+synthetic images and are not recreated by this deterministic script. The
+noisy garden exercise is derived from the latter. Run from the repository root.
 """
 from pathlib import Path
 import json
@@ -86,6 +87,47 @@ for page in (1, 2):
                 'Prepared for training purposes only.', '', 'End of example report.']
     lines(d, 76, 315, body, gap=48, size=23)
     report.save(OUT / f'report-{page}.png', optimize=True)
+
+# A deliberately imperfect, fictional field-notes page exercises local cleanup,
+# not just tidy stationery templates. Shading affects the paper and the ink.
+cleanup, d = document('Field notes', 'Cleanup practice  /  Artificially shaded page')
+lines(d, 76, 310, [
+    'COMMUNITY GARDEN  /  OBSERVATION', '',
+    'A small garden plot was observed on three mornings.',
+    'This fictional page is used to practise reducing',
+    'uneven lighting and comparing the result with the source.', '',
+    'FINDINGS', '',
+    'The soil stayed damp after watering. New leaves',
+    'appeared on the plants near the shaded fence.', '',
+    'Compare the colored chart as well as the text:',
+    'black-and-white cleanup intentionally removes color.',
+], gap=43, size=23)
+d.text((76, 930), 'EXAMPLE WATER LEVELS', font=font(19, True), fill=MUTED)
+for index, (label, level, color) in enumerate([
+    ('DAY 1', 230, '#458774'), ('DAY 2', 340, '#cf9459'), ('DAY 3', 280, '#5f7fa5'),
+]):
+    y = 980 + index * 64
+    d.text((76, y), label, font=font(19, True), fill=INK)
+    d.rounded_rectangle((190, y, 190 + level, y + 25), radius=5, fill=color)
+
+# Deterministic soft illumination gradient plus a broad shadow; this is an
+# intentionally degraded synthetic scan, not a real photograph or assessment.
+y, x = np.mgrid[0:H, 0:W].astype(np.float32)
+x /= W - 1
+y /= H - 1
+shadow = .23 * np.exp(-(((x - .50) / .23) ** 2 + ((y - .43) / .34) ** 2))
+light = np.clip(.49 + .42 * x + .06 * y - shadow, .32, 1.0)
+shaded = np.clip(np.asarray(cleanup, dtype=np.float32) * light[:, :, None], 0, 255).astype(np.uint8)
+Image.fromarray(shaded, 'RGB').save(OUT / 'shadowed-field-notes.png', optimize=True)
+
+# Add visible, reproducible isolated black/white pixel noise to a synthetic
+# garden photo. Save losslessly so the speckles remain a real filter exercise.
+garden = np.asarray(Image.open(OUT / 'garden-clean-photo.jpg').convert('RGB')).copy()
+rng = np.random.default_rng(20261027)
+noise = rng.random(garden.shape[:2])
+garden[noise < .04] = (0, 0, 0)
+garden[(noise >= .04) & (noise < .08)] = (255, 255, 255)
+Image.fromarray(garden, 'RGB').save(OUT / 'noisy-garden.png', optimize=True)
 
 # Place the letter on a neutral background using a true projective warp.
 # Destination corners are documented in the tutorial and used as a test fixture.

@@ -9,6 +9,8 @@ import '../images/photo_processor.dart';
 import '../workspace/file_gateway.dart';
 import 'camera_gateway.dart';
 import 'corner_editor.dart';
+import 'document_cleanup.dart';
+import 'document_cleanup_dialog.dart';
 import 'scan_draft_store.dart';
 import 'scan_pdf.dart';
 import 'scan_processor.dart';
@@ -34,6 +36,7 @@ class ScanStudioPage extends StatefulWidget {
     this.storeFactory,
     this.photoProcessor,
     this.scanProcessor,
+    this.cleanupProcessor,
     this.pdfGenerator,
   });
   final FileGateway files;
@@ -42,6 +45,7 @@ class ScanStudioPage extends StatefulWidget {
   final Future<ScanDraftStore> Function()? storeFactory;
   final Future<PhotoResult> Function(PhotoRequest)? photoProcessor;
   final Future<PhotoResult> Function(ScanRequest)? scanProcessor;
+  final Future<PhotoResult> Function(DocumentCleanupRequest)? cleanupProcessor;
   final Future<Uint8List> Function(ScanPdfRequest)? pdfGenerator;
 
   @override
@@ -66,6 +70,8 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
       widget.photoProcessor ?? processPhotoInBackground;
   Future<PhotoResult> Function(ScanRequest) get processPage =>
       widget.scanProcessor ?? processScanInBackground;
+  Future<PhotoResult> Function(DocumentCleanupRequest) get processCleanup =>
+      widget.cleanupProcessor ?? processDocumentCleanupInBackground;
 
   @override
   void initState() {
@@ -302,6 +308,14 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
         title: const Text('Choose a fictional example'),
         children: [
           SimpleDialogOption(
+            key: const Key('sample-cleanup'),
+            onPressed: () =>
+                Navigator.pop(context, ['shadowed-field-notes.png']),
+            child: const Text(
+              'Shadowed field notes · practise before/after cleanup',
+            ),
+          ),
+          SimpleDialogOption(
             key: const Key('sample-perspective'),
             onPressed: () => Navigator.pop(context, ['perspective-letter.png']),
             child: const Text(
@@ -411,6 +425,23 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
           ),
         ),
       );
+    }
+  }
+
+  Future<void> _cleanup() async {
+    if (busy || pages.isEmpty) return;
+    final page = pages[selected];
+    final cleaned = await showDialog<PhotoResult>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>
+          DocumentCleanupDialog(page: page.image, processor: processCleanup),
+    );
+    if (cleaned != null &&
+        mounted &&
+        pages.isNotEmpty &&
+        pages[selected].id == page.id) {
+      await _edit((_) async => cleaned);
     }
   }
 
@@ -657,7 +688,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
         ),
         const SizedBox(height: 6),
         const Text(
-          'Capture or import pages, correct them manually, and save an image PDF. Originals are not changed automatically.',
+          'Capture or import pages, correct and clean them, then save an image PDF. Originals are not changed automatically.',
         ),
         const SizedBox(height: 12),
         if (recovered != null)
@@ -877,6 +908,12 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
                 icon: const Icon(Icons.crop_free),
                 label: const Text('Corners & correct'),
               ),
+              FilledButton.tonalIcon(
+                key: const Key('scan-cleanup'),
+                onPressed: busy ? null : _cleanup,
+                icon: const Icon(Icons.auto_fix_high),
+                label: const Text('Clean up & compare'),
+              ),
               OutlinedButton.icon(
                 key: const Key('scan-rotate'),
                 onPressed: busy
@@ -932,7 +969,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'Black & white uses a fixed threshold and may remove light text. Reset returns to the imported page copy.',
+            'Clean up & compare offers local lighting and adaptive black-and-white previews. The separate Black & white button uses a fixed threshold. Both can lose details; Reset returns to the imported page copy.',
           ),
           const SizedBox(height: 18),
           DropdownButtonFormField<ScanPaper>(

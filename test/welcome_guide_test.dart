@@ -70,6 +70,12 @@ void main() {
       );
       await waitIo(tester);
       expect(find.text('Getting started'), findsWidgets);
+      expect(find.text('Clean a shadowed page'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Make a multipage image PDF'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Make a multipage image PDF'), findsOneWidget);
       final button = find.widgetWithText(
         OutlinedButton,

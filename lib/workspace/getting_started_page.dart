@@ -28,6 +28,14 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 20),
       _GuideCard(
+        icon: Icons.auto_fix_high,
+        title: 'Clean a shadowed page',
+        description: 'In Scan & assemble, choose Try an example → Shadowed field notes → Clean up & compare. Preview reduced uneven lighting, switch between Before and After, then try adaptive black & white. Use the result only after reviewing the text and colored chart; export a new PNG or image PDF.',
+        button: 'Practise document cleanup',
+        onPressed: onScan,
+      ),
+      const SizedBox(height: 12),
+      _GuideCard(
         icon: Icons.document_scanner_outlined,
         title: 'Make a multipage image PDF',
         description: 'Open Scan & assemble, choose Try an example → Two-page report, reorder the pages and select Prepare PDF. Choose a new destination and open the PDF to check it.',
@@ -41,6 +49,14 @@ class GettingStartedPage extends StatelessWidget {
         description: 'Choose the perspective letter example in Scan & assemble, select A4 portrait proportions, and move the four handles onto the paper corners. Correct the page and compare it with Reset page. Detection is manual.',
         button: 'Practise page correction',
         onPressed: onScan,
+      ),
+      const SizedBox(height: 12),
+      _GuideCard(
+        icon: Icons.filter_center_focus,
+        title: 'Reduce photo specks',
+        description: 'In Photo Studio, choose Try a noisy garden photo, then Reduce isolated specks. Pinch to inspect the detail, choose Compare original, and use Undo if needed. The filter targets isolated black or white dots; it cannot remove blur or scratches and may soften fine details. Export a separate copy.',
+        button: 'Practise photo cleanup',
+        onPressed: onPhoto,
       ),
       const SizedBox(height: 12),
       _GuideCard(

@@ -221,6 +221,88 @@ void main() {
   });
 
   testWidgets(
+    'noisy garden uses the real speck filter, compare, undo and export',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final files = PhotoFiles();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PhotoPage(
+              files: files,
+              processor: (request) async => processPhoto(request),
+            ),
+          ),
+        ),
+      );
+      await tester.ensureVisible(find.byKey(const Key('photo-noisy-example')));
+      await tester.tap(find.byKey(const Key('photo-noisy-example')));
+      await settleIo(tester);
+      await expectWorkingSize(tester, '1376 × 768 px · working copy');
+      await tester.ensureVisible(find.byKey(const Key('photo-zoom')));
+      await tester.pumpAndSettle();
+      Uint8List previewBytes() {
+        final image = tester.widget<Image>(
+          find.descendant(
+            of: find.byKey(const Key('photo-zoom')),
+            matching: find.byType(Image),
+          ),
+        );
+        return (image.image as MemoryImage).bytes;
+      }
+
+      final before = Uint8List.fromList(previewBytes());
+      expect(img.decodePng(before)!.getPixel(30, 354).r, 255);
+      await tester.ensureVisible(find.byKey(const Key('photo-denoise')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('photo-denoise')));
+      await settleIo(tester);
+      await tester.ensureVisible(find.byKey(const Key('photo-zoom')));
+      await tester.pumpAndSettle();
+      final cleaned = Uint8List.fromList(previewBytes());
+      expect(img.decodePng(cleaned)!.getPixel(30, 354).r, lessThan(200));
+      expect(cleaned, isNot(orderedEquals(before)));
+
+      await tester.ensureVisible(find.byKey(const Key('photo-compare')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('photo-compare')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('photo-zoom')));
+      await tester.pumpAndSettle();
+      expect(previewBytes(), orderedEquals(before));
+
+      await tester.ensureVisible(find.byKey(const Key('photo-noisy-example')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('photo-noisy-example')));
+      await tester.pumpAndSettle();
+      expect(find.text('Replace working image?'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('photo-png')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('photo-png')));
+      await settleIo(tester);
+      await tester.tap(find.byKey(const Key('photo-save-copy')));
+      await settleIo(tester);
+      expect(
+        img.decodePng(files.exported!)!.getPixel(30, 354).r,
+        lessThan(200),
+      );
+      await tester.ensureVisible(find.byKey(const Key('photo-undo')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('photo-undo')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('photo-zoom')));
+      await tester.pumpAndSettle();
+      expect(previewBytes(), orderedEquals(before));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'photo sheet validates capacity, exports a PDF and sends a print job',
     (tester) async {
       tester.view.physicalSize = const Size(360, 720);

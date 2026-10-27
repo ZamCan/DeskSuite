@@ -1,4 +1,5 @@
 import 'package:desksuite/design/design_document.dart';
+import 'package:desksuite/document_scan/document_cleanup.dart';
 import 'package:desksuite/document_scan/scan_pdf.dart';
 import 'package:desksuite/document_scan/scan_processor.dart';
 import 'package:desksuite/images/photo_processor.dart';
@@ -24,7 +25,10 @@ void main() {
         'report-1.png',
         'report-2.png',
         'perspective-letter.png',
+        'shadowed-field-notes.png',
         'practice-photo.jpg',
+        'garden-clean-photo.jpg',
+        'noisy-garden.png',
       ]) {
         final bytes = await asset(name);
         final photo = processPhoto(PhotoRequest(bytes, PhotoAction.inspect));
@@ -42,6 +46,50 @@ void main() {
       );
     },
   );
+
+  test(
+    'shadowed field notes exercise real color and adaptive B&W cleanup',
+    () async {
+      final bytes = await asset('shadowed-field-notes.png');
+      final untouched = Uint8List.fromList(bytes);
+      final before = img.decodePng(bytes)!;
+      final color = img.decodePng(
+        processDocumentCleanup(
+          DocumentCleanupRequest(bytes, mode: DocumentCleanupMode.evenLighting),
+        ).bytes,
+      )!;
+      final bw = img.decodePng(
+        processDocumentCleanup(
+          DocumentCleanupRequest(
+            bytes,
+            mode: DocumentCleanupMode.adaptiveBlackAndWhite,
+          ),
+        ).bytes,
+      )!;
+      expect(
+        color.getPixel(30, 400).r,
+        greaterThan(before.getPixel(30, 400).r + 40),
+      );
+      final chart = color.getPixel(200, 990);
+      expect(chart.g, greaterThan(chart.r));
+      expect(bw.getPixel(30, 400).r, 255);
+      expect(bw.getPixel(200, 990).r, 0);
+      expect(bytes, orderedEquals(untouched));
+    },
+  );
+
+  test('noisy garden sample really reduces an isolated speck', () async {
+    final bytes = await asset('noisy-garden.png');
+    final untouched = Uint8List.fromList(bytes);
+    final before = img.decodePng(bytes)!;
+    final after = img.decodePng(
+      processPhoto(PhotoRequest(bytes, PhotoAction.reduceImpulseNoise)).bytes,
+    )!;
+    expect(before.getPixel(30, 354).r, 255);
+    expect(after.getPixel(30, 354).r, lessThan(200));
+    expect([after.width, after.height], [1376, 768]);
+    expect(bytes, orderedEquals(untouched));
+  });
 
   test(
     'perspective tutorial sample really corrects to A4 and creates a PDF',
