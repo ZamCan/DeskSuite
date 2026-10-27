@@ -724,15 +724,15 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
                     children: [
                       FilledButton(
                         key: const Key('scan-add-recovered'),
-                        onPressed: busy || recoveryAdded ? null : _addRecovered,
+                        onPressed: busy || loading || recoveryAdded ? null : _addRecovered,
                         child: const Text('Add recovered page'),
                       ),
                       OutlinedButton(
-                        onPressed: busy ? null : _saveRecovered,
+                        onPressed: busy || loading ? null : _saveRecovered,
                         child: const Text('Export recovered original'),
                       ),
                       TextButton(
-                        onPressed: busy || recoveryAdded
+                        onPressed: busy || loading || recoveryAdded
                             ? null
                             : _dismissRecovered,
                         child: const Text('Dismiss'),
@@ -773,7 +773,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
           children: [
             FilledButton.icon(
               key: const Key('scan-import'),
-              onPressed: busy || pages.length >= maxScanPages ? null : _import,
+              onPressed: busy || loading || pages.length >= maxScanPages ? null : _import,
               icon: const Icon(Icons.add_photo_alternate_outlined),
               label: const Text('Add image'),
             ),
@@ -781,7 +781,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
               OutlinedButton.icon(
                 key: const Key('scan-camera'),
                 onPressed:
-                    busy || recovered != null || pages.length >= maxScanPages
+                    busy || loading || recovered != null || pages.length >= maxScanPages
                     ? null
                     : _capture,
                 icon: const Icon(Icons.photo_camera_outlined),
@@ -789,7 +789,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
               ),
             OutlinedButton.icon(
               key: const Key('scan-samples'),
-              onPressed: busy ? null : _samples,
+              onPressed: busy || loading ? null : _samples,
               icon: const Icon(Icons.school_outlined),
               label: const Text('Try an example'),
             ),
