@@ -16,6 +16,8 @@ The active app entry point is the modular creative editor from the reconciled cr
 - Undo/redo within the current editor session.
 - Save and reopen versioned local design projects; import/export editable project copies.
 - Export bounded PNG and single-page raster PDF output at selected DPI, with source-image resolution warnings.
+- Add editable date-aware visual stamps (DRAFT, APPROVED, PAID, RECEIVED, CONFIDENTIAL, COPY, VOID) and custom stamp labels.
+- Draw a finger/stylus signature into a transparent image layer; reposition and resize it like other design objects. This is a visual signature, not cryptographic signing.
 - Local-only project storage and platform file-picker boundary, with automated host tests for document, repository, export and widget flows.
 
 ### Preserved prototype capabilities to migrate into modular screens
@@ -25,6 +27,7 @@ The earlier prototype included basic Photo tools, Notes, an A4 print-test sheet,
 ### Not yet implemented as production features
 
 - Canva-level templates, advanced vector tools, background removal and full photo editing.
+- Stamping or signing imported PDFs/Office documents; cryptographic digital signatures and identity verification.
 - Full DOCX/XLSX editing and spreadsheet formulas.
 - Passport-photo sheets, production print queues, imposition and printer-specific calibration.
 - Complete inventory/POS, receipts, accounting, expenses, payments and reporting.
