@@ -6,11 +6,11 @@ DeskSuite is an Android-first, local-first Flutter workspace by ZamCan (Mussa Fi
 
 ## What you can do in this source tree
 
-- **Scan & assemble:** import PNG/JPEG/WebP or request an Android camera capture; manually adjust four page corners with true projective correction, choose known paper proportions, rotate and apply grayscale or fixed-threshold black-and-white. Reorder up to eight pages, reopen a local draft, and export ordered A4/US Letter **image-only PDFs** or individual PNG pages. Camera and file providers are not yet device-tested.
-- **Photo Studio:** first-frame PNG/JPEG/WebP input; rotate, flip, centre-square crop, fit-to-bounds or exact independent pixel resize; compare, undo/reset; review actual dimensions and byte size before PNG/JPEG export. JPEG flattens transparency to white. Optional repeated-photo sheet PDF/print handoff does not certify ID requirements.
+- **Scan & assemble:** import PNG/JPEG/WebP or request an Android camera capture; manually correct page perspective; preview local uneven-lighting reduction or adaptive black-and-white and compare before/after. Rotate, apply grayscale or fixed-threshold B&W, reorder up to eight pages, reopen a draft, and export A4/US Letter **image-only PDFs** or PNG pages. The cleanup UI and native camera/providers need device testing.
+- **Photo Studio:** first-frame PNG/JPEG/WebP input; rotate, flip, centre-square crop and resize; reduce isolated black/white specks on images up to 4 megapixels; zoom, compare and undo/reset; review dimensions and byte size before PNG/JPEG export. Speck reduction may soften detail and is not general restoration. JPEG flattens transparency to white. Photo sheets do not certify ID requirements.
 - **Creative Studio:** editable physical-size designs with text, shapes and images; arrange, edit, undo/redo, autosave/reopen, import/export `.dsdesign`, export PNG or a flattened one-page PDF. Earlier `.dsproject` files can be imported as new copies without automatically changing the source.
 - **Notes, Print and Business starter:** local plain-text notes and TXT export; A4 print-check PDF and OS print handoff; local products, opening stock, unit counter and JSON catalogue export. No accounting, payment or financial compliance claim.
-- **Getting started and Conversion routes:** a skippable introduction, revisitable fictional sample tutorials that call the real scan/photo/design engines, and an explicit catalogue of supported and unavailable routes. Bundled forms and names are fictional; the practice photo is synthetic.
+- **Getting started and Conversion routes:** a skippable introduction, revisitable fictional sample tutorials that call the scan/photo/design engines, and an explicit catalogue of supported and unavailable routes. Try the deliberately shadowed field notes and noisy synthetic garden; see the [real pixel-engine before/after evidence](docs/engineering/cleanup-evidence.png).
 
 Processing is local, without an account, paid API, analytics or cloud requirement. App-private data is **not encrypted by DeskSuite**; uninstalling or clearing data can remove it. Export and independently verify important copies. There is no complete backup/restore.
 
@@ -22,10 +22,10 @@ Images are bounded to 8 MiB input, 12 megapixels and 8192 pixels per side; scan 
 
 ## Try the real workflows
 
-1. Open **Getting started** from navigation; choose the two-page report, perspective letter or synthetic photo exercise. The examples use the same processors as user files.
-2. In **Scan & assemble**, add images, select known page proportions if appropriate, use **Corners & correct**, reorder, then **Prepare PDF**. Save a copy and verify it in an external reader. This PDF is not searchable.
-3. In **Photo Studio**, choose an image and **Resize**. Keep aspect ratio to fit, or turn it off to force exact width and height. Export PNG/JPG, review actual encoded size, then save a copy.
-4. Open **Conversion routes** for supported operations and explicit unsupported routes.
+1. Open **Getting started** from navigation. For cleanup, try the shadowed field notes or the noisy garden exercises; they call the same local processors as user files.
+2. In **Scan & assemble**, choose **Try an example → Shadowed field notes → Clean up & compare**. Preview a method, switch **Before/After**, then apply only if satisfied. Export a separate PNG or prepare an image-only PDF; it is not searchable.
+3. In **Photo Studio**, choose **Try a noisy garden photo → Reduce isolated specks**. Pinch to zoom and compare with the original. Undo or export a separate copy. **Resize** also supports fit-to-bounds or exact independent dimensions.
+4. Open **Conversion routes** for supported operations and explicit unsupported routes. The new Flutter UI and native integrations still need the checks in the [validation record](docs/engineering/VALIDATION.md).
 
 More detailed steps and recovery guidance: [user guide](docs/USER_GUIDE.md). Product-owner requirements: [master engineering directive](docs/engineering/MASTER_ENGINEERING_DIRECTIVE.md) and [additional instructions](docs/engineering/OWNER_INSTRUCTIONS.md). Engineering evidence: [current status](docs/engineering/CURRENT_STATUS.md), [baseline audit](docs/engineering/BASELINE_AUDIT.md), [engine evaluation](docs/engineering/ENGINE_EVALUATION.md), [validation record](docs/engineering/VALIDATION.md), [architecture](docs/ARCHITECTURE.md), [roadmap](docs/ROADMAP.md) and [changelog](CHANGELOG.md).
 
@@ -35,6 +35,7 @@ Use your **existing** Flutter, JDK and Android SDK installations. Recorded host 
 
 ```sh
 flutter pub get                     # use --offline when already cached
+dart test/pixel_algorithms_smoke.dart # standalone pixel checks, no Flutter dependency
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze --no-pub
 flutter test --no-pub --concurrency=1 --reporter expanded --timeout 120s
