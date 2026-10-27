@@ -70,6 +70,7 @@ Future<void> waitForEnabledButton(
   Duration timeout = const Duration(seconds: 30),
 }) async {
   final deadline = DateTime.now().add(timeout);
+  var lastState = 'target not found';
   while (DateTime.now().isBefore(deadline)) {
     if (finder.evaluate().isNotEmpty) {
       final widget = tester.widget<Widget>(finder);
@@ -80,6 +81,7 @@ Future<void> waitForEnabledButton(
         ElevatedButton button => button.onPressed != null,
         _ => false,
       };
+      lastState = '${widget.runtimeType}, enabled=$enabled';
       if (enabled) return;
     }
     await tester.pump(const Duration(milliseconds: 30));
@@ -87,7 +89,7 @@ Future<void> waitForEnabledButton(
       () => Future<void>.delayed(const Duration(milliseconds: 10)),
     );
   }
-  fail('Timed out waiting for the button to become enabled.');
+  fail('Timed out waiting for the button to become enabled ($lastState; busy indicator: ${find.bySemanticsLabel('Processing or saving page').evaluate().length}; save error: ${find.textContaining('Draft could not be saved').evaluate().length}).');
 }
 
 Future<void> tapVisible(WidgetTester tester, Finder finder) async {
