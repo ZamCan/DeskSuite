@@ -55,6 +55,10 @@ const conversionRoutes = <ConversionRoute>[
     target: ConversionTarget.pdfStudio,
   ),
   ConversionRoute(
+    title: 'Legacy .doc, .xls or .ppt → full-layout conversion',
+    detail: 'Unavailable without a verified external office engine. Content-level conversion does not promise original page layout, charts, fonts or slide fidelity.',
+  ),
+  ConversionRoute(
     title: 'DOCX, XLSX, PPTX, ODT, ODS, ODP, RTF → PDF, TXT, CSV, ODT, ODS',
     detail:
         'Reads office documents on the device and writes a content PDF, text, '
