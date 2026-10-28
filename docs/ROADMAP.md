@@ -9,13 +9,13 @@
 - [x] Manual projective page correction, ordered multipage image PDF, bounded private scan draft and failure/retry coverage on the host.
 - [x] Skippable, revisitable sample guides and explicit conversion catalogue linking to real tools.
 - [x] Notes save/error/retry and TXT export; starter catalogue/stock counters, exact minor units and JSON export.
-- [x] PDF physical-size and fake print-gateway behavior; baseline sequential host suite and targeted later tests. The source status recorded on 2026-10-27 reports 152 passing sequential host tests, clean analysis and formatting. Re-run the complete suite after subsequent changes; Android and release gates remain separate.
+- [x] PDF physical-size and fake print-gateway behavior; baseline sequential host suite and targeted later tests. CI on main commit `7f1920ef` passed the full Flutter test suite, analysis, Android release APK/AAB builds, Linux/Windows builds and unsigned iOS validation on 2026-10-28. Re-run the complete suite after subsequent changes; physical-device and signing gates remain separate.
 
 ## Implemented, not fully validated
 
 - [ ] Local uneven-lighting / adaptive B&W document previews and selective photo-speck reduction, with realistic synthetic examples. Pixel cores passed a DDC/Node smoke check; Flutter codec, widget, integration and Android tests are still pending.
 - [ ] Native Android camera capture/recovery, file picking, saving, lifecycle/process death, actual printer discovery/output, adaptive icons/splash and accessibility on representative devices.
-- [ ] Checked-in Android scaffold and external release-signing configuration: no integrated APK/AAB or device upgrade was built/tested in this execution.
+- [ ] Physical Android install/upgrade using the owner's existing private signing key. CI built APK (119.5 MB) and AAB (102.1 MB) on `7f1920ef`, but the active workflow does not sign with the owner's key; real-device behavior remains unverified.
 - [ ] Windows/Linux/iOS plugins, generated desktop runners, packaging and OS-specific paths.
 - [ ] System print scaling, colour, real margins and ID-photo requirements.
 
@@ -30,7 +30,7 @@
   [office support](engineering/OFFICE_SUPPORT.md).
 - PDF output now embeds a Unicode font so accents, dashes and smart quotes are
   not dropped.
-- `flutter test` 152 passing; `flutter analyze` clean.
+- Main commit `7f1920ef`: full `flutter test` and `flutter analyze` passed; Android APK/AAB, Linux/Windows and unsigned iOS validation builds completed in [CI run 40689024580](https://github.com/ZamCan/DeskSuite/actions/runs/40689024580). The APK is not yet verified on a physical device.
 
 ## Not implemented / next slices
 
