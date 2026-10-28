@@ -77,7 +77,7 @@ images, charts, macros, comments, text boxes, number formats and original page l
 
 ## Open and edit an existing PDF
 
-1. Open the menu → **PDF Studio** and choose a supported PDF from local storage.
+1. Open the menu → **PDF Studio** and choose a supported PDF. To combine files, choose **Combine PDFs**, add at least two PDF files in order, reorder if needed, then export a new combined copy.
 2. Review the loaded document and use the available page/content editing tools. Save a **separate copy** rather than overwriting the original.
 3. Existing PDF input/output is limited to 48 MiB. Encrypted, malformed, complex or very large PDFs may not open or may use substantial memory. A file-header check does not prove full validity.
 4. PDF Studio does not guarantee compatibility with every form, digital signature, annotation, embedded file or advanced PDF feature. Check the saved copy in an independent PDF reader. PDF Studio editing is not a cryptographic signature.
