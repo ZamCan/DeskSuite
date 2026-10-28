@@ -3,6 +3,8 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 
+import 'office_zip_guard.dart';
+
 /// Bounded reader for ZIP-based office packages (OOXML and ODF).
 ///
 /// Office files are attacker-controlled input: the reader caps the archive size,
@@ -41,6 +43,15 @@ class OfficePackage {
         'The document exceeds the 48 MB import limit.',
       );
     }
+    // Preflight central-directory declarations before the ZIP library inflates
+    // any entry. This rejects ZIP64, encrypted/multi-disk packages, duplicate
+    // names, symlinks, overlapping payloads and declared expansion bombs.
+    guardOfficeZip(
+      bytes,
+      maxEntries: maxEntries,
+      maxEntryBytes: maxEntryBytes,
+      maxTotalBytes: maxTotalBytes,
+    );
     final Archive archive;
     try {
       archive = ZipDecoder().decodeBytes(bytes, verify: true);
