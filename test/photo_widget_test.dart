@@ -342,7 +342,7 @@ void main() {
       expect(find.textContaining('Only 4 photo(s) fit'), findsOneWidget);
       final export = find.widgetWithText(OutlinedButton, 'Export PDF');
       expect(tester.widget<OutlinedButton>(export).onPressed, isNull);
-      await tester.enterText(copies, '8');
+      await tester.enterText(copies, '4');
       await tester.pumpAndSettle();
       await tester.tap(export);
       await tester.pumpAndSettle();
