@@ -16,12 +16,20 @@ declaration that the whole directive or a release is finished. The full
 | Later main `1cef153` CI | Analysis failed on all four jobs; logs require authentication. The feature branch fixes a separately reproduced constant-expression error in that main snapshot, but other project errors cannot be excluded until Flutter runs. | [run 40635793861](https://github.com/ZamCan/DeskSuite/actions/runs/40635793861) |
 | New enhancement and corner pixel cores | DartPad 3.13.7 DDC/Node smoke checks passed, including 40 randomized images and synthetic corner/fallback cases | [validation](VALIDATION.md) |
 | Media/raster integration | Actual Dart budget and sheet-geometry checks passed for 56 listed presets under DartPad DDC/Node; UI and optimizer control-flow analyses used stubs | [validation](VALIDATION.md) |
+| Owner-selected branding | Four Python asset/resource checks passed; source/derived images inspected on host, DartPad analyzed the theme and home with stubs | [brand assets](BRAND_ASSETS.md), [validation](VALIDATION.md) |
+| Cleanup and optimizer follow-up | DDC/Node verified zero-strength pixel equivalence for 100 randomized RGBA pages per color mode and 2,000 compression-geometry sequences; optimizer flow used a simulated codec | [validation](VALIDATION.md) |
 | New Flutter codec, widget, OCR-handoff and full-suite tests | **Written, not run in this workspace** | Flutter/Dart tools are absent from this snapshot |
 | Android/device and signed release for the new source | **Not built or tested here** | Independent CI passed for main only; signing and device checks remain separate |
 
 The independently triggered CI builds do not prove a signed release, actual
 camera/OCR behavior or the changes in this feature branch. The owner asked
 that no Android toolchain be downloaded or packaging performed in this workspace.
+
+## Owner-selected brand and focused engine improvements — 2026-10-28
+
+The selected dimensional DS scan-frame PNG is now the canonical brand source. Derived in-app and Android launcher assets, simplified monochrome/splash vectors, a coordinated light/dark sapphire palette and four home shortcuts are in source; legacy studios retain light surfaces. Android adaptive/splash rendering, Flutter asset loading and small-screen layout still require real builds and devices. See [brand assets](BRAND_ASSETS.md).
+
+The JPEG optimizer now considers thin panoramas when reducing resolution for byte targets and resamples each candidate from the same opaque source, using bounded geometry calculated from the initial target. Targets can still be impossible, and image codec tests remain unrun. The cleanup engine skips unnecessary histogram work for zero-strength color treatments while preserving white alpha compositing; grayscale and B&W remain active at zero. Actual pixel and geometry checks and the limits of simulated-codec evidence are recorded in [validation](VALIDATION.md).
 
 ## Earlier implementation slice — Photo print size
 

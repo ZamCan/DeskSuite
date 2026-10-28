@@ -28,10 +28,10 @@ import 'printing/photo_sheet_dialog.dart';
 import 'printing/optimized_image_pdf.dart';
 import 'workspace/file_gateway.dart';
 
-const ink = Color(0xFF292B29);
-const paper = Color(0xFFF7F5EF);
-const accent = Color(0xFFB56B45);
-const muted = Color(0xFF777970);
+const ink = Color(0xFF15243A);
+const paper = Color(0xFFF3F7FC);
+const accent = Color(0xFF1C58AC);
+const muted = Color(0xFF596B81);
 
 class LocalStore {
   static final LocalFileStore _files = LocalFileStore(suiteRoot);
@@ -2578,7 +2578,7 @@ class InfoNote extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
-      color: const Color(0xFFF0EAE0),
+      color: const Color(0xFFE9F1FB),
       borderRadius: BorderRadius.circular(14),
     ),
     child: Row(

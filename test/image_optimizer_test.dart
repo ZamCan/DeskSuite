@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:desksuite/images/image_optimizer.dart';
@@ -90,6 +91,40 @@ void main() {
     expect(result.bytes[1], 0xd8);
     expect(bytes, source);
   });
+
+  test(
+    'byte target can reduce a noisy image with a short side below 64 px',
+    () {
+      final image = img.Image(width: 2000, height: 16, numChannels: 3);
+      final random = math.Random(93);
+      for (var y = 0; y < image.height; y++) {
+        for (var x = 0; x < image.width; x++) {
+          image.setPixelRgb(
+            x,
+            y,
+            random.nextInt(256),
+            random.nextInt(256),
+            random.nextInt(256),
+          );
+        }
+      }
+      final input = Uint8List.fromList(img.encodePng(image));
+      final before = Uint8List.fromList(input);
+      final result = optimizeImage(
+        ImageOptimizationRequest(
+          bytes: input,
+          mode: ImageCompressionMode.targetBytes,
+          targetBytes: 2048,
+          quality: 30,
+        ),
+      );
+      expect(result.bytes.length, lessThanOrEqualTo(2048));
+      expect(result.width, lessThan(2000));
+      expect(result.height, lessThan(16));
+      expect(img.decodeJpg(result.bytes), isNotNull);
+      expect(input, orderedEquals(before));
+    },
+  );
 
   test('percentage target is validated', () {
     expect(

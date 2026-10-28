@@ -68,22 +68,28 @@ class WorkspaceSidebar extends StatelessWidget {
               children: [
                 BrandMark(),
                 SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'DeskSuite',
-                      style: TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -.6,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'DeskSuite',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -.6,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'CREATIVE WORKSPACE',
-                      style: TextStyle(fontSize: 9, letterSpacing: 1.05),
-                    ),
-                  ],
+                      Text(
+                        'CREATIVE WORKSPACE',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 9, letterSpacing: 1.05),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -194,7 +200,7 @@ class WorkspaceWelcome extends StatelessWidget {
                       Text(
                         'A WORKSPACE FOR YOUR IDEAS',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: accent,
+                          color: Theme.of(context).colorScheme.primary,
                           letterSpacing: 1.3,
                           fontWeight: FontWeight.w800,
                         ),
@@ -211,7 +217,7 @@ class WorkspaceWelcome extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Create, edit and prepare a design for print—all in one place.',
+                        'Scan documents, edit photos and design for print—all in one place.',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                           height: 1.5,
@@ -242,7 +248,9 @@ class WorkspaceWelcome extends StatelessWidget {
                   SizedBox(
                     width: 210,
                     height: 180,
-                    child: CustomPaint(painter: _WelcomeArt()),
+                    child: CustomPaint(
+                      painter: _WelcomeArt(Theme.of(context).colorScheme),
+                    ),
                   ),
                 ],
               ],
@@ -255,6 +263,9 @@ class WorkspaceWelcome extends StatelessWidget {
 }
 
 class _WelcomeArt extends CustomPainter {
+  _WelcomeArt(this.scheme);
+  final ColorScheme scheme;
+
   @override
   void paint(Canvas canvas, Size size) {
     final rect = RRect.fromRectAndRadius(
@@ -264,40 +275,41 @@ class _WelcomeArt extends CustomPainter {
     canvas.save();
     canvas.translate(8, 0);
     canvas.rotate(.075);
-    canvas.drawRRect(rect, Paint()..color = const Color(0xffe7dfd4));
+    canvas.drawRRect(rect, Paint()..color = scheme.secondaryContainer);
     canvas.restore();
-    canvas.drawRRect(rect, Paint()..color = const Color(0xfff8f3eb));
+    canvas.drawRRect(rect, Paint()..color = scheme.surfaceContainerHighest);
     canvas.drawRRect(
       rect,
       Paint()
-        ..color = const Color(0xffd5cbc0)
+        ..color = scheme.outline
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
     canvas.drawRect(
       const Rect.fromLTWH(52, 33, 107, 48),
-      Paint()..color = const Color(0xffc77c60),
+      Paint()..color = scheme.primary,
     );
     canvas.drawRect(
       const Rect.fromLTWH(52, 94, 64, 7),
-      Paint()..color = const Color(0xff393630),
+      Paint()..color = scheme.onSurface,
     );
     canvas.drawRect(
       const Rect.fromLTWH(52, 106, 84, 7),
-      Paint()..color = const Color(0xff393630),
+      Paint()..color = scheme.onSurface,
     );
     canvas.drawRect(
       const Rect.fromLTWH(52, 129, 48, 3),
-      Paint()..color = const Color(0xffb5a89a),
+      Paint()..color = scheme.outline,
     );
     canvas.drawRect(
       const Rect.fromLTWH(52, 137, 72, 3),
-      Paint()..color = const Color(0xffb5a89a),
+      Paint()..color = scheme.outline,
     );
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _WelcomeArt oldDelegate) =>
+      oldDelegate.scheme != scheme;
 }
 
 class StarterCard extends StatelessWidget {
@@ -330,10 +342,15 @@ class StarterCard extends StatelessWidget {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: accent.withValues(alpha: .1),
+                    color: Theme.of(context).colorScheme.primary
+                        .withValues(alpha: .1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, color: accent, size: 22),
+                  child: Icon(
+                    icon,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 22,
+                  ),
                 ),
                 const Spacer(),
                 const Icon(Icons.north_east, size: 16),
@@ -342,8 +359,10 @@ class StarterCard extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               eyebrow,
-              style: Theme.of(context).textTheme.labelSmall
-                  ?.copyWith(letterSpacing: 1.1, color: accent),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                letterSpacing: 1.1,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             const SizedBox(height: 5),
             Text(
@@ -386,10 +405,13 @@ class ProjectTile extends StatelessWidget {
         width: 48,
         height: 54,
         decoration: BoxDecoration(
-          color: const Color(0xffeee6dd),
+          color: Theme.of(context).colorScheme.primaryContainer,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: const Icon(Icons.description_outlined, color: accent),
+        child: Icon(
+          Icons.description_outlined,
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+        ),
       ),
       title: Text(
         item.name,

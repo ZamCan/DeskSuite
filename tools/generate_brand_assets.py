@@ -1,82 +1,87 @@
 #!/usr/bin/env python3
-"""Regenerate Android and transparent PNG assets from the checked-in SVG.
+"""Regenerate DeskSuite's raster branding from the owner-selected PNG.
 
-Requires Python 3, Pillow, and ImageMagick 7 (the `magick` command).
-This script is a developer utility, not an application/build dependency.
+Requires Python 3 and Pillow; no Flutter or Android toolchain is required.
+The source is preserved byte-for-byte. The generated foreground fits inside the
+66/108 adaptive-icon safe square; the system may apply different launcher masks.
 """
 from pathlib import Path
-import shutil
-import subprocess
-import xml.etree.ElementTree as ET
+
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
-SVG = ROOT / 'assets/brand/desksuite-mark.svg'
-PNG = ROOT / 'assets/brand/desksuite-mark.png'
+SOURCE = ROOT / 'assets/brand/desksuite-icon-source.png'
+BRAND = ROOT / 'assets/brand/desksuite-mark.png'
 RES = ROOT / 'android/app/src/main/res'
-if not shutil.which('magick'):
-    raise SystemExit('ImageMagick 7 `magick` is required to render the SVG.')
 
-ns = {'svg': 'http://www.w3.org/2000/svg'}
-xml = ET.parse(SVG).getroot()
-paths = xml.findall('.//svg:path', ns)
-rect = xml.find('.//svg:rect', ns)
-if len(paths) != 2 or rect is None:
-    raise SystemExit('The master SVG structure changed; review the Android vector generator.')
 
-# The mark is scaled by 1.25 around the centre in both the SVG and vector.
-def vector(monochrome=False):
-    pieces = ['<?xml version="1.0" encoding="utf-8"?>',
-              '<vector xmlns:android="http://schemas.android.com/apk/res/android"',
-              '    android:width="108dp" android:height="108dp"',
-              '    android:viewportWidth="512" android:viewportHeight="512">',
-              '  <group android:pivotX="256" android:pivotY="256" android:scaleX="1.25" android:scaleY="1.25">']
-    for path in paths:
-        color = '#FFFFFFFF' if monochrome else path.attrib['fill']
-        rule = ' android:fillType="evenOdd"' if path.attrib.get('fill-rule') == 'evenodd' else ''
-        pieces.append(f'    <path android:fillColor="{color}"{rule} android:pathData="{path.attrib["d"]}" />')
-    color = '#FFFFFFFF' if monochrome else rect.attrib['fill']
-    pieces.append(f'    <path android:fillColor="{color}" android:pathData="M205,273 H237 A5,5 0,0 1,237,283 H205 A5,5 0,0 1,205,273 Z" />')
-    pieces += ['  </group>', '</vector>', '']
-    return '\n'.join(pieces)
+def remove_corner_matte(image: Image.Image) -> Image.Image:
+    """Remove the black outside the selected rounded square, not its contents.
 
-(RES / 'drawable').mkdir(parents=True, exist_ok=True)
-(RES / 'drawable/ic_launcher_foreground.xml').write_text(vector(), encoding='utf-8')
-(RES / 'drawable/ic_launcher_monochrome.xml').write_text(vector(True), encoding='utf-8')
-(RES / 'values').mkdir(parents=True, exist_ok=True)
-(RES / 'values/launcher_colors.xml').write_text('<?xml version="1.0" encoding="utf-8"?>\n<resources><color name="launcher_background">#292824</color></resources>\n', encoding='utf-8')
-for folder, monochrome in [('mipmap-anydpi-v26', False), ('mipmap-anydpi-v33', True)]:
-    path = RES / folder
-    path.mkdir(parents=True, exist_ok=True)
-    line = '    <monochrome android:drawable="@drawable/ic_launcher_monochrome" />\n' if monochrome else ''
-    (path / 'ic_launcher.xml').write_text(
-        '<?xml version="1.0" encoding="utf-8"?>\n'
-        '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
-        '    <background android:drawable="@color/launcher_background" />\n'
-        '    <foreground android:drawable="@drawable/ic_launcher_foreground" />\n'
-        + line + '</adaptive-icon>\n', encoding='utf-8')
+    The supplied image is RGB with an almost-black corner matte. Each scanline
+    retains everything between the first and last blue-surface pixels. This is
+    intentionally specific to the checked-in owner-selected artwork, not a
+    general background-removal algorithm.
+    """
+    rgb = image.convert('RGB')
+    width, height = rgb.size
+    pixels = rgb.load()
+    alpha = Image.new('L', rgb.size, 0)
+    draw = ImageDraw.Draw(alpha)
+    for y in range(height):
+        left = 0
+        while left < width and pixels[left, y][2] <= 35:
+            left += 1
+        right = width - 1
+        while right >= left and pixels[right, y][2] <= 35:
+            right -= 1
+        if left > right:
+            continue
+        draw.line((left, y, right, y), fill=255)
+    rgba = rgb.convert('RGBA')
+    rgba.putalpha(alpha)
+    return rgba
 
-# Launch background uses the same adaptive foreground and warm-ink surface.
-launch = ('<?xml version="1.0" encoding="utf-8"?>\n'
-          '<layer-list xmlns:android="http://schemas.android.com/apk/res/android">\n'
-          '    <item android:drawable="@color/launcher_background" />\n'
-          '    <item android:drawable="@drawable/ic_launcher_foreground" android:gravity="center" />\n'
-          '</layer-list>\n')
-for folder in ['drawable', 'drawable-v21']:
-    (RES / folder).mkdir(parents=True, exist_ok=True)
-    (RES / folder / 'launch_background.xml').write_text(launch, encoding='utf-8')
 
-# Render the vector at high resolution, retain transparency in the brand PNG,
-# and downsample legacy icons from the same master with an opaque dark surface.
-subprocess.run(['magick', '-background', 'none', '-density', '192', str(SVG), '-resize', '1024x1024', str(PNG)], check=True)
-mark = Image.open(PNG).convert('RGBA').resize((1024, 1024), Image.Resampling.LANCZOS)
-mask = Image.new('L', (1024, 1024), 0)
-ImageDraw.Draw(mask).rounded_rectangle((0, 0, 1023, 1023), radius=220, fill=255)
-background = Image.new('RGBA', (1024, 1024), (41, 40, 36, 255))
-background.putalpha(mask)
-background.alpha_composite(mark)
-for density, size in [('mdpi', 48), ('hdpi', 72), ('xhdpi', 96), ('xxhdpi', 144), ('xxxhdpi', 192)]:
-    out = RES / ('mipmap-' + density)
-    out.mkdir(parents=True, exist_ok=True)
-    background.resize((size, size), Image.Resampling.LANCZOS).save(out / 'ic_launcher.png', optimize=True)
-print('Generated brand PNG, Android adaptive/monochrome vectors, legacy icons and splash backgrounds.')
+def background(size: int) -> Image.Image:
+    """An opaque, full-bleed sapphire surface behind the adaptive foreground."""
+    top = (24, 78, 174)
+    bottom = (10, 35, 101)
+    result = Image.new('RGB', (size, size))
+    draw = ImageDraw.Draw(result)
+    for y in range(size):
+        mix = y / max(1, size - 1)
+        color = tuple(round(a * (1 - mix) + b * mix) for a, b in zip(top, bottom))
+        draw.line((0, y, size - 1, y), fill=color)
+    return result
+
+
+def generate(source_path: Path = SOURCE, brand_path: Path = BRAND, res: Path = RES) -> None:
+    source = Image.open(source_path)
+    if source.width != source.height or source.width < 512:
+        raise SystemExit('The selected brand source must be a square of at least 512 px.')
+    mark = remove_corner_matte(source)
+    brand_path.parent.mkdir(parents=True, exist_ok=True)
+    mark.resize((512, 512), Image.Resampling.LANCZOS).save(brand_path, optimize=True)
+
+    # Legacy launchers show the selected full icon with transparent corners.
+    for density, size in [('mdpi', 48), ('hdpi', 72), ('xhdpi', 96),
+                          ('xxhdpi', 144), ('xxxhdpi', 192)]:
+        path = res / f'mipmap-{density}' / 'ic_launcher.png'
+        path.parent.mkdir(parents=True, exist_ok=True)
+        mark.resize((size, size), Image.Resampling.LANCZOS).save(path, optimize=True)
+
+    # 432 px is 108 dp at xxxhdpi. Artwork fits the central 66 dp square.
+    side, safe = 432, 264
+    foreground = Image.new('RGBA', (side, side), (0, 0, 0, 0))
+    art = mark.resize((safe, safe), Image.Resampling.LANCZOS)
+    foreground.alpha_composite(art, ((side - safe) // 2, (side - safe) // 2))
+    folder = res / 'drawable-nodpi'
+    folder.mkdir(parents=True, exist_ok=True)
+    foreground.save(folder / 'ic_launcher_foreground.png', optimize=True)
+    background(side).save(folder / 'ic_launcher_background.png', optimize=True)
+    print('Regenerated the in-app mark and Android raster icon layers.')
+
+
+if __name__ == '__main__':
+    generate()

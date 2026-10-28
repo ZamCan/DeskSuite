@@ -49,6 +49,20 @@ void cleanDocumentRgbaInPlace(
 
   if (mode == DocumentCleanupMode.original) return;
 
+  // Zero-strength color treatments only flatten transparency. Avoid allocating
+  // histograms and traversing the page twice when the slider is at zero.
+  // Grayscale and B&W are still active at zero: their amount has different
+  // semantics, so they must not take this shortcut.
+  if (amount == 0 &&
+      (mode == DocumentCleanupMode.lighten ||
+          mode == DocumentCleanupMode.evenLighting ||
+          mode == DocumentCleanupMode.magicPro)) {
+    for (var offset = 0; offset < pixels.length; offset += 4) {
+      _flattenOnWhite(pixels, offset);
+    }
+    return;
+  }
+
   // Simple global treatments do not need the local-paper histograms.
   if (mode == DocumentCleanupMode.lighten ||
       mode == DocumentCleanupMode.grayscale) {

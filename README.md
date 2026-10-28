@@ -8,6 +8,8 @@ DeskSuite is an Android-first, local-first multipurpose creative, office, docume
 
 ## Product areas
 
+The owner-selected dimensional DS scan-frame identity is applied to the in-app brand and Android launcher source; the launch screen and Android themed icon use simplified adaptations. Device rendering is not yet verified. See [brand asset sources](docs/engineering/BRAND_ASSETS.md).
+
 DeskSuite is organized around one shared workspace: **Home & Files, Studio, Image Lab, Capture, Office, PDF & Print, and Business**. These are coordinated product areas, not separate mini-apps. They should share projects, asset references, import/export, print services, navigation, design tokens and recovery behavior. The implemented features below are a truthful inventory of the current source, not a claim that all benchmark-product capabilities are complete.
 
 ## What you can do in this source tree
@@ -43,6 +45,8 @@ Use your **existing** Flutter, JDK and Android SDK installations. Recorded host 
 flutter pub get                     # use --offline when already cached
 dart test/pixel_algorithms_smoke.dart # standalone pixel checks, no Flutter dependency
 dart test/page_corner_pixels_smoke.dart # standalone corner-suggestion checks
+dart test/compression_dimensions_smoke.dart # bounded byte-target geometry
+python3 tools/test_brand_assets.py   # requires Pillow
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze --no-pub
 flutter test --no-pub --concurrency=1 --reporter expanded --timeout 120s

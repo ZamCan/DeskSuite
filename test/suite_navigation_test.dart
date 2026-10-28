@@ -57,6 +57,59 @@ Future<void> navigate(WidgetTester tester, String label) async {
 }
 
 void main() {
+  testWidgets('home shortcuts open the four real local workflows', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final temp = (await tester.runAsync(
+      () => Directory.systemTemp.createTemp('desksuite-shortcuts-'),
+    ))!;
+    addTearDown(() async {
+      if (await temp.exists()) await temp.delete(recursive: true);
+    });
+    const channel = MethodChannel('plugins.flutter.io/path_provider');
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      channel,
+      (call) async => '${temp.path}/support',
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        channel,
+        null,
+      ),
+    );
+    final root = Directory('${temp.path}/projects');
+    await tester.runAsync(() async {
+      await root.create(recursive: true);
+      await File('${root.path}/welcome.json')
+          .writeAsString('{"version":1,"seen":true}');
+    });
+    final repo = ProjectRepository(root);
+    await tester.pumpWidget(
+      DeskSuiteApp(repository: repo, fileGateway: NoFiles()),
+    );
+    await settleIo(tester);
+    final routes = <String, String>{
+      'home-open-scan': 'scan-import',
+      'home-open-photo': 'photo-choose',
+      'home-open-text': 'ocr-choose',
+      'home-open-converter': 'office-choose',
+    };
+    var first = true;
+    for (final route in routes.entries) {
+      if (!first) await navigate(tester, 'Home');
+      first = false;
+      final shortcut = find.byKey(Key(route.key));
+      await reveal(tester, shortcut);
+      await tester.tap(shortcut);
+      await settleUntil(tester, find.byKey(Key(route.value)));
+      expect(tester.takeException(), isNull, reason: route.key);
+    }
+  });
+
   testWidgets(
     'main workspace opens live studios and imports an earlier project into its existing documents root',
     (tester) async {

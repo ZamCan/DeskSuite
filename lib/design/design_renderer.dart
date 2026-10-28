@@ -172,7 +172,7 @@ class DesignPainter extends CustomPainter {
           Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = stroke
-            ..color = const Color(0xffbe6348),
+            ..color = const Color(0xff1c58ac),
         );
         canvas.drawRect(
           Rect.fromCenter(
@@ -180,7 +180,7 @@ class DesignPainter extends CustomPainter {
             width: handle,
             height: handle,
           ),
-          Paint()..color = const Color(0xffbe6348),
+          Paint()..color = const Color(0xff1c58ac),
         );
       }
       canvas.restore();

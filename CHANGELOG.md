@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — selected identity and engine hardening (not a release)
+
+- Applied the owner's selected dimensional DS icon to the in-app brand and Android launcher resources; added simplified vector splash/themed-icon adaptations, coordinated sapphire light/dark colors and home shortcuts to the existing scan, photo, OCR and converter workflows. Actual Android rendering and the new Flutter widget tests remain unverified.
+- Improved target-size JPEG optimization for very wide/tall images and calculate resize attempts from the initial target, sampling the same original opaque raster to avoid cumulative resampling. Targets remain bounded and can be impossible. Codec tests are written but unrun.
+- Short-circuited zero-strength color cleanup without changing its alpha-compositing behavior. DDC/Node compared the old and new pixel output exactly on 100 randomized images per color mode; grayscale and B&W remain active at zero. See [validation](docs/engineering/VALIDATION.md).
+
 ## Unreleased — placed-image print warning (not a release)
 
 - Corrected Creative Studio's effective image-resolution estimate to match its cropped **cover** rendering, avoiding overstatement for mismatched aspect ratios. Photo-sheet estimates retain their **contain** behavior. The pure geometry passed 5,000 deterministic DartPad/Node cases and the actual warning calculation passed with stub images; Flutter rendering and warning tests remain unrun.

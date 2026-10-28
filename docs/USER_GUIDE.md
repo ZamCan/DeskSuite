@@ -1,6 +1,6 @@
 # DeskSuite user guide
 
-DeskSuite is a local-first work-in-progress, not a finished office suite. **Getting started** in the navigation has fictional, revisitable exercises; the first welcome can be skipped. No account is required for the local tools described here. Native Android camera, file-picker and print behavior still needs real-device validation for this version.
+DeskSuite is a local-first work-in-progress, not a finished office suite. **Getting started** in the navigation has fictional, revisitable exercises; the first welcome can be skipped. On Home, shortcuts open Scan, Photo Studio, Text extraction and the Office converter. No account is required for the local tools described here. Native Android camera, file-picker and print behavior still needs real-device validation for this version.
 
 ## Scan pages into an image PDF
 

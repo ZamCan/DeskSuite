@@ -75,6 +75,27 @@ void main() {
     expect(bright, [145, 116, 87, 255, 0, 0, 0, 255]);
   });
 
+  test('zero-strength color modes only flatten transparency', () {
+    for (final mode in [
+      DocumentCleanupMode.lighten,
+      DocumentCleanupMode.evenLighting,
+      DocumentCleanupMode.magicPro,
+    ]) {
+      final pixels = Uint8List.fromList([200, 100, 0, 128, 0, 0, 0, 0]);
+      cleanDocumentRgbaInPlace(pixels, 2, 1, mode: mode, amount: 0);
+      expect(pixels, [
+        227,
+        177,
+        127,
+        255,
+        255,
+        255,
+        255,
+        255,
+      ], reason: mode.name);
+    }
+  });
+
   test('Magic Pro normalizes shaded paper and keeps dark text and color', () {
     final pixels = unevenPixels();
     final chart = (15 * 128 + 15) * 4;

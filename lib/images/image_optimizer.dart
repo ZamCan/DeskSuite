@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show compute;
 
 import 'package:image/image.dart' as img;
 
+import 'compression_dimensions.dart';
 import 'photo_processor.dart';
 
 enum ImageSizePreset {
@@ -168,17 +169,24 @@ ImageOptimizationResult optimizeImage(ImageOptimizationRequest request) {
     }
     var passes = 0;
     while (output.length > targetBytes &&
-        passes < 24 &&
-        working.width > 64 &&
-        working.height > 64) {
+        passes < maxCompressionResizePasses &&
+        (working.width > minimumCompressionLongSide ||
+            working.height > minimumCompressionLongSide)) {
+      passes++;
+      final next = compressionDimensionsAtPass(
+        width: target.width,
+        height: target.height,
+        pass: passes,
+      );
+      // Always sample from the same source rather than repeatedly resampling
+      // each compressed candidate, which accumulates blur.
       working = img.copyResize(
-        working,
-        width: math.max(1, (working.width * 0.9).round()),
-        height: math.max(1, (working.height * 0.9).round()),
+        opaque,
+        width: next.width,
+        height: next.height,
         interpolation: img.Interpolation.cubic,
       );
       output = encode();
-      passes++;
     }
     if (output.length > targetBytes) {
       throw const FormatException(

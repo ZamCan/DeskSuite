@@ -1,5 +1,12 @@
 # Validation record
 
+## Selected branding, home and engine hardening — 2026-10-28
+
+- **Brand assets:** `python3 tools/test_brand_assets.py` passed four checks: the checked-in 1254 × 1254 source matches the owner's selected PNG SHA-256, derived/legacy/adaptive dimensions and alpha are as expected, Android resource XML parses and points to the new layers/vector splash, and temporary regeneration matches the checked-in raster bytes under the installed Pillow. Host previews of the legacy icon, a simulated circular adaptive mask and approximate rasterizations of the vector paths were inspected. **This is not Android resource compilation, a real launcher, a real splash or a Flutter asset test.** See [brand assets](BRAND_ASSETS.md).
+- **UI:** DartPad Flutter 3.47.8 signature analysis of the actual theme and workspace widgets, plus the actual home method and brand widget test composed with surrounding stubs, reported no issues. The DartPad formatter reported no differences across 131 Dart files. Independently calculated sRGB contrast for the explicitly selected primary/on-primary/on-surface against their paired backgrounds was at least 6.8:1 in light mode and 9.2:1 in dark mode. New Flutter tests for asset loading, contrast, sidebar text scaling and all four home shortcuts are **written but unrun**; neither stub analysis nor numerical contrast tests establish complete accessibility or responsive layout behavior.
+- **Compression geometry:** the actual new helper passed wide/tall examples, invalid boundaries and 2,000 randomized dimension sequences under DartPad Dart 3.13.7 DDC/Node. The actual optimizer control flow reached a thin-image target and resampled every attempt from the same opaque source in a simulated-codec harness; the analyzer reported no issues. A real noisy panoramic-image JPEG test is **written but unrun**; no real codec, compression quality or Android performance result is claimed.
+- **Cleanup:** the actual new zero-strength shortcut passed the existing 40-random-image smoke and was compared byte-for-byte against the previous actual implementation for 100 random RGBA images in each of Lighten, Reduce shadows and Magic Pro. Grayscale/B&W remain active at zero. One local DDC/Node run over a synthetic 1500 × 1000 RGBA page measured old/new zero-strength Reduce shadows at 3079/795 ms and Magic Pro at 2888/713 ms, with matching checksums. These are single synthetic Node timings, **not Android benchmarks**. The comparison harness had two style-info notices; Flutter/device tests are unrun.
+
 ## Placed-image print detail — 2026-10-28
 
 The new pure image-detail helper passed 5,000 deterministic randomly sized source/frame cases for both contain and cover fits under DartPad DDC/Node, plus invalid-boundary checks. For a 4000 × 1000 image in a 100 × 100 mm frame, contain gives 1016 dpi and the design renderer's cover fit gives 254 dpi. A second harness exercised the actual `lowestPlacedImageDpi` calculation with stub image/document objects, confirming it selects cover while the photo-sheet default remains contain. These harnesses had an unused `dart:typed_data` import warning. DartPad's formatter subsequently reported no pending changes across all 127 Dart files under `lib/` and `test/`. New Flutter helper and rendered-image integration tests are written but unrun; they do not replace device/printer validation.
@@ -114,6 +121,8 @@ dart test/page_corner_pixels_smoke.dart
 dart test/raster_budget_smoke.dart
 dart test/resize_dimensions_smoke.dart
 dart test/image_detail_smoke.dart
+dart test/compression_dimensions_smoke.dart
+python3 tools/test_brand_assets.py
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze --no-pub
 flutter test --no-pub --concurrency=1 --reporter expanded --timeout 120s

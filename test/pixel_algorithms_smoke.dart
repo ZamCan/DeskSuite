@@ -118,6 +118,48 @@ void main() {
     'Transparent pixel was not composited on white.',
   );
 
+  for (final mode in [
+    DocumentCleanupMode.lighten,
+    DocumentCleanupMode.evenLighting,
+    DocumentCleanupMode.magicPro,
+  ]) {
+    final zero = Uint8List.fromList([200, 100, 0, 128, 0, 0, 0, 0]);
+    cleanDocumentRgbaInPlace(zero, 2, 1, mode: mode, amount: 0);
+    check(
+      zero[0] == 227 &&
+          zero[1] == 177 &&
+          zero[2] == 127 &&
+          zero[3] == 255 &&
+          zero[4] == 255 &&
+          zero[5] == 255 &&
+          zero[6] == 255 &&
+          zero[7] == 255,
+      'Zero-strength $mode must only composite onto white.',
+    );
+  }
+  final zeroGray = Uint8List.fromList([200, 100, 50, 255]);
+  cleanDocumentRgbaInPlace(
+    zeroGray,
+    1,
+    1,
+    mode: DocumentCleanupMode.grayscale,
+    amount: 0,
+  );
+  check(
+    zeroGray[0] == 124 && zeroGray[1] == 124 && zeroGray[2] == 124,
+    'Grayscale remains active at zero.',
+  );
+
+  final zeroBw = Uint8List.fromList([0, 0, 0, 255, 200, 200, 200, 255]);
+  cleanDocumentRgbaInPlace(
+    zeroBw,
+    2,
+    1,
+    mode: DocumentCleanupMode.adaptiveBlackAndWhite,
+    amount: 0,
+  );
+  check(zeroBw[0] == 0 && zeroBw[4] == 255, 'B&W remains active at zero.');
+
   final invalid = Uint8List.fromList([1, 2, 3, 4]);
   for (final amount in [-1.0, 2.0, double.nan, double.infinity]) {
     var rejected = false;

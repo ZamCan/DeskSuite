@@ -486,6 +486,39 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             ),
           ),
         ],
+        const SizedBox(height: 28),
+        _heading('Your tools', 'Continue with a local workflow.'),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            OutlinedButton.icon(
+              key: const Key('home-open-scan'),
+              onPressed: () => _navigate(WorkspaceSection.scans),
+              icon: const Icon(Icons.document_scanner_outlined),
+              label: const Text('Scan documents'),
+            ),
+            OutlinedButton.icon(
+              key: const Key('home-open-photo'),
+              onPressed: () => _navigate(WorkspaceSection.photos),
+              icon: const Icon(Icons.photo_outlined),
+              label: const Text('Edit a photo'),
+            ),
+            OutlinedButton.icon(
+              key: const Key('home-open-text'),
+              onPressed: () => _navigate(WorkspaceSection.text),
+              icon: const Icon(Icons.text_snippet_outlined),
+              label: const Text('Extract text'),
+            ),
+            OutlinedButton.icon(
+              key: const Key('home-open-converter'),
+              onPressed: () => _navigate(WorkspaceSection.office),
+              icon: const Icon(Icons.sync_alt_rounded),
+              label: const Text('Convert file'),
+            ),
+          ],
+        ),
         const SizedBox(height: 34),
         Row(
           children: [
@@ -497,8 +530,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             ),
             Text(
               '01 / CREATE',
-              style: Theme.of(context).textTheme.labelSmall
-                  ?.copyWith(letterSpacing: 1.1, color: accent),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                letterSpacing: 1.1,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ],
         ),
