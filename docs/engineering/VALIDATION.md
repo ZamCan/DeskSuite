@@ -1,5 +1,21 @@
 # Validation record
 
+## Consolidated main build — 2026-10-28
+
+Source commit: `7f1920ef361f013a26ee43032c807707432f9a3a`  
+GitHub Actions: [run 40689024580](https://github.com/ZamCan/DeskSuite/actions/runs/40689024580)
+
+- `dart format lib test`: completed.
+- `flutter analyze`: no issues found.
+- Full `flutter test` step: passed.
+- Android `flutter build apk --release`: passed; APK reported as 119.5 MB.
+- Android `flutter build appbundle --release`: passed; AAB reported as 102.1 MB.
+- Linux desktop, Windows desktop and unsigned iOS validation builds: passed.
+- The earlier Android release build on the parent commit failed at R8 with Java heap exhaustion at 768 MB. Increasing `org.gradle.jvmargs` to a 2 GB heap allowed the release APK and AAB builds to complete while keeping one Gradle worker.
+- The `desksuite-android` Actions artifact contains the CI APK/AAB. The active workflow does not inject the owner's private signing key; do not install the unsigned CI APK as an update. Sign the APK locally with the same `desksuite-test.jks` key used for the previously installed app, verify the certificate, and then install. No physical-device upgrade has yet been confirmed.
+
+This proves host tests and compilation for this commit, not camera/OCR quality, native file-provider behavior, independent PDF fidelity, printer behavior, or memory/performance on the phone.
+
 ## Cleanup slice checks on 2026-10-27
 
 The previously installed host Flutter/Dart tools were not present in this workspace snapshot. No Android tools were downloaded. To obtain real evidence without packaging, the **actual, dependency-free Dart pixel source** and checked-in `test/pixel_algorithms_smoke.dart` were analyzed and compiled with DartPad's Dart **3.13.7** DDC, then executed as JavaScript under Node. The standalone check passed, including uneven lighting, adaptive B&W, dark ink, alpha flattening, invalid settings, selective speck removal, transparent-neighborhood protection and 40 deterministic randomized images. This is a DDC/JavaScript run, **not a Dart VM, Flutter integration or Android-device test**.
