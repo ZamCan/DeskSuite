@@ -100,3 +100,8 @@ The catalogue now includes source/licence/schema metadata and guards template ge
 
 The workflow run [40631293017](https://github.com/ZamCan/DeskSuite/actions/runs/40631293017) reported 178 passing tests and one failure: a 3.5 px horizontal RenderFlex overflow while exercising the solid-background photo picker on a 360 px test viewport. The template catalogue and template-dialog tests passed in that run. The background-option labels were constrained to a flexible, ellipsized line in commit 76e0cc6742b4ca28c196fb139bf9c57138864f56. Await the next full CI run to verify the correction.
 
+
+
+## 2026-10-28 — photo print-sheet template source tests
+
+Added a shared A4 photo print-sheet starter with twenty editable example slots and a test for the rectangle/text counts. The slots are not image frames and no official size or printer scaling is certified. The test is **not yet confirmed passing**; wait for the latest GitHub Actions run. No Android build/device result is implied.

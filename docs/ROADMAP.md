@@ -84,3 +84,11 @@ Require a signed, reproducible Android release with stable package ID and key cu
 - [x] Record starter-template schema version, source/provenance and repository licence metadata; validate canvas dimensions and keep generated objects within custom canvas bounds.
 - [ ] Add human-reviewed previews, true image/photo placeholders and a user-editable template library; metadata alone is not a substitute for licence review of future third-party packs.
 
+
+
+## 2026-10-28 — photo print-sheet starter layout
+
+- [x] Add an A4 photo print-sheet starter to the shared template registry, with twenty bounded editable 35 × 45 mm example slots and explicit print-scaling caveat.
+- [x] Test the slot count, editable object types and shared canvas geometry at source level.
+- [ ] Replace generic shape placeholders with actual image-frame/drop-in asset support before calling this a photo imposition workflow; validate output on real printers and verify any authority-specific dimensions separately.
+- [ ] Run formatter, analyzer, complete Flutter suite and Android/device checks; no passing result is claimed until CI reports it.

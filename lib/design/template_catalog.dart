@@ -12,6 +12,7 @@ enum DesignTemplate {
   identityBadge,
   certificate,
   flyer,
+  photoPrintSheet,
   presentationCover,
 }
 
@@ -87,6 +88,14 @@ const designTemplateCatalog = <DesignTemplateDefinition>[
     widthMm: 210,
     heightMm: 297,
     template: DesignTemplate.flyer,
+  ),
+  DesignTemplateDefinition(
+    id: 'photo-print-sheet',
+    label: 'Photo print sheet',
+    description: 'A4 sheet with twenty editable 35 × 45 mm photo placeholders; verify your required dimensions before printing.',
+    widthMm: 210,
+    heightMm: 297,
+    template: DesignTemplate.photoPrintSheet,
   ),
   DesignTemplateDefinition(
     id: 'presentation-cover',
@@ -235,6 +244,38 @@ List<DesignElement> buildDesignTemplateElements(
         text('Contact / registration details', w * .07, h * .9, w * .86,
             h * .06, size: w * .035),
       ];
+    case DesignTemplate.photoPrintSheet:
+      // Twenty editable placeholders for a practical A4 layout. These are
+      // ordinary shapes/text, not image frames and not authority-certified IDs.
+      final elements = <DesignElement>[
+        text('PHOTO PRINT SHEET', 10, 5, w - 20, 10,
+            size: 5, bold: true),
+        text('Example layout · verify required size and printer scaling',
+            10, 16, w - 20, 7, size: 3.5, color: 0xff777970),
+      ];
+      const columns = 4;
+      const rows = 5;
+      const photoWidth = 35.0;
+      const photoHeight = 45.0;
+      const gapX = 4.0;
+      const gapY = 5.0;
+      final gridWidth = columns * photoWidth + (columns - 1) * gapX;
+      final startX = (w - gridWidth) / 2;
+      const startY = 29.0;
+      for (var row = 0; row < rows; row++) {
+        for (var column = 0; column < columns; column++) {
+          final x = startX + column * (photoWidth + gapX);
+          final y = startY + row * (photoHeight + gapY);
+          elements
+            ..add(rect(x, y, photoWidth, photoHeight, 0xffe8e1d5))
+            ..add(text('PHOTO\\n35 × 45 mm', x + 1, y + 17,
+                photoWidth - 2, 12, size: 4.5,
+                alignment: TextAlignment.center));
+        }
+      }
+      elements.add(text('Cut carefully · print at 100% scale', 10, 279,
+          w - 20, 8, size: 3.5, color: 0xff777970));
+      return elements;
     case DesignTemplate.presentationCover:
       return [
         rect(0, 0, w * .34, h, 0xffbd694f),

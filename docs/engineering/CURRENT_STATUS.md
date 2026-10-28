@@ -136,3 +136,10 @@ The starter registry now records a catalogue schema version, source/provenance l
 
 The first matrix run containing the template tests completed formatting and static analysis, and the new template catalogue tests passed. The full suite found one widget failure: a narrow-screen RenderFlex overflow in the photo background picker. The option labels now use a bounded, ellipsized flexible region. A fresh CI run triggered by this fix is required before calling the suite green.
 
+
+
+## Latest implementation slice — A4 photo print-sheet template (2026-10-28)
+
+Added a **Photo print sheet** entry to the shared editable template catalogue. It creates an A4 design with twenty 35 × 45 mm example slots arranged in four columns and five rows, plus header/footer guidance. Every slot is made from normal editable rectangle/text elements, so it follows the existing project save/render/export path and does not add a competing layout engine.
+
+**Boundary:** these are placeholders, not actual image frames or automatic photo placement. Dimensions are illustrative, not an official passport/ID standard; users must verify requirements and printer scaling. Tests have been added but remain pending the current CI run; no passing test or build claim is made here.

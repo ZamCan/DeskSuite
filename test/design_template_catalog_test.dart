@@ -13,7 +13,7 @@ void main() {
         designTemplateCatalog.map((item) => item.label).toSet().length,
         designTemplateCatalog.length,
       );
-      expect(designTemplateCatalog.length, greaterThanOrEqualTo(7));
+      expect(designTemplateCatalog.length, greaterThanOrEqualTo(8));
       for (final definition in designTemplateCatalog) {
         expect(definition.id, isNotEmpty);
         expect(definition.schemaVersion, designTemplateCatalogVersion);
@@ -74,6 +74,22 @@ void main() {
           }
         }
       }
+    });
+
+    test('photo print sheet provides twenty editable placeholder slots', () {
+      final definition = designTemplateDefinition(DesignTemplate.photoPrintSheet);
+      final elements = buildDesignTemplateElements(
+        definition.template,
+        widthMm: definition.widthMm,
+        heightMm: definition.heightMm,
+      );
+      expect(elements.where((element) => element.kind == ElementKind.rectangle),
+          hasLength(20));
+      expect(elements.where((element) => element.kind == ElementKind.text),
+          hasLength(22));
+      expect(elements.length, lessThanOrEqualTo(maxDesignElements));
+      expect(elements.where((element) => element.text.contains('35 × 45 mm')),
+          hasLength(20));
     });
 
     test('rejects non-finite or unsupported canvas dimensions', () {
