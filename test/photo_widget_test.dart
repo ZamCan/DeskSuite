@@ -359,8 +359,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Continue'));
       await settleIo(tester);
-      expect(printer.widthMm, 210);
-      expect(printer.heightMm, 297);
+      expect(printer.widthMm, 101.6);
+      expect(printer.heightMm, 152.4);
       expect(String.fromCharCodes(printer.pdf!.take(5)), '%PDF-');
       expect(tester.takeException(), isNull);
     },
