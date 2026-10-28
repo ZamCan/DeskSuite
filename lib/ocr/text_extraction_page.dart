@@ -320,7 +320,7 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
             height: 20,
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
-          title: Text('Checking the offline recognizer…'),
+          title: Text('Checking the text recognizer…'),
         ),
       );
     }
@@ -328,7 +328,7 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
       return Card(
         child: ListTile(
           leading: Icon(Icons.verified_outlined, color: scheme.primary),
-          title: const Text('Offline recognizer ready'),
+          title: const Text('Text recognizer ready'),
           subtitle: Text(
             '${_engine.label}. Images stay on this device. Languages: '
             'English and English + Kiswahili.',
