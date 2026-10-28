@@ -18,6 +18,7 @@ enum PhotoAction {
   resize,
   centerSquareCrop,
   reduceImpulseNoise,
+  flattenBackground,
   png,
   jpeg,
 }
@@ -30,6 +31,7 @@ class PhotoRequest {
     this.height,
     this.keepAspect = true,
     this.quality = 90,
+    this.backgroundColor = 0xFFFFFFFF,
   });
   final Uint8List bytes;
   final PhotoAction action;
@@ -37,6 +39,8 @@ class PhotoRequest {
   final int? height;
   final bool keepAspect;
   final int quality;
+  /// Opaque ARGB colour used by [PhotoAction.flattenBackground].
+  final int backgroundColor;
 }
 
 class PhotoResult {
@@ -201,6 +205,31 @@ PhotoResult processPhoto(PhotoRequest request) {
         width: width,
         height: height,
         interpolation: img.Interpolation.linear,
+      );
+    case PhotoAction.flattenBackground:
+      final color = request.backgroundColor;
+      if (color < 0 || color > 0xFFFFFFFF || ((color >> 24) & 0xff) != 0xff) {
+        throw const FormatException('Choose an opaque background colour.');
+      }
+      final background = img.Image(
+        width: image.width,
+        height: image.height,
+        numChannels: 3,
+      );
+      img.fill(
+        background,
+        color: img.ColorRgb8(
+          (color >> 16) & 0xff,
+          (color >> 8) & 0xff,
+          color & 0xff,
+        ),
+      );
+      img.compositeImage(background, image);
+      return validateEncodedPhoto(
+        Uint8List.fromList(img.encodePng(background, level: 3)),
+        background.width,
+        background.height,
+        PhotoFormat.png,
       );
     case PhotoAction.png:
       break;
