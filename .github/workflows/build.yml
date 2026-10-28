@@ -17,11 +17,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: python3 tools/validate-brand-assets.py
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-      - run: flutter pub get
+      - run: flutter pub get --enforce-lockfile
+      - name: Generate hosted package licence inventory
+        run: python3 tools/generate_pub_notices.py
+      - name: Capture resolved package notices for audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: desksuite-resolved-pub-notices
+          path: third_party/pub-packages.LICENSES.txt
+          if-no-files-found: error
+      - name: Capture resolved lockfile for release audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: desksuite-resolved-pubspec-lock
+          path: pubspec.lock
+          if-no-files-found: error
       - run: dart format lib test
       - run: flutter analyze
       - run: flutter test
@@ -67,7 +82,7 @@ jobs:
           channel: stable
           cache: true
       - name: Install Linux build dependencies
-        run: sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+        run: sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsecret-1-dev
       - run: flutter create --project-name desksuite --org com.zamcan.desksuite --platforms=linux .
       - run: git checkout -- test/widget_test.dart
       - run: flutter pub get
@@ -95,9 +110,7 @@ jobs:
           Comment=Offline-first creative and productivity workspace
           Terminal=false
           EOF
-          cat > AppDir/desksuite.svg <<'EOF'
-          <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="26" fill="#292B29"/><path d="M30 32h68v64H30z" fill="none" stroke="#F7F5EF" stroke-width="8"/><path d="M44 48h40M44 64h40M44 80h25" stroke="#B56B45" stroke-width="7" stroke-linecap="round"/></svg>
-          EOF
+          cp assets/brand/desksuite-app-icon.svg AppDir/desksuite.svg
           wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
           chmod +x appimagetool
           ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool AppDir desksuite-x86_64.AppImage

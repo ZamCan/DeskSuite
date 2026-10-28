@@ -1,15 +1,6 @@
 /// Explicit, bounded conversion routes. A null target is intentionally not
 /// actionable; the catalogue must never imply an unavailable engine exists.
-enum ConversionTarget {
-  photos,
-  scans,
-  projects,
-  design,
-  notes,
-  text,
-  office,
-  pdf,
-}
+enum ConversionTarget { photos, scans, projects, design, notes, text, office, pdfStudio }
 
 class ConversionRoute {
   const ConversionRoute({
@@ -32,7 +23,7 @@ const conversionRoutes = <ConversionRoute>[
   ),
   ConversionRoute(
     title: 'Images → multipage image PDF',
-    detail: 'Scan & assemble accepts up to eight images and places them in order on A4 or Letter pages. The PDF is not searchable.',
+    detail: 'Scan & assemble accepts up to eight images and places them in order on shared ISO A/B/C, US/ANSI, photo, card/badge, label or poster media, or custom 20–2500 mm pages. It creates image-only PDFs; reviewed OCR/searchable output is a separate Text extraction workflow.',
     target: ConversionTarget.scans,
   ),
   ConversionRoute(
@@ -59,20 +50,13 @@ const conversionRoutes = <ConversionRoute>[
     target: ConversionTarget.text,
   ),
   ConversionRoute(
-    title: 'Existing PDF → edited copy, page export or split files',
-    detail:
-        'PDF & Documents opens a PDF you already have, then reorders, rotates '
-        'or deletes pages, adds text and ink, fills forms, exports selected '
-        'pages and splits into separate files. Every result is a new file and '
-        'the original is never modified. Text inside the page is not reflowed '
-        'and encrypted PDFs are refused.',
-    target: ConversionTarget.pdf,
+    title: 'Existing PDF → view, annotate, edit and save a copy',
+    detail: 'PDF Studio opens supported existing PDFs locally and exports a separate edited copy. Inputs and outputs are limited to 48 MiB; encrypted, malformed or complex PDFs may not open. A PDF header check is not a full validity check.',
+    target: ConversionTarget.pdfStudio,
   ),
   ConversionRoute(
-    title: 'Password-protected PDF → unlocked copy',
-    detail:
-        'Unavailable: DeskSuite has no password unlocking, so it refuses an '
-        'encrypted PDF instead of pretending to open it.',
+    title: 'Legacy .doc, .xls or .ppt → full-layout conversion',
+    detail: 'Unavailable without a verified external office engine. Content-level conversion does not promise original page layout, charts, fonts or slide fidelity.',
   ),
   ConversionRoute(
     title: 'DOCX, XLSX, PPTX, ODT, ODS, ODP, RTF → PDF, TXT, CSV, ODT, ODS',

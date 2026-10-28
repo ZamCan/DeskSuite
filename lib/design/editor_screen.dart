@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 
 import '../core/ids.dart';
+import '../documents/stamp_signature_tools.dart';
 import '../printing/design_export.dart';
 import '../printing/print_gateway.dart';
 import '../workspace/file_gateway.dart';
@@ -336,6 +337,92 @@ class _EditorScreenState extends State<EditorScreen>
     }
   }
 
+  Future<void> _addStamp() async {
+    final spec = await showStampDialog(context);
+    if (spec == null || !mounted) return;
+    final d = _controller.document;
+    try {
+      final stampWidth = switch (spec.placement) {
+        StampPlacement.topCenter || StampPlacement.bottomCenter => d.widthMm * .8,
+        _ => d.widthMm * .44,
+      };
+      final stampX = switch (spec.placement) {
+        StampPlacement.topLeft || StampPlacement.bottomLeft => d.widthMm * .06,
+        StampPlacement.topCenter || StampPlacement.bottomCenter =>
+          (d.widthMm - stampWidth) / 2,
+        StampPlacement.topRight || StampPlacement.bottomRight =>
+          d.widthMm - stampWidth - d.widthMm * .06,
+      };
+      final stampHeight = d.heightMm * (spec.includeDate ? .16 : .1);
+      final stampY = switch (spec.placement) {
+        StampPlacement.topLeft ||
+        StampPlacement.topCenter ||
+        StampPlacement.topRight => d.heightMm * .08,
+        StampPlacement.bottomLeft ||
+        StampPlacement.bottomCenter ||
+        StampPlacement.bottomRight => d.heightMm - stampHeight - d.heightMm * .08,
+      };
+      _controller.add(
+        DesignElement(
+          id: newId(),
+          kind: ElementKind.text,
+          x: stampX,
+          y: stampY,
+          width: stampWidth,
+          height: stampHeight,
+          text: spec.textAt(DateTime.now()),
+          fontSizePt: spec.includeDate ? 17 : 21,
+          bold: true,
+          color: spec.color.toARGB32(),
+          textAlignment: TextAlignment.center,
+        ),
+      );
+      _message('Stamp added as an editable layer. Move it into position.');
+    } catch (error) {
+      _message('Could not add stamp: $error');
+    }
+  }
+
+  Future<void> _addSignature() async {
+    final png = await showSignatureCaptureDialog(context);
+    if (png == null || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      final d = _controller.document;
+      final id = newId();
+      final provisional = DesignElement(
+        id: id,
+        kind: ElementKind.image,
+        x: d.widthMm * .1,
+        y: d.heightMm * .72,
+        width: d.widthMm * .55,
+        height: d.heightMm * .16,
+        imageBytes: png,
+      );
+      await _imageSync;
+      await _images.sync(d.copyWith(elements: [...d.elements, provisional]));
+      final image = _images.images[id]!;
+      final maxWidth = d.widthMm * .55;
+      final maxHeight = d.heightMm * .16;
+      final scale = math.min(maxWidth / image.width, maxHeight / image.height);
+      final width = image.width * scale;
+      final height = image.height * scale;
+      _controller.add(
+        provisional.copyWith(
+          x: d.widthMm * .1,
+          y: math.max(0, d.heightMm - height - d.heightMm * .08),
+          width: width,
+          height: height,
+        ),
+      );
+      _message('Signature added as an editable image layer.');
+    } catch (error) {
+      _message('Could not add signature: $error');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _editText() async {
     final selected = _controller.selected;
     if (selected == null || selected.kind != ElementKind.text) return;
@@ -473,7 +560,6 @@ class _EditorScreenState extends State<EditorScreen>
         return false;
       }
     }
-
     final can150 = canExportAt(150);
     final can300 = canExportAt(300);
     final can100 = canExportAt(100);
@@ -511,14 +597,10 @@ class _EditorScreenState extends State<EditorScreen>
               if (printChoice != null)
                 ListTile(
                   leading: const Icon(Icons.print_outlined),
-                  title: Text(
-                    'Print using system dialog · ${_choiceDpi(printChoice)} dpi',
-                  ),
-                  subtitle: Text(
-                    posterMode
-                        ? 'Large-format raster detail; printer scaling and media still need checking'
-                        : 'Printer services and margins vary by device',
-                  ),
+                  title: Text('Print using system dialog · ${_choiceDpi(printChoice)} dpi'),
+                  subtitle: Text(posterMode
+                      ? 'Large-format raster detail; printer scaling and media still need checking'
+                      : 'Printer services and margins vary by device'),
                   onTap: () => Navigator.pop(context, printChoice),
                 ),
               if (can150)
@@ -539,9 +621,7 @@ class _EditorScreenState extends State<EditorScreen>
                 ListTile(
                   leading: const Icon(Icons.picture_as_pdf_outlined),
                   title: const Text('Large-format PDF · 100 dpi'),
-                  subtitle: const Text(
-                    'Lower raster density to stay within the device pixel budget',
-                  ),
+                  subtitle: const Text('Lower raster density to stay within the device pixel budget'),
                   onTap: () => Navigator.pop(context, _ExportChoice.pdf100),
                 ),
               if (posterMode && can72)
@@ -555,18 +635,14 @@ class _EditorScreenState extends State<EditorScreen>
                 ListTile(
                   leading: const Icon(Icons.picture_as_pdf_outlined),
                   title: const Text('Large-format PDF · 60 dpi'),
-                  subtitle: const Text(
-                    'For large-format viewing-distance artwork',
-                  ),
+                  subtitle: const Text('For large-format viewing-distance artwork'),
                   onTap: () => Navigator.pop(context, _ExportChoice.pdf60),
                 ),
               if (posterMode && can36)
                 ListTile(
                   leading: const Icon(Icons.picture_as_pdf_outlined),
                   title: const Text('Banner PDF · 36 dpi'),
-                  subtitle: const Text(
-                    'Low raster density; inspect output before production',
-                  ),
+                  subtitle: const Text('Low raster density; inspect output before production'),
                   onTap: () => Navigator.pop(context, _ExportChoice.pdf36),
                 ),
               if (can150)
@@ -1057,6 +1133,18 @@ class _EditorScreenState extends State<EditorScreen>
                   onTap: _busy ? null : _addImage,
                 ),
                 EditorToolButton(
+                  key: const Key('add-stamp'),
+                  icon: Icons.verified_outlined,
+                  label: 'Stamp',
+                  onTap: _busy ? null : _addStamp,
+                ),
+                EditorToolButton(
+                  key: const Key('add-signature'),
+                  icon: Icons.draw_outlined,
+                  label: 'Signature',
+                  onTap: _busy ? null : _addSignature,
+                ),
+                EditorToolButton(
                   icon: Icons.layers_outlined,
                   label: 'Layers',
                   onTap: _busy ? null : _showLayers,
@@ -1086,22 +1174,7 @@ int _choiceDpi(_ExportChoice choice) => switch (choice) {
 };
 
 enum _ExportChoice {
-  print36,
-  print60,
-  print72,
-  print100,
-  print150,
-  pdf36,
-  pdf60,
-  pdf72,
-  pdf100,
-  pdf150,
-  pdf300,
-  png36,
-  png60,
-  png72,
-  png100,
-  png150,
-  png300,
-  project,
+  print36, print60, print72, print100, print150,
+  pdf36, pdf60, pdf72, pdf100, pdf150, pdf300,
+  png36, png60, png72, png100, png150, png300, project
 }

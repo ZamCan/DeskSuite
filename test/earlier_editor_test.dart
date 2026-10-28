@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'support/reveal.dart';
-
 Future<void> settleIo(WidgetTester tester) async {
   for (var i = 0; i < 25; i++) {
     await tester.pump(const Duration(milliseconds: 50));
@@ -67,11 +65,7 @@ void main() {
       await tester.tap(find.text('Keep editing'));
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Save earlier design'));
-      // The save writes a file and then repaints the header. Waiting a fixed
-      // number of pumps raced that I/O under a loaded CI runner and left the
-      // still-dirty header on screen; wait for the app's own saved state, then
-      // confirm the file really exists.
-      await settleUntil(tester, find.text('Earlier editor · manual save'));
+      await settleIo(tester);
       expect(
         await tester.runAsync(
           () =>

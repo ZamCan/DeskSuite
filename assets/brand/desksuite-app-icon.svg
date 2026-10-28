@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="DeskSuite app icon">
+  <rect width="512" height="512" rx="112" fill="#292824"/>
+  <g transform="translate(256 256) scale(1.25) translate(-256 -256)">
+    <path d="M151 153 H207 C279 153 326 192 326 256 C326 320 279 359 207 359 H151 Z M187 188 V324 H207 C259 324 289 298 289 256 C289 214 259 188 207 188 Z" fill="#fbf8f1" fill-rule="evenodd"/>
+    <path d="M359 174 C345 159 326 155 308 160 C284 166 272 185 277 207 C282 229 302 239 323 247 C341 254 346 260 344 270 C342 281 332 289 319 290 C307 290 296 285 288 276 L267 294 C278 310 297 320 318 319 C347 318 370 300 371 272 C373 248 359 232 333 222 C315 215 305 210 306 200 C307 190 315 185 326 184 C339 183 348 189 354 197 Z" fill="#ed9a7a"/>
+    <rect x="200" y="273" width="42" height="10" rx="5" fill="#ed9a7a"/>
+  </g>
+</svg>

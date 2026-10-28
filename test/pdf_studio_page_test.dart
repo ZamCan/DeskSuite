@@ -1,45 +1,24 @@
 import 'dart:typed_data';
 
+import 'package:dart_pdf_editor/dart_pdf_editor.dart';
 import 'package:desksuite/pdf/pdf_studio_page.dart';
 import 'package:desksuite/workspace/file_gateway.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-
-Future<Uint8List> _pdf(int pages) async {
-  final document = pw.Document();
-  for (var i = 0; i < pages; i++) {
-    document.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        build: (_) => pw.Text('Page ${i + 1}'),
-      ),
-    );
-  }
-  return document.save();
-}
-
-class FakePicker implements DocumentPicker {
-  FakePicker(this.result);
-  PickedDocument? result;
-  int calls = 0;
+class PdfPicker implements DocumentPicker {
+  PdfPicker(this.picked);
+  PickedDocument? picked;
 
   @override
-  Future<PickedDocument?> pickDocument() async {
-    calls++;
-    return result;
-  }
+  Future<PickedDocument?> pickDocument() async => picked;
 }
 
-class RecordingFiles extends _FilesBase {}
-
-abstract class _FilesBase implements FileGateway {
-  Uint8List? bytes;
-  String? name;
-  final List<String> names = [];
-  bool accept = true;
+class PdfFiles implements FileGateway {
+  String? savedName;
+  Uint8List? savedBytes;
+  String? savedMime;
 
   @override
   Future<Uint8List?> pickImage() async => null;
@@ -53,219 +32,105 @@ abstract class _FilesBase implements FileGateway {
     required Uint8List bytes,
     required String mimeType,
   }) async {
-    names.add(name);
-    this.name = name;
-    this.bytes = bytes;
-    return accept;
+    savedName = name;
+    savedBytes = Uint8List.fromList(bytes);
+    savedMime = mimeType;
+    return true;
   }
 }
 
-/// A stand-in editor: it emits whatever the test asks for, so the screen's
-/// inspect/validate/save logic is exercised without rendering a PDF.
-Widget _stubEditor(
-  Uint8List bytes, {
-  required String documentId,
-  required ValueChanged<Uint8List> onSave,
-  required ValueChanged<Uint8List> onExportPages,
-  required ValueChanged<List<Uint8List>> onSplitPages,
-}) => Column(
-  children: [
-    Text('editor:$documentId'),
-    TextButton(
-      key: const Key('stub-save'),
-      onPressed: () => onSave(bytes),
-      child: const Text('save'),
+Future<Uint8List> samplePdf() async {
+  final document = pw.Document();
+  document.addPage(
+    pw.Page(
+      build: (_) => pw.Center(child: pw.Text('DeskSuite PDF test')),
     ),
-    TextButton(
-      key: const Key('stub-bad-save'),
-      onPressed: () => onSave(Uint8List.fromList('not a pdf'.codeUnits)),
-      child: const Text('bad save'),
-    ),
-    TextButton(
-      key: const Key('stub-export'),
-      onPressed: () => onExportPages(bytes),
-      child: const Text('export pages'),
-    ),
-    TextButton(
-      key: const Key('stub-split'),
-      onPressed: () => onSplitPages([bytes, bytes]),
-      child: const Text('split'),
-    ),
-  ],
-);
-
-Future<void> _settle(WidgetTester tester) async {
-  for (var i = 0; i < 25; i++) {
-    await tester.pump(const Duration(milliseconds: 40));
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 10)),
-    );
-  }
+  );
+  return document.save();
 }
 
 void main() {
-  late Uint8List twoPages;
-  late Uint8List onePage;
-
-  setUpAll(() async {
-    twoPages = await _pdf(2);
-    onePage = await _pdf(1);
-  });
-
-  Future<void> open(
-    WidgetTester tester,
-    FakePicker picker,
-    RecordingFiles files,
+  testWidgets('rejects non-PDF files instead of passing them to the editor', (
+    tester,
   ) async {
+    final files = PdfFiles();
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: PdfStudioPage(
-            picker: picker,
-            files: files,
-            editorBuilder: _stubEditor,
-          ),
+        home: PdfStudioPage(
+          picker: PdfPicker((
+            bytes: Uint8List.fromList('not a PDF'.codeUnits),
+            name: 'notes.txt',
+          )),
+          files: files,
         ),
       ),
     );
-    await _settle(tester);
-    await tester.tap(find.byKey(const Key('pdf-open')));
-    await _settle(tester);
-  }
 
-  testWidgets('opens a real PDF, reports its pages and saves an edited copy', (
+    await tester.tap(find.byKey(const Key('pdf-studio-open')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.textContaining('Choose an existing PDF file'), findsOneWidget);
+    expect(find.byType(PdfEditorView), findsNothing);
+    expect(files.savedBytes, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('opens a real PDF in the offline editor without changing it', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(380, 760);
+    tester.view.physicalSize = const Size(900, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    final picker = FakePicker((bytes: twoPages, name: '/tmp/My Report.pdf'));
-    final files = RecordingFiles();
-    await open(tester, picker, files);
+    final source = await samplePdf();
+    final untouched = Uint8List.fromList(source);
+    final files = PdfFiles();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PdfStudioPage(
+          picker: PdfPicker((bytes: source, name: 'invoice.pdf')),
+          files: files,
+        ),
+      ),
+    );
 
-    expect(find.textContaining('2 page(s)'), findsWidgets);
-    expect(find.text('editor:My-Report'), findsOneWidget);
-    expect(find.textContaining('Opened read-only'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('pdf-studio-open')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
-    await tester.tap(find.byKey(const Key('stub-save')));
-    await _settle(tester);
-
-    expect(files.name, 'My-Report-edited.pdf');
-    expect(String.fromCharCodes(files.bytes!.take(5)), '%PDF-');
-    expect(find.textContaining('Edited copy written'), findsOneWidget);
-    expect(find.textContaining('2 page(s)'), findsWidgets);
+    expect(find.byType(PdfEditorView), findsOneWidget);
+    expect(find.textContaining('invoice'), findsWidgets);
+    expect(source, orderedEquals(untouched));
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('an editor that returns garbage is refused, not written', (
+  testWidgets('rejects oversized PDFs before allocating an editor copy', (
     tester,
   ) async {
-    final picker = FakePicker((bytes: twoPages, name: 'report.pdf'));
-    final files = RecordingFiles();
-    await open(tester, picker, files);
+    final oversized = Uint8List(48 * 1024 * 1024 + 1);
+    oversized.setRange(0, 5, '%PDF-'.codeUnits);
+    final files = PdfFiles();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PdfStudioPage(
+          picker: PdfPicker((bytes: oversized, name: 'large.pdf')),
+          files: files,
+        ),
+      ),
+    );
 
-    await tester.tap(find.byKey(const Key('stub-bad-save')));
-    await _settle(tester);
+    await tester.tap(find.byKey(const Key('pdf-studio-open')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
-    expect(files.names, isEmpty);
-    expect(find.textContaining('not a PDF'), findsOneWidget);
+    expect(
+      find.textContaining('larger than the 48 MB local editing limit'),
+      findsOneWidget,
+    );
+    expect(find.byType(PdfEditorView), findsNothing);
+    expect(files.savedBytes, isNull);
     expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('page export and split write separate files with real names', (
-    tester,
-  ) async {
-    final picker = FakePicker((bytes: twoPages, name: 'contract.pdf'));
-    final files = RecordingFiles();
-    await open(tester, picker, files);
-
-    await tester.tap(find.byKey(const Key('stub-export')));
-    await _settle(tester);
-    expect(files.names, ['contract-pages.pdf']);
-
-    await tester.tap(find.byKey(const Key('stub-split')));
-    await _settle(tester);
-    expect(files.names, [
-      'contract-pages.pdf',
-      'contract-part-1.pdf',
-      'contract-part-2.pdf',
-    ]);
-    expect(find.textContaining('Split into 2 file(s)'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('a cancelled save is reported as cancelled, never as success', (
-    tester,
-  ) async {
-    final picker = FakePicker((bytes: onePage, name: 'letter.pdf'));
-    final files = RecordingFiles()..accept = false;
-    await open(tester, picker, files);
-
-    await tester.tap(find.byKey(const Key('stub-save')));
-    await _settle(tester);
-
-    expect(find.textContaining('Export cancelled'), findsOneWidget);
-    // The cancelled message itself contains "written", so assert on the
-    // success wording instead of the word alone.
-    expect(find.textContaining('Written'), findsNothing);
-    expect(find.textContaining('written ·'), findsNothing);
-  });
-
-  testWidgets('a non-PDF file is refused with an actionable message', (
-    tester,
-  ) async {
-    final picker = FakePicker((
-      bytes: Uint8List.fromList('hello'.codeUnits),
-      name: 'notes.txt',
-    ));
-    final files = RecordingFiles();
-    await open(tester, picker, files);
-
-    expect(find.textContaining('not a PDF'), findsOneWidget);
-    expect(find.textContaining('Document converter'), findsOneWidget);
-    expect(find.byKey(const Key('pdf-open')), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('cancelling the picker keeps the previous state and says so', (
-    tester,
-  ) async {
-    final picker = FakePicker(null);
-    final files = RecordingFiles();
-    await open(tester, picker, files);
-
-    expect(picker.calls, 1);
-    expect(find.textContaining('No file was chosen'), findsOneWidget);
-    expect(find.byKey(const Key('pdf-open')), findsOneWidget);
-  });
-
-  testWidgets('closing a PDF returns to the open screen', (tester) async {
-    final picker = FakePicker((bytes: onePage, name: 'a.pdf'));
-    final files = RecordingFiles();
-    await open(tester, picker, files);
-    expect(find.text('editor:a'), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('pdf-close')));
-    await tester.pumpAndSettle();
-    expect(find.text('editor:a'), findsNothing);
-    expect(find.byKey(const Key('pdf-open')), findsOneWidget);
-  });
-
-  group('pdfBaseName', () {
-    test('strips directories, extension and unsafe characters', () {
-      expect(pdfBaseName('/sdcard/Download/My Report.pdf'), 'My-Report');
-      expect(pdfBaseName(r'C:\Users\a\notes v2.PDF'), 'notes-v2');
-      expect(pdfBaseName('../../etc/passwd'), 'passwd');
-      expect(pdfBaseName('...pdf'), 'document');
-      expect(pdfBaseName('   '), 'document');
-      expect(pdfBaseName('.hidden'), 'hidden');
-    });
-
-    test('clamps very long names instead of failing the save', () {
-      final long = pdfBaseName('${'a' * 200}.pdf');
-      expect(long.length, 60);
-    });
   });
 }

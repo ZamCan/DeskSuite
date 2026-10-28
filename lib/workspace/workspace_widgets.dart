@@ -18,7 +18,7 @@ enum WorkspaceSection {
   // Appended last: IndexedStack children are indexed by this order.
   text,
   office,
-  pdf,
+  pdfStudio,
 }
 
 class WorkspaceSidebar extends StatelessWidget {
@@ -35,9 +35,6 @@ class WorkspaceSidebar extends StatelessWidget {
     Widget item(IconData icon, String label, WorkspaceSection value) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: ListTile(
-        // Stable handles for tests and accessibility tooling: the visible label
-        // is not unique enough to tap reliably once other screens are in the
-        // tree, because their headings can contain the same words.
         key: Key('nav-${value.name}'),
         dense: true,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -127,11 +124,7 @@ class WorkspaceSidebar extends StatelessWidget {
             'Document converter',
             WorkspaceSection.office,
           ),
-          item(
-            Icons.picture_as_pdf_outlined,
-            'PDF & Documents',
-            WorkspaceSection.pdf,
-          ),
+          item(Icons.picture_as_pdf_outlined, 'PDF Studio', WorkspaceSection.pdfStudio),
           item(Icons.print_outlined, 'Print Studio', WorkspaceSection.printing),
           item(
             Icons.storefront_outlined,

@@ -4,18 +4,14 @@
 /// This does not embed DPI metadata in the exported image or calibrate a printer.
 int pixelsFromMillimetres(double millimetres, int dpi) {
   if (!millimetres.isFinite || millimetres <= 0 || millimetres > 2000) {
-    throw const FormatException(
-      'Physical size must be greater than 0 and at most 2000 mm.',
-    );
+    throw const FormatException('Physical size must be greater than 0 and at most 2000 mm.');
   }
   if (dpi < 1 || dpi > 2400) {
     throw const FormatException('Resolution must be between 1 and 2400 DPI.');
   }
   final pixels = (millimetres * dpi / 25.4).round();
   if (pixels < 1 || pixels > 8192) {
-    throw const FormatException(
-      'Output side must be between 1 and 8192 pixels.',
-    );
+    throw const FormatException('Output side must be between 1 and 8192 pixels.');
   }
   return pixels;
 }

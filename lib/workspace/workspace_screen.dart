@@ -360,8 +360,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                                           WorkspaceSection.text,
                                         ConversionTarget.office =>
                                           WorkspaceSection.office,
-                                        ConversionTarget.pdf =>
-                                          WorkspaceSection.pdf,
+                                        ConversionTarget.pdfStudio =>
+                                          WorkspaceSection.pdfStudio,
                                       }),
                                 )
                               : const SizedBox.shrink(),
@@ -376,7 +376,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                                   files: widget.files,
                                 )
                               : const SizedBox.shrink(),
-                          _visited.contains(WorkspaceSection.pdf)
+                          _visited.contains(WorkspaceSection.pdfStudio)
                               ? PdfStudioPage(
                                   picker: widget.files is DocumentPicker
                                       ? widget.files as DocumentPicker
@@ -425,10 +425,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 WorkspaceSection.business => 'Business & POS',
                 WorkspaceSection.scans => 'Scan & assemble',
                 WorkspaceSection.guide => 'Getting started',
-                WorkspaceSection.pdf => 'PDF & Documents',
                 WorkspaceSection.conversions => 'Conversion routes',
                 WorkspaceSection.text => 'Text extraction',
                 WorkspaceSection.office => 'Document converter',
+                WorkspaceSection.pdfStudio => 'PDF Studio',
               },
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

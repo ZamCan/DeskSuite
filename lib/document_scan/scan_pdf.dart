@@ -17,12 +17,16 @@ class ScanPdfRequest {
     this.pages, {
     this.paper = ScanPaper.a4,
     this.autoRotatePaper = true,
+    this.pageWidthMm,
+    this.pageHeightMm,
   });
 
   /// Pages are orientation-baked PNGs produced by the scanning pipeline.
   final List<Uint8List> pages;
   final ScanPaper paper;
   final bool autoRotatePaper;
+  final double? pageWidthMm;
+  final double? pageHeightMm;
 }
 
 Future<Uint8List> createScanPdfInBackground(ScanPdfRequest request) =>
@@ -56,9 +60,33 @@ Future<Uint8List> createScanPdf(ScanPdfRequest request) async {
         'Document exceeds the 24-megapixel total limit.',
       );
     }
-    final base = request.paper == ScanPaper.a4
-        ? PdfPageFormat.a4
-        : PdfPageFormat.letter;
+    if ((request.pageWidthMm == null) != (request.pageHeightMm == null)) {
+      throw const FormatException('Choose both physical page dimensions.');
+    }
+    final double pageWidth;
+    final double pageHeight;
+    if (request.pageWidthMm != null && request.pageHeightMm != null) {
+      pageWidth = request.pageWidthMm!;
+      pageHeight = request.pageHeightMm!;
+      if (pageWidth < 20 ||
+          pageHeight < 20 ||
+          pageWidth > 2500 ||
+          pageHeight > 2500) {
+        throw const FormatException(
+          'PDF page dimensions must be between 20 and 2500 mm.',
+        );
+      }
+    } else {
+      final base = request.paper == ScanPaper.a4
+          ? PdfPageFormat.a4
+          : PdfPageFormat.letter;
+      pageWidth = base.width / PdfPageFormat.mm;
+      pageHeight = base.height / PdfPageFormat.mm;
+    }
+    final base = PdfPageFormat(
+      pageWidth * PdfPageFormat.mm,
+      pageHeight * PdfPageFormat.mm,
+    );
     final paper = request.autoRotatePaper && decoded.width > decoded.height
         ? base.landscape
         : base.portrait;

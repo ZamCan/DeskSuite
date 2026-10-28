@@ -37,13 +37,14 @@
 - [ ] Full suite backup, restore, migrations and cross-ID import for notes/catalogue, with crash and storage-full tests.
 - [ ] Transactional multi-instance database; complete POS, payment/refunds, sale lines, receipts, expense/profit reports and audit history.
 - [ ] Validate OCR accuracy/language behavior on representative real documents and Android devices; automatic page-edge detection with manual fallback.
-- [ ] Existing-PDF reader, search and page tools, PDF compression and accessible preview.
+- [x] PDF Studio entry point and supported existing-PDF edit/save-as-copy flow are integrated on the consolidation branch; full CI, lockfile and device validation are pending.
+- [ ] Robust PDF text search/extraction, page reorder/rotate/extract/merge, guaranteed structural compression, encrypted export and accessible preview.
 - [ ] Rich document editor, spreadsheet/formulas, presentation editing and stronger DOCX/XLSX/PPTX interoperability, based on tested format engines and explicit fidelity boundaries.
 - [ ] Advanced image editing: arbitrary crop/selection, non-destructive layers/masks, richer adjustments and optional local segmentation; no model downloads without consent.
 - [ ] Guides/snapping, professional vector/SVG tools, colour management, bleed/crop marks, imposition and printer calibration.
 - [ ] Consolidated asset registry with provenance/licences, reference tracking, thumbnails, deduplication and safe migration.
 - [ ] Complete transactional stationery POS: sale lines, stock ledger, refunds/voids, suppliers, expenses, customer balances, audit trail and ledger-backed profit reports.
-- [ ] Existing-PDF reader/rendering, text search/extraction, page reorder/rotate/extract/merge, annotations and verified save/reopen.
+- [ ] Validate PDF Studio against independent readers and protected/malformed fixtures; verify memory/performance and save/reopen on actual Android and desktop devices. Extend page tools and encryption only through tested, compatible engines.
 - [ ] Full accessibility, localization, dark theme across the restored studios, performance and low-memory profiling.
 
 ## Release gate: **not passed**
@@ -116,8 +117,8 @@ Require a signed, reproducible Android release with stable package ID and key cu
 ## 2026-10-28 — complete media and engine integration gate
 
 - [x] Expand the photo-sheet sheet-media selector from small photo paper to ISO A/B formats, US letter/legal/tabloid/ledger, photo prints, and poster/large-format presets; allow custom media up to 2500 mm per side.
-- [ ] Use one shared paper/media catalogue across photo sheets, new-design canvas, documents, badges and poster exports; distinguish stock/sheet size from finished photo/card size and from printer-supported media.
-- [ ] Add envelope/C-series, card/badge, label, roll-media and device/printer capability profiles; show unsupported media or clipping risks before printing.
+- [x] Use one shared paper/media catalogue across photo sheets, new-design canvas, scan PDFs and content-level Office PDF exports; distinguish stock/sheet size from finished photo/card size and from printer-supported media.
+- [x] Add ISO C/envelope, card/badge, label and large-format poster presets plus custom dimensions. [ ] Add roll-media and device/printer capability profiles; show unsupported media or clipping risks before printing.
 - [ ] Make large-format export resolution aware of page dimensions and the output pixel budget; offer validated lower DPI when needed rather than pretending every poster can render at 300 DPI on every device.
 - [ ] Maintain the engine/package register in [ENGINE_INTEGRATION_REGISTER.md](engineering/ENGINE_INTEGRATION_REGISTER.md); integrate only reviewed dependencies with pinned versions, notices, real fixtures, and measured device behavior.
 - [ ] Verify the existing offline Tesseract integration end-to-end on Android with English and Kiswahili. Do not confuse OCR with an SLM; evaluate an optional SLM runtime only after ABI, licence, model size, RAM/latency, privacy and offline tests.

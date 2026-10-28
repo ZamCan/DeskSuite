@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
 
+import '../printing/paper_catalog.dart';
 import '../workspace/file_gateway.dart';
 import 'office_content_editor_page.dart';
 import 'office_engine.dart';
@@ -47,6 +49,27 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
   String? _error;
   String? _status;
   bool _busy = false;
+  int _pdfPresetIndex = 0;
+  final _pdfWidth = TextEditingController(text: '210');
+  final _pdfHeight = TextEditingController(text: '297');
+
+  @override
+  void dispose() {
+    _pdfWidth.dispose();
+    _pdfHeight.dispose();
+    super.dispose();
+  }
+
+  void _selectPdfPreset(int? index) {
+    if (index == null) return;
+    setState(() {
+      _pdfPresetIndex = index;
+      if (index < paperSheetPresets.length) {
+        _pdfWidth.text = paperSheetPresets[index].widthMm.toString();
+        _pdfHeight.text = paperSheetPresets[index].heightMm.toString();
+      }
+    });
+  }
 
   Future<void> _pick() async {
     if (_busy) return;
@@ -127,6 +150,16 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
     final source = _source;
     final route = _selected;
     if (source == null || route == null || _busy) return;
+    PdfPageFormat pdfPageFormat = PdfPageFormat.a4;
+    if (route.to == OfficeFormat.pdf && !route.requiresExternalEngine) {
+      final width = double.tryParse(_pdfWidth.text);
+      final height = double.tryParse(_pdfHeight.text);
+      if (width == null || height == null || width < 20 || height < 20 || width > 2500 || height > 2500) {
+        setState(() => _error = 'Enter both PDF page dimensions from 20 to 2500 mm.');
+        return;
+      }
+      pdfPageFormat = PdfPageFormat(width * PdfPageFormat.mm, height * PdfPageFormat.mm);
+    }
     setState(() {
       _busy = true;
       _error = null;
@@ -137,6 +170,7 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
         bytes: source,
         route: route,
         sourceName: _sourceName,
+        pdfPageFormat: pdfPageFormat,
       );
       if (!mounted) return;
       setState(() {
@@ -360,7 +394,65 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
                         ),
                       ),
                   ],
-                  const SizedBox(height: 12),
+                  if (_selected?.to == OfficeFormat.pdf &&
+                      !(_selected?.requiresExternalEngine ?? false)) ...[
+                    const Divider(height: 24),
+                    DropdownButtonFormField<int>(
+                      key: const Key('office-pdf-paper-preset'),
+                      initialValue: _pdfPresetIndex,
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: 'PDF physical page size'),
+                      items: [
+                        for (var i = 0; i < paperSheetPresets.length; i++)
+                          DropdownMenuItem(
+                            value: i,
+                            child: Text(paperSheetPresets[i].label,
+                                maxLines: 1, overflow: TextOverflow.ellipsis),
+                          ),
+                        DropdownMenuItem(
+                          value: paperSheetPresets.length,
+                          child: const Text('Custom dimensions'),
+                        ),
+                      ],
+                      onChanged: _busy ? null : _selectPdfPreset,
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            key: const Key('office-pdf-width'),
+                            controller: _pdfWidth,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration: const InputDecoration(labelText: 'Width (mm)'),
+                            onChanged: (_) {
+                              if (_pdfPresetIndex != paperSheetPresets.length) {
+                                setState(() => _pdfPresetIndex = paperSheetPresets.length);
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            key: const Key('office-pdf-height'),
+                            controller: _pdfHeight,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration: const InputDecoration(labelText: 'Height (mm)'),
+                            onChanged: (_) {
+                              if (_pdfPresetIndex != paperSheetPresets.length) {
+                                setState(() => _pdfPresetIndex = paperSheetPresets.length);
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Text(
+                      'This changes the generated PDF page geometry, not the source document layout. External Office rendering uses its own page setup.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   FilledButton.icon(
                     key: const Key('office-convert'),
                     onPressed: _busy || _selected == null ? null : _convert,

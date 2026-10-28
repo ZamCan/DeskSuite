@@ -81,31 +81,21 @@ class DesignController extends ChangeNotifier {
     if (slot == null || slot.kind != ElementKind.rectangle) {
       throw StateError('Select a photo placeholder rectangle first.');
     }
-    if (imageElement.kind != ElementKind.image ||
-        imageElement.imageBytes == null) {
+    if (imageElement.kind != ElementKind.image || imageElement.imageBytes == null) {
       throw const FormatException('Choose a valid image for the photo slot.');
     }
-    final labels = document.elements
-        .where(
-          (element) =>
-              element.kind == ElementKind.text &&
-              element.text.contains('35 × 45 mm') &&
-              element.x >= slot.x &&
-              element.x < slot.x + slot.width &&
-              element.y >= slot.y &&
-              element.y < slot.y + slot.height,
-        )
-        .toList();
+    final labels = document.elements.where((element) =>
+      element.kind == ElementKind.text &&
+      element.text.contains('35 × 45 mm') &&
+      element.x >= slot.x && element.x < slot.x + slot.width &&
+      element.y >= slot.y && element.y < slot.y + slot.height
+    ).toList();
     if (slot.width != 35 || slot.height != 45 || labels.isEmpty) {
       throw StateError('The selected rectangle is not a supported photo slot.');
     }
-    if (imageElement.x != slot.x ||
-        imageElement.y != slot.y ||
-        imageElement.width != slot.width ||
-        imageElement.height != slot.height) {
-      throw const FormatException(
-        'The photo must match the placeholder dimensions.',
-      );
+    if (imageElement.x != slot.x || imageElement.y != slot.y ||
+        imageElement.width != slot.width || imageElement.height != slot.height) {
+      throw const FormatException('The photo must match the placeholder dimensions.');
     }
     final elements = <DesignElement>[];
     for (final element in document.elements) {

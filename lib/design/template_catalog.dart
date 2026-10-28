@@ -76,8 +76,7 @@ const designTemplateCatalog = <DesignTemplateDefinition>[
   DesignTemplateDefinition(
     id: 'certificate',
     label: 'Certificate',
-    description:
-        'Landscape certificate with title, recipient and signature lines.',
+    description: 'Landscape certificate with title, recipient and signature lines.',
     widthMm: 297,
     heightMm: 210,
     template: DesignTemplate.certificate,
@@ -122,9 +121,7 @@ List<DesignElement> buildDesignTemplateElements(
       heightMm < 10 ||
       widthMm > 1200 ||
       heightMm > 1200) {
-    throw const FormatException(
-      'Template dimensions must be between 10 and 1200 mm.',
-    );
+    throw const FormatException('Template dimensions must be between 10 and 1200 mm.');
   }
   if (template == DesignTemplate.blank) return const [];
   final w = widthMm;
@@ -184,232 +181,77 @@ List<DesignElement> buildDesignTemplateElements(
     case DesignTemplate.editorial:
       return [
         rect(0, 0, w, h * .34, 0xffbd694f),
-        text(
-          'YOUR\nHEADLINE',
-          w * .08,
-          h * .42,
-          w * .84,
-          h * .18,
-          size: w * .19,
-          bold: true,
-        ),
-        text(
-          'Add your details here.',
-          w * .08,
-          h * .72,
-          w * .78,
-          h * .12,
-          size: w * .065,
-        ),
+        text('YOUR\nHEADLINE', w * .08, h * .42, w * .84, h * .18,
+            size: w * .19, bold: true),
+        text('Add your details here.', w * .08, h * .72, w * .78, h * .12,
+            size: w * .065),
       ];
     case DesignTemplate.businessCard:
       return [
         rect(0, 0, w * .12, h, 0xffbd694f),
-        text(
-          'YOUR BRAND',
-          w * .2,
-          h * .16,
-          w * .74,
-          h * .2,
-          size: w * .105,
-          bold: true,
-        ),
-        text(
-          'Name / Position',
-          w * .2,
-          h * .45,
-          w * .74,
-          h * .15,
-          size: w * .065,
-        ),
-        text(
-          'phone · email · website',
-          w * .2,
-          h * .68,
-          w * .74,
-          h * .2,
-          size: w * .045,
-        ),
+        text('YOUR BRAND', w * .2, h * .16, w * .74, h * .2,
+            size: w * .105, bold: true),
+        text('Name / Position', w * .2, h * .45, w * .74, h * .15,
+            size: w * .065),
+        text('phone · email · website', w * .2, h * .68, w * .74, h * .2,
+            size: w * .045),
       ];
     case DesignTemplate.identityBadge:
       return [
         rect(0, 0, w, h * .22, 0xffbd694f),
-        text(
-          'ORGANISATION',
-          w * .08,
-          h * .07,
-          w * .84,
-          h * .1,
-          size: w * .095,
-          color: 0xffffffff,
-          bold: true,
-          alignment: TextAlignment.center,
-        ),
+        text('ORGANISATION', w * .08, h * .07, w * .84, h * .1,
+            size: w * .095, color: 0xffffffff, bold: true,
+            alignment: TextAlignment.center),
         rect(w * .3, h * .29, w * .4, h * .26, 0xffe8e1d5),
-        text(
-          'FULL NAME',
-          w * .08,
-          h * .61,
-          w * .84,
-          h * .1,
-          size: w * .095,
-          bold: true,
-          alignment: TextAlignment.center,
-        ),
-        text(
-          'Role · ID number',
-          w * .08,
-          h * .73,
-          w * .84,
-          h * .08,
-          size: w * .065,
-          alignment: TextAlignment.center,
-        ),
-        text(
-          'VALID UNTIL',
-          w * .08,
-          h * .87,
-          w * .84,
-          h * .06,
-          size: w * .045,
-          alignment: TextAlignment.center,
-        ),
+        text('FULL NAME', w * .08, h * .61, w * .84, h * .1,
+            size: w * .095, bold: true, alignment: TextAlignment.center),
+        text('Role · ID number', w * .08, h * .73, w * .84, h * .08,
+            size: w * .065, alignment: TextAlignment.center),
+        text('VALID UNTIL', w * .08, h * .87, w * .84, h * .06,
+            size: w * .045, alignment: TextAlignment.center),
       ];
     case DesignTemplate.certificate:
       return [
         rect(5, 5, w - 10, h - 10, 0xffe9dfcc),
         rect(9, 9, w - 18, h - 18, 0xffffffff),
-        text(
-          'CERTIFICATE',
-          w * .1,
-          h * .18,
-          w * .8,
-          h * .15,
-          size: w * .11,
-          color: 0xff8c5139,
-          bold: true,
-          alignment: TextAlignment.center,
-        ),
-        text(
-          'OF ACHIEVEMENT',
-          w * .1,
-          h * .33,
-          w * .8,
-          h * .1,
-          size: w * .055,
-          bold: true,
-          alignment: TextAlignment.center,
-        ),
-        text(
-          'Presented to',
-          w * .1,
-          h * .49,
-          w * .8,
-          h * .07,
-          size: w * .04,
-          alignment: TextAlignment.center,
-        ),
-        text(
-          'RECIPIENT NAME',
-          w * .1,
-          h * .57,
-          w * .8,
-          h * .12,
-          size: w * .075,
-          bold: true,
-          alignment: TextAlignment.center,
-        ),
-        text(
-          'For outstanding contribution',
-          w * .1,
-          h * .7,
-          w * .8,
-          h * .07,
-          size: w * .035,
-          alignment: TextAlignment.center,
-        ),
-        text(
-          'Date __________     Signature __________',
-          w * .1,
-          h * .82,
-          w * .8,
-          h * .07,
-          size: w * .03,
-          alignment: TextAlignment.center,
-        ),
+        text('CERTIFICATE', w * .1, h * .18, w * .8, h * .15,
+            size: w * .11, color: 0xff8c5139, bold: true,
+            alignment: TextAlignment.center),
+        text('OF ACHIEVEMENT', w * .1, h * .33, w * .8, h * .1,
+            size: w * .055, bold: true, alignment: TextAlignment.center),
+        text('Presented to', w * .1, h * .49, w * .8, h * .07,
+            size: w * .04, alignment: TextAlignment.center),
+        text('RECIPIENT NAME', w * .1, h * .57, w * .8, h * .12,
+            size: w * .075, bold: true, alignment: TextAlignment.center),
+        text('For outstanding contribution', w * .1, h * .7, w * .8, h * .07,
+            size: w * .035, alignment: TextAlignment.center),
+        text('Date __________     Signature __________', w * .1, h * .82,
+            w * .8, h * .07, size: w * .03,
+            alignment: TextAlignment.center),
       ];
     case DesignTemplate.flyer:
       return [
         rect(0, 0, w, h * .26, 0xffbd694f),
-        text(
-          'EVENT / OFFER',
-          w * .07,
-          h * .07,
-          w * .86,
-          h * .13,
-          size: w * .105,
-          color: 0xffffffff,
-          bold: true,
-        ),
-        text(
-          'A clear, memorable headline',
-          w * .07,
-          h * .34,
-          w * .86,
-          h * .15,
-          size: w * .075,
-          bold: true,
-        ),
-        text(
-          'Describe what is happening, who it is for and why people should care.',
-          w * .07,
-          h * .52,
-          w * .84,
-          h * .18,
-          size: w * .045,
-        ),
+        text('EVENT / OFFER', w * .07, h * .07, w * .86, h * .13,
+            size: w * .105, color: 0xffffffff, bold: true),
+        text('A clear, memorable headline', w * .07, h * .34, w * .86,
+            h * .15, size: w * .075, bold: true),
+        text('Describe what is happening, who it is for and why people should care.',
+            w * .07, h * .52, w * .84, h * .18, size: w * .045),
         rect(w * .07, h * .76, w * .55, h * .11, 0xff292722),
-        text(
-          'DATE · TIME · PLACE',
-          w * .09,
-          h * .785,
-          w * .51,
-          h * .055,
-          size: w * .035,
-          color: 0xffffffff,
-          bold: true,
-        ),
-        text(
-          'Contact / registration details',
-          w * .07,
-          h * .9,
-          w * .86,
-          h * .06,
-          size: w * .035,
-        ),
+        text('DATE · TIME · PLACE', w * .09, h * .785, w * .51, h * .055,
+            size: w * .035, color: 0xffffffff, bold: true),
+        text('Contact / registration details', w * .07, h * .9, w * .86,
+            h * .06, size: w * .035),
       ];
     case DesignTemplate.photoPrintSheet:
       // Twenty editable placeholders for a practical A4 layout. These are
       // ordinary shapes/text, not image frames and not authority-certified IDs.
       final elements = <DesignElement>[
-        text(
-          'A4 MULTI-PHOTO LAYOUT EXAMPLE',
-          10,
-          5,
-          w - 20,
-          10,
-          size: 5,
-          bold: true,
-        ),
-        text(
-          'Example only · verify photo spec, media and scale',
-          10,
-          16,
-          w - 20,
-          7,
-          size: 3.5,
-          color: 0xff777970,
-        ),
+        text('A4 MULTI-PHOTO LAYOUT EXAMPLE', 10, 5, w - 20, 10,
+            size: 5, bold: true),
+        text('Example only · verify photo spec, media and scale',
+            10, 16, w - 20, 7, size: 3.5, color: 0xff777970),
       ];
       const columns = 4;
       const rows = 5;
@@ -426,61 +268,24 @@ List<DesignElement> buildDesignTemplateElements(
           final y = startY + row * (photoHeight + gapY);
           elements
             ..add(rect(x, y, photoWidth, photoHeight, 0xffe8e1d5))
-            ..add(
-              text(
-                'PHOTO\n35 × 45 mm',
-                x + 1,
-                y + 17,
-                photoWidth - 2,
-                12,
-                size: 4.5,
-                alignment: TextAlignment.center,
-              ),
-            );
+            ..add(text('PHOTO\n35 × 45 mm', x + 1, y + 17,
+                photoWidth - 2, 12, size: 4.5,
+                alignment: TextAlignment.center));
         }
       }
-      elements.add(
-        text(
-          'Cut carefully · print at 100% scale',
-          10,
-          279,
-          w - 20,
-          8,
-          size: 3.5,
-          color: 0xff777970,
-        ),
-      );
+      elements.add(text('Cut carefully · print at 100% scale', 10, 279,
+          w - 20, 8, size: 3.5, color: 0xff777970));
       return elements;
     case DesignTemplate.presentationCover:
       return [
         rect(0, 0, w * .34, h, 0xffbd694f),
         rect(w * .34, 0, w * .66, h, 0xfff7f5ef),
-        text(
-          'PRESENTATION TITLE',
-          w * .42,
-          h * .24,
-          w * .52,
-          h * .28,
-          size: w * .075,
-          bold: true,
-        ),
-        text(
-          'Subtitle or project description',
-          w * .42,
-          h * .56,
-          w * .5,
-          h * .15,
-          size: w * .035,
-        ),
-        text(
-          'AUTHOR · DATE',
-          w * .42,
-          h * .79,
-          w * .5,
-          h * .08,
-          size: w * .028,
-          color: 0xff777970,
-        ),
+        text('PRESENTATION TITLE', w * .42, h * .24, w * .52, h * .28,
+            size: w * .075, bold: true),
+        text('Subtitle or project description', w * .42, h * .56, w * .5,
+            h * .15, size: w * .035),
+        text('AUTHOR · DATE', w * .42, h * .79, w * .5, h * .08,
+            size: w * .028, color: 0xff777970),
       ];
   }
 }

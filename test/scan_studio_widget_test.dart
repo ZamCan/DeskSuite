@@ -262,18 +262,42 @@ void main() {
       await tapVisible(tester, find.text('Export page PNG'));
       await waitIo(tester);
       expect(files.exported, orderedEquals(cleaned.image.bytes));
+      final scanStateBeforeExport = tester.state(find.byType(ScanStudioPage));
       await tapVisible(tester, find.byKey(const Key('scan-pdf')));
       await waitIo(tester, rounds: 45);
       await tapVisible(tester, find.byKey(const Key('scan-save-pdf')));
       await waitIo(tester);
       expect(String.fromCharCodes(files.exported!.take(5)), '%PDF-');
-      await tapVisible(tester, find.byKey(const Key('scan-undo')));
+      final persistedAfterExport = await readDraft(tester, store);
+      expect(persistedAfterExport, hasLength(1));
+      expect(tester.state(find.byType(ScanStudioPage)), same(scanStateBeforeExport));
+      // The PDF action is near the bottom of a lazy ListView. After saving,
+      // the page-count label and page tile at the top may be unmounted until
+      // we scroll back; wait for a real page tile by revealing it, not by
+      // waiting for off-screen text to appear spontaneously.
+      expect(find.byType(ScanStudioPage), findsOneWidget);
+      // The count and page tile are separated by a long control section in
+      // this lazy list; revealing one can unmount the other. Assert each only
+      // after explicitly revealing that specific child.
+      final pageCount = find.textContaining('1 of 8 pages');
+      await reveal(tester, pageCount);
+      expect(pageCount, findsOneWidget);
+      final firstPage = find.byKey(const Key('scan-page-0'));
+      await reveal(tester, firstPage);
+      expect(firstPage, findsOneWidget);
+      final undo = find.byKey(const Key('scan-undo'));
+      await reveal(tester, undo);
+      await settleUntilEnabled(tester, undo);
+      await tester.tap(undo);
       await waitIo(tester);
       expect(
         (await readDraft(tester, store)).single.image.bytes,
         orderedEquals(before.image.bytes),
       );
-      await tapVisible(tester, find.byKey(const Key('scan-reset')));
+      final reset = find.byKey(const Key('scan-reset'));
+      await reveal(tester, reset);
+      await settleUntilEnabled(tester, reset);
+      await tester.tap(reset);
       await waitIo(tester);
       expect(
         (await readDraft(tester, store)).single.image.bytes,
