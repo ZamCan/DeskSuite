@@ -4,6 +4,8 @@
 Requires Python 3 and Pillow. Does not compile Android resources or run Flutter.
 """
 import hashlib
+import math
+import re
 import sys
 import tempfile
 import unittest
@@ -71,6 +73,34 @@ class BrandAssetsTest(unittest.TestCase):
             items = {item.get('name'): item.text for item in root.iter('item')}
             self.assertEqual(items['android:windowSplashScreenAnimatedIcon'], '@drawable/splash_icon')
         self.assertIn('assets/brand/desksuite-mark.png', (ROOT / 'pubspec.yaml').read_text())
+
+    def test_splash_strokes_fit_inside_the_android_safe_circle(self):
+        vector = ET.parse(RES / 'drawable/splash_icon.xml').getroot()
+        self.assertEqual(vector.get(ANDROID + 'viewportWidth'), '1024')
+        self.assertEqual(vector.get(ANDROID + 'viewportHeight'), '1024')
+        group = vector.find('group')
+        self.assertIsNotNone(group)
+        self.assertEqual(float(group.get(ANDROID + 'pivotX')), 512)
+        self.assertEqual(float(group.get(ANDROID + 'pivotY')), 512)
+        sx = float(group.get(ANDROID + 'scaleX'))
+        self.assertGreater(sx, 0)
+        self.assertLess(sx, 1)
+        self.assertEqual(sx, float(group.get(ANDROID + 'scaleY')))
+        paths = group.findall('path')
+        self.assertTrue(paths)
+        self.assertEqual(len(list(vector.iter('path'))), len(paths))
+        for path in paths:
+            data = path.get(ANDROID + 'pathData')
+            # This conservative test supports absolute M/L/Q/C/Z only. Bezier
+            # curves lie in their control-point hull; include the stroke radius.
+            self.assertTrue(all(c in 'MLQCZ' for c in re.findall(r'[A-Za-z]', data)))
+            values = [float(v) for v in re.findall(r'-?\d+(?:\.\d+)?', data)]
+            self.assertEqual(len(values) % 2, 0)
+            stroke = float(path.get(ANDROID + 'strokeWidth')) / 2
+            extent = max(math.hypot(x - 512, y - 512) + stroke
+                         for x, y in zip(values[::2], values[1::2])) * sx
+            # Splash specification: 160/240 or 192/288 diameter.
+            self.assertLessEqual(extent, 1024 / 3)
 
     def test_regeneration_is_byte_identical(self):
         outputs = [ROOT / 'assets/brand/desksuite-mark.png',

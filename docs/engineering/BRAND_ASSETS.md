@@ -8,7 +8,7 @@ Android's manifest still uses `@mipmap/ic_launcher` and retains application ID `
 
 - Five legacy `mipmap-*` PNGs use the selected artwork at 48, 72, 96, 144 and 192 pixels.
 - Android 8+ adaptive resources use a full-bleed sapphire background and a raster foreground. The selected artwork is centered in the 66/108 adaptive safe square. Its original rounded surface and border remain part of the artwork, so the adaptive result may look like a nested badge with some launcher masks.
-- The Android 13 themed icon is a **simplified monochrome DS and scanning-frame vector**, not the detailed full-color artwork. The launch screen uses a separate simplified color vector: Android's splash specification calls for a vector icon, and a detailed raster would not preserve its small details in the system mask.
+- The Android 13 themed icon is a **simplified monochrome DS and scanning-frame vector**, not the detailed full-color artwork. The launch screen uses a separate simplified color vector: Android's splash specification calls for a vector icon, and a detailed raster would not preserve its small details in the system mask. Its paths are scaled around the center to fit the splash's documented inner circular safe area.
 - Both light/dark v31 launch themes and earlier launch backgrounds point at the new simplified vector. These are distinct adaptations of the approved PNG, not pixel-identical recreations.
 
 Regenerate the raster assets using Python 3 and Pillow (no Flutter/Android toolchain required):
