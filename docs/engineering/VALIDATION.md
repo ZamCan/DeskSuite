@@ -1,5 +1,13 @@
 # Validation record
 
+## Media, raster budget and optimizer integration — 2026-10-28
+
+Main was merged non-destructively through `7b15802` after reviewing its independent poster-export, default-sheet and card/label work. The actual dependency-free Dart `raster_budget.dart` and checked-in `test/raster_budget_smoke.dart` ran via DartPad 3.13.7 DDC and local Node: **56 catalogue entries** each had a fitting whole-number DPI and remained within 16 MP/8192 px; the next DPI was rejected when the chosen value was below 150. Actual `PhotoSheetSpec` geometry composed with the catalogue and limits also passed for those 56 entries, the four-photo 4 × 6 inch default and the lower boundary. The shared template generator composed with simple element/ID stubs passed 48 template/size combinations, including 10 and 2500 mm bounds.
+
+Examples from the real budget calculation: A0 (841 × 1189 mm) fits at 101 dpi (3344 × 4728 pixels); 48 × 72 inches fits at 68 dpi (3264 × 4896); and 2500 × 2500 mm fits at 40 dpi (3937 × 3937). These are arithmetic results, not print-quality or memory guarantees. The DDC harness prepended unused imports, which produced harmless unused-import warnings in some checks.
+
+All 120 Dart files under `lib/` and `test/` were checked with DartPad's Dart 3.13.7 formatter and had no formatting changes remaining at that point; this is not a local `dart format` run. The actual new-design dialog, photo-sheet/profile dialog, editor export method, optimizer dialog, optimizer and A4 PDF helper analyzed against local signature stubs with no code errors (one editor harness unused-import warning). The optimizer's real control flow was also exercised with a **simulated** image codec/compositor: internal 8–16 MiB input, white-before-resize, aspect calculation and quality-target logic passed. This does **not** validate the actual `image` or `pdf` package, native isolates or Flutter rendering. Separate Flutter tests for transparency, source metadata, working-image limits, optimizer PDF dimensions, preset selection, small sheets and lower-DPI export were written but **not run** here. No current complete analyzer/test suite, Android installation or physical printer test is claimed.
+
 ## Scan enhancement, suggestions and OCR handoff — 2026-10-28
 
 The repository's independently running [CI run 40634495478](https://github.com/ZamCan/DeskSuite/actions/runs/40634495478) completed successfully for **baseline commit `4c155232a09b20a290210c697a719ea8bb65a8f0`**, before these changes: its Flutter analysis/tests and Android, Linux, Windows and unsigned-iOS build steps succeeded. Later [run 40635793861](https://github.com/ZamCan/DeskSuite/actions/runs/40635793861) failed at Flutter analysis for main `1cef153ee782e4ed4feb859c3f34d313dc466d32`; authenticated logs were not accessible. Separately, DartPad analysis of its actual `photo_specifications.dart` reproduced `const_eval_property_access` for a `const` initialized from a list's `.length`. This feature branch changes that derived index to `final` and removes the corresponding `const` menu item; direct analysis of the modified registry reports no issues. That is not a complete project analyzer run, and it is not proven to be the only CI failure. Two source test predicates were also narrowed to exact slot labels after a main-branch heading started containing the same dimensions; those Flutter tests are unrun.
@@ -91,6 +99,7 @@ The **complete suite has not been rerun after all feature additions**. Prior tar
 flutter pub get
 dart test/pixel_algorithms_smoke.dart
 dart test/page_corner_pixels_smoke.dart
+dart test/raster_budget_smoke.dart
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze --no-pub
 flutter test --no-pub --concurrency=1 --reporter expanded --timeout 120s

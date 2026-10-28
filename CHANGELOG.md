@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — shared media and optimizer reconciliation (not a release)
+
+- Non-destructively integrated newer main work for poster export, shared media and card/badge/label sizes. Corrected the custom-size selection and aligned design/template/sheet page bounds to 10–2500 mm; the default 4 × 6 inch photo sheet now fits its four photos.
+- Large pages can choose an explicitly labelled pixel-budget-fitting raster DPI plus eligible 100/72/60/36 dpi PDF/PNG options. The PDF page remains physically sized; PNG print size is not reliably embedded. These are not claims of print quality or printer support.
+- The image optimizer flattens alpha onto white before resizing, accepts bounded internal working copies up to 16 MiB, and wraps a JPEG on A4 with margins instead of mapping pixels directly to PDF points. PDF and HTML are not encrypted. Added source tests; real codec/Flutter/device tests remain unrun.
+- Actual Dart budget and sheet geometry checks passed for 56 media entries under DartPad DDC/Node; several UI/control-flow checks used stubs. See [validation](docs/engineering/VALIDATION.md) for scope and remaining release gates.
+
 ## Unreleased — scan enhancement and OCR handoff (not a release)
 
 - Added reviewable Original, Lighten, Reduce shadows, Magic Pro, Grayscale and adaptive B&W document modes, with three reproducible fictional practice pages and actual [pixel-engine comparison evidence](docs/engineering/magic-scan-evidence.png). These classical algorithms can lose detail or leave shadows; they are not a claim of CamScanner parity.

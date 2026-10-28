@@ -1,5 +1,7 @@
 # Roadmap and release gates
 
+The dated sections below record how the source evolved; later sections supersede earlier open checkboxes. They are not release-readiness claims. See [current status](engineering/CURRENT_STATUS.md) and [validation](engineering/VALIDATION.md) for the latest evidence and unresolved gates.
+
 ## Implemented and host-tested
 
 - [x] Integrated live studios into the current main workspace while preserving existing settings, project roots and earlier data paths.
@@ -35,14 +37,12 @@
 ## Not implemented / next slices
 
 - [ ] Full suite backup, restore, migrations and cross-ID import for notes/catalogue, with crash and storage-full tests.
-- [ ] Transactional multi-instance database; complete POS, payment/refunds, sale lines, receipts, expense/profit reports and audit history.
+- [ ] Transactional multi-instance database; complete POS, payments/refunds, multi-item sale lines, expenses/profit reports and audit history. A basic recorded one-item sale and A5 receipt exist; they are not tax-compliant invoicing.
 - [ ] Validate OCR accuracy/language behavior on representative real documents and Android devices; benchmark and extend the limited corner-suggestion heuristic with manual fallback.
-- [ ] Existing-PDF reader, search and page tools, PDF compression and accessible preview.
 - [ ] Rich document editor, spreadsheet/formulas, presentation editing and stronger DOCX/XLSX/PPTX interoperability, based on tested format engines and explicit fidelity boundaries.
 - [ ] Advanced image editing: arbitrary crop/selection, non-destructive layers/masks, richer adjustments and optional local segmentation; no model downloads without consent.
 - [ ] Guides/snapping, professional vector/SVG tools, colour management, bleed/crop marks, imposition and printer calibration.
 - [ ] Consolidated asset registry with provenance/licences, reference tracking, thumbnails, deduplication and safe migration.
-- [ ] Complete transactional stationery POS: sale lines, stock ledger, refunds/voids, suppliers, expenses, customer balances, audit trail and ledger-backed profit reports.
 - [ ] Existing-PDF reader/rendering, text search/extraction, page reorder/rotate/extract/merge, annotations and verified save/reopen.
 - [ ] Full accessibility, localization, dark theme across the restored studios, performance and low-memory profiling.
 
@@ -90,7 +90,7 @@ Require a signed, reproducible Android release with stable package ID and key cu
 
 - [x] Add an A4 photo print-sheet starter to the shared template registry, with twenty bounded editable 35 × 45 mm example slots and explicit print-scaling caveat.
 - [x] Test the slot count, editable object types and shared canvas geometry at source level.
-- [ ] Replace generic shape placeholders with actual image-frame/drop-in asset support before calling this a photo imposition workflow; validate output on real printers and verify any authority-specific dimensions separately.
+- [ ] Add general drag-and-drop image frames and automatic photo imposition; a later slice supports manual replacement of the twenty known example slots one at a time. Validate output on real printers and verify authority-specific dimensions separately.
 - [ ] Run formatter, analyzer, complete Flutter suite and Android/device checks; no passing result is claimed until CI reports it.
 
 
@@ -124,9 +124,9 @@ Require a signed, reproducible Android release with stable package ID and key cu
 ## 2026-10-28 — complete media and engine integration gate
 
 - [x] Expand the photo-sheet sheet-media selector from small photo paper to ISO A/B formats, US letter/legal/tabloid/ledger, photo prints, and poster/large-format presets; allow custom media up to 2500 mm per side.
-- [ ] Use one shared paper/media catalogue across photo sheets, new-design canvas, documents, badges and poster exports; distinguish stock/sheet size from finished photo/card size and from printer-supported media.
-- [ ] Add envelope/C-series, card/badge, label, roll-media and device/printer capability profiles; show unsupported media or clipping risks before printing.
-- [ ] Make large-format export resolution aware of page dimensions and the output pixel budget; offer validated lower DPI when needed rather than pretending every poster can render at 300 DPI on every device.
+- [x] Share one media catalogue between Photo Sheet and the new-design canvas, including envelope/C-series and card/badge/label examples. Dimensions describe media geometry, not certified product or printer support.
+- [ ] Extend shared media to other document/roll workflows when implemented; add device/printer capability profiles and show unsupported media or clipping risks before printing.
+- [x] Make large-format raster export resolution aware of physical page dimensions and the output pixel budget; offer explicitly labelled lower DPI in source. Device-memory and physical-print validation remain open.
 - [ ] Maintain the engine/package register in [ENGINE_INTEGRATION_REGISTER.md](engineering/ENGINE_INTEGRATION_REGISTER.md); integrate only reviewed dependencies with pinned versions, notices, real fixtures, and measured device behavior.
 - [ ] Verify the existing offline Tesseract integration end-to-end on Android with English and Kiswahili. Do not confuse OCR with an SLM; evaluate an optional SLM runtime only after ABI, licence, model size, RAM/latency, privacy and offline tests.
 - [ ] Finish the complete CI matrix, repair every analyzer/test/build regression, and run APK install/upgrade/offline/storage/printing/OCR/photo/design/office tests on the actual target phone before calling the product build-ready.

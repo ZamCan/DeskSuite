@@ -6,11 +6,11 @@ Photo Studio has an **Optimise & export** workflow implemented in `lib/images/im
 
 - **Dimensions:** original, 120×150, 300×300, 300×400, 600×600, 600×800, 1200×1500, and custom width/height in pixels.
 - **Aspect ratio:** preserved by default. A user can explicitly turn it off when exact dimensions matter more than proportions. With preservation enabled, the result fits inside the selected box and may have smaller dimensions.
-- **Compression modes:** choose JPEG quality; request a percentage reduction from source bytes; or target a file size in KB.
+- **Compression modes:** choose JPEG quality; request a percentage reduction relative to the current working image bytes; or target a file size in KB.
 - **Quality strategy:** for byte targets, lower JPEG quality before gradually reducing resolution. The app reports actual output bytes, dimensions, quality and measured reduction. A target is rejected if it cannot be reached within safety limits; output is not promised to match a target exactly.
 - **Preservation:** optimisation works on a new copy. It does not overwrite the source image.
-- **Export types:** JPEG, an image-only PDF, and a standalone HTML page embedding the JPEG for offline viewing.
-- **Bounds:** source image is limited by the existing 8 MB/12-megapixel image pipeline; output is bounded to 8192 pixels per side and 12 megapixels.
+- **Export types:** JPEG, an image-only A4 PDF (portrait or landscape, 10 mm margins), and a standalone HTML page embedding the JPEG for offline viewing. The PDF contains no OCR text or encryption and does not promise a specific finished photo size.
+- **Bounds:** an external pick is limited to 8 MiB, while an already-edited internal working image can be up to 16 MiB. Decoded and optimized images are limited to 8192 pixels per side and 12 megapixels. Device memory may be more restrictive.
 
 ## Security boundary
 
@@ -19,10 +19,10 @@ The current PDF export is **not encrypted**. It must not be described as passwor
 ## Standards and product distinctions
 
 - Pixel dimensions are not physical print dimensions. Physical size requires a separately chosen print size and resolution/DPI; this feature does not certify passport or identity-photo compliance.
-- Compression percentage means a target reduction in encoded bytes relative to the selected source bytes, not a percentage of image pixels or a guaranteed exact result.
-- JPEG is lossy and does not preserve transparency. The output preview and measured size must be reviewed before saving.
+- Compression percentage means a target reduction in encoded bytes relative to the **current working image**, which may already have been edited or re-encoded, not necessarily the originally selected file. It is not a percentage of image pixels or a guaranteed exact result.
+- JPEG is lossy and does not preserve transparency. Transparency is composited onto white before resizing/encoding. Review the output and measured size before saving. The optimizer uses a new RGB raster rather than intentionally copying input metadata, but metadata removal has not been independently verified across all formats; inspect outputs before sharing sensitive images.
 - Keep original files available for reset/re-export and never silently replace them.
 
 ## Validation still required
 
-Automated tests cover pixel preset resolution, custom-dimension validation, JPEG decodability and source-byte preservation. The integrated Flutter analyzer, complete test suite, platform builds, and real-device memory/quality checks must pass before calling the feature release-ready.
+Regression tests for pixel presets, custom-dimension validation, alpha-on-white, one EXIF description, >8 MiB working PNGs, JPEG decodability, A4 PDF page size and source-byte preservation have been written but **not run in Flutter for this branch**. A DartPad/Node check exercised optimizer control flow with a simulated codec, not the real image/PDF packages. The integrated Flutter analyzer, complete test suite, independent PDF/image inspection and real-device memory/quality checks must pass before calling the feature release-ready.
