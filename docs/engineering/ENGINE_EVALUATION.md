@@ -1,6 +1,6 @@
 # Engine decisions and remaining evaluations
 
-Research date: 2026-10-27. This is an engineering comparison, not evidence that an unintegrated engine is installed or tested. DeskSuite currently has **no OCR, searchable PDF, PDF reader or office conversion**. The existing image/PDF creation routes are in [CONVERSIONS.md](../CONVERSIONS.md).
+Research date: 2026-10-27. This is an engine-selection comparison, not evidence that an unintegrated engine is installed or tested. **Status correction:** this document's original opening inventory was overtaken by later work. The current source includes offline Tesseract OCR/searchable-PDF generation and content-level Office readers/writers; see [CURRENT_STATUS.md](CURRENT_STATUS.md), [OFFICE_SUPPORT.md](OFFICE_SUPPORT.md), and [VALIDATION.md](VALIDATION.md). Existing-PDF reading/manipulation, full layout-faithful Office editing and advanced image editing remain incomplete. This file evaluates candidate integrations and must not override verified current-source status. The shared product contract is [UNIFIED_PRODUCT_ARCHITECTURE.md](UNIFIED_PRODUCT_ARCHITECTURE.md); existing image/PDF creation routes are in [CONVERSIONS.md](../CONVERSIONS.md).
 
 ## OCR candidates
 
