@@ -508,7 +508,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 23,
-                  fontWeight: FontWeight.w750,
+                  fontWeight: FontWeight.w700,
                   letterSpacing: -.5,
                 ),
               ),
