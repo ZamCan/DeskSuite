@@ -3,7 +3,9 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
 
+import '../printing/paper_catalog.dart';
 import '../workspace/file_gateway.dart';
 import 'office_format.dart';
 import 'office_pdf.dart';
@@ -43,6 +45,9 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
   bool _saving = false;
   String? _error;
   String? _status;
+  int _pdfPresetIndex = 0;
+  final _pdfWidth = TextEditingController(text: '210');
+  final _pdfHeight = TextEditingController(text: '297');
 
   bool get _spreadsheet =>
       _format == OfficeFormat.xlsx || _format == OfficeFormat.ods;
@@ -71,6 +76,8 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
   @override
   void dispose() {
     _title.dispose();
+    _pdfWidth.dispose();
+    _pdfHeight.dispose();
     super.dispose();
   }
 
@@ -167,6 +174,17 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
     );
   }
 
+  void _selectPdfPreset(int? index) {
+    if (index == null) return;
+    setState(() {
+      _pdfPresetIndex = index;
+      if (index < paperSheetPresets.length) {
+        _pdfWidth.text = paperSheetPresets[index].widthMm.toString();
+        _pdfHeight.text = paperSheetPresets[index].heightMm.toString();
+      }
+    });
+  }
+
   Future<void> _export() async {
     if (_saving || _original == null) return;
     if (_blocks.isEmpty ||
@@ -177,6 +195,16 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
         )) {
       setState(() => _error = 'Add some readable content before exporting.');
       return;
+    }
+    PdfPageFormat pdfPageFormat = PdfPageFormat.a4;
+    if (_output == OfficeEditOutput.pdf) {
+      final width = double.tryParse(_pdfWidth.text);
+      final height = double.tryParse(_pdfHeight.text);
+      if (width == null || height == null || width < 20 || height < 20 || width > 2500 || height > 2500) {
+        setState(() => _error = 'Enter both PDF page dimensions from 20 to 2500 mm.');
+        return;
+      }
+      pdfPageFormat = PdfPageFormat(width * PdfPageFormat.mm, height * PdfPageFormat.mm);
     }
     setState(() {
       _saving = true;
@@ -190,7 +218,7 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
       late final String mime;
       switch (_output) {
         case OfficeEditOutput.pdf:
-          bytes = await buildOfficePdf(document);
+          bytes = await buildOfficePdf(document, format: pdfPageFormat);
           extension = 'pdf';
           mime = 'application/pdf';
         case OfficeEditOutput.docx:
@@ -376,6 +404,66 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
                                   }
                                 },
                         ),
+                        if (_output == OfficeEditOutput.pdf) ...[
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<int>(
+                            key: const Key('office-editor-pdf-paper-preset'),
+                            initialValue: _pdfPresetIndex,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              labelText: 'PDF physical page size',
+                              border: OutlineInputBorder(),
+                            ),
+                            items: [
+                              for (var i = 0; i < paperSheetPresets.length; i++)
+                                DropdownMenuItem(
+                                  value: i,
+                                  child: Text(paperSheetPresets[i].label,
+                                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                                ),
+                              DropdownMenuItem(
+                                value: paperSheetPresets.length,
+                                child: const Text('Custom dimensions'),
+                              ),
+                            ],
+                            onChanged: _saving ? null : _selectPdfPreset,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  key: const Key('office-editor-pdf-width'),
+                                  controller: _pdfWidth,
+                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  decoration: const InputDecoration(labelText: 'Width (mm)'),
+                                  onChanged: (_) {
+                                    if (_pdfPresetIndex != paperSheetPresets.length) {
+                                      setState(() => _pdfPresetIndex = paperSheetPresets.length);
+                                    }
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextField(
+                                  key: const Key('office-editor-pdf-height'),
+                                  controller: _pdfHeight,
+                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  decoration: const InputDecoration(labelText: 'Height (mm)'),
+                                  onChanged: (_) {
+                                    if (_pdfPresetIndex != paperSheetPresets.length) {
+                                      setState(() => _pdfPresetIndex = paperSheetPresets.length);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Text(
+                            'PDF page geometry is physical size; this content editor does not recreate the original Word/Excel page layout.',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ],
                       ],
                     ),
                   ),
