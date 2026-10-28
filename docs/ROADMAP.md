@@ -1,125 +1,65 @@
-# Roadmap and release gates
+# DeskSuite engineering roadmap
 
-## Implemented and host-tested
+This roadmap is the short, current action list. The full scope and product requirements remain in [MASTER_ENGINEERING_DIRECTIVE.md](engineering/MASTER_ENGINEERING_DIRECTIVE.md); the exact present implementation is in [CURRENT_STATUS.md](engineering/CURRENT_STATUS.md). “Implemented” means code exists, not that it is production-certified.
 
-- [x] Integrated live studios into the current main workspace while preserving existing settings, project roots and earlier data paths.
-- [x] Physically dimensioned editable design, text/shapes/images, arrangement, history, save/reopen, copy import/export, PNG and raster PDF.
-- [x] Non-destructive earlier project conversion and interrupted-replacement recovery.
-- [x] Local photo transformations, exact pixel dimensions, actual encoded-output review and configurable one-page photo-sheet PDF.
-- [x] Manual projective page correction, ordered multipage image PDF, bounded private scan draft and failure/retry coverage on the host.
-- [x] Skippable, revisitable sample guides and explicit conversion catalogue linking to real tools.
-- [x] Notes save/error/retry and TXT export; starter catalogue/stock counters, exact minor units and JSON export.
-- [x] PDF physical-size and fake print-gateway behavior; baseline sequential host suite and targeted later tests. CI on main commit `7f1920ef` passed the full Flutter test suite, analysis, Android release APK/AAB builds, Linux/Windows builds and unsigned iOS validation on 2026-10-28. Re-run the complete suite after subsequent changes; physical-device and signing gates remain separate.
+## Stage 0 — consolidate and install
 
-## Implemented, not fully validated
+- [x] Keep a single shared Flutter workspace and product identity on `main`.
+- [x] Integrate Scan & assemble, OCR, Photo Studio, Creative Studio, Office content workflows, existing-PDF Studio, print tools and starter inventory/POS without duplicating the image engine.
+- [x] Integrate bounded, offline page-corner suggestions with manual correction and explicit confirmation.
+- [x] Preserve the existing package ID and keep private signing material out of the repository.
+- [ ] Confirm CI passes on the exact latest `main` commit.
+- [ ] Pull to Termux, build with the existing private signing key, verify the certificate and install as an update on the same phone.
+- [ ] Complete a real-device smoke pass and record results before the next large feature integration.
 
-- [ ] Local uneven-lighting / adaptive B&W document previews and selective photo-speck reduction, with realistic synthetic examples. Pixel cores passed a DDC/Node smoke check; Flutter codec, widget, integration and Android tests are still pending.
-- [ ] Native Android camera capture/recovery, file picking, saving, lifecycle/process death, actual printer discovery/output, adaptive icons/splash and accessibility on representative devices.
-- [ ] Physical Android install/upgrade using the owner's existing private signing key. CI built APK (119.5 MB) and AAB (102.1 MB) on `7f1920ef`, but the active workflow does not sign with the owner's key; real-device behavior remains unverified.
-- [ ] Windows/Linux/iOS plugins, generated desktop runners, packaging and OS-specific paths.
-- [ ] System print scaling, colour, real margins and ID-photo requirements.
+## Stage 1 — scanner and PDF reliability
 
-## Implemented in this source (2026-10-27)
+- [x] Local image import, manual perspective correction, page ordering, draft storage and image-PDF export.
+- [x] Offline corner suggestions that remain editable and never auto-apply without user confirmation.
+- [ ] Validate camera capture, permission/provider behavior, app backgrounding, process death and low-memory recovery on the phone.
+- [ ] Add robust automatic page detection only after evaluating real-document false positives and manual fallback.
+- [ ] Evaluate PDF combine/inspection/split/reorder/rotate as isolated, tested engine slices.
+- [ ] Validate encrypted, malformed, large and complex PDFs; independently open every exported result.
+- [ ] Add PDF text search/extraction, accessible preview and structural compression only with a tested compatible engine.
+- [ ] Add encrypted output only after key handling and format interoperability are reviewed.
 
-- **Offline OCR** for English and English+Kiswahili with Tesseract 5 through
-  Tesseract4Android; editable review, low-confidence warning, TXT and DOCX
-  export, and a searchable PDF whose invisible text layer is verified in tests.
-- **Office reading and conversion**: DOCX, XLSX, PPTX, ODT, ODS, ODP, RTF, TXT
-  and HTML → PDF, TXT, CSV, ODT or ODS, with per-route fidelity and limits, a
-  bounded package reader and an optional LibreOffice seam. See
-  [office support](engineering/OFFICE_SUPPORT.md).
-- PDF output now embeds a Unicode font so accents, dashes and smart quotes are
-  not dropped.
-- Main commit `7f1920ef`: full `flutter test` and `flutter analyze` passed; Android APK/AAB, Linux/Windows and unsigned iOS validation builds completed in [CI run 40689024580](https://github.com/ZamCan/DeskSuite/actions/runs/40689024580). The APK is not yet verified on a physical device.
+## Stage 2 — image and print-production engine
 
-## Not implemented / next slices
+- [x] Shared bounded image decode/transform engine, pixel and physical-size resize, JPEG quality control and image-based PDF output.
+- [x] Photo-sheet layouts and editable image slots in Creative Studio.
+- [ ] Evaluate image-compression/raster-budget helpers from unmerged branches against current `lib/images/` code before adoption; retain one implementation per task.
+- [ ] Add arbitrary crop/selection, layers/masks, richer colour adjustments and non-destructive edits.
+- [ ] Evaluate optional local background segmentation with licence, memory, latency and offline checks; do not silently download models.
+- [ ] Add calibrated print presets, bleed/crop marks, imposition and real printer tests.
+- [ ] Add authority-specific ID/photo templates only where physical requirements are verified. Generic size presets must not be described as official passport standards.
+- [ ] Support posters, badges, labels and all relevant paper/media dimensions with bounded high-resolution rendering.
 
-- [ ] Full suite backup, restore, migrations and cross-ID import for notes/catalogue, with crash and storage-full tests.
-- [ ] Transactional multi-instance database; complete POS, payment/refunds, sale lines, receipts, expense/profit reports and audit history.
-- [ ] Validate OCR accuracy/language behavior on representative real documents and Android devices; automatic page-edge detection with manual fallback.
-- [x] PDF Studio entry point and supported existing-PDF edit/save-as-copy flow are integrated on the consolidation branch; full CI, lockfile and device validation are pending.
-- [ ] Robust PDF text search/extraction, page reorder/rotate/extract/merge, guaranteed structural compression, encrypted export and accessible preview.
-- [ ] Rich document editor, spreadsheet/formulas, presentation editing and stronger DOCX/XLSX/PPTX interoperability, based on tested format engines and explicit fidelity boundaries.
-- [ ] Advanced image editing: arbitrary crop/selection, non-destructive layers/masks, richer adjustments and optional local segmentation; no model downloads without consent.
-- [ ] Guides/snapping, professional vector/SVG tools, colour management, bleed/crop marks, imposition and printer calibration.
-- [ ] Consolidated asset registry with provenance/licences, reference tracking, thumbnails, deduplication and safe migration.
-- [ ] Complete transactional stationery POS: sale lines, stock ledger, refunds/voids, suppliers, expenses, customer balances, audit trail and ledger-backed profit reports.
-- [ ] Validate PDF Studio against independent readers and protected/malformed fixtures; verify memory/performance and save/reopen on actual Android and desktop devices. Extend page tools and encryption only through tested, compatible engines.
-- [ ] Full accessibility, localization, dark theme across the restored studios, performance and low-memory profiling.
+## Stage 3 — Office engine and document interoperability
 
-## Release gate: **not passed**
+- [x] Bounded package readers and content-level editing/conversion for the explicitly supported document routes.
+- [ ] Improve editability and round-trip preservation for DOCX/XLSX/PPTX/ODF, including images, styles, formulas, page breaks and tables.
+- [ ] Evaluate the separate Office preview/WebAssembly candidate only after security sandbox, binary provenance/licences, ZIP-bomb protections, accessibility, file-size limits and device memory are independently reviewed.
+- [ ] Compare any Office rendering engine against real reference documents and independent desktop office suites; document fidelity limits by route.
+- [ ] Add true rich-text editing, spreadsheet formulas, presentation editing and export formats only through a maintained, tested engine.
+- [ ] Keep conversion routes explicit when a format or operation is unsupported; never imply that a file was converted when only its text was extracted.
 
-Require a signed, reproducible Android release with stable package ID and key custody; real-device cold/offline/upgrade/process-death/storage-full tests; native file-picker and printer checks; verified backup/restore; dependency/licence and permissions review; accessibility/performance testing; and a reviewed CI run/artifact. A host test pass or a debug APK is not equivalent to these gates.
+## Stage 4 — complete stationery POS and records
 
+- [x] Starter stationery catalogue, local stock counters, recorded sale log and reprintable A5 receipt.
+- [ ] Transactional multi-item basket with stock ledger, stable sale IDs, exact currency arithmetic and rollback/recovery.
+- [ ] Supplier and purchase records, refunds/voids, customer balances, expenses, profit reporting and audit trail.
+- [ ] Quote/invoice layouts, tax configuration and export/print flows; verify local legal requirements before claiming compliance.
+- [ ] Backup/restore, schema migrations, storage-full and crash tests, with explicit user control over private business data.
 
-## Creative imaging, ID photography and template expansion
+## Stage 5 — cross-platform, accessibility and release
 
-- [ ] Audit the existing Photo Studio, photo-sheet, project serialization, template/sample assets and export/print services before adding another engine.
-- [ ] Build a shared editable template registry/schema with licence/provenance metadata, preview thumbnails, stable IDs and versioning.
-- [ ] Add configurable ID/passport-style presets (authority-specific where verified), assisted and manual crop/pose guidance, background presets, output review, exact physical sizing and multi-photo print sheets. Do not claim official acceptance.
-- [ ] Evaluate local background segmentation models versus classical methods; benchmark hair edges, transparent objects, memory, latency, licences and offline operation before selecting one shared implementation.
-- [ ] Add editable school/staff IDs, visitor/event badges, business cards, posters/flyers and presentation themes/layouts through the shared catalogue rather than flattened images.
-- [ ] Benchmark one optional SLM runtime behind a capability interface for reviewed OCR-correction/layout suggestions only; keep Tesseract OCR and deterministic processing as real engines and ensure core workflows work without model downloads or network access.
-- [ ] Add fixture-based tests for dimensions, aspect ratios, masks/transparency, template save/reopen, print-sheet layout, missing model, cancellation and low-memory failure; verify on modest Android hardware.
+- [x] Shared Flutter product architecture and CI build matrix for Android, Windows, Linux and unsigned iOS validation.
+- [ ] Test native plugins, file paths, fonts, storage, printing and accessibility independently on each OS.
+- [ ] Audit all direct/transitive dependencies, embedded binaries, licences, network boundaries and Android permissions.
+- [ ] Complete screen-reader semantics, keyboard navigation, narrow-screen layouts, dark theme consistency and low-memory profiling.
+- [ ] Produce a reproducible signed Android release with stable package identity and owner-held key custody.
+- [ ] Pass cold-start, offline, update-install, process-death, backup/restore and real-output acceptance tests before release.
 
+## Explicitly not a claim today
 
-## Latest source change — Photo Studio background placement (2026-10-28)
-
-- [x] Solid-colour compositing for images that already contain transparency, with a manual colour picker, bounded shared processing, PNG output and unit-test coverage added.
-- [x] Editable photo-sheet size examples and custom physical dimensions.
-- [ ] Actual background removal / segmentation, editable masks and edge refinement.
-- [ ] Guided ID-photo crop, head/shoulder framing and verified authority-specific presets.
-- [ ] Shared editable template catalogue for school/staff IDs, badges, business cards, posters/flyers and presentation themes.
-- [ ] Optional SLM capability adapter and measured local-runtime selection.
-- [ ] Run format, analyzer, all Flutter tests and Android build/device checks after this slice; do not mark as passed until actual results are recorded.
-
-## 2026-10-28 — shared editable starter templates
-
-- [x] Add one stable-ID template registry and wire it into the existing new-design dialog and shared editable project model.
-- [x] Add starter layouts for blank, editorial poster, business card, identity badge, certificate, flyer and presentation cover.
-- [x] Add source-level tests for catalog identity, element bounds, serialization round-trip and the template-selection UI.
-- [ ] Expand the registry with reviewed, licensed template packs, image/logo placeholders and editable photo frames; do not imply that a starter badge is an official ID specification.
-- [ ] Add multi-slide presentation documents and real PPTX import/export through the Office capability registry; the current presentation-cover template is a single editable design page, not a PowerPoint deck.
-- [ ] Run the new tests, formatter, analyzer, complete Flutter suite and Android/device checks before marking verification complete.
-
-- [x] Record starter-template schema version, source/provenance and repository licence metadata; validate canvas dimensions and keep generated objects within custom canvas bounds.
-- [ ] Add human-reviewed previews, true image/photo placeholders and a user-editable template library; metadata alone is not a substitute for licence review of future third-party packs.
-
-
-
-## 2026-10-28 — photo print-sheet starter layout
-
-- [x] Add an A4 photo print-sheet starter to the shared template registry, with twenty bounded editable 35 × 45 mm example slots and explicit print-scaling caveat.
-- [x] Test the slot count, editable object types and shared canvas geometry at source level.
-- [ ] Replace generic shape placeholders with actual image-frame/drop-in asset support before calling this a photo imposition workflow; validate output on real printers and verify any authority-specific dimensions separately.
-- [ ] Run formatter, analyzer, complete Flutter suite and Android/device checks; no passing result is claimed until CI reports it.
-
-
-## Photo print-sheet interaction (2026-10-28)
-
-- [x] Add an editor action to fill a selected 35 × 45 mm catalogue slot with a locally picked image; replace the placeholder and label in one undoable edit.
-- [x] Route the image through the existing embedded-image project format and shared renderer/export path, with cover fitting to the physical slot.
-- [x] Add controller tests for replacement, encode/decode, undo and rejection of a normal rectangle.
-- [ ] Confirm tests/analyzer/formatting in CI, then test actual Android picking and real print scaling. This is manual slot placement, not automatic multi-photo batching, face alignment or certified ID-photo processing.
-
-
-## 2026-10-28 — print-production specification gate
-
-- [x] Document a production model separating finished product, source sheet/roll, substrate, device profile and authority requirements.
-- [x] Start Photo Sheet with 4 × 6 inch media as a convenient small-format option; retain A4/A5/custom as independent choices.
-- [x] Rename the A4 photo layout example so it is not presented as a passport preset; leave Tanzania passport dimensions unspecified when the cited source does not publish them.
-- [x] Record the scope of ISO 216, ISO/IEC 23385, ICAO Doc 9303 and ISO/IEC 7810 in `docs/engineering/PRINT_PRODUCTION_STANDARDS.md`.
-- [ ] Add A3, B-series, US Letter/Tabloid and roll-media profiles only where the output path/device supports them.
-- [ ] Implement printer/media capability profiles, trim/bleed/safe areas, actual-size controls and export validation.
-- [ ] Verify physical dimensions, colour/quality and media compatibility on actual supported devices before claiming production readiness.
-
-
-## 2026-10-28 — complete media and engine integration gate
-
-- [x] Expand the photo-sheet sheet-media selector from small photo paper to ISO A/B formats, US letter/legal/tabloid/ledger, photo prints, and poster/large-format presets; allow custom media up to 2500 mm per side.
-- [x] Use one shared paper/media catalogue across photo sheets, new-design canvas, scan PDFs and content-level Office PDF exports; distinguish stock/sheet size from finished photo/card size and from printer-supported media.
-- [x] Add ISO C/envelope, card/badge, label and large-format poster presets plus custom dimensions. [ ] Add roll-media and device/printer capability profiles; show unsupported media or clipping risks before printing.
-- [ ] Make large-format export resolution aware of page dimensions and the output pixel budget; offer validated lower DPI when needed rather than pretending every poster can render at 300 DPI on every device.
-- [ ] Maintain the engine/package register in [ENGINE_INTEGRATION_REGISTER.md](engineering/ENGINE_INTEGRATION_REGISTER.md); integrate only reviewed dependencies with pinned versions, notices, real fixtures, and measured device behavior.
-- [ ] Verify the existing offline Tesseract integration end-to-end on Android with English and Kiswahili. Do not confuse OCR with an SLM; evaluate an optional SLM runtime only after ABI, licence, model size, RAM/latency, privacy and offline tests.
-- [ ] Finish the complete CI matrix, repair every analyzer/test/build regression, and run APK install/upgrade/offline/storage/printing/OCR/photo/design/office tests on the actual target phone before calling the product build-ready.
+DeskSuite is **not yet** a full Microsoft Office/LibreOffice replacement, Acrobat/CamScanner equivalent, biometric passport-photo certification tool or complete retail accounting system. No cloud account, paid API or remote model download is required for the core local flows. Any future optional engine must preserve that offline-first contract and be evaluated before integration.
