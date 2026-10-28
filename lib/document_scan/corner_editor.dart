@@ -3,12 +3,14 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../images/photo_processor.dart';
+import 'page_corner_suggestion.dart';
 import 'scan_processor.dart';
 
-/// Manual four-corner editor with a numeric alternative to dragging.
+/// Reviewable four-corner editor with a numeric alternative to dragging.
 class CornerEditor extends StatefulWidget {
-  const CornerEditor({super.key, required this.photo});
+  const CornerEditor({super.key, required this.photo, this.suggester});
   final PhotoResult photo;
+  final Future<ScanCorners?> Function(PhotoResult)? suggester;
 
   @override
   State<CornerEditor> createState() => _CornerEditorState();
@@ -16,10 +18,48 @@ class CornerEditor extends StatefulWidget {
 
 class _CornerEditorState extends State<CornerEditor> {
   List<ScanPoint> points = const ScanCorners.full().points;
-  String? error;
+  String? error, notice;
+  bool suggesting = false;
 
   ScanCorners get corners =>
       ScanCorners(points[0], points[1], points[2], points[3]);
+
+  Future<void> suggest() async {
+    if (suggesting) return;
+    setState(() {
+      suggesting = true;
+      error = null;
+      notice = null;
+    });
+    try {
+      final suggestion =
+          await (widget.suggester ?? suggestScanCornersInBackground)(
+            widget.photo,
+          );
+      if (!mounted) return;
+      if (suggestion == null) {
+        setState(
+          () => error = 'No reliable suggestion. Drag the handles or enter coordinates instead.',
+        );
+      } else {
+        // The algorithm can mistake other bright rectangles for paper. Always
+        // keep the suggestion editable and require the user's confirmation.
+        suggestion.validate();
+        setState(() {
+          points = suggestion.points;
+          notice = 'Suggested corners are approximate. Check and adjust all four before correcting.';
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => error = 'Could not suggest corners. Manual adjustment is still available.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => suggesting = false);
+    }
+  }
 
   Future<void> coordinates() async {
     final updated = await showDialog<List<ScanPoint>>(
@@ -30,6 +70,7 @@ class _CornerEditorState extends State<CornerEditor> {
       setState(() {
         points = updated;
         error = null;
+        notice = null;
       });
     }
   }
@@ -62,14 +103,39 @@ class _CornerEditorState extends State<CornerEditor> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Adjust page corners',
-                        style: Theme.of(context).textTheme.titleLarge,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Adjust page corners',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                          ),
+                          if (suggesting)
+                            const SizedBox(
+                              width: 48,
+                              height: 48,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  semanticsLabel: 'Suggesting page corners',
+                                ),
+                              ),
+                            )
+                          else
+                            IconButton(
+                              key: const Key('suggest-corners'),
+                              tooltip: 'Suggest corners',
+                              onPressed: suggest,
+                              icon: const Icon(Icons.auto_fix_high),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        'Drag each numbered handle to a page corner, or enter coordinates. No automatic detection is used.',
+                        'Use the wand to suggest corners for a bright page on a darker background, or drag the handles or enter coordinates. Always review all four corners.',
                       ),
+                      if (notice != null)
+                        Semantics(liveRegion: true, child: Text(notice!)),
                       if (error != null)
                         Semantics(
                           liveRegion: true,
@@ -135,21 +201,20 @@ class _CornerEditorState extends State<CornerEditor> {
                               child: GestureDetector(
                                 key: Key('corner-$i'),
                                 behavior: HitTestBehavior.opaque,
-                                onTap: coordinates,
-                                onPanUpdate: (details) => setState(() {
-                                  points = List.of(points);
-                                  points[i] = ScanPoint(
-                                    (points[i].x + details.delta.dx / w).clamp(
-                                      0.0,
-                                      1.0,
-                                    ),
-                                    (points[i].y + details.delta.dy / h).clamp(
-                                      0.0,
-                                      1.0,
-                                    ),
-                                  );
-                                  error = null;
-                                }),
+                                onTap: suggesting ? null : coordinates,
+                                onPanUpdate: suggesting
+                                    ? null
+                                    : (details) => setState(() {
+                                        points = List.of(points);
+                                        points[i] = ScanPoint(
+                                          (points[i].x + details.delta.dx / w)
+                                              .clamp(0.0, 1.0),
+                                          (points[i].y + details.delta.dy / h)
+                                              .clamp(0.0, 1.0),
+                                        );
+                                        error = null;
+                                        notice = null;
+                                      }),
                                 child: SizedBox(
                                   width: 48,
                                   height: 48,
@@ -192,7 +257,7 @@ class _CornerEditorState extends State<CornerEditor> {
                 children: [
                   IconButton(
                     tooltip: 'Enter coordinates',
-                    onPressed: coordinates,
+                    onPressed: suggesting ? null : coordinates,
                     icon: const Icon(Icons.tune),
                   ),
                   IconButton(
@@ -204,7 +269,7 @@ class _CornerEditorState extends State<CornerEditor> {
                   Expanded(
                     child: FilledButton(
                       key: const Key('apply-corners'),
-                      onPressed: apply,
+                      onPressed: suggesting ? null : apply,
                       child: const Text('Correct page'),
                     ),
                   ),
