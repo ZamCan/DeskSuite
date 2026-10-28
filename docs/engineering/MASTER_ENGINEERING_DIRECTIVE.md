@@ -1047,3 +1047,81 @@ Begin with the repository audit and proceed into implementation without waiting 
 Implement the highest-value complete workflows first, verify them, and continue iteratively until the defined acceptance criteria are met.
 
 The objective is a genuinely useful, premium, extensible DeskSuite product that can be tested, installed, maintained and improved—not merely an attractive early-stage application.
+
+
+## 31. CREATIVE STUDIO, ID/PASSPORT PHOTOGRAPHY, TEMPLATE LIBRARY AND OPTIONAL SLM TOOLS
+
+This is a first-class product area, not a future footnote and not a PDF subfeature. DeskSuite must serve both **print-ready output** and **digital/soft-copy use**. Implement these capabilities through the existing shared image, project, asset, export, print and design services; do not build parallel one-off engines inside screens.
+
+### 31.1 ID and passport photo workflow — assisted and manual
+
+Provide a dedicated Photo & ID Studio that can begin with a camera capture or imported image and supports both a guided automatic route and a complete manual route:
+
+1. Import/capture, apply orientation correction, inspect resolution and preserve the untouched original.
+2. Offer a user-selectable target preset (country/authority and document type where requirements are known), with width/height in mm, output pixels, DPI, head-size/eye-line guidance, background requirements and source/version notes. Never imply a universal passport standard; requirements vary by authority and can change.
+3. Detect a person/face and estimate pose/landmarks only with an evaluated, licensed, on-device-capable engine. Suggest a crop that places the head and shoulders/chest at an appropriate level for the selected preset. Show a visible crop frame and let users adjust it manually; never silently decide compliance.
+4. Remove or refine the background with edge-aware foreground segmentation, hair/soft-edge refinement and an editable mask. Keep the original and mask recoverable; provide brush/erase/refine controls and a no-model/manual fallback.
+5. Place the subject on selectable backgrounds: neutral white, off-white, light grey, pale blue and other user-defined solid colours, plus approved gradients/textures and optional studio styles. Include a plain-background preset first for identity photographs. Preview at actual size and check for halos, cut-out edges, shadows and colour spill.
+6. Apply optional conservative lighting/colour balancing; do not reshape identity, alter facial features, fabricate details or conceal that the background was changed. Flag possible shadows, clipped hair, low resolution and poor contrast instead of guaranteeing acceptance.
+7. Export one image, a digital upload version and a print sheet. Print sheets must support configurable photo dimensions, page size, margins, gutters, count, crop marks where appropriate, and verified pixel/DPI calculations. Preserve aspect ratio unless the user explicitly chooses a crop or stretch.
+8. Save an editable project with source reference, crop, mask, background, preset, export settings and processing history. Make the final soft-copy easy to share/save separately from the print sheet.
+
+Provide clear manual controls at every consequential automatic step. Face/pose analysis and segmentation should be local by default where feasible; do not upload personal photographs to a service without explicit, informed consent. Warn users that image editing cannot guarantee compliance with official identity-document rules.
+
+### 31.2 Background removal and image enhancement
+
+Evaluate the best practical segmentation options rather than pretending a simple colour threshold is a universal background remover. Compare classical algorithms for suitable plain backgrounds against compact segmentation models for general scenes. Assess model licence, model provenance, offline operation, download size, RAM/CPU, cold-start latency, output quality on hair/transparent objects and performance on a modest Android phone.
+
+The shared image pipeline should eventually support: foreground mask generation; edge refinement/decontamination; feathering; hole repair; transparent PNG export; replacement background composition; undo/reset; before/after comparison; batch operation with limits; cancellation; and graceful low-memory failure. Do not add multiple competing segmentation engines without measured reasons. Model files must be versioned, checksummed, licensed, and downloaded only with user consent when they are not bundled.
+
+### 31.3 Professional template catalogue — editable and extensible
+
+Create one searchable, categorized template catalogue backed by editable project data and licensed assets, not a gallery of flattened screenshots. Initial categories must include:
+
+- Passport/ID photos: authority-specific configurable presets, neutral backgrounds and print sheets.
+- School IDs: student portrait, name, admission/registration number, school, class, academic year, emergency/authorized fields, logo and QR/barcode placeholders. Clearly mark sample data as fictional and make sensitive fields optional.
+- Staff/work IDs, visitor badges, event badges, conference badges and access cards.
+- Business cards, contact cards and simple brand stationery.
+- Posters, flyers, invitations, announcements, certificates, menus, price lists and promotional social images.
+- Office documents: letters, CVs, invoices, quotations, receipts, reports and meeting minutes.
+- Presentations: multiple coherent PowerPoint-style themes and slide layouts (title, section, text/image, two-column, data/chart, timeline, comparison, closing), with consistent master colours, typography and spacing.
+- Print-production layouts: A4/A5/Letter, configurable cards, labels, sticker sheets, multi-up imposition, margins, bleed and crop marks where supported.
+
+Each template needs a unique stable ID, category, display name, dimensions/unit, intended use, editable element tree, theme tokens, thumbnail/preview, required optional fields, supported export routes, source/licence attribution and version. Build reusable typography, layout, colour, shape, image-frame and QR/barcode components. Keep content editable; do not treat a preview thumbnail as the document itself. Include duplicate/customize, search/filter, favourites/recent, replace-image, data-field mapping, and safe template version migration.
+
+Ship a curated starter library first and make the catalogue expandable through properly licensed, optional packs. Do not claim “thousands of templates” until those assets exist, are indexed and tested. Prefer quality, variety and a clean design language over a large collection of near-duplicates.
+
+### 31.4 Small language models (SLMs) and companion engine integrations
+
+Introduce a capability-based optional local-model layer only where it measurably improves a real workflow. Potential tasks include OCR post-correction suggestions, document/form classification, layout-aware field suggestions, template recommendations, background/subject workflow guidance and presentation-outline assistance. A model must never replace OCR, deterministic measurement, file validation, colour/geometry operations, transactional accounting or the actual export engine.
+
+Before choosing a runtime, benchmark viable candidates (for example, llama.cpp/GGUF, ONNX Runtime, LiteRT/TFLite or MediaPipe-supported paths where suitable) against the target Android ABI, Flutter/native bridge maintenance, model and runtime licences, quantization, memory pressure, thermal behavior, latency, offline use, language coverage and packaging size. These are candidates for evaluation, not a mandate to bundle all of them. Prefer one supported runtime per actual model family, behind a stable service interface, and avoid unnecessary native binaries.
+
+Requirements:
+- Feature flags and capability discovery so core app workflows work without any SLM installed.
+- On-device-first execution and explicit consent for any remote inference.
+- Optional model download with size, source, checksum, licence and storage disclosure.
+- Quantized small-model profiles appropriate for low-memory phones; lazy loading, cancellation, timeout, resource limits and unload/release.
+- Structured request/result contracts, model versioning, deterministic fallback and visible failure states.
+- User review before any model-generated OCR correction, rewritten text, document classification or suggested crop is applied.
+- Never send identity photos, document text or business records to remote services by default.
+- No fabricated claims of model accuracy, no silent replacement of source text and no requirement to pay for an API to use core features.
+- A benchmark fixture set covering Kiswahili and English where available, printed text, low light, mixed layouts, privacy and false-positive behavior.
+
+Treat OCR, image segmentation, face/pose landmarks, PDF rendering, Office conversion, QR/barcodes, vector/SVG rendering and print/imposition as distinct companion-engine integrations. Evaluate each by supported input/output, Android and desktop viability, offline behavior, licence, maintenance, memory, security, test fixtures and failure recovery. Reuse the existing Tesseract OCR integration and language packs where they meet requirements; do not introduce a second OCR engine without a documented accuracy or platform justification. Evaluate whether any added native engine is really usable in a Flutter Android build and how it will be packaged for desktop before integrating it.
+
+### 31.5 Shared architecture and definition of done
+
+All these capabilities must use the shared project/asset catalogue, file gateway, theme/design tokens, background-task/result conventions, export registry, print gateway, recent-files/search and recovery mechanisms. Template, model and engine registries must not become isolated screens or orphan modules.
+
+A feature is not complete until:
+- it accepts real files or data and produces a valid, reopenable output;
+- originals remain recoverable and edits can be reset or revised;
+- output dimensions, crop, transparency, background and print layout are verified by tests;
+- templates remain editable after save/reopen and work at target export sizes;
+- model-offline, model-missing, cancellation, corrupt-input and low-memory cases are tested;
+- assets/models have recorded provenance, licences and checksums where relevant;
+- performance is measured on a modest Android device, not inferred from desktop tests;
+- limitations are stated honestly, with no claim that an edited ID/passport photo is officially compliant.
+
+These requirements extend the existing product scope; they do not displace document scanning, OCR/Tesseract, Office, PDF, image, print-production, stationery POS, file management, backups, accessibility or release-quality work.
