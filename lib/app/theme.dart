@@ -72,7 +72,7 @@ class BrandMark extends StatelessWidget {
     width: size,
     height: size,
     decoration: BoxDecoration(
-      color: ink,
+      color: const Color(0xff073b91),
       borderRadius: BorderRadius.circular(size * .25),
     ),
     child: CustomPaint(painter: _BrandPainter()),
@@ -120,14 +120,14 @@ class _BrandPainter extends CustomPainter {
       ..cubicTo(307, 190, 315, 185, 326, 184)
       ..cubicTo(339, 183, 348, 189, 354, 197)
       ..close();
-    final accentPaint = Paint()..color = const Color(0xffed9a7a);
+    final accentPaint = Paint()..color = const Color(0xff18d9f3);
     canvas.drawPath(s, accentPaint);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         const Rect.fromLTWH(200, 273, 42, 10),
         const Radius.circular(5),
       ),
-      accentPaint,
+      Paint()..color = const Color(0xfff3c45b),
     );
     canvas.restore();
   }
