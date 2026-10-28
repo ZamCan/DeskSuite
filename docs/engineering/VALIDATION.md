@@ -94,3 +94,5 @@ Added `test/design_template_catalog_test.dart` for unique stable IDs/labels, ele
 
 These tests are **written but not executed in this session**. No formatter, analyzer, full-suite or Android build result is claimed for this change. Run the commands above and record their actual output before treating the tests as passing.
 
+The catalogue now includes source/licence/schema metadata and guards template generation against unsupported canvas dimensions. Tests were expanded for 10 mm and 1200 mm edge cases and invalid dimensions. They remain unexecuted until the current GitHub Actions run completes.
+
