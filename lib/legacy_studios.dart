@@ -18,6 +18,7 @@ import 'core/atomic_file_store.dart' show recoverAtomicBackup;
 import 'core/ids.dart';
 import 'core/suite_paths.dart';
 import 'images/photo_processor.dart';
+import 'images/image_optimizer.dart';
 import 'images/print_dimensions.dart';
 import 'printing/print_gateway.dart';
 import 'printing/design_export.dart' show effectiveImageDpi;
@@ -1049,6 +1050,84 @@ class _PhotoPageState extends State<PhotoPage> {
     }
   }
 
+
+  Future<void> optimizeAndExport() async {
+    final current = photo;
+    if (current == null || busy) return;
+    final options = await showDialog<_ImageOptimizationOptions>(
+      context: context,
+      builder: (_) => _ImageOptimizationDialog(width: current.width, height: current.height),
+    );
+    if (options == null || !mounted) return;
+    setState(() => busy = true);
+    try {
+      final result = await processPhotoInBackground(ImageOptimizationRequest(
+        bytes: current.bytes,
+        sizeTarget: options.sizeTarget,
+        mode: options.mode,
+        quality: options.quality,
+        reductionPercent: options.reductionPercent,
+        targetBytes: options.targetBytes,
+      ));
+      Uint8List output = result.bytes;
+      var name = 'desksuite-optimized.jpg';
+      var mime = 'image/jpeg';
+      if (options.format == _ImageExportFormat.pdf) {
+        final document = pw.Document();
+        final image = pw.MemoryImage(result.bytes);
+        document.addPage(pw.Page(
+          pageFormat: PdfPageFormat(result.width.toDouble(), result.height.toDouble()),
+          build: (_) => pw.Center(child: pw.Image(image, fit: pw.BoxFit.contain)),
+        ));
+        output = Uint8List.fromList(await document.save());
+        name = 'desksuite-optimized.pdf';
+        mime = 'application/pdf';
+      } else if (options.format == _ImageExportFormat.html) {
+        final encoded = base64Encode(result.bytes);
+        final html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DeskSuite image export</title><style>body{margin:0;padding:2rem;background:#f7f5ef;color:#292b29;font:16px system-ui,sans-serif}main{max-width:960px;margin:auto}img{display:block;max-width:100%;height:auto;margin:1.5rem auto}p{overflow-wrap:anywhere}</style></head><body><main><h1>DeskSuite image export</h1><p>§{result.width} × §{result.height} px · JPEG quality §{result.quality}</p><img alt="Optimised image" src="data:image/jpeg;base64,$encoded"></main></body></html>';
+        output = Uint8List.fromList(utf8.encode(html));
+        name = 'desksuite-optimized.html';
+        mime = 'text/html';
+      }
+      if (!mounted) return;
+      final reduction = result.reductionPercent.toStringAsFixed(1);
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Review optimised export'),
+          content: SingleChildScrollView(child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Image.memory(result.bytes, height: 160, fit: BoxFit.contain),
+              const SizedBox(height: 12),
+              Text('Image: §{result.width} × §{result.height} px'),
+              Text('JPEG quality: §{result.quality}/100'),
+              Text('Image bytes: §{result.bytes.length} · source bytes: §{result.originalBytes}'),
+              Text('Measured image-size reduction: $reduction%'),
+              Text('Export file: §{output.length} bytes'),
+              const SizedBox(height: 8),
+              const Text('The source is unchanged. Compression results depend on image content; a target may be impossible without excessive quality loss.'),
+              if (options.format == _ImageExportFormat.pdf) const Text('This PDF is not password/PIN encrypted. Do not use it for confidential material.'),
+              if (options.format == _ImageExportFormat.html) const Text('The HTML embeds the image locally; it is not a secure or access-controlled page.'),
+            ],
+          )),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+            FilledButton(key: const Key('photo-optimizer-save'), onPressed: () => Navigator.pop(context, true), child: const Text('Save a copy')),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+      final saved = await files.save(name: name, bytes: output, mimeType: mime);
+      if (saved) note('Optimised copy exported. Original image remains unchanged.');
+    } catch (error) {
+      note(error is FormatException ? error.message : 'Optimisation/export failed. The source image is unchanged.');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
   Future<void> makeSheet() async {
     final current = photo;
     if (current == null || busy) return;
@@ -1301,6 +1380,13 @@ class _PhotoPageState extends State<PhotoPage> {
                   : () => apply(PhotoAction.centerSquareCrop),
               icon: const Icon(Icons.crop_square),
               label: const Text('Centre square crop'),
+            ),
+
+            OutlinedButton.icon(
+              key: const Key('photo-optimizer'),
+              onPressed: busy ? null : optimizeAndExport,
+              icon: const Icon(Icons.compress),
+              label: const Text('Optimise & export'),
             ),
             OutlinedButton.icon(
               key: const Key('photo-sheet'),
@@ -2385,5 +2471,146 @@ class EmptyState extends StatelessWidget {
         ),
       ],
     ),
+  );
+}
+
+
+enum _ImageExportFormat { jpeg, pdf, html }
+
+class _ImageOptimizationOptions {
+  const _ImageOptimizationOptions({required this.sizeTarget, required this.mode, required this.quality, required this.reductionPercent, required this.targetBytes, required this.format});
+  final ImageSizeTarget sizeTarget;
+  final ImageCompressionMode mode;
+  final int quality, reductionPercent, targetBytes;
+  final _ImageExportFormat format;
+}
+
+class _ImageOptimizationDialog extends StatefulWidget {
+  const _ImageOptimizationDialog({required this.width, required this.height});
+  final int width, height;
+  @override
+  State<_ImageOptimizationDialog> createState() => _ImageOptimizationDialogState();
+}
+
+class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
+  ImageSizePreset preset = ImageSizePreset.original;
+  ImageCompressionMode mode = ImageCompressionMode.quality;
+  _ImageExportFormat format = _ImageExportFormat.jpeg;
+  bool keepAspect = true;
+  int quality = 88, reductionPercent = 30;
+  final width = TextEditingController();
+  final height = TextEditingController();
+  final targetKb = TextEditingController(text: '200');
+
+  @override
+  void initState() {
+    super.initState();
+    width.text = '${widget.width}';
+    height.text = '${widget.height}';
+  }
+  @override
+  void dispose() { width.dispose(); height.dispose(); targetKb.dispose(); super.dispose(); }
+
+  String label(ImageSizePreset value) => switch (value) {
+    ImageSizePreset.original => 'Original dimensions',
+    ImageSizePreset.px120x150 => '120 × 150 px',
+    ImageSizePreset.px300x300 => '300 × 300 px',
+    ImageSizePreset.px300x400 => '300 × 400 px',
+    ImageSizePreset.px600x600 => '600 × 600 px',
+    ImageSizePreset.px600x800 => '600 × 800 px',
+    ImageSizePreset.px1200x1500 => '1200 × 1500 px',
+    ImageSizePreset.custom => 'Custom pixel dimensions',
+  };
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Image optimisation & export'),
+    content: SizedBox(width: 440, child: SingleChildScrollView(child: Column(
+      mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Work offline on a new copy. The original image is not overwritten. JPEG is used for predictable lossy file-size optimisation.'),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<ImageSizePreset>(
+          key: const Key('optimizer-dimensions'), initialValue: preset, isExpanded: true,
+          decoration: const InputDecoration(labelText: 'Pixel dimensions'),
+          items: [for (final value in ImageSizePreset.values) DropdownMenuItem(value: value, child: Text(label(value)))],
+          onChanged: (value) => setState(() {
+            if (value == null) return;
+            preset = value;
+            switch (value) {
+              case ImageSizePreset.original: width.text = '${widget.width}'; height.text = '${widget.height}';
+              case ImageSizePreset.px120x150: width.text = '120'; height.text = '150';
+              case ImageSizePreset.px300x300: width.text = '300'; height.text = '300';
+              case ImageSizePreset.px300x400: width.text = '300'; height.text = '400';
+              case ImageSizePreset.px600x600: width.text = '600'; height.text = '600';
+              case ImageSizePreset.px600x800: width.text = '600'; height.text = '800';
+              case ImageSizePreset.px1200x1500: width.text = '1200'; height.text = '1500';
+              case ImageSizePreset.custom: break;
+            }
+          }),
+        ),
+        if (preset != ImageSizePreset.original) ...[
+          Row(children: [
+            Expanded(child: TextField(key: const Key('optimizer-width'), controller: width, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Width (px)'), onChanged: (_) { if (preset != ImageSizePreset.custom) setState(() => preset = ImageSizePreset.custom); })),
+            const SizedBox(width: 12),
+            Expanded(child: TextField(key: const Key('optimizer-height'), controller: height, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Height (px)'), onChanged: (_) { if (preset != ImageSizePreset.custom) setState(() => preset = ImageSizePreset.custom); })),
+          ]),
+          CheckboxListTile(contentPadding: EdgeInsets.zero, value: keepAspect, title: const Text('Preserve aspect ratio'), onChanged: (value) => setState(() => keepAspect = value ?? true)),
+          const Text('With aspect ratio on, the result fits inside the selected box and may be smaller than its listed dimensions. Turn it off to force exact dimensions.', style: TextStyle(fontSize: 12)),
+        ],
+        const SizedBox(height: 12),
+        DropdownButtonFormField<ImageCompressionMode>(
+          key: const Key('optimizer-mode'), initialValue: mode,
+          decoration: const InputDecoration(labelText: 'Compression target'),
+          items: const [
+            DropdownMenuItem(value: ImageCompressionMode.quality, child: Text('Best visual quality / choose quality')),
+            DropdownMenuItem(value: ImageCompressionMode.reduceByPercent, child: Text('Reduce file size by percentage')),
+            DropdownMenuItem(value: ImageCompressionMode.targetBytes, child: Text('Target file size in KB')),
+          ],
+          onChanged: (value) => setState(() { if (value != null) mode = value; }),
+        ),
+        if (mode == ImageCompressionMode.quality) ...[
+          Text('JPEG quality: $quality / 100'),
+          Slider(value: quality.toDouble(), min: 30, max: 100, divisions: 14, label: '$quality', onChanged: (value) => setState(() => quality = value.round())),
+        ],
+        if (mode == ImageCompressionMode.reduceByPercent) ...[
+          Text('Requested reduction: $reductionPercent%'),
+          Slider(value: reductionPercent.toDouble(), min: 5, max: 95, divisions: 18, label: '$reductionPercent%', onChanged: (value) => setState(() => reductionPercent = value.round())),
+          const Text('Targets a reduction from source bytes; actual output can differ. Resolution is reduced gradually only if quality adjustment is not enough.', style: TextStyle(fontSize: 12)),
+        ],
+        if (mode == ImageCompressionMode.targetBytes)
+          TextField(controller: targetKb, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Target size (KB)')),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<_ImageExportFormat>(
+          key: const Key('optimizer-export-format'), initialValue: format,
+          decoration: const InputDecoration(labelText: 'Export format'),
+          items: const [
+            DropdownMenuItem(value: _ImageExportFormat.jpeg, child: Text('JPEG image')),
+            DropdownMenuItem(value: _ImageExportFormat.pdf, child: Text('PDF document (not encrypted)')),
+            DropdownMenuItem(value: _ImageExportFormat.html, child: Text('Standalone HTML page')),
+          ],
+          onChanged: (value) => setState(() { if (value != null) format = value; }),
+        ),
+        if (format == _ImageExportFormat.pdf) const Padding(padding: EdgeInsets.only(top: 8), child: Text('PIN/password-protected PDF is not offered yet because the current PDF pipeline has no verified encryption path. Do not treat an ordinary PDF as secure.', style: TextStyle(fontSize: 12))),
+        if (format == _ImageExportFormat.html) const Padding(padding: EdgeInsets.only(top: 8), child: Text('HTML embeds the image for offline viewing. A PIN screen without cryptographic protection would not secure the image, so PIN protection is not simulated.', style: TextStyle(fontSize: 12))),
+      ],
+    ))),
+    actions: [
+      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+      FilledButton(onPressed: () {
+        final w = int.tryParse(width.text), h = int.tryParse(height.text), kb = int.tryParse(targetKb.text);
+        if (preset == ImageSizePreset.custom && (w == null || h == null || w < 1 || h < 1 || w > maxPhotoSide || h > maxPhotoSide)) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter custom dimensions from 1 to 8192 px.'))); return;
+        }
+        if (mode == ImageCompressionMode.targetBytes && (kb == null || kb < 1 || kb > 20480)) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a target from 1 to 20480 KB.'))); return;
+        }
+        Navigator.pop(context, _ImageOptimizationOptions(
+          sizeTarget: ImageSizeTarget(preset: preset, width: w, height: h, keepAspect: keepAspect),
+          mode: mode, quality: quality, reductionPercent: reductionPercent,
+          targetBytes: (kb ?? 200) * 1024, format: format,
+        ));
+      }, child: const Text('Optimise & preview')),
+    ],
   );
 }
