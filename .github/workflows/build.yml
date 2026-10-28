@@ -1,7 +1,10 @@
 name: DeskSuite build matrix
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - 'integration/**'
+      - 'engineering/**'
   pull_request:
     branches: [main]
   workflow_dispatch:
