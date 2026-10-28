@@ -62,6 +62,22 @@ class ZamCanBrand {
   /// 40 % black, for the scrim behind a modal preview.
   static const Color scrim = Color(0x66000000);
 
+  // --- Document rendering -------------------------------------------------
+  // A rendered slide is white paper whatever the app theme is, and a workbook
+  // grid uses its own neutral rules. These are the only interface-adjacent
+  // colours a preview needs, named so the palette rule keeps holding.
+  static const Color documentPaper = Color(0xFFFFFFFF);
+  static const Color documentInk = Color(0xFF000000);
+
+  // The fixed preset colours OOXML allows a file to name directly.
+  static const Color presetRed = Color(0xFFFF0000);
+  static const Color presetGreen = Color(0xFF008000);
+  static const Color presetBlue = Color(0xFF0000FF);
+  static const Color presetYellow = Color(0xFFFFFF00);
+  static const Color presetGray = Color(0xFF808080);
+  static const Color sheetRule = Color(0xFFB9B4AC);
+  static const Color sheetNote = Color(0xFF9A938A);
+
   /// Every colour allowed to appear as a literal outside this file. Used by the
   /// palette test as the allowlist.
   static const List<Color> tokens = [
@@ -86,6 +102,15 @@ class ZamCanBrand {
     placeholder,
     swatchRing,
     scrim,
+    documentPaper,
+    documentInk,
+    sheetRule,
+    sheetNote,
+    presetRed,
+    presetGreen,
+    presetBlue,
+    presetYellow,
+    presetGray,
   ];
 
   // Colours that describe a *document*, not the interface: photo backgrounds a

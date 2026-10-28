@@ -23,7 +23,15 @@ void main() {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
       // The token file is where literals are allowed to be defined.
       if (entity.path.endsWith('app/brand.dart')) continue;
-      final source = entity.readAsStringSync();
+      // `OfficeColor(0x…)` is document data — the colour a spreadsheet cell or
+      // a slide shape actually contains — not interface chrome. A file is
+      // allowed to be green; the app's own surfaces are not. Those values are
+      // checked separately below, so excluding them here is a distinction and
+      // not a weakening.
+      final source = entity.readAsStringSync().replaceAll(
+        RegExp(r'OfficeColor\(0x[0-9a-fA-F]{8}\)'),
+        'OfficeColor(data)',
+      );
       for (final match in pattern.allMatches(source)) {
         final hex = '#${match.group(1)!.toUpperCase()}';
         if (!allowed.contains(hex)) {
@@ -38,6 +46,23 @@ void main() {
       reason:
           'Add the colour to app/brand.dart (or use an existing token) instead '
           'of inventing a value:\n${offenders.join('\n')}',
+    );
+  });
+
+  test('the default document colours are brand tokens, not new inventions', () {
+    // A shape with no colour, an empty slide and a sheet grid all fall back to
+    // something; those fallbacks must be the same ink and paper as the app.
+    // Document ink is pure black — a printed page is black on white, and a
+    // slide must not inherit a warm tint from the app chrome. The two are
+    // deliberately different, and this pins that decision.
+    expect(ZamCanBrand.documentInk, const Color(0xFF000000));
+    expect(ZamCanBrand.documentInk, isNot(ZamCanBrand.ink));
+    expect(ZamCanBrand.documentPaper, const Color(0xFFFFFFFF));
+    final layout = File('lib/office/render/office_layout.dart').readAsStringSync();
+    expect(
+      layout,
+      contains('static const OfficeColor black = OfficeColor(0xFF000000)'),
+      reason: 'the no-colour default is pure black document ink',
     );
   });
 

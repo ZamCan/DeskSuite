@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../workspace/file_gateway.dart';
 import 'office_content_editor_page.dart';
+import 'render/office_layout.dart';
+import 'render/office_preview.dart';
+import 'render/pptx_layout.dart';
+import 'render/xlsx_layout.dart';
 import 'office_engine.dart';
 import 'office_format.dart';
 
@@ -47,6 +51,11 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
   String? _error;
   String? _status;
   bool _busy = false;
+
+  /// The rendered preview of the current file, when this build can draw it.
+  OfficeDeck? _deck;
+  OfficeWorkbook? _book;
+  String? _previewError;
 
   Future<void> _pick() async {
     if (_busy) return;
@@ -104,8 +113,29 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
     try {
       final detected = detectOfficeFile(bytes, fileName: name);
       final routes = await _engine.routesFor(detected.format);
+      // A presentation or workbook is parsed into its real layout so it can be
+      // drawn as slides or a sheet grid, not flattened to text.
+      OfficeDeck? deck;
+      OfficeWorkbook? book;
+      String? previewError;
+      if (detected.format == OfficeFormat.pptx) {
+        try {
+          deck = parsePptx(bytes);
+        } catch (error) {
+          previewError = '$error';
+        }
+      } else if (detected.format == OfficeFormat.xlsx) {
+        try {
+          book = parseXlsx(bytes);
+        } catch (error) {
+          previewError = '$error';
+        }
+      }
       if (!mounted) return;
       setState(() {
+        _deck = deck;
+        _book = book;
+        _previewError = previewError;
         _detected = detected;
         _routes = routes;
         _selected = routes.isEmpty ? null : routes.first;
@@ -259,6 +289,54 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
                     label: 'Source preserved',
                     value: 'Yes — output is written to a new file you choose.',
                   ),
+                  if (_deck != null || _book != null) ...[
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        if (_deck != null)
+                          FilledButton.icon(
+                            key: const Key('office-open-slides'),
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => OfficePreviewPage(
+                                  title: _deck!.title,
+                                  subtitle:
+                                      '${_deck!.slides.length} slide(s), drawn from the file\'s own geometry',
+                                  child: PptxViewer(deck: _deck!),
+                                ),
+                              ),
+                            ),
+                            icon: const Icon(Icons.slideshow_outlined),
+                            label: const Text('Open slides'),
+                          ),
+                        if (_book != null)
+                          FilledButton.icon(
+                            key: const Key('office-open-workbook'),
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => OfficePreviewPage(
+                                  title: _book!.title,
+                                  subtitle:
+                                      '${_book!.sheets.length} sheet(s), formatted values and real column widths',
+                                  child: XlsxViewer(book: _book!),
+                                ),
+                              ),
+                            ),
+                            icon: const Icon(Icons.grid_on_outlined),
+                            label: const Text('Open workbook'),
+                          ),
+                      ],
+                    ),
+                  ],
+                  if (_previewError != null) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      'The rendered preview could not be built: $_previewError',
+                      style: TextStyle(color: theme.colorScheme.error),
+                    ),
+                  ],
                   if (_detected!.format.isReadable) ...[
                     const SizedBox(height: 12),
                     OutlinedButton.icon(

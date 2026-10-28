@@ -25,6 +25,10 @@ ThemeData deskTheme(Brightness brightness) {
     useMaterial3: true,
     brightness: brightness,
     colorScheme: scheme,
+    // One typeface across the app, bundled with the binary rather than
+    // borrowed from the platform, so a document preview and the interface
+    // around it agree on how text looks on every device.
+    fontFamily: 'DeskSuiteSans',
     // Brand colours that are not part of ColorScheme (the tile the mark sits
     // on, the document tints) travel with the theme, so a studio never has to
     // hard-code a hex value again.
