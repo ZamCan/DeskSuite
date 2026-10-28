@@ -164,7 +164,9 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
         _status = saved
             ? 'Combined ${result.documentCount} PDFs into ${result.pageCount} pages. The originals were not changed.'
             : 'Export cancelled. No file was written.';
-        if (saved) _combineMode = false;
+        if (saved) {
+          _combineMode = false;
+        }
       });
     } catch (error) {
       if (mounted) setState(() => _error = 'Could not combine these PDFs: $error');
