@@ -130,7 +130,9 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
         setState(() => _error = 'Could not add this PDF: $error');
       }
     } finally {
-      if (mounted) setState(() => _opening = false);
+      if (mounted) {
+        setState(() => _opening = false);
+      }
     }
   }
 
