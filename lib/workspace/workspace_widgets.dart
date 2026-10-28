@@ -35,6 +35,10 @@ class WorkspaceSidebar extends StatelessWidget {
     Widget item(IconData icon, String label, WorkspaceSection value) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: ListTile(
+        // Stable handles for tests and accessibility tooling: the visible label
+        // is not unique enough to tap reliably once other screens are in the
+        // tree, because their headings can contain the same words.
+        key: Key('nav-${value.name}'),
         dense: true,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         selected: section == value,

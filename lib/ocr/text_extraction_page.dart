@@ -446,6 +446,10 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
             children: [
               DropdownButton<String>(
                 key: const Key('ocr-language'),
+                // The "English + Kiswahili" label is wider than a phone-width
+                // Wrap line, and without this the button's inner Row overflows
+                // on a 320 px screen.
+                isExpanded: true,
                 value: _language,
                 onChanged: _running
                     ? null

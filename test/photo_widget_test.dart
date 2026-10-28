@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 
-import 'package:desksuite/printing/paper_catalog.dart';
 
 import 'support/reveal.dart';
 
