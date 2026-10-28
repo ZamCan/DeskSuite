@@ -59,7 +59,9 @@ void main() {
       await tester.tap(find.text('PDF Studio'));
       await tester.pumpAndSettle();
       expect(find.text('Read, mark up and edit existing PDFs'), findsOneWidget);
-      await reveal(tester, find.text('Settings'), within: drawer);
+      await tester.tap(find.byTooltip('Open navigation'));
+      await tester.pumpAndSettle();
+      await reveal(tester, find.text('Settings'), within: find.byType(Drawer));
       await tester.tap(find.text('Settings'));
       await tester.pumpAndSettle();
       expect(find.text('Dark appearance'), findsOneWidget);
