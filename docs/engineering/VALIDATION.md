@@ -87,3 +87,10 @@ Test at least camera cancellation and interrupted-activity recovery, content pro
 Added a photo background-compositing path to the existing bounded photo processor and a Photo Studio action for placing already-transparent content on a selected solid colour. Added unit and widget tests for compositing, invalid translucent colour values, and the Photo Studio import → choose background → export workflow. The Photo Sheet preset UI was also added in the previous slice.
 
 These source changes have **not** been run through Dart formatting, Flutter analysis, the full Flutter test suite or an Android build in this execution. Do not interpret the added tests as passing tests. Run the command sequence above on the maintained toolchain and record the actual result before claiming verification.
+
+## 2026-10-28 — editable template registry tests added
+
+Added `test/design_template_catalog_test.dart` for unique stable IDs/labels, element bounds, and serialization round-trip; added `test/new_design_dialog_template_test.dart` for selecting a business-card template in the UI and creating an editable project.
+
+These tests are **written but not executed in this session**. No formatter, analyzer, full-suite or Android build result is claimed for this change. Run the commands above and record their actual output before treating the tests as passing.
+
