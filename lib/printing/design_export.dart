@@ -19,8 +19,8 @@ class ExportDimensions {
 }
 
 ExportDimensions exportDimensions(DesignDocument doc, int dpi) {
-  if (dpi < 72 || dpi > 600) {
-    throw const FormatException('Resolution must be between 72 and 600 dpi.');
+  if (dpi < 36 || dpi > 600) {
+    throw const FormatException('Resolution must be between 36 and 600 dpi.');
   }
   final width = mmToPixels(doc.widthMm, dpi);
   final height = mmToPixels(doc.heightMm, dpi);
