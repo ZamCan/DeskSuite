@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../images/photo_processor.dart';
 import 'design_export.dart' show effectiveImageDpi;
 import 'photo_sheet.dart';
+import 'photo_specifications.dart';
 
 class PhotoSheetChoice {
   const PhotoSheetChoice(this.spec, {required this.print});
@@ -28,7 +29,7 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
   final spacing = TextEditingController(text: '3');
   final copies = TextEditingController(text: '8');
   int preset = 0;
-  int photoPreset = 0;
+  int photoPreset = customPhotoSpecificationIndex;
 
   @override
   void dispose() {
@@ -70,7 +71,7 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
     decoration: InputDecoration(labelText: label),
     onChanged: (_) => setState(() {
       if (pageDimension) preset = 4;
-      if (photoDimension) photoPreset = 4;
+      if (photoDimension) photoPreset = customPhotoSpecificationIndex;
     }),
   );
 
@@ -96,19 +97,20 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
     if (value == null) return;
     setState(() {
       photoPreset = value;
-      final size = switch (value) {
-        0 => (35.0, 45.0),
-        1 => (50.8, 50.8),
-        2 => (30.0, 40.0),
-        3 => (40.0, 50.0),
-        _ => (0.0, 0.0),
-      };
-      if (value != 4) {
-        photoWidth.text = '${size.$1}';
-        photoHeight.text = '${size.$2}';
+      if (value < photoSpecifications.length) {
+        final profile = photoSpecifications[value];
+        if (profile.hasPublishedDimensions) {
+          photoWidth.text = '${profile.widthMm}';
+          photoHeight.text = '${profile.heightMm}';
+        }
       }
     });
   }
+
+  PhotoSpecification? get _selectedSpecification =>
+      photoPreset < photoSpecifications.length
+          ? photoSpecifications[photoPreset]
+          : null;
 
   @override
   Widget build(BuildContext context) {
@@ -180,32 +182,65 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
                 decoration: const InputDecoration(
                   labelText: 'Photo size preset (editable)',
                 ),
-                items: const [
-                  DropdownMenuItem(
-                    value: 0,
-                    child: Text('35 × 45 mm · example, not universal'),
+                items: [
+                  for (var i = 0; i < photoSpecifications.length; i++)
+                    DropdownMenuItem(
+                      value: i,
+                      child: Text(
+                        photoSpecifications[i].label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  const DropdownMenuItem(
+                    value: customPhotoSpecificationIndex,
+                    child: Text('Custom / generic layout size'),
                   ),
-                  DropdownMenuItem(
-                    value: 1,
-                    child: Text('2 × 2 in / 50.8 × 50.8 mm · example'),
-                  ),
-                  DropdownMenuItem(
-                    value: 2,
-                    child: Text('30 × 40 mm · example'),
-                  ),
-                  DropdownMenuItem(
-                    value: 3,
-                    child: Text('40 × 50 mm · example'),
-                  ),
-                  DropdownMenuItem(value: 4, child: Text('Custom size')),
                 ],
                 onChanged: _selectPhotoPreset,
               ),
               const SizedBox(height: 4),
-              const Text(
-                'These are layout examples, not official passport or ID rules. Confirm the receiving authority’s current dimensions, crop and background requirements.',
-                style: TextStyle(fontSize: 12),
-              ),
+              if (_selectedSpecification case final profile?) ...[
+                Text(
+                  '${profile.authority} · ${profile.documentType}',
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  profile.hasPublishedDimensions
+                      ? '${profile.dimensionRule == PhotoDimensionRule.maximum ? 'Published maximum envelope' : profile.dimensionRule == PhotoDimensionRule.recommended ? 'International guidance / recommended print size' : 'Published print size'}: ${profile.widthMm} × ${profile.heightMm} mm'
+                      : 'Physical print dimensions are not stated in this source. Do not infer an official size.',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                Text(
+                  'Background: ${profile.background}. ${profile.notes}',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                if (profile.headHeightMinMm != null)
+                  Text(
+                    'Head height: ${profile.headHeightMinMm}–${profile.headHeightMaxMm} mm from chin to crown.',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                if (profile.headHeightMinFraction != null)
+                  Text(
+                    'ICAO portrait guidance: head height ${(profile.headHeightMinFraction! * 100).round()}–${(profile.headHeightMaxFraction! * 100).round()}% of image height.',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                if (profile.maxFileBytes != null)
+                  Text(
+                    'Digital upload limit: ${(profile.maxFileBytes! / 1024).round()} KB · formats: ${profile.fileFormats.join(', ')}.',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                Text(
+                  'Source: ${profile.sourceTitle} · verified ${profile.verifiedOn}. Check the authority for current rules.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                SelectableText(profile.sourceUrl),
+              ] else
+                const Text(
+                  'Custom dimensions are for layout only, not an official passport or ID specification. Confirm the issuing authority’s size, crop, background and digital-upload rules.',
+                  style: TextStyle(fontSize: 12),
+                ),
               Row(
                 children: [
                   Expanded(
