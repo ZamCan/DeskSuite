@@ -16,6 +16,8 @@ dependencies:
   pdf: 3.13.1
   # Existing-PDF viewer/editor; pinned until Android memory and compatibility are benchmarked.
   dart_pdf_editor: 10.0.0
+  # Used by PDF inspection and validated multi-document merge.
+  pdf_document: 10.0.0
   image: ^4.5.4
   printing: ^5.14.2
   # Direct: OOXML (DOCX/XLSX/PPTX) parts are ZIP containers read and written by
