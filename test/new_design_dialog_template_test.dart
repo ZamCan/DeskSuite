@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:desksuite/design/design_document.dart';
-import 'package:desksuite/design/template_catalog.dart';
 import 'package:desksuite/workspace/new_design_dialog.dart';
 
 void main() {
@@ -32,8 +31,14 @@ void main() {
     await tester.tap(find.text('Business card').last);
     await tester.pumpAndSettle();
     expect(find.text('Business card'), findsOneWidget);
-    expect(find.text('85.0'), findsOneWidget);
-    expect(find.text('55.0'), findsOneWidget);
+    expect(
+      tester.widget<TextFormField>(find.byKey(const Key('canvas-width'))).controller!.text,
+      '85.0',
+    );
+    expect(
+      tester.widget<TextFormField>(find.byKey(const Key('canvas-height'))).controller!.text,
+      '55.0',
+    );
 
     await tester.tap(find.byKey(const Key('create-design')));
     await tester.pumpAndSettle();
@@ -42,6 +47,9 @@ void main() {
     expect(created!.widthMm, 85);
     expect(created!.heightMm, 55);
     expect(created!.elements, isNotEmpty);
-    expect(created!.elements.any((element) => element.text == 'YOUR BRAND'), isTrue);
+    expect(
+      created!.elements.any((element) => element.text == 'YOUR BRAND'),
+      isTrue,
+    );
   });
 }
