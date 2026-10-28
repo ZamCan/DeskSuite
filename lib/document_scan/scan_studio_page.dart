@@ -632,6 +632,14 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
 
   Future<void> _pdf() async {
     if (pages.isEmpty || busy) return;
+    final pageWidth = double.tryParse(pageWidthController.text);
+    final pageHeight = double.tryParse(pageHeightController.text);
+    if (pageWidth == null || pageHeight == null ||
+        pageWidth < 20 || pageHeight < 20 ||
+        pageWidth > 2500 || pageHeight > 2500) {
+      message('Enter both page dimensions from 20 to 2500 mm.');
+      return;
+    }
     setState(() => busy = true);
     try {
       final pdf = await (widget.pdfGenerator ?? createScanPdfInBackground)(
@@ -639,8 +647,8 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
           for (final page in pages) page.image.bytes,
         ],
           paper: paper,
-          pageWidthMm: double.tryParse(pageWidthController.text),
-          pageHeightMm: double.tryParse(pageHeightController.text),
+          pageWidthMm: pageWidth,
+          pageHeightMm: pageHeight,
           autoRotatePaper: autoRotatePaper,
         ),
       );
