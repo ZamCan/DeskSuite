@@ -1,10 +1,12 @@
 # Changelog
 
-## 0.2.0+3 — consolidated Android integration candidate
+## 0.2.1+4 — PDF merge and Office package safety integration
 
-- Include the offline page-corner suggestion engine with explicit user confirmation and manual correction; update branch audit and product status/roadmap.
-- Bump Android build number so this candidate can update an earlier 0.2.0+2 install when signed with the same existing private key.
-- This remains a validation candidate, not a production release. Full latest-head CI and physical-device checks are required.
+- Add ordered multi-PDF combination with source-count/byte limits, isolate-backed processing, output inspection and page-count verification; originals remain untouched.
+- Preflight Office ZIP structure before decompression to reject oversized or ambiguous packages before the archive decoder runs.
+- Polish PDF Studio busy/error states and remove the fixed “Offline” header claim; refresh current capability guidance.
+- Increase the Android version code to 4 so the signed candidate can update an earlier build with the same private key.
+- This remains an integration-validation build, not a production release. Full latest-head CI and physical-device checks are required.
 
 ## 0.2.0+2 — consolidated Android-first integration (validation build)
 
