@@ -13,6 +13,7 @@ import '../document_scan/scan_studio_page.dart';
 import '../legacy_studios.dart' as legacy;
 import '../ocr/text_extraction_page.dart';
 import '../office/office_convert_page.dart';
+import '../pdf/pdf_studio_page.dart';
 import 'conversion_catalog.dart';
 import 'conversion_catalog_page.dart';
 import 'creative_studio_page.dart';
@@ -20,6 +21,7 @@ import 'file_gateway.dart';
 import 'getting_started_page.dart';
 import 'new_design_dialog.dart';
 import 'project_repository.dart';
+import 'shortcut_search.dart';
 import 'workspace_widgets.dart';
 
 class WorkspaceScreen extends StatefulWidget {
@@ -51,6 +53,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   int _refreshVersion = 0;
   bool _showWelcome = false;
   Uint8List? _recoveredCapture;
+  final _shortcutSearch = TextEditingController();
+  String _shortcutQuery = '';
 
   @override
   void initState() {
@@ -73,6 +77,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         });
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _shortcutSearch.dispose();
+    super.dispose();
   }
 
   Future<void> _loadWelcome() async {
@@ -223,6 +233,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   }
 
   void _navigate(WorkspaceSection value, {bool closeDrawer = false}) {
+    FocusManager.instance.primaryFocus?.unfocus();
     if (closeDrawer) Navigator.of(context).pop();
     setState(() {
       _section = value;
@@ -317,6 +328,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               onPhoto: () => _navigate(WorkspaceSection.photos),
               onText: () => _navigate(WorkspaceSection.text),
               onOffice: () => _navigate(WorkspaceSection.office),
+              onPdf: () => _navigate(WorkspaceSection.pdf),
               onEditableExample: _openEditableExample,
             )
           : const SizedBox.shrink(),
@@ -331,6 +343,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 ConversionTarget.notes => WorkspaceSection.notes,
                 ConversionTarget.text => WorkspaceSection.text,
                 ConversionTarget.office => WorkspaceSection.office,
+                ConversionTarget.pdf => WorkspaceSection.pdf,
               }),
             )
           : const SizedBox.shrink(),
@@ -341,6 +354,15 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     WorkspaceSection.office =>
       _visited.contains(section)
           ? OfficeConvertPage(
+              picker: widget.files is DocumentPicker
+                  ? widget.files as DocumentPicker
+                  : const _NoDocumentPicker(),
+              files: widget.files,
+            )
+          : const SizedBox.shrink(),
+    WorkspaceSection.pdf =>
+      _visited.contains(section)
+          ? PdfStudioPage(
               picker: widget.files is DocumentPicker
                   ? widget.files as DocumentPicker
                   : const _NoDocumentPicker(),
@@ -430,6 +452,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 WorkspaceSection.business => 'Business & POS',
                 WorkspaceSection.scans => 'Scan & assemble',
                 WorkspaceSection.guide => 'Getting started',
+                WorkspaceSection.pdf => 'PDF & Documents',
                 WorkspaceSection.conversions => 'Conversion routes',
                 WorkspaceSection.text => 'Text extraction',
                 WorkspaceSection.office => 'Document converter',
@@ -512,84 +535,171 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           ),
         ],
         const SizedBox(height: 28),
-        _heading('Your tools', 'Continue with a local workflow.'),
+        _heading('Your tools', 'Choose a local workflow or find a shortcut.'),
         const SizedBox(height: 12),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final columns = constraints.maxWidth >= 820
-                ? 3
-                : constraints.maxWidth >= 520
-                ? 2
-                : 1;
-            final width = (constraints.maxWidth - (columns - 1) * 12) / columns;
-            return Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                SizedBox(
-                  width: width,
-                  child: WorkspaceToolCard(
-                    key: const Key('home-open-scan'),
-                    section: WorkspaceSection.scans,
-                    title: 'Scan documents',
-                    description: 'Capture, clean and assemble pages.',
-                    onNavigate: _navigate,
+        TextField(
+          key: const Key('home-shortcut-search'),
+          controller: _shortcutSearch,
+          textInputAction: TextInputAction.search,
+          onChanged: (value) => setState(() => _shortcutQuery = value),
+          onSubmitted: (_) => FocusScope.of(context).unfocus(),
+          decoration: InputDecoration(
+            labelText: 'Find a shortcut',
+            hintText: 'Scan, PDF, photo…',
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: _shortcutQuery.isEmpty
+                ? null
+                : IconButton(
+                    key: const Key('home-clear-shortcut-search'),
+                    tooltip: 'Clear shortcut search',
+                    onPressed: () => setState(() {
+                      _shortcutSearch.clear();
+                      _shortcutQuery = '';
+                    }),
+                    icon: const Icon(Icons.close),
                   ),
-                ),
-                SizedBox(
-                  width: width,
-                  child: WorkspaceToolCard(
-                    key: const Key('home-open-photo'),
-                    section: WorkspaceSection.photos,
-                    title: 'Edit a photo',
-                    description: 'Adjust and resize an image.',
-                    onNavigate: _navigate,
-                  ),
-                ),
-                SizedBox(
-                  width: width,
-                  child: WorkspaceToolCard(
-                    key: const Key('home-open-text'),
-                    section: WorkspaceSection.text,
-                    title: 'Extract text',
-                    description: 'Recognize and review words in an image.',
-                    onNavigate: _navigate,
-                  ),
-                ),
-                SizedBox(
-                  width: width,
-                  child: WorkspaceToolCard(
-                    key: const Key('home-open-converter'),
-                    section: WorkspaceSection.office,
-                    title: 'Convert file',
-                    description: 'Read and convert supported document content.',
-                    onNavigate: _navigate,
-                  ),
-                ),
-                SizedBox(
-                  width: width,
-                  child: WorkspaceToolCard(
-                    key: const Key('home-open-design'),
-                    section: WorkspaceSection.design,
-                    title: 'Creative Studio',
-                    description: 'Design an editable layout for print.',
-                    onNavigate: _navigate,
-                  ),
-                ),
-                SizedBox(
-                  width: width,
-                  child: WorkspaceToolCard(
-                    key: const Key('home-open-projects'),
-                    section: WorkspaceSection.projects,
-                    title: 'Files & Projects',
-                    description: 'Open locally saved design projects.',
-                    onNavigate: _navigate,
-                  ),
-                ),
-              ],
-            );
-          },
+          ),
         ),
+        if (_shortcutQuery.trim().isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              '${homeShortcutSearchTerms.keys.where((section) => matchesHomeShortcut(section, _shortcutQuery)).length} '
+              'of ${homeShortcutSearchTerms.length} shortcuts',
+              key: const Key('home-shortcut-result-count'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ],
+        const SizedBox(height: 12),
+        if (homeShortcutSearchTerms.keys.any(
+          (section) => matchesHomeShortcut(section, _shortcutQuery),
+        ))
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 820
+                  ? 3
+                  : constraints.maxWidth >= 520
+                  ? 2
+                  : 1;
+              final width =
+                  (constraints.maxWidth - (columns - 1) * 12) / columns;
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.scans,
+                    _shortcutQuery,
+                  ))
+                    SizedBox(
+                      width: width,
+                      child: WorkspaceToolCard(
+                        key: const Key('home-open-scan'),
+                        section: WorkspaceSection.scans,
+                        title: 'Scan documents',
+                        description: 'Capture, clean and assemble pages.',
+                        onNavigate: _navigate,
+                      ),
+                    ),
+                  if (matchesHomeShortcut(WorkspaceSection.pdf, _shortcutQuery))
+                    SizedBox(
+                      width: width,
+                      child: WorkspaceToolCard(
+                        key: const Key('home-open-pdf'),
+                        section: WorkspaceSection.pdf,
+                        title: 'Work with a PDF',
+                        description: 'Review pages and save a separate copy.',
+                        fallbackIcon: Icons.picture_as_pdf_outlined,
+                        onNavigate: _navigate,
+                      ),
+                    ),
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.photos,
+                    _shortcutQuery,
+                  ))
+                    SizedBox(
+                      width: width,
+                      child: WorkspaceToolCard(
+                        key: const Key('home-open-photo'),
+                        section: WorkspaceSection.photos,
+                        title: 'Edit a photo',
+                        description: 'Adjust and resize an image.',
+                        onNavigate: _navigate,
+                      ),
+                    ),
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.text,
+                    _shortcutQuery,
+                  ))
+                    SizedBox(
+                      width: width,
+                      child: WorkspaceToolCard(
+                        key: const Key('home-open-text'),
+                        section: WorkspaceSection.text,
+                        title: 'Extract text',
+                        description: 'Recognize and review words in an image.',
+                        onNavigate: _navigate,
+                      ),
+                    ),
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.office,
+                    _shortcutQuery,
+                  ))
+                    SizedBox(
+                      width: width,
+                      child: WorkspaceToolCard(
+                        key: const Key('home-open-converter'),
+                        section: WorkspaceSection.office,
+                        title: 'Convert file',
+                        description:
+                            'Read and convert supported document content.',
+                        onNavigate: _navigate,
+                      ),
+                    ),
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.design,
+                    _shortcutQuery,
+                  ))
+                    SizedBox(
+                      width: width,
+                      child: WorkspaceToolCard(
+                        key: const Key('home-open-design'),
+                        section: WorkspaceSection.design,
+                        title: 'Creative Studio',
+                        description: 'Design an editable layout for print.',
+                        onNavigate: _navigate,
+                      ),
+                    ),
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.projects,
+                    _shortcutQuery,
+                  ))
+                    SizedBox(
+                      width: width,
+                      child: WorkspaceToolCard(
+                        key: const Key('home-open-projects'),
+                        section: WorkspaceSection.projects,
+                        title: 'Files & Projects',
+                        description: 'Open locally saved design projects.',
+                        onNavigate: _navigate,
+                      ),
+                    ),
+                ],
+              );
+            },
+          )
+        else
+          const Card(
+            child: Padding(
+              padding: EdgeInsets.all(18),
+              child: Text(
+                'No matching shortcuts. Try a different search or clear it.',
+                key: Key('home-shortcut-empty'),
+              ),
+            ),
+          ),
         const SizedBox(height: 34),
         Row(
           children: [

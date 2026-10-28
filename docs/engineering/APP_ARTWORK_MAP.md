@@ -15,6 +15,7 @@ exhaustive `_sectionPage` switch in `lib/workspace/workspace_screen.dart`.
 | Home card / key | Navigation destination | Actual page | Artwork (earlier candidate) | Matching guide actions |
 | --- | --- | --- | --- | --- |
 | Scan documents / `home-open-scan` | Scan & assemble | `ScanStudioPage` in `lib/document_scan/scan_studio_page.dart` | `scan.png` — `01-sapphire-scan.png` | Page cleanup, multipage PDF, perspective correction |
+| Work with a PDF / `home-open-pdf` | PDF & Documents | `PdfStudioPage` in `lib/pdf/pdf_studio_page.dart` | Standard PDF icon; no additional app logo | Work with an existing PDF |
 | Edit a photo / `home-open-photo` | Photo Studio | `PhotoPage` in `lib/legacy_studios.dart` | `photo.png` — `03-indigo-orbit.png` | Photo speck cleanup and resize |
 | Extract text / `home-open-text` | Text extraction | `TextExtractionPage` in `lib/ocr/text_extraction_page.dart` | `text.png` — `DeskSuite-symbolic-logo.png` | Extract text from a scan |
 | Convert file / `home-open-converter` | Document converter | `OfficeConvertPage` in `lib/office/office_convert_page.dart` | `office.png` — `DeskSuite-scan-frame-alternative.png` | Convert an office document |
@@ -23,11 +24,10 @@ exhaustive `_sectionPage` switch in `lib/workspace/workspace_screen.dart`.
 
 Other navigation items keep their own appropriate standard icons; artwork does
 not imply extra functionality. The Guide and Home retain the selected primary
-logo. `PDF & Documents` is marked planned **in this feature branch**. GitHub
-`main` advanced independently to `cb1e264` with a PDF feature; those commits
-are not yet merged here and have conflicts requiring careful reconciliation.
-Do not remove either branch's work or assume the newer PDF feature is present in
-the feature branch.
+logo. In this isolated integration candidate, `PDF & Documents` uses the real
+PDF page imported from `main`; its Home and guide entries use a standard icon.
+Home's search filters only the seven real shortcuts and does not search files.
+Flutter, PDF-rendering and device behavior remain unverified.
 
 `tools/test_brand_assets.py` checks the selected logo assets, six source-image
 hashes, Home/card/section/guide mappings, exhaustive page cases and desktop

@@ -1,6 +1,15 @@
 /// Explicit, bounded conversion routes. A null target is intentionally not
 /// actionable; the catalogue must never imply an unavailable engine exists.
-enum ConversionTarget { photos, scans, projects, design, notes, text, office }
+enum ConversionTarget {
+  photos,
+  scans,
+  projects,
+  design,
+  notes,
+  text,
+  office,
+  pdf,
+}
 
 class ConversionRoute {
   const ConversionRoute({
@@ -44,21 +53,34 @@ const conversionRoutes = <ConversionRoute>[
   ConversionRoute(
     title: 'Images → extracted text / searchable PDF',
     detail:
-        'Text extraction runs on the device. Edit the recognized words, then '
-        'export TXT, DOCX or a searchable PDF. Tables, columns and handwriting '
-        'are not reconstructed.',
+        'Text extraction runs on the device. Reviewed text can be exported '
+        'as TXT or DOCX; a searchable PDF uses the original OCR word layer. '
+        'Tables, columns and handwriting are not reconstructed.',
     target: ConversionTarget.text,
   ),
   ConversionRoute(
-    title: 'Existing PDF → images, edited pages or compressed PDF',
-    detail: 'Unavailable: DeskSuite does not import or modify existing PDFs.',
+    title: 'Existing PDF → edited copy, page export or split files',
+    detail:
+        'PDF & Documents opens a PDF you already have, then reorders, rotates '
+        'or deletes pages, adds text and ink, fills forms, exports selected '
+        'pages and splits into separate files. Choose a different destination '
+        'to preserve the original. Text inside the page is not reflowed and '
+        'encrypted PDFs are refused.',
+    target: ConversionTarget.pdf,
+  ),
+  ConversionRoute(
+    title: 'Password-protected PDF → unlocked copy',
+    detail:
+        'Unavailable: DeskSuite has no password unlocking, so it refuses an '
+        'encrypted PDF instead of pretending to open it.',
   ),
   ConversionRoute(
     title: 'DOCX, XLSX, PPTX, ODT, ODS, ODP, RTF → PDF, TXT, CSV, ODT, ODS',
     detail:
         'Reads office documents on the device and writes a content PDF, text, '
         'CSV or a real OpenDocument copy. Layout, images and exact fonts are '
-        'not reproduced. Legacy .doc/.xls/.ppt need an installed office engine.',
+        'not reproduced. Legacy .doc/.xls/.ppt conversion is unavailable in '
+        'the normal build; the separate preview is experimental.',
     target: ConversionTarget.office,
   ),
 ];

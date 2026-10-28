@@ -547,12 +547,31 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('photo-sheet')));
       await tester.pumpAndSettle();
+      // Read the medium the dialog is configured with and require the print job
+      // to carry exactly that, instead of hardcoding a default that has already
+      // changed once (A4 -> 4x6 photo print).
+      final pageWidth = double.parse(
+        tester
+            .widget<TextField>(find.byKey(const Key('sheet-page-width')))
+            .controller!
+            .text,
+      );
+      final pageHeight = double.parse(
+        tester
+            .widget<TextField>(find.byKey(const Key('sheet-page-height')))
+            .controller!
+            .text,
+      );
       await tester.tap(find.widgetWithText(FilledButton, 'Print'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Continue'));
       await settleIo(tester);
-      expect(printer.widthMm, 101.6);
-      expect(printer.heightMm, 152.4);
+      expect(printer.widthMm, pageWidth);
+      expect(printer.heightMm, pageHeight);
+      // The sheet defaults to a 4x6 inch photo print, and the print job must
+      // carry the medium the dialog is set to rather than a stale default.
+      expect(pageWidth, 101.6);
+      expect(pageHeight, 152.4);
       expect(String.fromCharCodes(printer.pdf!.take(5)), '%PDF-');
       expect(tester.takeException(), isNull);
     },

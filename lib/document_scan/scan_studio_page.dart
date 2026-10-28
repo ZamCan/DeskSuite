@@ -1070,7 +1070,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
         ],
         const SizedBox(height: 20),
         const Text(
-          'Prepare PDF here makes an image-only PDF. Extract text from this page opens the separate OCR workflow, which can export a searchable single-page PDF when the Android recognizer is available. Corner suggestions are optional and must be checked. An in-app PDF reader is not available. Draft pages are private until discarded; export a copy for backup.',
+          'Prepare PDF here makes an image-only PDF. Extract text from this page opens the separate OCR workflow, which can export a searchable single-page PDF when the Android recognizer is available. Corner suggestions are optional and must be checked. Open exported files separately in PDF & Documents; support for complex PDFs is limited. Draft pages are private until discarded; export a copy for backup.',
         ),
       ],
     );

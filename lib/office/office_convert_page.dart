@@ -207,7 +207,7 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
         Text(
           'Extracts readable content from DOCX, XLSX, PPTX, ODT, ODS, ODP '
           'and RTF on this device. Conversion routes are offered only when '
-          'available; the original file is never modified.',
+          'available. Choose a different destination to preserve the original.',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

@@ -12,12 +12,14 @@ class GettingStartedPage extends StatelessWidget {
     required this.onPhoto,
     required this.onText,
     required this.onOffice,
+    required this.onPdf,
     required this.onEditableExample,
   });
   final VoidCallback onScan;
   final VoidCallback onPhoto;
   final VoidCallback onText;
   final VoidCallback onOffice;
+  final VoidCallback onPdf;
   final VoidCallback onEditableExample;
 
   @override
@@ -86,6 +88,18 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        key: const Key('guide-pdf'),
+        icon: Icons.picture_as_pdf_outlined,
+        title: 'Work with an existing PDF',
+        description:
+            'Open a PDF from this device in PDF & Documents. Review the pages, '
+            'make supported changes and save a separate copy. Encrypted PDFs '
+            'cannot be opened; complex documents and layout need review.',
+        button: 'Open PDF & Documents',
+        onPressed: onPdf,
+      ),
+      const SizedBox(height: 12),
+      _GuideCard(
         key: const Key('guide-clean-page'),
         artwork: SectionArt.scan,
         icon: Icons.auto_fix_high,
@@ -148,7 +162,7 @@ class GettingStartedPage extends StatelessWidget {
       Text('Important limits', style: Theme.of(context).textTheme.titleMedium),
       const SizedBox(height: 8),
       const Text(
-        'Scan & assemble exports image-only PDFs. The separate Android OCR workflow can export a searchable single-page PDF; its recognition needs review. Corner suggestions are limited and may be wrong. The office editor has format and fidelity limits; an in-app PDF reader and cloud sync are not available. Export copies for backup; app-private data can be removed when the app is uninstalled.',
+        'Scan & assemble exports image-only PDFs. The separate Android OCR workflow can export a searchable single-page PDF; its recognition needs review. Corner suggestions are limited and may be wrong. PDF & Documents and the office editor have format and fidelity limits. Cloud sync is not available. Export copies for backup; app-private data can be removed when the app is uninstalled.',
       ),
       const SizedBox(height: 8),
       const Text(
@@ -162,14 +176,14 @@ class _GuideCard extends StatelessWidget {
   const _GuideCard({
     super.key,
     required this.icon,
-    required this.artwork,
+    this.artwork,
     required this.title,
     required this.description,
     required this.button,
     required this.onPressed,
   });
   final IconData icon;
-  final String artwork;
+  final String? artwork;
   final String title, description, button;
   final VoidCallback onPressed;
   @override
@@ -182,7 +196,21 @@ class _GuideCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SectionArtwork(asset: artwork, size: 40, fallback: icon),
+              if (artwork case final asset?)
+                SectionArtwork(asset: asset, size: 40, fallback: icon)
+              else
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+                ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(

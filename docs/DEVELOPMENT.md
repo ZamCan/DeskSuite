@@ -49,8 +49,13 @@ cp pubspec.lock pubspec.lock.before-platform-create
 flutter create --no-pub --project-name desksuite --org com.zamcan.desksuite --platforms=linux,windows .
 cp pubspec.lock.before-platform-create pubspec.lock && rm pubspec.lock.before-platform-create
 flutter pub get
-flutter build linux --release      # Linux desktop dependencies required
+flutter build linux --release      # existing Linux desktop dependencies required
 ```
+
+The PDF editor brings `flutter_secure_storage_linux` transitively; Linux builds
+also require the system libsecret development headers (commonly
+`libsecret-1-dev` on Debian/Ubuntu). This is a build prerequisite, not evidence
+that the integrated Linux build has passed.
 
 For a Linux application-menu launcher, keep **the whole bundle** together in a stable location, then point the local installer at its executable:
 

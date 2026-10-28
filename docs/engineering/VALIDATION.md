@@ -1,12 +1,52 @@
 # Validation record
 
+## Isolated feature + main candidate — 2026-10-28
+
+The candidate combines feature `90904cd` with fetched main `cb1e264`. It is not
+production validated. See [branch integration audit](BRANCH_INTEGRATION_AUDIT.md)
+for the remaining independent branches and known CI failures.
+
+- Python host checks passed: 11 branding/artwork/search-mapping checks, three
+  desktop-packaging-definition checks and three Linux-launcher checks. One
+  search-mapping test initially failed because its source regex did not accept
+  Dart formatter line breaks; the regex was fixed and all 11 passed on rerun.
+  The GIO check launches a fictional executable, not DeskSuite.
+- The actual section switch, artwork map and shortcut search ran under DartPad
+  DDC/Node against UI stubs: 14 section identities, lazy states, six guide
+  actions, eight conversion actions and document-picker forwarding passed.
+  Harness analysis reported unused stub imports/one optional stub parameter.
+- Actual PDF inspection guards ran under DDC/Node with a **fake parser**. The
+  split-save method ran with a fake parser/gateway: empty output, over-100 file
+  count, aggregate size, invalid later part, cancellation, partial failure,
+  normal success and concurrent save guards passed. The aggregate test uses a
+  small fake budget; it does not validate real memory use. Neither check tests
+  the real PDF parser, editor widget, native picker or device.
+- DartPad signature analysis of the changed Home, sidebar/artwork, guide and PDF
+  page reported no issues with Flutter/engine stubs. Changed Dart files were
+  formatted through DartPad. This is not a full project `flutter analyze`.
+- The actual experimental Office WASM/worker passed local Node smokes for four
+  project-generated fictional fixtures, nine additional DOC/DOCX/XLS/XLSX/
+  PPT/PPTX/ODT/ODS/ODP fixtures, encrypted input and invalid inputs. The latter
+  fixtures stay outside the product because their upstream licence was not
+  identified. The viewer-script check used fake DOM/worker objects. These do
+  not establish visual fidelity, Android operation, CSP or network isolation.
+- Workflow/example YAML, `pubspec.yaml` and the lockfile parsed on the host.
+  The published metadata for the selected PDF packages and shared preferences
+  matched their lockfile hashes; selected PDF source archives were hash-checked.
+  This is not a complete dependency, licence or native-binary review.
+- Current main's independently triggered Android and Linux release build steps
+  failed in [run 40655142850](https://github.com/ZamCan/DeskSuite/actions/runs/40655142850).
+  Anonymous job logs returned HTTP 403, so the failure causes are unknown. No
+  current candidate Flutter suite, APK/AAB, desktop build, install, signature,
+  accessibility or Android/device test was run. No online packaging was started.
+
 ## Artwork mapped to real routes — 2026-10-28
 
 `python3 tools/test_brand_assets.py` passed **ten** host checks. New source checks compare the six Home card section assignments with the shared artwork map, verify every `WorkspaceSection` maps to the intended page class in the exhaustive switch, and compare eight guide illustrations with their callbacks. The Android manifest's launcher/round icon and main launcher intent, selected primary-brand path and startup `BrandMark` reference are checked as source. These are structural checks, not Flutter interaction tests.
 
 The actual `artworkForSection`, `_sectionPage` and `_visitedStudio` methods were compiled with DartPad DDC and executed under Node with fake page/widget classes. The artwork map, thirteen section cases, unvisited lazy placeholders, five guide actions, seven conversion targets and Office picker forwarding passed. The analyzer reported only unused imports and an unused optional stub parameter; the test does **not** exercise Flutter rendering, plugins, persisted state, accessibility, or native devices. The checked-in `tools/test_workspace_routing.py` regenerates the same harness and can run it with the owner's existing local Dart SDK; that local Dart execution was not available here.
 
-DartPad analyzed the changed actual Home, section artwork/sidebar and guide UI composed with type/signature stubs without issues, and formatted the changed Dart files. Added/updated Flutter tests check six Home destinations, card and header artwork, six drawer images and their callbacks, and eight guide image/action pairs, including a narrow large-text card. These tests have **not been run in Flutter here**. A newer GitHub main PDF implementation remains separately unmerged because a trial merge exposed conflicts in other product workflows.
+DartPad analyzed the changed actual Home, section artwork/sidebar and guide UI composed with type/signature stubs without issues, and formatted the changed Dart files. Added/updated Flutter tests check six Home destinations, card and header artwork, six drawer images and their callbacks, and eight guide image/action pairs, including a narrow large-text card. These tests have **not been run in Flutter here**. A later isolated integration candidate incorporates the main PDF implementation, as described in the new validation entry above; it remains unverified by the real Flutter suite.
 
 ## Desktop identity and section illustrations — 2026-10-28
 

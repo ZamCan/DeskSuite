@@ -26,6 +26,14 @@ class DesktopPackagingTest(unittest.TestCase):
                 (ROOT / 'assets/brand/desksuite-windows.ico').read_bytes(),
                 (ROOT / 'windows/runner/resources/app_icon.ico').read_bytes())
 
+    def test_linux_definitions_include_secure_storage_headers(self):
+        # dart_pdf_editor brings flutter_secure_storage_linux transitively.
+        # This is a source-definition check, not a successful Linux build.
+        for path in DEFINITIONS:
+            source = path.read_text()
+            self.assertIn('libsecret-1-dev', source, str(path))
+        self.assertIn('flutter_secure_storage_linux:', (ROOT / 'pubspec.lock').read_text())
+
     def test_appimage_entry_names_the_selected_png(self):
         for path in DEFINITIONS:
             source = path.read_text()

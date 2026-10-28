@@ -20,6 +20,7 @@ void main() {
             onPhoto: () => opened = 'photo',
             onText: () => opened = 'text',
             onOffice: () => opened = 'office',
+            onPdf: () => opened = 'pdf',
             onEditableExample: () => opened = 'design',
           ),
         ),
@@ -53,6 +54,16 @@ void main() {
       await tester.tap(button);
       expect(opened, entry.value.$2, reason: entry.key);
     }
+    final pdfCard = find.byKey(const Key('guide-pdf'));
+    await reveal(tester, pdfCard);
+    final pdfButton = find.descendant(
+      of: pdfCard,
+      matching: find.byType(OutlinedButton),
+    );
+    await tester.ensureVisible(pdfButton);
+    await tester.pumpAndSettle();
+    await tester.tap(pdfButton);
+    expect(opened, 'pdf');
     expect(tester.takeException(), isNull);
   });
 }

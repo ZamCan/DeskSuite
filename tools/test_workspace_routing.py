@@ -20,6 +20,8 @@ target_enum = re.search(r'enum ConversionTarget\s*\{[^}]+\}', catalog, re.S).gro
 art_file = (root / 'lib/app/section_artwork.dart').read_text()
 art_constants = re.search(r'abstract final class SectionArt\s*\{[^}]+\}', art_file, re.S).group()
 art_mapping = widgets[widgets.index('String? artworkForSection('):widgets.index('/// A labelled,')]
+search_file = (root / 'lib/workspace/shortcut_search.dart').read_text()
+search_logic = re.sub(r"^import [^\n]+\n", '', search_file, flags=re.M)
 method = screen[screen.index('  Widget _visitedStudio('):screen.index('  @override\n  Widget build(BuildContext context) => LayoutBuilder(')]
 for name in ('PhotoPage', 'NotesPage', 'PrintPage', 'BusinessPage'):
     method = method.replace('legacy.' + name, name)
@@ -45,8 +47,8 @@ class PrintPage extends Widget { const PrintPage(); }
 class BusinessPage extends Widget { BusinessPage({required FileGateway files}); }
 class ScanStudioPage extends Widget { ScanStudioPage({required FileGateway files, Object? camera, Object? recoveredCapture}); }
 class GettingStartedPage extends Widget {
-  GettingStartedPage({required this.onScan, required this.onPhoto, required this.onText, required this.onOffice, required this.onEditableExample});
-  final VoidCallback onScan, onPhoto, onText, onOffice, onEditableExample;
+  GettingStartedPage({required this.onScan, required this.onPhoto, required this.onText, required this.onOffice, required this.onPdf, required this.onEditableExample});
+  final VoidCallback onScan, onPhoto, onText, onOffice, onPdf, onEditableExample;
 }
 class ConversionCatalogPage extends Widget {
   ConversionCatalogPage({required this.onOpen}); final void Function(ConversionTarget) onOpen;
@@ -54,6 +56,10 @@ class ConversionCatalogPage extends Widget {
 class TextExtractionPage extends Widget { TextExtractionPage({required FileGateway files}); }
 class OfficeConvertPage extends Widget {
   OfficeConvertPage({required this.picker, required this.files});
+  final DocumentPicker picker; final FileGateway files;
+}
+class PdfStudioPage extends Widget {
+  PdfStudioPage({required this.picker, required this.files});
   final DocumentPicker picker; final FileGateway files;
 }
 class Host {
@@ -85,6 +91,16 @@ void main() {
   for (final section in WorkspaceSection.values) {
     check(artworkForSection(section) == assignments[section], 'art ${section.name}');
   }
+  check(homeShortcutSearchTerms.length == 7, 'home shortcut count');
+  for (final section in homeShortcutSearchTerms.keys) {
+    check(matchesHomeShortcut(section, '  '), 'empty search ${section.name}');
+  }
+  check(matchesHomeShortcut(WorkspaceSection.photos, 'PHOTO'), 'case-insensitive search');
+  check(matchesHomeShortcut(WorkspaceSection.photos, 'resize  image'), 'multiword search');
+  check(matchesHomeShortcut(WorkspaceSection.pdf, 'pdf split'), 'pdf search');
+  check(!matchesHomeShortcut(WorkspaceSection.pdf, 'pdf spreadsheet'), 'all search words required');
+  check(!matchesHomeShortcut(WorkspaceSection.settings, ''), 'non-shortcut excluded');
+  check(!matchesHomeShortcut(WorkspaceSection.photos, 'nonsense'), 'no-result search');
   final h = Host();
   check(h._sectionPage(WorkspaceSection.workspace) is HomePage, 'home');
   check(h._sectionPage(WorkspaceSection.projects) is ProjectsPage, 'projects');
@@ -101,16 +117,22 @@ void main() {
   check(h._sectionPage(WorkspaceSection.scans) is ScanStudioPage, 'scan');
   check(h._sectionPage(WorkspaceSection.text) is TextExtractionPage, 'text');
   check(h._sectionPage(WorkspaceSection.office) is OfficeConvertPage, 'office');
+  check(h._sectionPage(WorkspaceSection.pdf) is PdfStudioPage, 'pdf');
   final fallbackOffice = h._sectionPage(WorkspaceSection.office) as OfficeConvertPage;
   check(fallbackOffice.picker is _NoDocumentPicker, 'office picker fallback');
+  final fallbackPdf = h._sectionPage(WorkspaceSection.pdf) as PdfStudioPage;
+  check(fallbackPdf.picker is _NoDocumentPicker, 'pdf picker fallback');
   h.widget.files = FilesAndPicker();
   final office = h._sectionPage(WorkspaceSection.office) as OfficeConvertPage;
-  check(identical(office.picker, h.widget.files), 'real picker forwarded');
+  check(identical(office.picker, h.widget.files), 'office real picker forwarded');
+  final pdf = h._sectionPage(WorkspaceSection.pdf) as PdfStudioPage;
+  check(identical(pdf.picker, h.widget.files), 'pdf real picker forwarded');
   final guide = h._sectionPage(WorkspaceSection.guide) as GettingStartedPage;
   guide.onScan(); check(h.opened == WorkspaceSection.scans, 'guide scan');
   guide.onPhoto(); check(h.opened == WorkspaceSection.photos, 'guide photo');
   guide.onText(); check(h.opened == WorkspaceSection.text, 'guide text');
   guide.onOffice(); check(h.opened == WorkspaceSection.office, 'guide office');
+  guide.onPdf(); check(h.opened == WorkspaceSection.pdf, 'guide pdf');
   guide.onEditableExample(); check(h.editedExample, 'guide editable');
   final catalog = h._sectionPage(WorkspaceSection.conversions) as ConversionCatalogPage;
   const targets = <ConversionTarget, WorkspaceSection>{
@@ -121,13 +143,14 @@ void main() {
     ConversionTarget.notes: WorkspaceSection.notes,
     ConversionTarget.text: WorkspaceSection.text,
     ConversionTarget.office: WorkspaceSection.office,
+    ConversionTarget.pdf: WorkspaceSection.pdf,
   };
   check(targets.length == ConversionTarget.values.length, 'conversion target coverage');
   for (final item in targets.entries) { catalog.onOpen(item.key); check(h.opened == item.value, 'conversion ${item.key.name}'); }
-  print('Actual artwork map and section switch: 13 pages, lazy states, 5 guide actions, 7 conversion actions and picker forwarding passed with UI stubs.');
+  print('Actual artwork, shortcut search and section switch: 14 pages, lazy states, 6 guide actions, 8 conversion actions and picker forwarding passed with UI stubs.');
 }
 '''
-source = section_enum + '\n' + target_enum + '\n' + art_constants + '\n' + art_mapping + '\n' + stubs + method + main
+source = section_enum + '\n' + target_enum + '\n' + art_constants + '\n' + art_mapping + '\n' + search_logic + '\n' + stubs + method + main
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--emit', type=Path, help='write the standalone Dart harness without running it')
 args = parser.parse_args()

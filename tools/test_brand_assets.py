@@ -174,6 +174,25 @@ class BrandAssetsTest(unittest.TestCase):
                        + re.escape('onNavigate: _navigate'))
             self.assertRegex(screen, re.compile(pattern, re.S), key)
 
+    def test_home_search_only_indexes_real_shortcuts(self):
+        screen = (ROOT / 'lib/workspace/workspace_screen.dart').read_text()
+        search = (ROOT / 'lib/workspace/shortcut_search.dart').read_text()
+        registry = search.split('const homeShortcutSearchTerms', 1)[1].split('};', 1)[0]
+        sections = set(re.findall(r'WorkspaceSection\.([a-z]+)', registry))
+        cards = set(re.findall(
+            r'key: const Key\(\'home-open-[^\']+\'\),\s*section: WorkspaceSection\.([a-z]+)',
+            screen,
+        ))
+        filters = set(re.findall(
+            r'matchesHomeShortcut\(\s*WorkspaceSection\.([a-z]+)\s*,\s*_shortcutQuery\s*,?\s*\)',
+            screen,
+        ))
+        self.assertEqual(sections, cards)
+        self.assertEqual(sections, filters)
+        self.assertEqual(len(sections), 7)
+        self.assertIn("Key('home-shortcut-empty')", screen)
+        self.assertIn("Key('home-clear-shortcut-search')", screen)
+
     def test_section_pages_map_every_enum_to_the_real_page(self):
         screen = (ROOT / 'lib/workspace/workspace_screen.dart').read_text()
         widgets = (ROOT / 'lib/workspace/workspace_widgets.dart').read_text()
@@ -192,7 +211,7 @@ class BrandAssetsTest(unittest.TestCase):
             'printing': 'legacy.PrintPage(', 'business': 'legacy.BusinessPage(',
             'scans': 'ScanStudioPage(', 'guide': 'GettingStartedPage(',
             'conversions': 'ConversionCatalogPage(', 'text': 'TextExtractionPage(',
-            'office': 'OfficeConvertPage(',
+            'office': 'OfficeConvertPage(', 'pdf': 'PdfStudioPage(',
         }
         self.assertEqual(set(expected), set(sections))
         for index, match in enumerate(cases):

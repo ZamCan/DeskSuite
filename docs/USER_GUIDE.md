@@ -53,8 +53,8 @@ In the Creative Studio editor choose **Export design**. Normal pages can use 150
    paragraph per line) includes your reviewed edits. **Searchable PDF** contains
    the image plus an invisible layer of the *original recognized words and
    positions*, not your edits; if you changed the text, a confirmation warns you.
-   **Copy** puts reviewed text on the clipboard. Choose a new destination; your
-   original image is untouched.
+   **Copy** puts reviewed text on the clipboard. Choose a different destination
+   to preserve the original image.
 
 Limits you should know: columns, tables and handwriting are not reconstructed —
 the text comes out in the recognizer's reading order. The DOCX is a text-flow
@@ -77,7 +77,7 @@ photographs is not guaranteed.
    an in-app conversion route.
 4. Choose a route and select **Convert**. Review the output name, format, size,
    the engine used and the "What changed" notes.
-5. Select **Save output**. The source file is never modified.
+5. Select **Save output** and choose a different destination to protect the source; the system picker can allow a file to be replaced.
 
 What is preserved: paragraph text and order, headings, bold/italic, table rows
 and cells, sheet names and values, slide text. What is not: exact fonts, layout,
@@ -85,6 +85,30 @@ images, charts, macros, comments, text boxes, number formats and page size (A4 i
 used). An original-layout C++-engine preview is experimental, read-only and
 disabled by default until Android security and fidelity are verified; it is not
 a conversion route. See [Office support](engineering/OFFICE_SUPPORT.md).
+
+## Work with a PDF you already have
+
+1. Open the menu → **PDF & Documents**, then **Open PDF** and choose a file. The
+   header shows the page count, the file size and the first page size, read from
+   the document itself.
+2. Read it on screen. Pages are drawn by a bundled on-device engine; nothing is
+   uploaded and no account is needed.
+3. Edit: reorder, rotate or delete pages from the thumbnail panel, add text or
+   ink on a page, or fill in a form field that the file already defines.
+4. Save with **Save**. DeskSuite suggests a new name such as
+   `report-edited.pdf`, and tells you the page count and size it wrote. Choose
+   a **different destination**: the system picker may allow replacing a file.
+5. Exporting selected pages writes `report-pages.pdf`; splitting writes
+   `report-part-1.pdf`, `report-part-2.pdf` and so on. If you cancel a save, the
+   screen says the export was cancelled — it never reports a file it did not
+   write.
+
+What this does not do: it does not re-typeset the text already inside a page
+(annotations and form fields sit on top of the page), it does not merge two
+different PDFs into one, it cannot compress to a target size, and it refuses a
+encrypted PDF instead of guessing at the password. The native document picker
+accepts files up to 48 MiB; in-memory PDF inspection rejects files above 96 MiB.
+Very large or damaged PDFs may open with fewer pages than a desktop reader shows.
 
 ## Sell something and print a receipt
 
@@ -119,7 +143,7 @@ Other bundled forms, names and invoices are fictional and are not official docum
 
 ## Find other supported routes
 
-Open **Conversion routes** to jump to Photo Studio, Scan & assemble, Files & Projects, Creative Studio or Notes for an implemented operation. Routes without an engine are marked unavailable. See [conversion details](CONVERSIONS.md) and [formats](FILE_FORMATS.md). Existing PDFs cannot be opened, merged or compressed by the scan tool; existing pages are **images in the scan draft**, not pages imported from a PDF.
+Open **Conversion routes** to jump to Photo Studio, Scan & assemble, PDF & Documents, Files & Projects, Creative Studio or Notes for an implemented operation. Routes without an engine are marked unavailable. See [conversion details](CONVERSIONS.md) and [formats](FILE_FORMATS.md). Existing PDFs cannot be opened, merged or compressed by the scan tool; existing pages are **images in the scan draft**, not pages imported from a PDF.
 
 ## Protect your work and troubleshoot
 

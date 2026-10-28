@@ -14,6 +14,9 @@ abstract class FileGateway {
   });
 }
 
+/// Maximum encoded size accepted by the shared native document picker.
+const int maxPickedDocumentBytes = 48 * 1024 * 1024;
+
 /// A document the user picked, with the name the picker reported.
 typedef PickedDocument = ({Uint8List bytes, String name});
 
@@ -92,7 +95,10 @@ class NativeFileGateway implements FileGateway, DocumentPicker {
       ],
     );
     if (file == null) return null;
-    final bytes = await _readBounded(file.readAsByteStream(), 48 * 1024 * 1024);
+    final bytes = await _readBounded(
+      file.readAsByteStream(),
+      maxPickedDocumentBytes,
+    );
     return (bytes: bytes, name: file.name);
   }
 

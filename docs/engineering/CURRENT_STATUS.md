@@ -14,22 +14,26 @@ declaration that the whole directive or a release is finished. The full
 | Earlier baseline `4c15523` CI | Flutter analyze/test and matrix builds succeeded in the repository's independently running CI | [run 40634495478](https://github.com/ZamCan/DeskSuite/actions/runs/40634495478) |
 | Merged main `b226257` CI | Independently run Flutter analyze/tests and Android/Linux/Windows/unsigned-iOS build jobs succeeded **for main only**, before feature-branch changes. | [run 40642887765](https://github.com/ZamCan/DeskSuite/actions/runs/40642887765) |
 | Later main `1cef153` CI | Analysis failed on all four jobs; logs require authentication. The feature branch fixes a separately reproduced constant-expression error in that main snapshot, but other project errors cannot be excluded until Flutter runs. | [run 40635793861](https://github.com/ZamCan/DeskSuite/actions/runs/40635793861) |
+| Latest fetched main `cb1e264` CI | Android release-APK and Linux release-build steps failed; Windows and unsigned-iOS jobs passed. Public job logs returned HTTP 403, so the precise build failures are unknown. This is not a result for the candidate. | [run 40655142850](https://github.com/ZamCan/DeskSuite/actions/runs/40655142850) |
 | New enhancement and corner pixel cores | DartPad 3.13.7 DDC/Node smoke checks passed, including 40 randomized images and synthetic corner/fallback cases | [validation](VALIDATION.md) |
 | Media/raster integration | Actual Dart budget and sheet-geometry checks passed for 56 listed presets under DartPad DDC/Node; UI and optimizer control-flow analyses used stubs | [validation](VALIDATION.md) |
-| Owner-selected branding | Ten Python asset/mapping checks passed, including selected icon resources and six section illustrations. The 13-page routing switch ran under DDC/Node using UI stubs. Flutter widgets and devices remain untested. Three Linux launcher checks passed, including a fictional GIO launch. | [brand assets](BRAND_ASSETS.md), [validation](VALIDATION.md) |
+| Owner-selected branding and navigation | Eleven Python asset/mapping/search checks passed, including selected icon resources and six section illustrations. The 14-page routing switch and shortcut search ran under DDC/Node using UI stubs. Flutter widgets and devices remain untested. Three Linux launcher checks passed, including a fictional GIO launch. | [brand assets](BRAND_ASSETS.md), [validation](VALIDATION.md) |
 | Cleanup and optimizer follow-up | DDC/Node verified zero-strength pixel equivalence for 100 randomized RGBA pages per color mode and 2,000 compression-geometry sequences; optimizer flow used a simulated codec | [validation](VALIDATION.md) |
 | Branded launch and guide | DartPad analyzed actual launch/theme code; the motion geometry smoke passed. Widget, accessibility, Android splash and device tests remain unrun. | [brand assets](BRAND_ASSETS.md) |
 | Experimental Office preview | Actual OpenDocument.core WASM + worker generated HTML with expected text from one DOC/DOCX/XLS/XLSX/PPT/PPTX fixture each under Node. Disabled by default; visual fidelity, Android integration and offline isolation not verified. | [office support](OFFICE_SUPPORT.md) |
 | Office ZIP hardening | Pure-Dart preflight passed valid, malformed/truncated and 3,000 mutation checks plus three real OOXML fixture structures under DartPad/Node. Flutter + real archive/CRC tests unrun. | [office support](OFFICE_SUPPORT.md) |
 | New Flutter codec, widget, OCR-handoff and full-suite tests | **Written, not run in this workspace** | Flutter/Dart tools are absent from this snapshot |
-| Android/device and signed release for the new source | **Not built or tested here** | Independent CI passed for main only; signing and device checks remain separate |
+| Android/device and signed release for the new source | **Not built or tested here** | Older main CI passed; latest main Android/Linux builds failed, and candidate signing/device checks remain separate |
 
 The independently triggered CI builds do not prove a signed release, actual
 camera/OCR behavior or the changes in this feature branch. The owner asked
 that no Android toolchain be downloaded or packaging performed in this workspace.
-On 2026-10-28, remote `main` had advanced separately to `cb1e264` with PDF
-work. It is **not integrated in this feature branch**; a dry-run merge identified
-conflicts that require careful reconciliation and full validation.
+This isolated integration candidate combines feature `90904cd` and main
+`cb1e264` in source, including the existing-PDF page. The independent
+`integration/full-product-consolidation-2026-10-28` branch contains further
+work that has not been merged wholesale. Conflict choices, actual Flutter
+analysis/tests, output fidelity, native behavior and release signing still need
+independent validation before this candidate can replace `main`.
 
 ## Owner-selected brand and focused engine improvements — 2026-10-28
 
@@ -51,10 +55,10 @@ This is a source change only until the repository's formatter, analyzer, full ho
 
 | Target | Current result | Missing or unverified |
 | --- | --- | --- |
-| **A. Paper → searchable PDF** | Camera entry point, optional reviewed corner suggestion, projective correction, enhancement, multipage image PDF, and selected-page handoff to a **single-page searchable PDF** are implemented in source. The original OCR words form the PDF text layer; reviewed edits are exported to TXT/DOCX. | Broad/robust page detection, reviewed edits in PDF text layers, multipage searchable export, in-app PDF reopening, camera and recognition on Android hardware. **Not complete on device.** |
+| **A. Paper → searchable PDF** | Camera entry point, optional reviewed corner suggestion, projective correction, enhancement, multipage image PDF, selected-page handoff to a **single-page searchable PDF**, and a separate existing-PDF viewer/editor are present in source. The original OCR words form the PDF text layer; reviewed edits are exported to TXT/DOCX. | Broad/robust page detection, reviewed edits in PDF text layers, multipage searchable export, real PDF reopening, camera and recognition on Android hardware. **Not complete on device.** |
 | **B. Image → exact-size output** | Photo Studio supports exact or proportion-preserving pixels, percentage, print-size/DPI calculation and selectable nearest/linear/cubic resampling, PNG/JPEG, JPEG target-size optimisation, output review, separate destination, speck reduction, compare and undo. | Embedded DPI metadata; real codec behavior, Flutter resize/optimizer tests, device performance, providers and printing remain unverified for the new source. |
 | **C. Existing document → extracted text** | **Implemented in source:** offline Tesseract recognition with English and English+Kiswahili models, EXIF-corrected bounded preparation, editable review, confidence warning, TXT/DOCX export and a searchable PDF. Text is extracted from office documents through the separate converter (below). | Native Android build/device behavior and recognition accuracy on representative photographs and printed pages; handwriting and non-Latin scripts are not supported claims. |
-| **D. Convert and compress** | Office reader/writer (DOCX/XLSX/PPTX/ODT/ODS/ODP/RTF/TXT/HTML → PDF/TXT/CSV/ODT/ODS) with per-route fidelity and limits. Image re-encoding with quality control. A separate experimental original-layout preview is disabled by default. | Existing-PDF compression and page operations, verified original-layout Office conversion, preview device/security tests, batch conversion. |
+| **D. Convert and compress** | Office reader/writer (DOCX/XLSX/PPTX/ODT/ODS/ODP/RTF/TXT/HTML → PDF/TXT/CSV/ODT/ODS) with per-route fidelity and limits. Image re-encoding with quality control. The PDF page offers existing-page operations; a separate experimental original-layout Office preview is disabled by default. | Existing-PDF target-size compression and device/fidelity testing, verified original-layout Office conversion, preview device/security tests, batch conversion. |
 | **E. New-user sample tutorial** | Skippable, revisitable guides plus a sample library; each guide invokes the real engine (scan, cleanup, photo resize, OCR sample letter, office conversion). | Native/device runs of the guides. |
 
 ## Modules in this source
@@ -91,8 +95,9 @@ environment.
    install it, then run the scanner, OCR and converter against real documents.
 2. Benchmark and improve the limited corner-suggestion heuristic against real
    camera images and difficult lighting, with manual fallback and device profiling.
-3. PDF import: render pages, extract existing text, reorder/split/compress —
-   the largest remaining gap for "Acrobat-style" workflows.
+3. Exercise existing-PDF viewing, page operations and save/split with real
+   files, independent readers and Android devices; merging and target-size
+   compression are not implemented.
 4. **Done for sales:** `lib/business/sale_receipt.dart` turns a recorded sale into
    a real A5 PDF receipt, and `InventoryRepository.recordSale` keeps a numbered
    `sales.json` log so it can be reprinted. Next in this area: multi-item
@@ -110,7 +115,7 @@ before deciding.
 | --- | --- | --- |
 | `engineering/office-content-editor` (#5) | Offline editing of an opened office document's text content, reachable from the converter, with writer support and tests. | **Merged** into `main` at `7639844`. It fills a real gap (editing) without duplicating an engine. The branch's copy of `test/scan_studio_widget_test.dart` was dropped in favour of the version on `main`, which waits for controls to be enabled; the app-side scan changes merged cleanly. Verified here: analyze clean, 156/156 host tests. |
 | `engineering/engine-capability-audit` (#3) | `ImageProcessingService` (263 lines), a Photo Studio screen, a PDF Studio screen, and audit/selection documents. | **Not merged.** The image service is a second image engine beside `lib/images/photo_processor.dart`, which already does bounded decode, crop, rotate, exact-pixel resize and JPEG quality with tests; the directive forbids competing engines for one task. Its PDF screen is better taken from #6, which is a dedicated PDF implementation. Useful ideas remain in its `ENGINE_SELECTION.md`; a reviewer should re-cut the parts that are genuinely new rather than merge the branch whole. |
-| `engineering/pdf-studio-editor` (#6) | A PDF Studio screen for existing PDFs plus conversion-catalogue and navigation wiring, with its own tests. | **Candidate next.** This is the largest honest gap: `main` currently declares "existing PDF → images/pages/compressed PDF" explicitly unavailable. Needs the same treatment as #5: merge, keep `main`'s scan test harness, then run the full suite before any claim. |
+| `engineering/pdf-studio-editor` (#6) | A PDF Studio screen for existing PDFs plus conversion-catalogue and navigation wiring, with its own tests. | **Present in fetched main and the isolated candidate.** The candidate retains the newer scan test harness and adds safety checks, but real Flutter, parser and device tests are still required. PDF merge and target-size compression are not present in this candidate. |
 | `engineering/scan-studio-ci-fixes` (#4) | Scan recovery readiness plus a rewritten scan test file. | **Superseded in part.** `main` already fixes the failures at their cause (tapping disabled controls) and its scan tests are green. Review the app-side recovery change; do not reintroduce the older test harness. |
 | `engineering/document-workflows-phase-1` (#2) | Earlier image tools, stamps, signatures and brand foundation. | **Historical.** Its content is largely present in `main` by another route; close it after a manual comparison rather than merging. |
 

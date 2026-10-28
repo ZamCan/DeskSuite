@@ -1118,7 +1118,7 @@ class _PhotoPageState extends State<PhotoPage> {
                 Text('Export file: ${output.length} bytes'),
                 const SizedBox(height: 8),
                 const Text(
-                  'The source is unchanged. Compression results depend on image content; a target may be impossible without excessive quality loss.',
+                  'Choose a different destination to preserve the source. Compression results depend on image content; a target may be impossible without excessive quality loss.',
                 ),
                 if (options.format == _ImageExportFormat.pdf)
                   const Text(
@@ -2698,7 +2698,7 @@ class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Work offline on a new copy. The original image is not overwritten. JPEG is lossy; transparency is flattened onto white.',
+              'Work offline on a copy. Choose a different save destination to preserve your original. JPEG is lossy; transparency is flattened onto white.',
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<ImageSizePreset>(

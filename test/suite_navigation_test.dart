@@ -60,9 +60,7 @@ Future<void> navigate(WidgetTester tester, String label) async {
 }
 
 void main() {
-  testWidgets('home tool cards open the six real local workflows', (
-    tester,
-  ) async {
+  testWidgets('home tool cards open the real local workflows', (tester) async {
     tester.view.physicalSize = const Size(360, 720);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -100,7 +98,20 @@ void main() {
     );
     await settleIo(tester);
     expect(find.byType(BrandMark), findsWidgets);
-    expect(find.byType(WorkspaceToolCard), findsNWidgets(6));
+    expect(find.byType(WorkspaceToolCard), findsNWidgets(7));
+    final search = find.byKey(const Key('home-shortcut-search'));
+    await reveal(tester, search);
+    await tester.enterText(search, 'PHOTO');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('home-open-photo')), findsOneWidget);
+    expect(find.byKey(const Key('home-open-scan')), findsNothing);
+    expect(find.text('1 of 7 shortcuts'), findsOneWidget);
+    await tester.enterText(search, 'not-a-real-shortcut');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('home-shortcut-empty')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('home-clear-shortcut-search')));
+    await tester.pumpAndSettle();
+    expect(find.byType(WorkspaceToolCard), findsNWidgets(7));
     final routes = <String, (String, WorkspaceSection, String)>{
       'home-open-scan': (
         'scan-import',
@@ -161,6 +172,21 @@ void main() {
       }
       expect(tester.takeException(), isNull, reason: route.key);
     }
+    // PDF uses an honest standard icon rather than a new launcher logo.
+    await navigate(tester, 'Home');
+    final pdfShortcut = find.byKey(const Key('home-open-pdf'));
+    await reveal(tester, pdfShortcut);
+    expect(
+      tester.widget<WorkspaceToolCard>(pdfShortcut).section,
+      WorkspaceSection.pdf,
+    );
+    expect(
+      find.descendant(of: pdfShortcut, matching: find.byType(SectionArtwork)),
+      findsNothing,
+    );
+    await tester.tap(pdfShortcut);
+    await settleUntil(tester, find.byKey(const Key('pdf-open')));
+    expect(find.byKey(const ValueKey('workspace-page-pdf')), findsOneWidget);
     // Switching sections should not recreate a visited page and lose its work.
     await navigate(tester, 'Photo Studio');
     expect(find.byKey(const Key('photo-zoom')), findsOneWidget);

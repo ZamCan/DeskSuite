@@ -18,6 +18,7 @@ enum WorkspaceSection {
   conversions,
   text,
   office,
+  pdf,
 }
 
 /// Section identities are decorative. The selected DS mark remains the app logo.
@@ -39,6 +40,7 @@ class WorkspaceToolCard extends StatelessWidget {
     required this.title,
     required this.description,
     required this.onNavigate,
+    this.fallbackIcon = Icons.grid_view_rounded,
   });
 
   /// The same section determines both the illustration and the destination.
@@ -47,10 +49,12 @@ class WorkspaceToolCard extends StatelessWidget {
   final String description;
   final ValueChanged<WorkspaceSection> onNavigate;
 
+  /// Used for real tools without one of the six approved section illustrations.
+  final IconData fallbackIcon;
+
   @override
   Widget build(BuildContext context) {
     final artwork = artworkForSection(section);
-    assert(artwork != null, 'A tool card must have assigned section artwork.');
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
@@ -62,10 +66,17 @@ class WorkspaceToolCard extends StatelessWidget {
               if (artwork != null)
                 SectionArtwork(asset: artwork)
               else
-                const SizedBox(
+                Container(
                   width: 64,
                   height: 64,
-                  child: Icon(Icons.grid_view_rounded),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    fallbackIcon,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
                 ),
               const SizedBox(width: 14),
               Expanded(
@@ -113,6 +124,7 @@ class WorkspaceSidebar extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
         child: ListTile(
+          key: Key('nav-${value.name}'),
           dense: true,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -137,19 +149,6 @@ class WorkspaceSidebar extends StatelessWidget {
       );
     }
 
-    Widget planned(IconData icon, String label) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: ListTile(
-        dense: true,
-        enabled: false,
-        leading: Icon(icon, size: 20),
-        title: Text(label),
-        trailing: const Text(
-          'PLANNED',
-          style: TextStyle(fontSize: 9, letterSpacing: .7),
-        ),
-      ),
-    );
     return Material(
       color: scheme.surface,
       child: ListView(
@@ -234,7 +233,11 @@ class WorkspaceSidebar extends StatelessWidget {
             'Document converter',
             WorkspaceSection.office,
           ),
-          planned(Icons.picture_as_pdf_outlined, 'PDF & Documents'),
+          item(
+            Icons.picture_as_pdf_outlined,
+            'PDF & Documents',
+            WorkspaceSection.pdf,
+          ),
           item(Icons.print_outlined, 'Print Studio', WorkspaceSection.printing),
           item(
             Icons.storefront_outlined,
