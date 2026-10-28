@@ -23,6 +23,12 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - name: Capture resolved lockfile for release audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: desksuite-resolved-pubspec-lock
+          path: pubspec.lock
+          if-no-files-found: error
       - run: dart format lib test
       - run: flutter analyze
       - run: flutter test
