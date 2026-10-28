@@ -292,7 +292,7 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Offline recognition of a photo or image you choose. Review the text '
+          'On-device text recognition for a photo or image you choose. Review the text '
           'before you rely on it; complex tables, columns and handwriting are '
           'not reconstructed.',
           style: Theme.of(context).textTheme.bodyMedium
