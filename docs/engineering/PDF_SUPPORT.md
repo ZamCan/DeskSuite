@@ -12,7 +12,7 @@ The version is pinned because this is a new dependency with a fast release caden
 
 - Opens an existing PDF selected through DeskSuite's document picker.
 - Validates the PDF signature before passing the bytes to the editor.
-- Enforces a 64 MiB input and edited-output limit to reduce avoidable memory pressure on phones.
+- Enforces a 48 MiB input and edited-output limit to reduce avoidable memory pressure on phones.
 - Embeds the editor's supported viewing, search, annotation, page, stamp and form tools.
 - Exports through DeskSuite's file gateway as `edited-<source-name>.pdf`.
 - Never writes directly over the selected source bytes.
@@ -20,7 +20,7 @@ The version is pinned because this is a new dependency with a fast release caden
 
 ## Not a blanket compatibility guarantee
 
-A signature check only confirms that the bytes begin with a PDF header; it does not prove the whole document is valid. Password-protected, malformed, encrypted or complex real-world documents may fail or use significant memory. Files over the 64 MiB app limit are rejected before editor initialization. Users should keep an independently verified original. Native save-provider behavior and accessibility still need device tests.
+A signature check only confirms that the bytes begin with a PDF header; it does not prove the whole document is valid. Password-protected, malformed, encrypted or complex real-world documents may fail or use significant memory. Files over the 48 MiB app limit are rejected before editor initialization. Users should keep an independently verified original. Native save-provider behavior and accessibility still need device tests.
 
 The engine is not yet validated against a broad production PDF corpus. CI must pass on the repository's supported targets before merging. Follow-up validation should include scanned PDFs, large mixed image/vector documents, forms, links, embedded fonts, rotations, annotations, page reordering/deletion, save/reopen comparisons, and memory pressure on low-RAM Android devices.
 
