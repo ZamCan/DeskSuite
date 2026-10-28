@@ -267,6 +267,8 @@ void main() {
       await tapVisible(tester, find.byKey(const Key('scan-save-pdf')));
       await waitIo(tester);
       expect(String.fromCharCodes(files.exported!.take(5)), '%PDF-');
+      expect(find.byType(ScanStudioPage), findsOneWidget);
+      expect(find.byKey(const Key('scan-page-0')), findsOneWidget);
       await tapVisible(tester, find.byKey(const Key('scan-undo')));
       await waitIo(tester);
       expect(

@@ -655,7 +655,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
       if (!mounted) return;
       final save = await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
+        builder: (dialogContext) => AlertDialog(
           title: const Text('PDF ready to save'),
           content: SingleChildScrollView(
             child: Text(
@@ -664,12 +664,12 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () => Navigator.of(dialogContext, rootNavigator: true).pop(false),
               child: const Text('Cancel'),
             ),
             FilledButton(
               key: const Key('scan-save-pdf'),
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () => Navigator.of(dialogContext, rootNavigator: true).pop(true),
               child: const Text('Choose destination'),
             ),
           ],
