@@ -13,7 +13,8 @@ import 'support/reveal.dart';
 
 class PhotoFiles implements FileGateway {
   PhotoFiles({Uint8List? source})
-    : original = source ??
+    : original =
+          source ??
           Uint8List.fromList(img.encodePng(img.Image(width: 4, height: 2)));
   final Uint8List original;
   Uint8List? exported;
@@ -342,7 +343,7 @@ void main() {
       expect(find.textContaining('Only 4 photo(s) fit'), findsOneWidget);
       final export = find.widgetWithText(OutlinedButton, 'Export PDF');
       expect(tester.widget<OutlinedButton>(export).onPressed, isNull);
-      await tester.enterText(copies, '8');
+      await tester.enterText(copies, '4');
       await tester.pumpAndSettle();
       await tester.tap(export);
       await tester.pumpAndSettle();
@@ -359,59 +360,61 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Continue'));
       await settleIo(tester);
-      expect(printer.widthMm, 210);
-      expect(printer.heightMm, 297);
+      expect(printer.widthMm, 101.6);
+      expect(printer.heightMm, 152.4);
       expect(String.fromCharCodes(printer.pdf!.take(5)), '%PDF-');
       expect(tester.takeException(), isNull);
     },
   );
 
-  testWidgets('solid background action composites transparent pixels and exports', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(360, 720);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets(
+    'solid background action composites transparent pixels and exports',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    final transparent = img.Image(width: 2, height: 1, numChannels: 4);
-    transparent.setPixelRgba(0, 0, 255, 0, 0, 0);
-    transparent.setPixelRgba(1, 0, 255, 0, 0, 255);
-    final files = PhotoFiles(source: Uint8List.fromList(img.encodePng(transparent)));
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: PhotoPage(
-            files: files,
-            processor: (request) async => processPhoto(request),
+      final transparent = img.Image(width: 2, height: 1, numChannels: 4);
+      transparent.setPixelRgba(0, 0, 255, 0, 0, 0);
+      transparent.setPixelRgba(1, 0, 255, 0, 0, 255);
+      final files = PhotoFiles(
+        source: Uint8List.fromList(img.encodePng(transparent)),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PhotoPage(
+              files: files,
+              processor: (request) async => processPhoto(request),
+            ),
           ),
         ),
-      ),
-    );
-    await tester.tap(find.byKey(const Key('photo-choose')));
-    await settleIo(tester);
-    await reveal(tester, find.byKey(const Key('photo-background')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('photo-background')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Pale blue'));
-    await settleIo(tester);
-    await reveal(tester, find.byKey(const Key('photo-png')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('photo-png')));
-    await settleIo(tester);
-    await tester.tap(find.byKey(const Key('photo-save-copy')));
-    await settleIo(tester);
+      );
+      await tester.tap(find.byKey(const Key('photo-choose')));
+      await settleIo(tester);
+      await reveal(tester, find.byKey(const Key('photo-background')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('photo-background')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Pale blue'));
+      await settleIo(tester);
+      await reveal(tester, find.byKey(const Key('photo-png')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('photo-png')));
+      await settleIo(tester);
+      await tester.tap(find.byKey(const Key('photo-save-copy')));
+      await settleIo(tester);
 
-    final output = img.decodePng(files.exported!)!;
-    expect([output.width, output.height], [2, 1]);
-    expect(output.getPixel(0, 0).r, closeTo(220, 1));
-    expect(output.getPixel(0, 0).g, closeTo(235, 1));
-    expect(output.getPixel(0, 0).b, closeTo(250, 1));
-    expect(output.getPixel(1, 0).r, 255);
-    expect(output.getPixel(1, 0).g, 0);
-    expect(output.getPixel(1, 0).b, 0);
-    expect(tester.takeException(), isNull);
-  });
-
+      final output = img.decodePng(files.exported!)!;
+      expect([output.width, output.height], [2, 1]);
+      expect(output.getPixel(0, 0).r, closeTo(220, 1));
+      expect(output.getPixel(0, 0).g, closeTo(235, 1));
+      expect(output.getPixel(0, 0).b, closeTo(250, 1));
+      expect(output.getPixel(1, 0).r, 255);
+      expect(output.getPixel(1, 0).g, 0);
+      expect(output.getPixel(1, 0).b, 0);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

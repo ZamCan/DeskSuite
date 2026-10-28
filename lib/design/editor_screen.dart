@@ -473,6 +473,14 @@ class _EditorScreenState extends State<EditorScreen>
     );
     final fits150 = fitting150 == 150;
     final fits300 = fitting300 == 300;
+    // Keep the shared main-branch lower-DPI choices as well as the highest
+    // exact fitting DPI, so a smaller output remains an explicit user choice.
+    const lowerChoices = [
+      (dpi: 100, pdf: _ExportChoice.pdf100, png: _ExportChoice.png100),
+      (dpi: 72, pdf: _ExportChoice.pdf72, png: _ExportChoice.png72),
+      (dpi: 60, pdf: _ExportChoice.pdf60, png: _ExportChoice.png60),
+      (dpi: 36, pdf: _ExportChoice.pdf36, png: _ExportChoice.png36),
+    ];
     final choice = await showModalBottomSheet<_ExportChoice>(
       context: context,
       showDragHandle: true,
@@ -578,6 +586,34 @@ class _EditorScreenState extends State<EditorScreen>
                   onTap: () => Navigator.pop(context, _ExportChoice.pngReduced),
                 ),
               ],
+              for (final option in lowerChoices)
+                if (fitting150 != null &&
+                    fitting150 < 150 &&
+                    option.dpi <= fitting150 &&
+                    option.dpi != fitting150) ...[
+                  ListTile(
+                    key: ValueKey('export-pdf-${option.dpi}'),
+                    leading: const Icon(Icons.picture_as_pdf_outlined),
+                    title: Text(
+                      '${option.dpi == 36 ? 'Banner' : 'Large-format'} PDF · ${option.dpi} dpi',
+                    ),
+                    subtitle: const Text(
+                      'Lower raster detail; inspect before production.',
+                    ),
+                    onTap: () => Navigator.pop(context, option.pdf),
+                  ),
+                  ListTile(
+                    key: ValueKey('export-png-${option.dpi}'),
+                    leading: const Icon(Icons.image_outlined),
+                    title: Text(
+                      '${option.dpi == 36 ? 'Banner' : 'Large-format'} PNG · ${option.dpi} dpi',
+                    ),
+                    subtitle: const Text(
+                      'Lower detail; PNG print size is not embedded.',
+                    ),
+                    onTap: () => Navigator.pop(context, option.png),
+                  ),
+                ],
               if (fitting150 == null)
                 const ListTile(
                   title: Text('Raster export unavailable for this page size.'),
@@ -606,6 +642,10 @@ class _EditorScreenState extends State<EditorScreen>
       _ExportChoice.pdf150 ||
       _ExportChoice.png150 => 150,
       _ExportChoice.pdf300 || _ExportChoice.png300 => 300,
+      _ExportChoice.pdf100 || _ExportChoice.png100 => 100,
+      _ExportChoice.pdf72 || _ExportChoice.png72 => 72,
+      _ExportChoice.pdf60 || _ExportChoice.png60 => 60,
+      _ExportChoice.pdf36 || _ExportChoice.png36 => 36,
       _ExportChoice.printReduced ||
       _ExportChoice.pdfReduced ||
       _ExportChoice.pngReduced => fitting150,
@@ -665,6 +705,10 @@ class _EditorScreenState extends State<EditorScreen>
         case _ExportChoice.png150:
         case _ExportChoice.png300:
         case _ExportChoice.pngReduced:
+        case _ExportChoice.png100:
+        case _ExportChoice.png72:
+        case _ExportChoice.png60:
+        case _ExportChoice.png36:
           bytes = await renderPng(doc, _images.images, dpi: exportDpi!);
           extension = 'png';
           mime = 'image/png';
@@ -673,6 +717,10 @@ class _EditorScreenState extends State<EditorScreen>
         case _ExportChoice.pdf150:
         case _ExportChoice.pdf300:
         case _ExportChoice.pdfReduced:
+        case _ExportChoice.pdf100:
+        case _ExportChoice.pdf72:
+        case _ExportChoice.pdf60:
+        case _ExportChoice.pdf36:
           bytes = await renderPdf(doc, _images.images, dpi: exportDpi!);
           extension = 'pdf';
           mime = 'application/pdf';
@@ -1060,8 +1108,16 @@ enum _ExportChoice {
   pdf150,
   pdf300,
   pdfReduced,
+  pdf100,
+  pdf72,
+  pdf60,
+  pdf36,
   png150,
   png300,
   pngReduced,
+  png100,
+  png72,
+  png60,
+  png36,
   project,
 }

@@ -105,6 +105,9 @@ void main() {
     expect(find.byKey(const Key('export-reduced-pdf')), findsOneWidget);
     expect(find.byKey(const Key('export-reduced-png')), findsOneWidget);
     expect(find.byKey(const Key('export-reduced-print')), findsOneWidget);
+    expect(find.byKey(const ValueKey('export-pdf-60')), findsOneWidget);
+    expect(find.byKey(const ValueKey('export-png-36')), findsOneWidget);
+    expect(find.byKey(const ValueKey('export-pdf-72')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
