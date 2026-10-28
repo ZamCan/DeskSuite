@@ -10,7 +10,6 @@ MODE="${1:-debug}"
 INSTALL_MODE="${2:-}"
 [[ "$MODE" == debug || "$MODE" == release ]] || fail "Use: bash tools/build-android.sh [debug|release] [--install]"
 [[ -z "$INSTALL_MODE" || "$INSTALL_MODE" == --install ]] || fail "The only supported second argument is --install."
-[[ "$INSTALL_MODE" != --install || "$MODE" == debug || "$MODE" == release ]] || fail "Invalid install mode."
 
 command -v flutter >/dev/null 2>&1 || fail "Flutter is not on PATH; check your existing installation with flutter doctor -v."
 command -v java >/dev/null 2>&1 || fail "Java is not on PATH; use a JDK compatible with the checked-in Gradle wrapper."
