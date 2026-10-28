@@ -51,6 +51,66 @@ void main() {
     },
   );
 
+  test(
+    'resize resampling changes pixel interpolation without changing the source',
+    () {
+      final image = img.Image(width: 2, height: 2, numChannels: 4);
+      image.setPixelRgba(0, 0, 0, 0, 0, 255);
+      image.setPixelRgba(1, 0, 255, 255, 255, 255);
+      image.setPixelRgba(0, 1, 255, 255, 255, 255);
+      image.setPixelRgba(1, 1, 0, 0, 0, 255);
+      final input = Uint8List.fromList(img.encodePng(image));
+      final before = Uint8List.fromList(input);
+      PhotoResult resize(PhotoResampling method) => processPhoto(
+        PhotoRequest(
+          input,
+          PhotoAction.resize,
+          width: 5,
+          height: 5,
+          keepAspect: false,
+          resampling: method,
+        ),
+      );
+      final nearest = img.decodePng(resize(PhotoResampling.nearest).bytes)!;
+      final linear = img.decodePng(resize(PhotoResampling.linear).bytes)!;
+      final cubic = img.decodePng(resize(PhotoResampling.cubic).bytes)!;
+      expect(nearest.getPixel(1, 1).r, 0);
+      expect(linear.getPixel(1, 1).r, greaterThan(0));
+      expect(linear.getPixel(1, 1).r, lessThan(255));
+      expect([cubic.width, cubic.height], [5, 5]);
+      expect(input, orderedEquals(before));
+    },
+  );
+
+  test('linear resize expands a palette instead of forcing nearest pixels', () {
+    final image = img.Image(
+      width: 2,
+      height: 2,
+      numChannels: 3,
+      withPalette: true,
+    );
+    image.palette!.setRgb(0, 0, 0, 0);
+    image.palette!.setRgb(1, 255, 255, 255);
+    image.setPixelIndex(0, 0, 0);
+    image.setPixelIndex(1, 0, 1);
+    image.setPixelIndex(0, 1, 1);
+    image.setPixelIndex(1, 1, 0);
+    final bytes = Uint8List.fromList(img.encodePng(image));
+    final resized = processPhoto(
+      PhotoRequest(
+        bytes,
+        PhotoAction.resize,
+        width: 5,
+        height: 5,
+        keepAspect: false,
+        resampling: PhotoResampling.linear,
+      ),
+    );
+    final pixel = img.decodePng(resized.bytes)!.getPixel(1, 1).r;
+    expect(pixel, greaterThan(0));
+    expect(pixel, lessThan(255));
+  });
+
   test('converts to real PNG/JPEG, flattening transparency on white', () {
     final transparent = img.Image(width: 3, height: 2, numChannels: 4);
     img.fill(transparent, color: img.ColorRgba8(0, 0, 0, 0));

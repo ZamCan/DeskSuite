@@ -4,12 +4,14 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show compute;
 import 'package:image/image.dart' as img;
 
+import '../core/image_limits.dart';
 import 'image_cleanup_pixels.dart';
 
-const int maxPhotoInputBytes = 8 * 1024 * 1024;
-const int maxPhotoWorkingBytes = 16 * 1024 * 1024;
-const int maxPhotoPixels = 12000000;
-const int maxPhotoSide = 8192;
+export '../core/image_limits.dart'
+    show maxPhotoInputBytes, maxPhotoWorkingBytes, maxPhotoPixels, maxPhotoSide;
+
+/// Resampling choices are explicit; interpolation cannot restore lost detail.
+enum PhotoResampling { nearest, linear, cubic }
 
 enum PhotoAction {
   inspect,
@@ -30,6 +32,7 @@ class PhotoRequest {
     this.width,
     this.height,
     this.keepAspect = true,
+    this.resampling = PhotoResampling.linear,
     this.quality = 90,
     this.backgroundColor = 0xFFFFFFFF,
   });
@@ -38,6 +41,7 @@ class PhotoRequest {
   final int? width;
   final int? height;
   final bool keepAspect;
+  final PhotoResampling resampling;
   final int quality;
 
   /// Opaque ARGB colour used by [PhotoAction.flattenBackground].
@@ -214,11 +218,24 @@ PhotoResult processPhoto(PhotoRequest request) {
       if (width * height > maxPhotoPixels) {
         throw const FormatException('Output exceeds 12 megapixels.');
       }
+      // The image package otherwise forces nearest-neighbour on indexed
+      // palettes. Expand those pixels when a different method was requested.
+      if (image.hasPalette && request.resampling != PhotoResampling.nearest) {
+        image = image.convert(
+          format: img.Format.uint8,
+          numChannels: image.hasAlpha ? 4 : 3,
+          noAnimation: true,
+        );
+      }
       image = img.copyResize(
         image,
         width: width,
         height: height,
-        interpolation: img.Interpolation.linear,
+        interpolation: switch (request.resampling) {
+          PhotoResampling.nearest => img.Interpolation.nearest,
+          PhotoResampling.linear => img.Interpolation.linear,
+          PhotoResampling.cubic => img.Interpolation.cubic,
+        },
       );
     case PhotoAction.flattenBackground:
       final color = request.backgroundColor;

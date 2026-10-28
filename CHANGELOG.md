@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — photo resize controls (not a release)
+
+- Added percentage resizing relative to the current working image, with rounded-dimension preview and bounded 1–1000% input. Added nearest, linear and cubic resampling to the existing photo engine; palette images are expanded when required so linear/cubic are not silently replaced with nearest-neighbour.
+- Fixed parsing of hidden pixel fields when switching to print-size mode and avoided a second proportional fit that could lose pixels after rounding. Percentage geometry and processor control flow passed DartPad/Node checks (the latter with a simulated codec); real codec and widget regression tests are written but unrun. See [validation](docs/engineering/VALIDATION.md).
+
 ## Unreleased — shared media and optimizer reconciliation (not a release)
 
 - Non-destructively integrated newer main work for poster export, shared media and card/badge/label sizes. Corrected the custom-size selection and aligned design/template/sheet page bounds to 10–2500 mm; the default 4 × 6 inch photo sheet now fits its four photos.

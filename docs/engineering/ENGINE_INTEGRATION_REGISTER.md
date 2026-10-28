@@ -15,7 +15,7 @@
 
 | Capability | Current engine/integration | Current truth | Required next gate |
 |---|---|---|---|
-| Image decode/transform | Dart image package; shared bounded photo processor | Local decode, orientation correction, crop/rotate/flip/resize, PNG/JPEG, solid background compositing, selective speck cleanup; bounded input and output | Profile colour/EXIF/alpha/animation edge cases, output fidelity, memory and responsiveness on target Android |
+| Image decode/transform | Dart image package; shared bounded photo processor | Local decode, orientation correction, crop/rotate/flip/resize (pixels, percentage or print size; nearest/linear/cubic), PNG/JPEG, solid background compositing, selective speck cleanup; bounded input and output | Run the new Flutter/codec tests; profile colour/EXIF/alpha/animation edge cases, output fidelity, memory and responsiveness on target Android |
 | Image compression | lib/images/image_optimizer.dart using image JPEG encoder | Offline JPEG quality, byte-reduction and target-KB modes; preset/custom pixel dimensions; review before saving copy | Full CI pass, verify codec behavior on real photos, batch workflow and format/metadata preservation decisions |
 | PDF writing | Dart pdf package | Generates image/text PDFs, photo sheets, design output and OCR searchable PDFs; it is not an existing-PDF reader/editor | Independent reader validation, huge-page limits, encryption path and PDF malformed-output checks |
 | System printing | printing package and PrintGateway seam | Generates PDF and hands it to platform print UI | Actual printers/drivers, supported media, scaling, margins, paper selection, cancellation and printer-job lifecycle on devices |

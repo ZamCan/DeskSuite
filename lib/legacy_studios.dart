@@ -20,6 +20,7 @@ import 'core/suite_paths.dart';
 import 'images/photo_processor.dart';
 import 'images/image_optimizer.dart';
 import 'images/print_dimensions.dart';
+import 'images/resize_dimensions.dart';
 import 'printing/print_gateway.dart';
 import 'printing/design_export.dart' show effectiveImageDpi;
 import 'printing/photo_sheet.dart';
@@ -859,6 +860,7 @@ class _PhotoPageState extends State<PhotoPage> {
     int? width,
     int? height,
     bool keepAspect = true,
+    PhotoResampling resampling = PhotoResampling.linear,
     int backgroundColor = 0xFFFFFFFF,
   }) async {
     final current = photo;
@@ -872,6 +874,7 @@ class _PhotoPageState extends State<PhotoPage> {
           width: width,
           height: height,
           keepAspect: keepAspect,
+          resampling: resampling,
           backgroundColor: backgroundColor,
         ),
       );
@@ -960,7 +963,10 @@ class _PhotoPageState extends State<PhotoPage> {
         PhotoAction.resize,
         width: size.width,
         height: size.height,
-        keepAspect: size.keepAspect,
+        // The dialog already calculates the final rounded dimensions. Fitting
+        // them a second time can lose a pixel on very small images.
+        keepAspect: false,
+        resampling: size.resampling,
       );
     }
   }
@@ -1452,10 +1458,12 @@ class _PhotoPageState extends State<PhotoPage> {
   );
 }
 
+enum _PhotoResizeMode { pixels, printSize, percentage }
+
 class _PhotoSize {
-  const _PhotoSize(this.width, this.height, this.keepAspect);
+  const _PhotoSize(this.width, this.height, this.resampling);
   final int width, height;
-  final bool keepAspect;
+  final PhotoResampling resampling;
 }
 
 class _ResizePhotoDialog extends StatefulWidget {
@@ -1473,8 +1481,10 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
   late final TextEditingController physicalWidth;
   late final TextEditingController physicalHeight;
   late final TextEditingController dpi;
+  final percentage = TextEditingController(text: '100');
   bool keepAspect = true;
-  bool physicalMode = false;
+  _PhotoResizeMode mode = _PhotoResizeMode.pixels;
+  PhotoResampling resampling = PhotoResampling.linear;
 
   @override
   void initState() {
@@ -1499,6 +1509,7 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
     physicalWidth.dispose();
     physicalHeight.dispose();
     dpi.dispose();
+    percentage.dispose();
     super.dispose();
   }
 
@@ -1510,13 +1521,45 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
   String? validatePhysical(String? value) {
     final n = double.tryParse(value ?? '');
     return n == null || !n.isFinite || n <= 0 || n > 2000
-        ? 'Enter a size from 0 to 2000 mm'
+        ? 'Use more than 0 and at most 2000 mm'
         : null;
   }
 
   String? validateDpi(String? value) {
     final n = int.tryParse(value ?? '');
     return n == null || n < 1 || n > 2400 ? 'Use 1–2400 DPI' : null;
+  }
+
+  String? validatePercentage(String? value) {
+    final n = double.tryParse(value ?? '');
+    if (n == null) return 'Use a percentage from 1 to 1000.';
+    try {
+      percentagePhotoDimensions(
+        sourceWidth: widget.width,
+        sourceHeight: widget.height,
+        percent: n,
+      );
+      return null;
+    } on FormatException catch (error) {
+      return error.message;
+    }
+  }
+
+  String get percentageSummary {
+    final n = double.tryParse(percentage.text);
+    if (n != null) {
+      try {
+        final result = percentagePhotoDimensions(
+          sourceWidth: widget.width,
+          sourceHeight: widget.height,
+          percent: n,
+        );
+        return 'Output: ${result.width} × ${result.height} pixels';
+      } on FormatException {
+        // The field validator describes the problem when the user submits.
+      }
+    }
+    return 'Enter a percentage that fits the image limits.';
   }
 
   void updateHeight(String value) {
@@ -1530,7 +1573,7 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
 
   void updatePhysicalHeight(String value) {
     final n = double.tryParse(value);
-    if (keepAspect && n != null && n > 0) {
+    if (keepAspect && n != null && n.isFinite && n > 0) {
       physicalHeight.text = (n * widget.height / widget.width).toStringAsFixed(
         2,
       );
@@ -1547,19 +1590,33 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SegmentedButton<bool>(
+            DropdownButtonFormField<_PhotoResizeMode>(
               key: const Key('photo-resize-mode'),
-              segments: const [
-                ButtonSegment(value: false, label: Text('Pixels')),
-                ButtonSegment(value: true, label: Text('Print size')),
+              initialValue: mode,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: 'Resize by'),
+              items: const [
+                DropdownMenuItem(
+                  value: _PhotoResizeMode.pixels,
+                  child: Text('Pixels'),
+                ),
+                DropdownMenuItem(
+                  value: _PhotoResizeMode.printSize,
+                  child: Text('Print size'),
+                ),
+                DropdownMenuItem(
+                  value: _PhotoResizeMode.percentage,
+                  child: Text('Percentage'),
+                ),
               ],
-              selected: {physicalMode},
-              onSelectionChanged: (value) {
-                setState(() => physicalMode = value.first);
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => mode = value);
+                }
               },
             ),
             const SizedBox(height: 12),
-            if (!physicalMode) ...[
+            if (mode == _PhotoResizeMode.pixels) ...[
               TextFormField(
                 key: const Key('photo-width'),
                 controller: width,
@@ -1577,7 +1634,7 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
                 validator: validateSide,
                 onChanged: (_) => setState(() {}),
               ),
-            ] else ...[
+            ] else if (mode == _PhotoResizeMode.printSize) ...[
               TextFormField(
                 key: const Key('photo-print-width-mm'),
                 controller: physicalWidth,
@@ -1613,37 +1670,86 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
                 validator: validateDpi,
               ),
               const Text(
-                'Print size determines the pixel dimensions from millimetres and DPI. The image is resampled; DPI metadata and printer calibration are not guaranteed by this export.',
+                'Millimetres and DPI determine pixel dimensions. The image is resampled; DPI metadata and printer calibration are not guaranteed.',
                 textAlign: TextAlign.start,
               ),
+            ] else ...[
+              TextFormField(
+                key: const Key('photo-scale-percent'),
+                controller: percentage,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(labelText: 'Scale (%)'),
+                validator: validatePercentage,
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                percentageSummary,
+                key: const Key('photo-percentage-summary'),
+              ),
+              const Text(
+                'Percentage applies to the current working copy and preserves proportions as closely as whole pixels allow.',
+              ),
             ],
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Keep aspect ratio'),
-              value: keepAspect,
-              onChanged: (value) {
-                setState(() => keepAspect = value ?? true);
-                if (keepAspect) {
-                  if (physicalMode) {
-                    updatePhysicalHeight(physicalWidth.text);
-                  } else {
-                    updateHeight(width.text);
+            if (mode != _PhotoResizeMode.percentage) ...[
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Keep aspect ratio'),
+                value: keepAspect,
+                onChanged: (value) {
+                  setState(() => keepAspect = value ?? true);
+                  if (keepAspect) {
+                    if (mode == _PhotoResizeMode.printSize) {
+                      updatePhysicalHeight(physicalWidth.text);
+                    } else {
+                      updateHeight(width.text);
+                    }
                   }
+                },
+              ),
+              const Text(
+                'Turning off aspect preservation forces exact dimensions and may distort the image.',
+              ),
+            ],
+            const SizedBox(height: 8),
+            DropdownButtonFormField<PhotoResampling>(
+              key: const Key('photo-resampling'),
+              initialValue: resampling,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: 'Resampling'),
+              items: const [
+                DropdownMenuItem(
+                  value: PhotoResampling.nearest,
+                  child: Text(
+                    'Nearest · preserve pixel edges',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: PhotoResampling.linear,
+                  child: Text('Linear · balanced'),
+                ),
+                DropdownMenuItem(
+                  value: PhotoResampling.cubic,
+                  child: Text(
+                    'Cubic · smoother, slower',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => resampling = value);
                 }
               },
             ),
             const Text(
-              'Keep aspect ratio preserves proportions. Turn it off to force exact dimensions, which may distort the image. Output is limited to 12 megapixels.',
+              'Output is limited to 12 megapixels and 8192 pixels per side. Enlarging adds interpolated pixels, not new detail.',
             ),
-            if (!physicalMode &&
-                ((int.tryParse(width.text) ?? 0) > widget.width ||
-                    (int.tryParse(height.text) ?? 0) > widget.height))
-              const Padding(
-                padding: EdgeInsets.only(top: 8),
-                child: Text(
-                  'Enlargement adds interpolated pixels, not new detail.',
-                ),
-              ),
           ],
         ),
       ),
@@ -1656,44 +1762,44 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
       FilledButton(
         onPressed: () {
           if (!form.currentState!.validate()) return;
-          var w = int.parse(width.text);
-          var h = int.parse(height.text);
-          if (physicalMode) {
-            final targetDpi = int.parse(dpi.text);
-            try {
-              final dimensions = printDimensionsToPixels(
-                widthMm: double.parse(physicalWidth.text),
-                heightMm: double.parse(physicalHeight.text),
-                dpi: targetDpi,
-              );
-              w = dimensions.width;
-              h = dimensions.height;
-            } on FormatException catch (error) {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text(error.message)));
-              return;
+          try {
+            late int w, h;
+            switch (mode) {
+              case _PhotoResizeMode.pixels:
+                w = int.parse(width.text);
+                h = keepAspect
+                    ? math.max(1, (w * widget.height / widget.width).round())
+                    : int.parse(height.text);
+              case _PhotoResizeMode.printSize:
+                final dimensions = printDimensionsToPixels(
+                  widthMm: double.parse(physicalWidth.text),
+                  heightMm: double.parse(physicalHeight.text),
+                  dpi: int.parse(dpi.text),
+                );
+                w = dimensions.width;
+                h = keepAspect
+                    ? math.max(1, (w * widget.height / widget.width).round())
+                    : dimensions.height;
+              case _PhotoResizeMode.percentage:
+                final dimensions = percentagePhotoDimensions(
+                  sourceWidth: widget.width,
+                  sourceHeight: widget.height,
+                  percent: double.parse(percentage.text),
+                );
+                w = dimensions.width;
+                h = dimensions.height;
             }
             if (w < 1 || h < 1 || w > maxPhotoSide || h > maxPhotoSide) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Print size exceeds the 8192-pixel side limit.',
-                  ),
-                ),
-              );
-              return;
+              throw const FormatException('Output side must be 1–8192 pixels.');
             }
-            if (keepAspect) {
-              h = math.max(1, (w * widget.height / widget.width).round());
+            if (w * h > maxPhotoPixels) {
+              throw const FormatException('Output exceeds 12 megapixels.');
             }
+            Navigator.pop(context, _PhotoSize(w, h, resampling));
+          } on FormatException catch (error) {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(error.message)));
           }
-          if (w * h > maxPhotoPixels) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Output exceeds 12 megapixels.')),
-            );
-            return;
-          }
-          Navigator.pop(context, _PhotoSize(w, h, keepAspect));
         },
         child: const Text('Resize'),
       ),

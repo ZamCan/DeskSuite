@@ -1,5 +1,11 @@
 # Validation record
 
+## Percentage resizing and resampling — 2026-10-28
+
+The actual dependency-free `percentagePhotoDimensions` helper and `test/resize_dimensions_smoke.dart` passed on DartPad Dart 3.13.7 DDC/Node: fractional scaling, small-image rounding, 1-pixel minimum, invalid/non-finite percentages, input bounds and 8192-side/12-MP output bounds. The composed harness had one unused `dart:typed_data` import warning. The actual resize dialog analyzed without issues when composed with the real dimension helpers and a minimal photo-resampling enum. DartPad's formatter reported no pending changes across all 124 Dart files under `lib/` and `test/` at this point; this is not a local Dart SDK run.
+
+A separate DDC/Node check exercised the **actual photo processor control flow with a simulated image codec**: nearest, linear and cubic were each mapped to the requested resampler, and indexed input was expanded for linear/cubic. This does not prove pixel results or the real `image` package integration. New Flutter codec tests cover pixel differences and palette input; widget tests cover percentage, chosen interpolation and switching away from an invalid hidden pixel field. **Those Flutter tests and Android behavior have not been run here.**
+
 ## Media, raster budget and optimizer integration — 2026-10-28
 
 Main was merged non-destructively through `b226257` after reviewing its independent poster-export, default-sheet and card/label work. The actual dependency-free Dart `raster_budget.dart` and checked-in `test/raster_budget_smoke.dart` ran via DartPad 3.13.7 DDC and local Node: **56 catalogue entries** each had a fitting whole-number DPI and remained within 16 MP/8192 px; the next DPI was rejected when the chosen value was below 150. Actual `PhotoSheetSpec` geometry composed with the catalogue and limits also passed for those 56 entries, the four-photo 4 × 6 inch default and the lower boundary. The shared template generator composed with simple element/ID stubs passed 48 template/size combinations, including 10 and 2500 mm bounds.
@@ -100,6 +106,7 @@ flutter pub get
 dart test/pixel_algorithms_smoke.dart
 dart test/page_corner_pixels_smoke.dart
 dart test/raster_budget_smoke.dart
+dart test/resize_dimensions_smoke.dart
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze --no-pub
 flutter test --no-pub --concurrency=1 --reporter expanded --timeout 120s
