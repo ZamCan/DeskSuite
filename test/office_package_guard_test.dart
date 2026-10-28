@@ -24,7 +24,7 @@ void main() {
     expect(package.entryCount, 2);
   });
 
-  test('checks actual CRC even though ZipDecoder verify is ineffective', () {
+  test('rejects changed stored content when its CRC no longer matches', () {
     final bytes = base64.decode(_fixture);
     bytes[30 + 'word/document.xml'.length + 5] ^= 1; // Stored content only.
     // Headers remain consistent, so the CRC check must catch the damage.
