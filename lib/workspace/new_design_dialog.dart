@@ -179,6 +179,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                 children: [
                   Expanded(
                     child: TextFormField(
+                      key: const Key('canvas-width'),
                       controller: _width,
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
@@ -194,6 +195,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextFormField(
+                      key: const Key('canvas-height'),
                       controller: _height,
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
