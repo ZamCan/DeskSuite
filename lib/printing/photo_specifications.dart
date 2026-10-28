@@ -82,4 +82,5 @@ const photoSpecifications = <PhotoSpecification>[
     notes: 'The authority specifies 50 × 70 mm and chin-to-crown head height of 31–36 mm. Other quality and professional-printing rules apply.',
   ),
 ];
-const customPhotoSpecificationIndex = photoSpecifications.length;
+// Keep this equal to photoSpecifications.length; guarded by a regression test.
+const customPhotoSpecificationIndex = 5;
