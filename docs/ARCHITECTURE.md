@@ -1,5 +1,7 @@
 # Architecture
 
+> Product-wide architecture contract: [Unified product architecture and integration plan](engineering/UNIFIED_PRODUCT_ARCHITECTURE.md). This file describes the current implementation layout; it is not a complete product roadmap.
+
 ## Choice and boundaries
 
 Flutter/Dart is the single UI stack: native Android packaging and plugins first, with shared logic reusable on Windows/Linux. Desktop shells and plugin behavior still require host builds and testing. We did not substitute a web application or add a second UI framework. `file_picker` handles user-directed file selection/export, `image_picker` delegates Android camera capture to an installed camera app, `path_provider` finds app support storage, `image` performs local photo transformations, and `pdf`/`printing` generate and hand PDFs to OS services. All core workflows are local; OS print services may themselves use the network if the user selects a network printer.
@@ -11,7 +13,7 @@ Flutter/Dart is the single UI stack: native Android packaging and plugins first,
 - `lib/workspace/`: project browser, new-design dialog, bounded file-picker boundary, `.dsdesign` repository and one-way earlier-project conversion.
 - `lib/core/`: random IDs, shared app-support root, queued bounded local files and same-directory temporary-file replacement/recovery.
 - `lib/images/`: validated first-frame photo decode and operations dispatched to a background isolate, including a 4-megapixel selective 3×3 impulse-noise filter that preserves alpha and skips transparent neighborhoods.
-- `lib/document_scan/`: Android camera gateway, projective manual correction, bounded local-paper luminance estimates and adaptive cleanup, temporary before/after preview, bounded ordered image-PDF generation, and manifest-last recoverable private draft. OCR and PDF reading are not provided.
+- `lib/document_scan/`: Android camera gateway, projective manual correction, bounded local-paper luminance estimates and adaptive cleanup, temporary before/after preview, bounded ordered image-PDF generation, and manifest-last recoverable private draft. OCR is implemented separately under `lib/ocr/`; **existing-PDF reading and manipulation remain missing**.
 - `lib/workspace/conversion_catalog.dart`: declared implemented and unavailable routes; its page links to actual tools instead of faking conversions. `getting_started_page.dart` links fictional examples to those tools.
 - `lib/printing/`: physical unit conversion and flattened design PDF, bounded photo-sheet layout/PDF, and injectable system-print boundary.
 - `lib/business/`: typed catalogue, integer minor-unit money, arbitrary-precision totals and per-repository serialized stock updates.
