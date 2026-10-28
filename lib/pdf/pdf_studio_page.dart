@@ -64,9 +64,13 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
         _status = 'Original opened read-only. Save edits as a separate copy.';
       });
     } catch (error) {
-      if (mounted) setState(() => _error = 'Could not open this PDF: $error');
+      if (mounted) {
+        setState(() => _error = 'Could not open this PDF: $error');
+      }
     } finally {
-      if (mounted) setState(() => _opening = false);
+      if (mounted) {
+        setState(() => _opening = false);
+      }
     }
   }
 
@@ -122,7 +126,9 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
         _status = '${_combineSources.length} PDF file(s) selected.';
       });
     } catch (error) {
-      if (mounted) setState(() => _error = 'Could not add this PDF: $error');
+      if (mounted) {
+        setState(() => _error = 'Could not add this PDF: $error');
+      }
     } finally {
       if (mounted) setState(() => _opening = false);
     }
@@ -169,7 +175,9 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
         }
       });
     } catch (error) {
-      if (mounted) setState(() => _error = 'Could not combine these PDFs: $error');
+      if (mounted) {
+        setState(() => _error = 'Could not combine these PDFs: $error');
+      }
     } finally {
       if (mounted) {
         setState(() => _combining = false);
@@ -209,7 +217,9 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
         setState(() => _error = 'Could not export the edited PDF: $error');
       }
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
 
