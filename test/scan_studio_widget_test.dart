@@ -262,6 +262,7 @@ void main() {
       await tapVisible(tester, find.text('Export page PNG'));
       await waitIo(tester);
       expect(files.exported, orderedEquals(cleaned.image.bytes));
+      final scanStateBeforeExport = tester.state(find.byType(ScanStudioPage));
       await tapVisible(tester, find.byKey(const Key('scan-pdf')));
       await waitIo(tester, rounds: 45);
       await tapVisible(tester, find.byKey(const Key('scan-save-pdf')));
@@ -269,6 +270,7 @@ void main() {
       expect(String.fromCharCodes(files.exported!.take(5)), '%PDF-');
       final persistedAfterExport = await readDraft(tester, store);
       expect(persistedAfterExport, hasLength(1));
+      expect(tester.state(find.byType(ScanStudioPage)), same(scanStateBeforeExport));
       await settleUntil(tester, find.textContaining('1 of 8 pages'));
       expect(find.byType(ScanStudioPage), findsOneWidget);
       expect(find.byKey(const Key('scan-page-0')), findsOneWidget);
