@@ -10,6 +10,7 @@ DeskSuite repository code is licensed under [Apache-2.0](LICENSE). Direct runtim
 | path_provider | 2.1.6 | [BSD-3-Clause](third_party/path_provider.LICENSE) |
 | image | 4.12.0 | [MIT](third_party/image.LICENSE); [additional codec notices](third_party/image-additional-notices.md) |
 | pdf | 3.13.1 | [Apache-2.0](third_party/pdf.LICENSE) |
+| pdf_document | 10.0.0 | Apache-2.0; pure-Dart PDF inspection/merge dependency (no bundled native runtime) |
 | printing | 5.15.1 | [Apache-2.0](third_party/printing.LICENSE) |
 | archive | 4.5.2 | MIT |
 | xml | 7.0.1 | MIT |
@@ -17,7 +18,7 @@ DeskSuite repository code is licensed under [Apache-2.0](LICENSE). Direct runtim
 | tessdata_fast language models (`eng`, `swa`) | fetched from `tesseract-ocr/tessdata_fast` | Apache-2.0 (repository licence); LSTM data, Tesseract 4/5 engine only |
 | Noto Sans Regular/Bold (embedded PDF font) | 2022 release | [SIL Open Font License 1.1](third_party/noto-fonts.OFL.txt) |
 
-The consolidation branch adds dart_pdf_editor 10.0.0 (Apache-2.0) for existing-PDF editing. Its resolved pubspec.lock and transitive notices are a merge gate; regenerate the lock and notice collection after resolving the package and review native dependencies/licences before distribution.
+The PDF workflows use `dart_pdf_editor` 10.0.0 and `pdf_document` 10.0.0 (Apache-2.0) for existing-PDF editing, inspection and ordered merging. The resolved lockfile is enforced in CI; the PDF engine is pure Dart, while full distribution still requires reviewing every resolved package and platform-specific dependency notice.
 
 The [Pub notice collection](third_party/pub-packages.LICENSES.txt) contains root-level licence/notice files for all 87 hosted packages in `pubspec.lock`, including development and platform-specific dependencies. In particular it includes `image_picker_android` 0.8.13+25, `image_picker_platform_interface` 2.11.2, `flutter_plugin_android_lifecycle` 2.0.35 and `cross_file` 0.3.5+5. Recreate it from the local Pub cache with `python3 tools/generate_pub_notices.py` after resolving packages and review the diff. Some packages do not ship on every platform.
 

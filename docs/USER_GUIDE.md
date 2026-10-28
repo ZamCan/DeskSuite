@@ -1,6 +1,6 @@
 # DeskSuite user guide
 
-DeskSuite is a local-first work-in-progress, not a finished office suite. **Getting started** in the navigation has fictional, revisitable exercises; the first welcome can be skipped. No account is required for the local tools described here. Native Android camera, file-picker and print behavior still needs real-device validation for this version.
+DeskSuite is an actively developed document and creative workspace, not a finished office suite. **Getting started** in the navigation has fictional, revisitable exercises; the first welcome can be skipped. No account is required for the local tools described here. Native Android camera, file-picker and print behavior still needs real-device validation for this version.
 
 ## Scan pages into an image PDF
 
@@ -28,7 +28,7 @@ The Photo working copy is not restored after the app closes. Export it to keep i
 ## Extract text from a photo or scan
 
 1. Open the menu → **Text extraction**. The first card tells you whether the
-   offline recognizer is ready on this build. If it is not, the screen says so
+   text recognizer is available on this build. If it is not, the screen says so
    instead of showing an empty result.
 2. Choose **Choose image**, or **Use sample letter** to practise. Large images
    are prepared automatically: the real format is verified, EXIF orientation is
@@ -77,7 +77,7 @@ images, charts, macros, comments, text boxes, number formats and original page l
 
 ## Open and edit an existing PDF
 
-1. Open the menu → **PDF Studio** and choose a supported PDF from local storage.
+1. Open the menu → **PDF Studio** and choose a supported PDF. To combine files, choose **Combine PDFs**, add at least two PDF files in order, reorder if needed, then export a new combined copy.
 2. Review the loaded document and use the available page/content editing tools. Save a **separate copy** rather than overwriting the original.
 3. Existing PDF input/output is limited to 48 MiB. Encrypted, malformed, complex or very large PDFs may not open or may use substantial memory. A file-header check does not prove full validity.
 4. PDF Studio does not guarantee compatibility with every form, digital signature, annotation, embedded file or advanced PDF feature. Check the saved copy in an independent PDF reader. PDF Studio editing is not a cryptographic signature.

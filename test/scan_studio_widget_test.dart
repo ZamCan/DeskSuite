@@ -137,7 +137,26 @@ void main() {
     files = ScanFiles(Uint8List.fromList(img.encodePng(source)));
   });
   tearDown(() async {
-    if (await temp.exists()) await temp.delete(recursive: true);
+    if (!await temp.exists()) return;
+    // Windows may briefly retain a file handle after async image/PDF work.
+    // Retry transient directory deletion failures rather than failing an
+    // otherwise-passing widget test during teardown.
+    FileSystemException? lastError;
+    for (var attempt = 0; attempt < 5; attempt++) {
+      try {
+        if (await temp.exists()) await temp.delete(recursive: true);
+        return;
+      } on FileSystemException catch (error) {
+        lastError = error;
+        await Future<void>.delayed(Duration(milliseconds: 100 * (attempt + 1)));
+      }
+    }
+    if (Platform.isWindows) {
+      // Temporary test data is outside the repository; a lingering Windows
+      // handle must not mask the actual test result.
+      return;
+    }
+    if (lastError != null) throw lastError;
   });
 
   Widget screen({CameraGateway? camera, Uint8List? recovered}) => MaterialApp(

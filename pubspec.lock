@@ -622,7 +622,7 @@ packages:
     source: hosted
     version: "10.0.0"
   pdf_document:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: pdf_document
       sha256: "515c3e7731c21ad79ca48e99ac9876a505a7c01184764de84a726694084649d3"

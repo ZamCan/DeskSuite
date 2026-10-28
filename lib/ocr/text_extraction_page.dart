@@ -292,7 +292,7 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Offline recognition of a photo or image you choose. Review the text '
+          'On-device text recognition for a photo or image you choose. Review the text '
           'before you rely on it; complex tables, columns and handwriting are '
           'not reconstructed.',
           style: Theme.of(context).textTheme.bodyMedium
@@ -320,7 +320,7 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
             height: 20,
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
-          title: Text('Checking the offline recognizer…'),
+          title: Text('Checking the text recognizer…'),
         ),
       );
     }
@@ -328,7 +328,7 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
       return Card(
         child: ListTile(
           leading: Icon(Icons.verified_outlined, color: scheme.primary),
-          title: const Text('Offline recognizer ready'),
+          title: const Text('Text recognizer ready'),
           subtitle: Text(
             '${_engine.label}. Images stay on this device. Languages: '
             'English and English + Kiswahili.',

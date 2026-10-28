@@ -129,7 +129,7 @@ void main() {
       host(engine: engine, files: files, sample: sampleImage()),
     );
     await settle(tester);
-    expect(find.text('Offline recognizer ready'), findsOneWidget);
+    expect(find.text('Text recognizer ready'), findsOneWidget);
 
     await reveal(tester, find.byKey(const Key('ocr-sample')));
 

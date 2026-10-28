@@ -32,20 +32,40 @@ class WorkspaceSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    Widget item(IconData icon, String label, WorkspaceSection value) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      child: ListTile(
-        key: Key('nav-${value.name}'),
-        dense: true,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        selected: section == value,
-        selectedTileColor: scheme.primary.withValues(alpha: .09),
-        selectedColor: scheme.primary,
-        leading: Icon(icon, size: 21),
-        title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-        onTap: () => onNavigate(value),
-      ),
-    );
+    Widget item(IconData icon, String label, WorkspaceSection value) {
+      final selected = section == value;
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        child: ListTile(
+          key: Key('nav-${value.name}'),
+          dense: true,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          selected: selected,
+          selectedTileColor: scheme.primary.withValues(alpha: .09),
+          selectedColor: scheme.primary,
+          leading: Container(
+            key: Key('nav-icon-tile-${value.name}'),
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: selected ? .16 : .055),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              icon,
+              size: 19,
+              color: selected ? scheme.primary : scheme.onSurfaceVariant,
+            ),
+          ),
+          title: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          onTap: () => onNavigate(value),
+        ),
+      );
+    }
     return Material(
       color: scheme.surface,
       child: ListView(

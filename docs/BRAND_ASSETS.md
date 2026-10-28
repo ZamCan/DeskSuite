@@ -5,6 +5,7 @@
 - `assets/brand/desksuite-mark.svg` is the transparent master vector mark. Keep the open-page crease and interlocking D/S geometry intact.
 - `assets/brand/desksuite-app-icon.svg` is the desktop/AppImage icon variant with the same mark over the warm ink background.
 - `lib/app/theme.dart` draws the mark natively in the Flutter interface so the app does not need a runtime SVG renderer.
+- `lib/app/startup_view.dart` uses that same mark and palette while local storage initializes. It has no fixed delay, so it cannot hold the user on a splash once the workspace is ready.
 - Android vector resources under `android/app/src/main/res/drawable/` provide adaptive foreground and monochrome icon artwork. Adaptive icon XML supplies the background separately; do not bake a second background into the foreground vector.
 - Legacy density icons, adaptive/monochrome resources and splash XML are already part of the Android project. Their actual appearance still needs physical-device checks.
 

@@ -22,7 +22,7 @@ class _NoFiles implements FileGateway {
 }
 
 void main() {
-  testWidgets('DeskSuite starts with its local workspace', (tester) async {
+  testWidgets('DeskSuite starts without a static connectivity status', (tester) async {
     final dir = await tester.runAsync(
       () => Directory.systemTemp.createTemp('desksuite_smoke_'),
     );
@@ -38,6 +38,8 @@ void main() {
       );
     }
     expect(find.text('Workspace'), findsWidgets);
+    expect(find.text('Offline'), findsNothing);
+    expect(find.text('LOCAL WORKSPACE'), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.runAsync(() => dir.delete(recursive: true));
   });

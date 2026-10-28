@@ -436,18 +436,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
-          if (wide)
-            Text(
-              'LOCAL WORKSPACE',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                letterSpacing: 1.5,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          const SizedBox(width: 12),
-          const Icon(Icons.lock_outline_rounded, size: 17),
-          const SizedBox(width: 6),
-          Text('Offline', style: Theme.of(context).textTheme.labelMedium),
+          if (wide) const SizedBox(width: 12),
         ],
       ),
     ),
@@ -633,7 +622,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               const Divider(height: 1),
               const ListTile(
                 leading: Icon(Icons.folder_outlined),
-                title: Text('Local project storage'),
+                title: Text('Project storage'),
                 subtitle: Text(
                   'Projects are stored in the app’s private files. Export a project copy before uninstalling.',
                 ),
