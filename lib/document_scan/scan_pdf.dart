@@ -5,7 +5,6 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../images/photo_processor.dart';
-import '../printing/paper_catalog.dart';
 
 const int maxScanPages = 8;
 const int maxScanTotalBytes = 32 * 1024 * 1024;
