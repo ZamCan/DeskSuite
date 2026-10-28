@@ -2,7 +2,13 @@
 
 **Create. Design. Print. Manage.**
 
-DeskSuite is an Android-first, local-first Flutter workspace by ZamCan (Mussa Fikiri Ngwegelo). This repository is an actively developed foundation, **not a production-ready office suite**. The current document and image workflows have host-test evidence; native Android capture, storage, printing, signing and device behavior still need verification.
+DeskSuite is an Android-first, local-first multipurpose creative, office, document-capture, image-editing, print-production and stationery-business workspace by ZamCan (Mussa Fikiri Ngwegelo). PDF is one supported document workflow, not the product's centre. This repository is an actively developed foundation, **not a production-ready suite**. Some core workflows have host-test evidence; native Android behavior, full Office/PDF editing, complete POS and release readiness remain incomplete or unverified.
+
+**Product architecture:** [Unified product and engine integration contract](docs/engineering/UNIFIED_PRODUCT_ARCHITECTURE.md). It defines the shared document/asset engines, one design system, workflow acceptance tests, engine-selection gates and product-wide roadmap. Use it alongside the [master engineering directive](docs/engineering/MASTER_ENGINEERING_DIRECTIVE.md).
+
+## Product areas
+
+DeskSuite is organized around one shared workspace: **Home & Files, Studio, Image Lab, Capture, Office, PDF & Print, and Business**. These are coordinated product areas, not separate mini-apps. They should share projects, asset references, import/export, print services, navigation, design tokens and recovery behavior. The implemented features below are a truthful inventory of the current source, not a claim that all benchmark-product capabilities are complete.
 
 ## What you can do in this source tree
 
