@@ -1165,7 +1165,9 @@ class _PhotoPageState extends State<PhotoPage> {
           ],
         ),
       );
-      if (proceed != true || !mounted) return;
+      if (proceed != true || !mounted) {
+        return;
+      }
     }
     setState(() => busy = true);
     try {
@@ -2555,7 +2557,11 @@ class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
         ),
         if (preset != ImageSizePreset.original) ...[
           Row(children: [
-            Expanded(child: TextField(key: const Key('optimizer-width'), controller: width, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Width (px)'), onChanged: (_) { if (preset != ImageSizePreset.custom) setState(() => preset = ImageSizePreset.custom); })),
+            Expanded(child: TextField(key: const Key('optimizer-width'), controller: width, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Width (px)'), onChanged: (_) {
+              if (preset != ImageSizePreset.custom) {
+                setState(() => preset = ImageSizePreset.custom);
+              }
+            })),
             const SizedBox(width: 12),
             Expanded(child: TextField(key: const Key('optimizer-height'), controller: height, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Height (px)'), onChanged: (_) { if (preset != ImageSizePreset.custom) setState(() => preset = ImageSizePreset.custom); })),
           ]),
