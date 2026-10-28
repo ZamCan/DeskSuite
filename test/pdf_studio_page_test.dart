@@ -10,9 +10,11 @@ import 'package:pdf/widgets.dart' as pw;
 class PdfPicker implements DocumentPicker {
   PdfPicker(this.picked);
   PickedDocument? picked;
+  final List<PickedDocument?> queue = <PickedDocument?>[];
 
   @override
-  Future<PickedDocument?> pickDocument() async => picked;
+  Future<PickedDocument?> pickDocument() async =>
+      queue.isNotEmpty ? queue.removeAt(0) : picked;
 }
 
 class PdfFiles implements FileGateway {
@@ -131,6 +133,42 @@ void main() {
     );
     expect(find.byType(PdfEditorView), findsNothing);
     expect(files.savedBytes, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('PDF Studio lets the user select and order PDFs before export', (
+    tester,
+  ) async {
+    final first = await samplePdf();
+    final second = await samplePdf();
+    final picker = PdfPicker(null)
+      ..queue.addAll([
+        (bytes: first, name: 'cover.pdf'),
+        (bytes: second, name: 'report.pdf'),
+      ]);
+    final files = PdfFiles();
+    await tester.pumpWidget(
+      MaterialApp(home: PdfStudioPage(picker: picker, files: files)),
+    );
+
+    await tester.tap(find.byKey(const Key('pdf-studio-combine')));
+    await tester.pump();
+    expect(find.byKey(const Key('pdf-combine-panel')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('pdf-combine-add')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('cover.pdf'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('pdf-combine-add')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('report.pdf'), findsOneWidget);
+    expect(tester.widget<FilledButton>(find.byKey(const Key('pdf-combine-save'))).onPressed, isNotNull);
+
+    await tester.tap(find.byTooltip('Move up').last);
+    await tester.pump();
+    expect(find.text('report.pdf'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
