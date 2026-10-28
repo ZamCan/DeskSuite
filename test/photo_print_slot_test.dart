@@ -102,6 +102,78 @@ void main() {
     controller.dispose();
   });
 
+  test('staff, member and event slots survive project round-trip and undo', () {
+    for (final template in [
+      DesignTemplate.identityBadge,
+      DesignTemplate.memberCard,
+      DesignTemplate.eventBadge,
+    ]) {
+      final definition = designTemplateDefinition(template);
+      final original =
+          DesignDocument.blank(
+            name: definition.label,
+            widthMm: definition.widthMm,
+            heightMm: definition.heightMm,
+          ).copyWith(
+            elements: buildDesignTemplateElements(
+              template,
+              widthMm: definition.widthMm,
+              heightMm: definition.heightMm,
+            ),
+          );
+      final reopened = DesignDocument.decode(original.encode());
+      final slot = reopened.elements.singleWhere(
+        (element) => element.text == photoPlaceholderMarker,
+      );
+      // Even a legacy-looking overlapping label belongs to the user and must
+      // not be deleted when a modern marked slot is filled.
+      final unrelated = DesignElement(
+        id: 'unrelated-label',
+        kind: ElementKind.text,
+        x: slot.x,
+        y: slot.y,
+        width: 4,
+        height: 4,
+        text: '35 × 45 mm — unrelated artwork',
+      );
+      final controller = DesignController(
+        reopened.copyWith(elements: [...reopened.elements, unrelated]),
+      );
+      controller.select(slot.id);
+      expect(controller.canFillSelectedPhotoPlaceholder, isTrue);
+      final photo = DesignElement(
+        id: 'id-photo',
+        kind: ElementKind.image,
+        x: slot.x,
+        y: slot.y,
+        width: slot.width,
+        height: slot.height,
+        imageBytes: samplePng(),
+      );
+      controller.replaceSelectedPhotoPlaceholder(photo);
+      expect(
+        controller.document.elements.any((e) => e.id == unrelated.id),
+        isTrue,
+      );
+      expect(controller.document.elements.any((e) => e.id == photo.id), isTrue);
+      expect(
+        DesignDocument.decode(controller.document.encode()).elements
+            .singleWhere((e) => e.id == photo.id)
+            .imageBytes,
+        orderedEquals(photo.imageBytes!),
+      );
+      controller.undo();
+      expect(controller.document.elements.any((e) => e.id == slot.id), isTrue);
+      expect(
+        controller.document.elements.any((e) => e.id == unrelated.id),
+        isTrue,
+      );
+      controller.redo();
+      expect(controller.document.elements.any((e) => e.id == photo.id), isTrue);
+      controller.dispose();
+    }
+  });
+
   test('rejects a regular rectangle instead of deleting unrelated artwork', () {
     final document = DesignDocument.blank(
       name: 'Test',

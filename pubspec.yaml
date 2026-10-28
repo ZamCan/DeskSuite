@@ -38,6 +38,7 @@ flutter:
     - assets/brand/sections/
     - assets/licenses/office-engine-notices.txt
     - assets/samples/
+    - assets/samples/office_templates/
     - assets/tessdata/
   fonts:
     # Embedded so generated PDFs keep smart quotes, dashes, accents and

@@ -118,18 +118,7 @@ class ObjectInspector extends StatelessWidget {
                   action(Icons.delete_outline, 'Delete object', onDelete),
                 ],
               ),
-              if (item.kind == ElementKind.rectangle &&
-                  item.width == 35 &&
-                  item.height == 45 &&
-                  controller.document.elements.any(
-                    (element) =>
-                        element.kind == ElementKind.text &&
-                        element.text.contains('35 × 45 mm') &&
-                        element.x >= item.x &&
-                        element.x < item.x + item.width &&
-                        element.y >= item.y &&
-                        element.y < item.y + item.height,
-                  )) ...[
+              if (controller.canFillSelectedPhotoPlaceholder) ...[
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
                   key: const Key('fill-photo-slot'),

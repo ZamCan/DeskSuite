@@ -380,12 +380,39 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
                 Navigator.pop(context, ['report-1.png', 'report-2.png']),
             child: const Text('Two-page report · practise a multipage PDF'),
           ),
+          SimpleDialogOption(
+            key: const Key('sample-office-pack'),
+            onPressed: () => Navigator.pop(context, [
+              'letter.png',
+              'invoice.png',
+              'application-form.png',
+            ]),
+            child: const Text(
+              'Three-page office pack · letter, invoice and practice form',
+            ),
+          ),
+          SimpleDialogOption(
+            key: const Key('sample-cleanup-pack'),
+            onPressed: () => Navigator.pop(context, [
+              'clean-practice-page.png',
+              'shadowed-practice-page.png',
+              'angled-practice-page.jpg',
+            ]),
+            child: const Text(
+              'Three-page scan pack · clean, shadowed and angled examples',
+            ),
+          ),
         ],
       ),
     );
     if (paths == null || !mounted) return;
     setState(() => busy = true);
     try {
+      if (pages.length + paths.length > maxScanPages) {
+        throw const FormatException(
+          'This package would exceed the 8-page draft limit. Remove pages first.',
+        );
+      }
       final prepared = <PhotoResult>[];
       for (final path in paths) {
         final data = await rootBundle.load('assets/samples/$path');
@@ -410,9 +437,11 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
         undoImage = null;
         undoId = null;
       });
-      await _persist();
+      final saved = await _persist();
       message(
-        'Example added. Adjust the page or export the PDF using the same tools as your own files.',
+        saved
+            ? 'Example added. Adjust the pages or export the PDF using the same tools as your own files.'
+            : 'Example added in memory, but the draft was not saved. Retry saving or export before closing.',
       );
     } catch (e) {
       message(readableError(e, 'Could not load the example. Try again.'));

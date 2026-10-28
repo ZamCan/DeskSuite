@@ -133,6 +133,42 @@ void main() {
     expect(files.original, orderedEquals(untouched));
     expect(tester.takeException(), isNull);
   });
+  testWidgets('studio still life goes through the real crop and PNG export', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final files = PhotoFiles();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PhotoPage(
+            files: files,
+            processor: (request) async => processPhoto(request),
+          ),
+        ),
+      ),
+    );
+    await reveal(tester, find.byKey(const Key('photo-still-life-example')));
+    await tester.tap(find.byKey(const Key('photo-still-life-example')));
+    await settleIo(tester);
+    await expectWorkingSize(tester, '1200 × 896 px · working copy');
+    await reveal(tester, find.byKey(const Key('photo-crop')));
+    await tester.tap(find.byKey(const Key('photo-crop')));
+    await settleIo(tester);
+    await expectWorkingSize(tester, '896 × 896 px · working copy');
+    await reveal(tester, find.byKey(const Key('photo-png')));
+    await tester.tap(find.byKey(const Key('photo-png')));
+    await settleIo(tester);
+    await tester.tap(find.byKey(const Key('photo-save-copy')));
+    await settleIo(tester);
+    final decoded = img.decodePng(files.exported!)!;
+    expect([decoded.width, decoded.height], [896, 896]);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('exact dimensions require an explicit aspect-ratio choice', (
     tester,
   ) async {

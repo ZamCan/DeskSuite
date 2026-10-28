@@ -7,6 +7,19 @@ declaration that the whole directive or a release is finished. The full
 [baseline audit](BASELINE_AUDIT.md) describes the starting state and
 [validation](VALIDATION.md) records the actual test runs.
 
+## Latest slice — ID, Office and practice templates
+
+The candidate now includes three generic editable ID layouts with marked photo
+slots; six fictional DOCX/XLSX/PPTX starter files selectable in the document
+converter and savable unchanged; a generated Photo Studio still life; and two
+three-page scan practice packs. See [template/sample packs](TEMPLATE_SAMPLE_PACKS.md).
+These are source changes, not a release claim. The in-app Office editor remains
+content-level: it cannot preserve workbook formulas/layout or export edited
+PPTX slides, and normal builds cannot convert legacy DOC/XLS/PPT. The badges
+are not government IDs or biometric compliance tools. Real Flutter tests,
+Office-app compatibility, Android storage/pickers and print/device checks remain
+open. [Validation](VALIDATION.md) records the host evidence separately.
+
 ## Verification summary
 
 | Check | Result | Where |
@@ -150,7 +163,7 @@ Automatic person/pose/head-and-shoulder crop, background removal, editable segme
 - Added catalogue tests for unique IDs, element bounds and project encode/decode, plus a widget test for choosing and creating a business-card design.
 
 **Scope boundary**
-- These are generic starter layouts, not finished template packs, official identity-card specifications, or verified government/school requirements. The later photo-slot action below adds manual replacement for that specific template; general image-frame editing, template thumbnails, user-authored templates, multi-page presentation editing and PPTX export remain unimplemented.
+- These are generic starter layouts, not official identity-card specifications or verified government/school requirements. The later photo-slot action covers the photo sheet; the latest slice above adds marked staff/member/event photo areas. General image-frame editing, template thumbnails, user-authored templates, multi-page in-app presentation editing and edited PPTX export remain unimplemented.
 - The new tests have been added but have **not** been run in this execution. Formatter, analyzer, full suite, CI and Android build/device checks remain unverified.
 
 ### Registry hardening addendum

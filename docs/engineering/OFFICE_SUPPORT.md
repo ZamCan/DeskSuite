@@ -4,6 +4,17 @@ Updated 2026-10-28. This is a source/host-test record, **not** a claim that
 all Office documents render faithfully or that the Android preview has passed
 a device, security or release test.
 
+## Bundled Office starters
+
+The normal converter now offers six fictional, project-generated starter files:
+two DOCX, two XLSX and two PPTX. **Save unchanged template** saves their exact
+OOXML bytes, including workbook formulas and editable slide shapes. These are
+intended for compatible Office applications; real external-app compatibility
+and visual fidelity have not been tested here. The in-app content editor is
+separate and makes simplified copies: formulas/styles are not preserved, and
+edited PPTX layout export and legacy DOC/XLS/PPT conversion are unavailable.
+The original bundled files are not modified. See [template and sample packs](TEMPLATE_SAMPLE_PACKS.md).
+
 ## Stable and experimental paths
 
 | Path | Availability | What it actually does |

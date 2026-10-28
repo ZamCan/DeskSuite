@@ -15,6 +15,8 @@ enum DesignTemplate {
   flyer,
   photoPrintSheet,
   presentationCover,
+  memberCard,
+  eventBadge,
 }
 
 class DesignTemplateDefinition {
@@ -68,11 +70,27 @@ const designTemplateCatalog = <DesignTemplateDefinition>[
   ),
   DesignTemplateDefinition(
     id: 'identity-badge',
-    label: 'Identity badge',
-    description: 'Portrait badge layout with name, role and ID placeholder.',
+    label: 'Staff ID badge',
+    description: 'Editable fictional staff badge with a fillable photo area; not an official identity document.',
     widthMm: 54,
     heightMm: 86,
     template: DesignTemplate.identityBadge,
+  ),
+  DesignTemplateDefinition(
+    id: 'member-card',
+    label: 'Member ID card',
+    description: 'Landscape fictional membership card with editable details and a fillable photo area.',
+    widthMm: 85,
+    heightMm: 54,
+    template: DesignTemplate.memberCard,
+  ),
+  DesignTemplateDefinition(
+    id: 'event-badge',
+    label: 'Event ID badge',
+    description: 'Portrait fictional event badge with editable name, event and photo area.',
+    widthMm: 54,
+    heightMm: 86,
+    template: DesignTemplate.eventBadge,
   ),
   DesignTemplateDefinition(
     id: 'certificate',
@@ -150,6 +168,15 @@ List<DesignElement> buildDesignTemplateElements(
       color: color,
     );
   }
+
+  DesignElement photoSlot(double x, double y, double width, double height) =>
+      rect(
+        x,
+        y,
+        width,
+        height,
+        0xffd7e4f2,
+      ).copyWith(text: photoPlaceholderMarker);
 
   DesignElement text(
     String value,
@@ -246,7 +273,17 @@ List<DesignElement> buildDesignTemplateElements(
           bold: true,
           alignment: TextAlignment.center,
         ),
-        rect(w * .3, h * .29, w * .4, h * .26, 0xffe8e1d5),
+        photoSlot(w * .3, h * .29, w * .4, h * .26),
+        text(
+          'SELECT PHOTO AREA',
+          w * .08,
+          h * .56,
+          w * .84,
+          h * .04,
+          size: w * .045,
+          color: 0xff596d82,
+          alignment: TextAlignment.center,
+        ),
         text(
           'FULL NAME',
           w * .08,
@@ -267,12 +304,126 @@ List<DesignElement> buildDesignTemplateElements(
           alignment: TextAlignment.center,
         ),
         text(
-          'VALID UNTIL',
+          'EXAMPLE · VALID UNTIL',
           w * .08,
           h * .87,
           w * .84,
           h * .06,
           size: w * .045,
+          alignment: TextAlignment.center,
+        ),
+      ];
+    case DesignTemplate.memberCard:
+      return [
+        rect(0, 0, w, h * .25, 0xff18395f),
+        text(
+          'MEMBER CARD',
+          w * .07,
+          h * .06,
+          w * .86,
+          h * .13,
+          size: w * .075,
+          color: 0xffffffff,
+          bold: true,
+        ),
+        photoSlot(w * .07, h * .33, w * .24, h * .43),
+        text(
+          'SELECT PHOTO AREA',
+          w * .05,
+          h * .78,
+          w * .29,
+          h * .07,
+          size: w * .042,
+          color: 0xff596d82,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'MEMBER NAME',
+          w * .37,
+          h * .37,
+          w * .57,
+          h * .13,
+          size: w * .075,
+          bold: true,
+        ),
+        text(
+          'Member number: [0000]',
+          w * .37,
+          h * .55,
+          w * .57,
+          h * .10,
+          size: w * .049,
+        ),
+        text(
+          'Valid until: [date]',
+          w * .37,
+          h * .68,
+          w * .57,
+          h * .10,
+          size: w * .049,
+        ),
+        text(
+          'FICTIONAL EXAMPLE',
+          w * .37,
+          h * .86,
+          w * .55,
+          h * .07,
+          size: w * .042,
+          color: 0xff596d82,
+        ),
+      ];
+    case DesignTemplate.eventBadge:
+      return [
+        rect(0, 0, w, h * .25, 0xff144f69),
+        text(
+          'EVENT PASS',
+          w * .08,
+          h * .07,
+          w * .84,
+          h * .10,
+          size: w * .10,
+          color: 0xffffffff,
+          bold: true,
+          alignment: TextAlignment.center,
+        ),
+        photoSlot(w * .28, h * .30, w * .44, h * .27),
+        text(
+          'SELECT PHOTO AREA',
+          w * .08,
+          h * .58,
+          w * .84,
+          h * .04,
+          size: w * .045,
+          color: 0xff596d82,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'ATTENDEE NAME',
+          w * .08,
+          h * .65,
+          w * .84,
+          h * .10,
+          size: w * .085,
+          bold: true,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'Event · [date]',
+          w * .08,
+          h * .77,
+          w * .84,
+          h * .07,
+          size: w * .065,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'FICTIONAL EXAMPLE',
+          w * .08,
+          h * .90,
+          w * .84,
+          h * .05,
+          size: w * .045,
+          color: 0xff596d82,
           alignment: TextAlignment.center,
         ),
       ];

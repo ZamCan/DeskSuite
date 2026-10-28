@@ -1,5 +1,56 @@
 # Validation record
 
+## ID, Office and practice packs — 2026-10-28
+
+- `tools/test_office_template_assets.py` passed **five** host tests: all six
+  OOXML ZIPs passed CRC/XML/internal-relationship and size checks; `python-docx`
+  read both fictional documents; `openpyxl` verified the workbook sheets,
+  styles and live formulas; slide XML contained the intended editable shapes,
+  text, dimensions and counts; Pillow verified the still-life and scan assets.
+  Two consecutive generator runs were byte-identical with this host's
+  `python-docx`/`openpyxl`. This is not Office-application compatibility.
+- The actual packaged C++/WASM worker opened and returned expected text/HTML
+  for the six new files under Node: 1, 1, 2, 2, 4 and 3 views respectively. The
+  existing four fictional fixtures and invalid input checks also passed. A
+  Pillow approximation of the pitch's first two slides was visually inspected;
+  it is not an Office/Android screenshot or evidence of rendering fidelity.
+  The unchanged viewer-control script passed with a fake DOM/worker.
+- The actual pure-Dart Office ZIP preflight accepted the final six template
+  byte streams under DartPad DDC/Node. An isolated actual XLSX cell-value
+  method with XML-element stubs passed cached result, empty/missing formula
+  cache, blank, boolean and inline text checks. These do not run the real
+  Flutter `archive`/XML integration or calculate formulas.
+- The actual design registry, document model and controller ran under DartPad
+  DDC/Node with fake IDs, `Offset` and notifier: ID photo marker serialization,
+  replacement, overlapping text preservation, undo/redo, legacy 35 × 45 mm
+  slot behavior, ordinary-rectangle rejection and template bounds passed.
+  The actual photo-fill method also passed a 100-layer project, transform,
+  invalid-image and changed-selection case with a fake picker and decoder.
+  These do not test rendering, actual image decoding, persistence or printing.
+- The actual Office unchanged-template save handler passed byte/MIME/name,
+  cancellation, failure and concurrent-call checks with a fake file gateway.
+  The actual scan sample/capacity flow passed append/order, count preflight,
+  bad later page, aggregate pixels, unsaved-in-memory notice and cancellation
+  with fake dialog/assets/codec/store. Repeatable harness emitters are
+  `tools/test_office_template_save_flow.py`, `tools/test_scan_sample_flow.py`
+  and `tools/test_id_photo_fill_flow.py`; these require an existing Dart SDK to
+  run locally. Stub harness analyzers had
+  unused-import warnings only.
+- DartPad Flutter signature analysis reported no issues for the actual changed
+  Office chooser, ID inspector, scan sample UI and Photo Studio sample loading/
+  build methods with service stubs. The new-design composition had only an
+  unused harness import warning. Changed Dart files were formatted. This is
+  **not** a complete `flutter analyze` or runtime interaction check.
+- Added Flutter tests cover all six bundled Office reader inputs and save-byte
+  workflow, the three ID slot models/inspector, the generated still-life photo
+  crop/export, and three-page scan packs/draft capacity. They are **written but
+  not run here**. Flutter/Dart, native Android tools, LibreOffice, real Office
+  applications and devices were unavailable; no APK/AAB/desktop build, signing,
+  external-app compatibility, device, printer or accessibility pass is claimed.
+- Regression host checks also passed: 11 brand/mapping tests, three desktop
+  packaging-definition tests and three Linux-launcher tests. YAML and changed
+  Python scripts parsed. No online packaging was started.
+
 ## Isolated feature + main candidate — 2026-10-28
 
 The candidate combines feature `90904cd` with fetched main `cb1e264`. It is not

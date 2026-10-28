@@ -318,14 +318,22 @@ class _EditorScreenState extends State<EditorScreen>
         y: slot.y,
         width: slot.width,
         height: slot.height,
+        rotation: slot.rotation,
+        opacity: slot.opacity,
         imageBytes: bytes,
       );
       await _imageSync;
-      // Decode and validate before replacing anything, so a bad image leaves
-      // the original editable placeholder intact.
+      if (_controller.selectedId != slot.id) {
+        throw StateError('The photo area changed; select it again.');
+      }
+      // Decode and validate against a temporary replacement, not an extra
+      // layer. This also works when the project is already at its layer limit.
       await _images.sync(
         _controller.document.copyWith(
-          elements: [..._controller.document.elements, imageElement],
+          elements: [
+            for (final element in _controller.document.elements)
+              element.id == slot.id ? imageElement : element,
+          ],
         ),
       );
       _controller.replaceSelectedPhotoPlaceholder(imageElement);
@@ -431,6 +439,9 @@ class _EditorScreenState extends State<EditorScreen>
                                   ? (e.text.isEmpty
                                         ? 'Empty text'
                                         : e.text.replaceAll('\n', ' '))
+                                  : e.kind == ElementKind.rectangle &&
+                                        e.text == photoPlaceholderMarker
+                                  ? 'Photo placeholder'
                                   : e.kind.name;
                               return ListTile(
                                 selected: e.id == _controller.selectedId,

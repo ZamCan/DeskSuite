@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:desksuite/office/office_convert_page.dart';
 import 'package:desksuite/workspace/file_gateway.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/office_fixtures.dart';
@@ -143,6 +144,59 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('not a supported document'), findsOneWidget);
   });
+
+  testWidgets(
+    'bundled templates save unchanged OOXML bytes with correct MIME',
+    (tester) async {
+      tester.view.physicalSize = const Size(430, 950);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final files = FilesDouble();
+      await tester.pumpWidget(host(picker: PickerDouble(null), files: files));
+      for (final item in [
+        (
+          'professional-letter',
+          'professional-letter.docx',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ),
+        (
+          'monthly-budget',
+          'monthly-budget.xlsx',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ),
+        (
+          'project-pitch',
+          'project-pitch.pptx',
+          'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        ),
+      ]) {
+        await reveal(tester, find.byKey(const Key('office-sample')));
+        await tester.tap(find.byKey(const Key('office-sample')));
+        await tester.pumpAndSettle();
+        final choice = find.byKey(Key('office-template-${item.$1}'));
+        await tester.ensureVisible(choice);
+        await tester.pumpAndSettle();
+        await tester.tap(choice);
+        await tester.pumpAndSettle();
+        await reveal(tester, find.byKey(const Key('office-save-template')));
+        await tester.tap(find.byKey(const Key('office-save-template')));
+        await tester.pumpAndSettle();
+        final asset = await rootBundle.load(
+          'assets/samples/office_templates/${item.$2}',
+        );
+        expect(files.savedName, 'copy-${item.$2}');
+        expect(files.savedMime, item.$3);
+        expect(
+          files.savedBytes,
+          orderedEquals(
+            asset.buffer.asUint8List(asset.offsetInBytes, asset.lengthInBytes),
+          ),
+        );
+      }
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('sample loader drives a real conversion', (tester) async {
     tester.view.physicalSize = const Size(430, 950);

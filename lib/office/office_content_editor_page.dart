@@ -228,7 +228,7 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
       setState(() {
         _saving = false;
         _status = saved
-            ? 'Exported edited-$base.$extension. Your original was not changed.'
+            ? 'Exported the edited copy. Choose a different destination to preserve the source.'
             : 'Export cancelled. No file was written.';
       });
     } catch (error) {
@@ -341,7 +341,7 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
                           'Edit the text and table values DeskSuite can read. '
                           'This is not a layout-faithful Word/Excel editor: '
                           'images, page layout, fonts, charts, formulas and '
-                          'macros may not survive export. The source stays untouched.',
+                          'macros may not survive export. Choose a different save destination to preserve the source.',
                         ),
                         const SizedBox(height: 14),
                         TextField(

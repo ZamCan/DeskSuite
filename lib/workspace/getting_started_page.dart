@@ -79,10 +79,7 @@ class GettingStartedPage extends StatelessWidget {
         artwork: SectionArt.office,
         icon: Icons.sync_alt_rounded,
         title: 'Convert an office document',
-        description:
-            'In Document converter, open a DOCX, XLSX, PPTX, ODT, ODS, ODP or '
-            'RTF file and save a PDF, text, CSV or OpenDocument copy. Each route '
-            'states what is preserved and what is lost.',
+        description: 'In Document converter, browse fictional DOCX, XLSX and PPTX templates or open your own file. Save an unchanged template, or convert readable content with the fidelity limits shown. Edited PPTX layouts and legacy DOC/XLS/PPT conversion are unavailable.',
         button: 'Open document converter',
         onPressed: onOffice,
       ),
@@ -114,7 +111,7 @@ class GettingStartedPage extends StatelessWidget {
         artwork: SectionArt.scan,
         icon: Icons.document_scanner_outlined,
         title: 'Make a multipage image PDF',
-        description: 'Open Scan & assemble, choose Try an example → Two-page report, reorder the pages and select Prepare PDF. Choose a new destination and open the PDF to check it.',
+        description: 'Open Scan & assemble, choose Try an example → Two-page report or a three-page practice pack, reorder the pages and select Prepare PDF. Examples are added only if the entire pack fits the draft limits. Choose a new destination and inspect the PDF.',
         button: 'Open scan workspace',
         onPressed: onScan,
       ),
@@ -166,7 +163,7 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 8),
       const Text(
-        'The practice photograph is synthetic. The forms, names and invoices are fictional and are not official documents.',
+        'The practice images are synthetic or AI-generated. The forms, names, ID layouts and invoices are fictional and are not official documents.',
       ),
     ],
   );

@@ -18,7 +18,7 @@ The app keeps one private scan draft on the device, including page order and ori
 
 ## Clean, resize or convert a photo
 
-1. Open **Photo Studio → Choose image**, **Try a sample image**, or **Try a noisy garden photo**. The garden is a synthetic photograph with intentionally added isolated black and white specks. The local source is not changed automatically.
+1. Open **Photo Studio → Choose image**, **Try a sample image**, **Try a noisy garden photo**, or **Try a studio still life**. The garden is a synthetic photograph with intentionally added isolated black and white specks; the still life is a fictional generated image for crop, rotate, resize and export practice. The local source is not changed automatically.
 2. For an image of up to **4 megapixels**, choose **Reduce isolated specks**. Pinch the preview to zoom, and select **Compare original** / **Show working copy** to judge the change. This selective local filter only targets strong isolated brightness outliers; it leaves borders and transparent neighborhoods unchanged. It can soften fine details and does not remove scratches, blur or all noise. For larger images, resize a working copy first. A large image's on-screen preview may be downsampled; exported output uses the working image.
 3. Choose **Resize** and select **Pixels**, **Print size** or **Percentage**. Percentage is measured against the current working copy, from 1% to 1000%; a live preview shows rounded output dimensions. With **Keep aspect ratio** on, change width and the height follows; for independently specified dimensions, turn it off, which can distort the image. Choose nearest-neighbour, linear or cubic resampling. Cubic may take longer; enlargement does not create new detail. Very small results are rounded to at least one pixel per side. Rotate, flip or centre-square crop if needed. **Undo last edit** and **Reset** affect only the working copy. Replacing an open image asks for confirmation; export it first if needed.
 4. Choose **Export PNG** or **Export JPG**. For JPEG, select quality. Review the actual encoded dimensions and byte count, then **Save a copy** to a different destination and open the saved file in an image viewer. Re-encoding can increase size. JPEG removes transparency by flattening onto white.
@@ -29,6 +29,12 @@ The Photo working copy is not restored after the app closes. Export it to keep i
 ### Photo-sheet profiles and official submissions
 
 The Photo Sheet dialog offers custom dimensions and source-referenced examples. Read the scope, notes and authority link for the selected profile: specifications can change and the layout is not a compliance check. The Tanzania e-Visa entry describes an upload rule, but the sheet tool creates a print/PDF layout, **not** a JPG upload or an upload-size guarantee. For Canadian in-person/mail passport applications, the linked government guidance requires original, unaltered photos taken and professionally printed by a commercial photographer or studio; it does not accept home printing or photo edits. The U.S. paper-photo guidance also requires an unedited original. Do not apply document-enhancement modes to official ID photos unless the issuing authority allows it.
+
+## Make a generic staff, member or event badge
+
+1. Open **Creative Studio → ID badge templates**, then use the **Starting template** list to choose Staff ID badge, Member ID card or Event ID badge. Set the project name and canvas and choose **Create design**.
+2. Select the coloured photo area (or select **Photo placeholder** from **Layers**), choose **Edit object**, then **Fill photo slot with image**. The local image is validated and embedded as a layer; cover fitting can crop it. Edit the name, role and other text with the object controls, then save/export the design. Undo restores the placeholder.
+3. These are fictional generic layouts, **not** government identity documents or certified photo specifications. Check any organization’s own rules and measure a test print; no facial alignment or biometric compliance is checked.
 
 ## Export or print a design
 
@@ -66,8 +72,7 @@ photographs is not guaranteed.
 
 ## Convert an office document
 
-1. Open the menu → **Document converter**. Choose a file, or **Use sample
-   document** if a sample is bundled in this build.
+1. Open the menu → **Document converter**. Choose a file, or **Browse templates & samples** for fictional DOCX letters/briefs, XLSX budget/stock workbooks and PPTX pitch/workshop decks. Select **Save unchanged template** to save the original OOXML bytes for editing in a compatible external Office app. The bundled master remains unchanged; choose a new destination to avoid overwriting other files.
 2. Check the **Detected** row. ZIP packages are identified by their contents;
    a `.docx` that is really an ODT is reported as ODT. Legacy OLE2 files share
    one signature, so a `.doc`/`.xls`/`.ppt` subtype is only a filename hint.
@@ -84,7 +89,7 @@ and cells, sheet names and values, slide text. What is not: exact fonts, layout,
 images, charts, macros, comments, text boxes, number formats and page size (A4 is
 used). An original-layout C++-engine preview is experimental, read-only and
 disabled by default until Android security and fidelity are verified; it is not
-a conversion route. See [Office support](engineering/OFFICE_SUPPORT.md).
+a conversion route. The in-app content editor/export does not preserve spreadsheet formulas or styles, and it cannot save edited PPTX slides. Save the unchanged workbook/deck and use a compatible Office app for layout and formulas. No legacy DOC/XLS/PPT templates are faked or renamed. See [Office support](engineering/OFFICE_SUPPORT.md).
 
 ## Work with a PDF you already have
 
@@ -134,7 +139,7 @@ yet. Selling more than the stock on hand is refused and changes nothing.
 
 - **Getting started → Clean a shadowed page**: open Scan & assemble, choose **Try an example → Shadowed practice report**, preview each cleanup method and compare the text and colored bars before applying. The separate **Clean practice report** is the fictional unshaded reference. [Comparison evidence](engineering/magic-scan-evidence.png) shows actual Dart pixel output, not an Android screenshot.
 - **Reduce photo specks**: open Photo Studio, choose **Try a noisy garden photo**, reduce specks, zoom and compare with the original. Some specks and fine-detail changes may remain. [Earlier evidence](engineering/cleanup-evidence.png) shows the pixel engine, not an Android screenshot.
-- **Getting started → Make a multipage image PDF** opens the scan workspace. Select **Try an example → Two-page report**, reorder it and export.
+- **Getting started → Make a multipage image PDF** opens the scan workspace. Select **Try an example → Two-page report**, reorder it and export. The three-page office pack combines a fictional letter, invoice and form; the three-page scan pack combines clean, shadowed and angled examples. Packages append to your current draft only if the full package fits the page, pixel and byte limits.
 - **Correct a perspective page** uses the fictional angled practice report. Select A4 portrait and try the corner-suggestion wand or adjust the handles manually. Check all four before applying and compare with **Reset page**.
 - **Resize an image** uses the synthetic photo and real photo processor. Try width 512 with aspect preserved, or select Percentage and enter 50 to produce 688 × 384 pixels; review the resulting file.
 - **Edit an example design** imports a new editable `.dsdesign` copy. Its text is editable inside DeskSuite; it is not a DOCX document or a word processor.

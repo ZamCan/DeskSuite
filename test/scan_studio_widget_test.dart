@@ -356,6 +356,41 @@ void main() {
     },
   );
 
+  testWidgets(
+    'three-page office packs preserve existing drafts and reject overflow atomically',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(screen());
+      await waitIo(tester);
+      await tapVisible(tester, find.byKey(const Key('scan-import')));
+      await settleUntil(tester, find.textContaining('1 of 8 pages'));
+      final first = (await readDraft(tester, store)).single.id;
+      for (final expected in [4, 7]) {
+        await tapVisible(tester, find.byKey(const Key('scan-samples')));
+        await tapVisible(tester, find.byKey(const Key('sample-office-pack')));
+        await settleUntil(tester, find.textContaining('$expected of 8 pages'));
+        expect((await readDraft(tester, store)).first.id, first);
+      }
+      final before = await readDraft(tester, store);
+      await tapVisible(tester, find.byKey(const Key('scan-samples')));
+      await tapVisible(tester, find.byKey(const Key('sample-office-pack')));
+      await settleUntil(
+        tester,
+        find.textContaining('would exceed the 8-page draft limit'),
+      );
+      final after = await readDraft(tester, store);
+      expect(after.map((p) => p.id), orderedEquals(before.map((p) => p.id)));
+      expect(after, hasLength(7));
+      await tapVisible(tester, find.byKey(const Key('scan-pdf')));
+      await waitIo(tester, rounds: 45);
+      expect(find.textContaining('7 page(s)'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('reopening restores edited pages and their order', (
     tester,
   ) async {

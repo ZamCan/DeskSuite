@@ -138,6 +138,14 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                 designTemplateDefinition(_template).description,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+              if (_template == DesignTemplate.identityBadge ||
+                  _template == DesignTemplate.memberCard ||
+                  _template == DesignTemplate.eventBadge) ...[
+                const SizedBox(height: 8),
+                const Text(
+                  'After creating, select the coloured photo area, choose Edit object, then Fill photo slot with image. You can also select Photo placeholder from Layers. These are generic examples, not government IDs or certified photo layouts.',
+                ),
+              ],
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
                 key: ValueKey(_preset),

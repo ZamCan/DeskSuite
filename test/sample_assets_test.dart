@@ -30,6 +30,7 @@ void main() {
         'shadowed-practice-page.png',
         'angled-practice-page.jpg',
         'practice-photo.jpg',
+        'studio-still-life.jpg',
         'garden-clean-photo.jpg',
         'noisy-garden.png',
       ]) {

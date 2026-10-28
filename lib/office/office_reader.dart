@@ -342,8 +342,7 @@ OfficeDocument _readXlsx(OfficePackage package) {
     }
   }
   notes.add(
-    'Cell values and formulas are carried as text; cell formatting, '
-    'charts and pivot tables are not.',
+    'Cached formula results, or formulas without a cached result, are carried as text; formulas are not recalculated. Cell formatting, charts and pivot tables are not preserved.',
   );
   return OfficeDocument(
     format: OfficeFormat.xlsx,
@@ -405,8 +404,8 @@ String _xlsxCellValue(XmlElement cell, List<String> shared) {
       .where((e) => e.localName == 'f')
       .map((e) => e.innerText)
       .firstOrNull;
-  if (value == null) {
-    return formula == null ? '' : '=$formula';
+  if (value == null || value.isEmpty) {
+    return formula == null || formula.isEmpty ? '' : '=$formula';
   }
   if (type == 's') {
     final index = int.tryParse(value);

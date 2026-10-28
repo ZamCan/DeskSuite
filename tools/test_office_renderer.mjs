@@ -55,6 +55,28 @@ for (const [name, expectedViews] of [['preview.docx', 1], ['preview.xlsx', 2], [
   }
   console.log(`${name}: ${expectedViews} fictional view(s) rendered`);
 }
+// The bundled starter templates must also open in the actual capped renderer.
+// This verifies the package/view count and readable text, not visual fidelity.
+const templateDir = path.join(root, 'assets/samples/office_templates');
+for (const [name, expectedViews, marker] of [
+  ['professional-letter.docx', 1, 'Professional letter'],
+  ['project-brief.docx', 1, 'Project brief'],
+  ['monthly-budget.xlsx', 2, 'MONTHLY BUDGET'],
+  ['stock-tracker.xlsx', 2, 'STOCK TRACKER'],
+  ['project-pitch.pptx', 4, 'Your project'],
+  ['workshop-lesson.pptx', 3, 'Your workshop'],
+]) {
+  result = await send({ kind: 'open', name, bytes: new Uint8Array(fs.readFileSync(path.join(templateDir, name))) });
+  assert.equal(result.kind, 'opened', name);
+  assert.equal(result.views.length, expectedViews, name);
+  for (let position = 0; position < expectedViews; position++) {
+    result = await send({ kind: 'render', position });
+    assert.equal(result.kind, 'rendered', `${name} view ${position + 1}`);
+    assert.ok(result.html.includes('<html'), `${name} view ${position + 1} has HTML`);
+    if (position === 0) assert.ok(result.html.includes(marker), `${name} contains its marker`);
+  }
+  console.log(`${name}: ${expectedViews} template view(s) rendered`);
+}
 const dir = process.argv[2];
 if (!dir) {
   console.log('Local fixture, WASM memory and invalid-input tests passed. An optional fixture directory adds legacy DOC/PPT, ODF and encryption coverage.');

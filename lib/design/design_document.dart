@@ -9,6 +9,11 @@ const int maxProjectBytes = 32 * 1024 * 1024;
 const int maxImportedImageBytes = 8 * 1024 * 1024;
 const int maxDesignElements = 100;
 
+/// Reserved rectangle metadata, stored in the existing text field so older
+/// project files remain readable. This marks user-replaceable photo areas;
+/// it makes no claim that their dimensions meet official ID requirements.
+const String photoPlaceholderMarker = 'desksuite.photo-placeholder.v1';
+
 /// All physical geometry is measured in millimetres, independent of the screen.
 enum ElementKind { text, rectangle, ellipse, image }
 

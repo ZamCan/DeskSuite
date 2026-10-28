@@ -745,6 +745,7 @@ class _PhotoPageState extends State<PhotoPage> {
   bool showingOriginal = false;
   bool isExample = false;
   bool isNoisyExample = false;
+  bool isStillLifeExample = false;
 
   void note(String value) {
     if (mounted) {
@@ -792,6 +793,7 @@ class _PhotoPageState extends State<PhotoPage> {
           showingOriginal = false;
           isExample = false;
           isNoisyExample = false;
+          isStillLifeExample = false;
         });
       }
     } catch (error) {
@@ -805,12 +807,14 @@ class _PhotoPageState extends State<PhotoPage> {
     }
   }
 
-  Future<void> loadExample({bool noisy = false}) async {
+  Future<void> loadExample({bool noisy = false, bool stillLife = false}) async {
     if (busy || !await confirmReplace() || !mounted) return;
     setState(() => busy = true);
     try {
       final data = await rootBundle.load(
-        noisy
+        stillLife
+            ? 'assets/samples/studio-still-life.jpg'
+            : noisy
             ? 'assets/samples/noisy-garden.png'
             : 'assets/samples/practice-photo.jpg',
       );
@@ -826,8 +830,9 @@ class _PhotoPageState extends State<PhotoPage> {
           original = result;
           undoPhoto = null;
           showingOriginal = false;
-          isExample = !noisy;
-          isNoisyExample = noisy;
+          isExample = !noisy && !stillLife;
+          isNoisyExample = noisy && !stillLife;
+          isStillLifeExample = stillLife;
         });
       }
     } catch (_) {
@@ -1149,13 +1154,15 @@ class _PhotoPageState extends State<PhotoPage> {
       }
       final saved = await files.save(name: name, bytes: output, mimeType: mime);
       if (saved) {
-        note('Optimised copy exported. Original image remains unchanged.');
+        note(
+          'Optimised image exported. Verify the saved file and destination.',
+        );
       }
     } catch (error) {
       note(
         error is FormatException
             ? error.message
-            : 'Optimisation/export failed. The source image is unchanged.',
+            : 'Optimisation/export failed. Your working image is unchanged.',
       );
     } finally {
       if (mounted) setState(() => busy = false);
@@ -1292,6 +1299,14 @@ class _PhotoPageState extends State<PhotoPage> {
                         icon: const Icon(Icons.auto_fix_high),
                         label: const Text('Try a noisy garden photo'),
                       ),
+                      TextButton.icon(
+                        key: const Key('photo-still-life-example'),
+                        onPressed: busy
+                            ? null
+                            : () => loadExample(stillLife: true),
+                        icon: const Icon(Icons.photo_library_outlined),
+                        label: const Text('Try a studio still life'),
+                      ),
                     ],
                   ),
                 ),
@@ -1338,6 +1353,10 @@ class _PhotoPageState extends State<PhotoPage> {
           const Text(
             'Synthetic garden with added black and white specks: reduce specks, pinch to zoom, then compare with the original.',
           ),
+        if (isStillLifeExample)
+          const Text(
+            'Fictional studio still life: try centre crop, rotate, resize or optimise, then compare and export a copy.',
+          ),
         const Text(
           'Pinch the preview to inspect details. Reducing isolated specks can soften fine details; it does not remove blur, scratches or every kind of noise.',
         ),
@@ -1357,6 +1376,12 @@ class _PhotoPageState extends State<PhotoPage> {
               onPressed: busy ? null : () => loadExample(noisy: true),
               icon: const Icon(Icons.school_outlined),
               label: const Text('Noisy garden example'),
+            ),
+            OutlinedButton.icon(
+              key: const Key('photo-still-life-example'),
+              onPressed: busy ? null : () => loadExample(stillLife: true),
+              icon: const Icon(Icons.photo_library_outlined),
+              label: const Text('Studio still life'),
             ),
             OutlinedButton(
               key: const Key('photo-compare'),
