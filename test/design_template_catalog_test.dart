@@ -70,26 +70,38 @@ void main() {
             expect(element.x, greaterThanOrEqualTo(0));
             expect(element.y, greaterThanOrEqualTo(0));
             expect(element.x + element.width, lessThanOrEqualTo(size.$1 + .01));
-            expect(element.y + element.height, lessThanOrEqualTo(size.$2 + .01));
+            expect(
+              element.y + element.height,
+              lessThanOrEqualTo(size.$2 + .01),
+            );
           }
         }
       }
     });
 
     test('photo print sheet provides twenty editable placeholder slots', () {
-      final definition = designTemplateDefinition(DesignTemplate.photoPrintSheet);
+      final definition = designTemplateDefinition(
+        DesignTemplate.photoPrintSheet,
+      );
       final elements = buildDesignTemplateElements(
         definition.template,
         widthMm: definition.widthMm,
         heightMm: definition.heightMm,
       );
-      expect(elements.where((element) => element.kind == ElementKind.rectangle),
-          hasLength(20));
-      expect(elements.where((element) => element.kind == ElementKind.text),
-          hasLength(23));
+      expect(
+        elements.where((element) => element.kind == ElementKind.rectangle),
+        hasLength(20),
+      );
+      expect(
+        elements.where((element) => element.kind == ElementKind.text),
+        hasLength(23),
+      );
       expect(elements.length, lessThanOrEqualTo(maxDesignElements));
-      expect(elements.where((element) => element.text.contains('35 × 45 mm')),
-          hasLength(20));
+      // Count slot labels, not the separate descriptive page heading.
+      expect(
+        elements.where((element) => element.text == 'PHOTO\n35 × 45 mm'),
+        hasLength(20),
+      );
     });
 
     test('rejects non-finite or unsupported canvas dimensions', () {
@@ -113,17 +125,18 @@ void main() {
 
     test('template output round-trips through the shared project format', () {
       final definition = designTemplateDefinition(DesignTemplate.identityBadge);
-      final document = DesignDocument.blank(
-        name: definition.label,
-        widthMm: definition.widthMm,
-        heightMm: definition.heightMm,
-      ).copyWith(
-        elements: buildDesignTemplateElements(
-          definition.template,
-          widthMm: definition.widthMm,
-          heightMm: definition.heightMm,
-        ),
-      );
+      final document =
+          DesignDocument.blank(
+            name: definition.label,
+            widthMm: definition.widthMm,
+            heightMm: definition.heightMm,
+          ).copyWith(
+            elements: buildDesignTemplateElements(
+              definition.template,
+              widthMm: definition.widthMm,
+              heightMm: definition.heightMm,
+            ),
+          );
       final decoded = DesignDocument.decode(document.encode());
       expect(decoded.name, definition.label);
       expect(decoded.elements.length, document.elements.length);

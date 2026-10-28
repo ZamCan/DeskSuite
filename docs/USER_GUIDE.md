@@ -5,12 +5,12 @@ DeskSuite is a local-first work-in-progress, not a finished office suite. **Gett
 ## Scan pages into an image PDF
 
 1. Open the menu → **Scan & assemble**. Choose **Add image**, **Use camera** on Android, or **Try an example**. The camera opens an installed camera app; its result can be cancelled or rejected if it exceeds the limits. Imports accept PNG, JPEG and WebP, first frame only.
-2. Select a page. For a photographed document, select **A4 · portrait**, **A4 · landscape**, **Letter · portrait** or **Letter · landscape** if the paper shape is known. Otherwise leave **Estimate**. Select **Corners & correct** and drag the numbered handles to the paper corners in order (top-left, top-right, bottom-right, bottom-left). Tap a handle or the tune icon to enter coordinates as percentages instead. Select **Correct page**. Correction is manual: there is no automatic edge detection.
-3. Select **Clean up & compare**. Choose **Reduce uneven lighting · color** and set lighting strength, or choose **Adaptive black & white** and set mark sensitivity. Select **Preview cleanup**, then **Before** and **After** to compare the current page with that preview. Changing a setting clears the preview; preview again. **Cancel** leaves the draft unchanged; **Use cleaned page** applies the preview to the selected page. Undo the last edit or **Reset page** to return to its orientation-baked imported PNG copy. The separate **Black & white** button still uses a fixed threshold.
-4. Rotate, use grayscale and select, reorder or remove pages as needed. Removal asks for confirmation and does not delete the source image.
+2. Select a page. For a photographed document, select **A4 · portrait**, **A4 · landscape**, **Letter · portrait** or **Letter · landscape** if the paper shape is known. Otherwise leave **Estimate**. Select **Corners & correct**. The wand can suggest corners for a bright page on a darker contrasting background; it may find the wrong object or no page. Always check and drag the numbered handles to the actual corners in order (top-left, top-right, bottom-right, bottom-left). Tap a handle or the tune icon to enter percentages. Nothing is cropped until you select **Correct page**.
+3. Select **Clean up & compare**. Choose **Original** (the current page), **Lighten**, **Reduce shadows**, **Magic Pro · clean color**, **Grayscale** or **Adaptive black & white**. Adjust strength or mark sensitivity where available. Select **Preview cleanup**, then **Before** and **After**; changing a setting clears the preview. **Cancel** leaves the draft unchanged; **Use cleaned page** applies the preview. Original keeps the current working page, while **Reset page** returns to the orientation-baked imported PNG copy. The separate **Black & white** button uses a fixed threshold.
+4. Rotate and select, reorder or remove pages as needed. Removal asks for confirmation and does not delete the source image. For OCR, select a page and choose **Extract text from this page**; recognition remains a separate explicit action.
 5. Export an individual **page PNG**, or choose A4 or US Letter paper and **Prepare PDF**. Review the page count and byte size, then choose a **different** destination. Landscape pages use landscape paper; content is contained inside 10 mm margins. Open the saved file in an external PDF reader to check page order and quality.
 
-Lighting cleanup estimates a local paper background and tries to lift shadows while retaining color. It can change photographs, colored paper, artwork or faint writing; adaptive B&W discards color and may lose light text or keep some shadows. Higher sensitivity retains more marks, sometimes including unwanted ones. Transparency is flattened to white. Neither method can recover obscured text. Inspect each preview, and do not use the only copy of an important record as your output destination.
+**Lighten** brightens the whole image; **Reduce shadows** tries a milder local correction; **Magic Pro** combines local paper normalization and a contrast curve. These are deterministic image-processing heuristics, not AI restoration, and do not guarantee shadow-free pages. They can change photographs, colored paper, artwork or faint writing. Adaptive B&W discards color; higher sensitivity retains more marks, sometimes including shadows. Original preserves transparency; the other modes flatten it to white. None can recover obscured text. Inspect each preview and save to a new destination.
 
 This is an **image-only PDF**: it has no OCR, searchable/selectable text, PDF editing or PDF reader. Paper-proportion correction resamples the image and can distort it if the wrong paper ratio is selected. The final paper size and margins do not establish scan DPI or print accuracy.
 
@@ -25,12 +25,17 @@ The app keeps one private scan draft on the device, including page order and ori
 
 The Photo working copy is not restored after the app closes. Export it to keep it. Image input is limited to 8 MiB, 12 megapixels and 8192 pixels per side; intermediate encoded files are limited to 16 MiB. The scan draft is limited to 8 pages, 24 megapixels and 32 MiB of processed images (64 MiB for private draft assets). Device memory may be more restrictive.
 
+### Photo-sheet profiles and official submissions
+
+The Photo Sheet dialog offers custom dimensions and source-referenced examples. Read the scope, notes and authority link for the selected profile: specifications can change and the layout is not a compliance check. The Tanzania e-Visa entry describes an upload rule, but the sheet tool creates a print/PDF layout, **not** a JPG upload or an upload-size guarantee. For Canadian in-person/mail passport applications, the linked government guidance requires original, unaltered photos taken and professionally printed by a commercial photographer or studio; it does not accept home printing or photo edits. The U.S. paper-photo guidance also requires an unedited original. Do not apply document-enhancement modes to official ID photos unless the issuing authority allows it.
+
 ## Extract text from a photo or scan
 
-1. Open the menu → **Text extraction**. The first card tells you whether the
-   offline recognizer is ready on this build. If it is not, the screen says so
-   instead of showing an empty result.
-2. Choose **Choose image**, or **Use sample letter** to practise. Large images
+1. Open the menu → **Text extraction**, or choose **Extract text from this page**
+   for the selected working page in Scan & assemble. The first card tells you
+   whether the offline recognizer is ready on this build. If it is not, the screen
+   says so instead of showing an empty result.
+2. If no scan page was passed in, choose **Choose image**, or **Use sample letter** to practise. Large images
    are prepared automatically: the real format is verified, EXIF orientation is
    applied and the image is scaled to a 2600 px long edge. The exact size the
    recognizer sees is what the searchable PDF uses.
@@ -39,17 +44,20 @@ The Photo working copy is not restored after the app closes. Export it to keep i
 4. Review the text in the editable field. The summary shows the word count and
    the mean confidence; if many words were scored low, a warning asks you to
    check them against the image. Correct anything the recognizer misread.
-5. Export: **Save TXT** (UTF-8), **Save DOCX** (a real Word document with one
-   paragraph per line) or **Searchable PDF** (the page image plus an invisible
-   text layer you can select and search). **Copy** puts the reviewed text on the
-   clipboard. Each export goes to a destination you choose; your original image
-   is untouched.
+5. Export: **Save TXT** (UTF-8) or **Save DOCX** (a real Word document with one
+   paragraph per line) includes your reviewed edits. **Searchable PDF** contains
+   the image plus an invisible layer of the *original recognized words and
+   positions*, not your edits; if you changed the text, a confirmation warns you.
+   **Copy** puts reviewed text on the clipboard. Choose a new destination; your
+   original image is untouched.
 
 Limits you should know: columns, tables and handwriting are not reconstructed —
 the text comes out in the recognizer's reading order. The DOCX is a text-flow
 document, not a reproduction of the page. The searchable PDF is an image with a
-text layer, not an editable PDF. Very large images (over 24 MP or 4000 px) are
-refused; recognition accuracy on poor photographs is not guaranteed.
+text layer, not an editable PDF. External image picks are limited to 8 MiB;
+internal scan PNGs can be up to 16 MiB, and image decoding is limited to 12 MP
+and 8192 px per side before downsampling. Recognition accuracy on poor
+photographs is not guaranteed.
 
 ## Convert an office document
 
@@ -92,10 +100,10 @@ yet. Selling more than the stock on hand is refused and changes nothing.
 
 ## Practise without your own files
 
-- **Getting started → Clean a shadowed page**: open Scan & assemble, choose **Try an example → Shadowed field notes**, preview each cleanup method and compare the text and colored chart before applying. The sample is intentionally degraded, not an official document.
-- **Reduce photo specks**: open Photo Studio, choose **Try a noisy garden photo**, reduce specks, zoom and compare with the original. Some specks and fine-detail changes may remain. Both examples use the actual pixel processors; [before/after evidence](engineering/cleanup-evidence.png) shows a host pixel-engine run, not an Android screenshot.
+- **Getting started → Clean a shadowed page**: open Scan & assemble, choose **Try an example → Shadowed practice report**, preview each cleanup method and compare the text and colored bars before applying. The separate **Clean practice report** is the fictional unshaded reference. [Comparison evidence](engineering/magic-scan-evidence.png) shows actual Dart pixel output, not an Android screenshot.
+- **Reduce photo specks**: open Photo Studio, choose **Try a noisy garden photo**, reduce specks, zoom and compare with the original. Some specks and fine-detail changes may remain. [Earlier evidence](engineering/cleanup-evidence.png) shows the pixel engine, not an Android screenshot.
 - **Getting started → Make a multipage image PDF** opens the scan workspace. Select **Try an example → Two-page report**, reorder it and export.
-- **Correct a perspective page** uses the fictional perspective letter. Select A4 portrait and move all four handles; compare with **Reset page**. No corners are detected automatically.
+- **Correct a perspective page** uses the fictional angled practice report. Select A4 portrait and try the corner-suggestion wand or adjust the handles manually. Check all four before applying and compare with **Reset page**.
 - **Resize an image** uses the synthetic photo and real photo processor. Try width 512 with aspect preserved; review the resulting file.
 - **Edit an example design** imports a new editable `.dsdesign` copy. Its text is editable inside DeskSuite; it is not a DOCX document or a word processor.
 

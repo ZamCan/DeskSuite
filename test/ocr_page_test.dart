@@ -97,13 +97,16 @@ Widget host({
   required OcrEngine engine,
   required CapturingFiles files,
   required Uint8List sample,
+  Uint8List? initialImage,
+  Future<Uint8List> Function(Uint8List)? prepare,
 }) => MaterialApp(
   home: Scaffold(
     body: TextExtractionPage(
       files: files,
       engine: engine,
       sampleLoader: () async => sample,
-      prepare: (bytes) async => bytes,
+      initialImage: initialImage,
+      prepare: prepare ?? (bytes) async => bytes,
     ),
   ),
 );
@@ -117,6 +120,76 @@ Future<void> settle(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('selected scan page loads without automatically recognizing', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(420, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final engine = FakeEngine(result: recognized());
+    final bytes = sampleImage();
+    await tester.pumpWidget(
+      host(
+        engine: engine,
+        files: CapturingFiles(),
+        sample: bytes,
+        initialImage: bytes,
+      ),
+    );
+    await settle(tester);
+    expect(find.text('Selected scan page'), findsOneWidget);
+    expect(find.byKey(const Key('ocr-preview')), findsOneWidget);
+    expect(engine.usedLanguage, isNull);
+    await reveal(tester, find.byKey(const Key('ocr-run')));
+    await tester.tap(find.byKey(const Key('ocr-run')));
+    await settle(tester);
+    expect(engine.usedLanguage, 'eng');
+    expect(find.byKey(const Key('ocr-summary')), findsOneWidget);
+  });
+
+  testWidgets(
+    'failed preparation cannot recognize the previous page by mistake',
+    (tester) async {
+      tester.view.physicalSize = const Size(420, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final files = CapturingFiles()..picked = sampleImage();
+      final engine = FakeEngine(result: recognized());
+      var failNext = false;
+      await tester.pumpWidget(
+        host(
+          engine: engine,
+          files: files,
+          sample: sampleImage(),
+          prepare: (bytes) async {
+            if (failNext) throw const FormatException('Bad image.');
+            return bytes;
+          },
+        ),
+      );
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('ocr-sample')));
+      await settle(tester);
+      expect(find.byKey(const Key('ocr-preview')), findsOneWidget);
+      failNext = true;
+      await tester.tap(find.byKey(const Key('ocr-choose')));
+      await settle(tester);
+      expect(
+        find.textContaining('This image could not be prepared'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('ocr-preview')), findsNothing);
+      await reveal(tester, find.byKey(const Key('ocr-run')));
+      expect(
+        tester.widget<FilledButton>(find.byKey(const Key('ocr-run'))).onPressed,
+        isNull,
+      );
+      expect(engine.usedLanguage, isNull);
+    },
+  );
+
   testWidgets('extracts, reviews and exports recognized text', (tester) async {
     tester.view.physicalSize = const Size(420, 900);
     tester.view.devicePixelRatio = 1;
@@ -174,6 +247,14 @@ void main() {
     await reveal(tester, find.byKey(const Key('ocr-pdf')));
 
     await tester.tap(find.byKey(const Key('ocr-pdf')));
+    await settle(tester);
+    expect(find.text('PDF layer uses original OCR'), findsOneWidget);
+    await tester.tap(find.text('Cancel').last);
+    await settle(tester);
+    expect(files.savedName, 'desksuite-extracted-text.docx');
+    await tester.tap(find.byKey(const Key('ocr-pdf')));
+    await settle(tester);
+    await tester.tap(find.byKey(const Key('ocr-confirm-original-layer')));
     await settle(tester);
     expect(files.savedName, 'desksuite-searchable.pdf');
     expect(files.savedMime, 'application/pdf');

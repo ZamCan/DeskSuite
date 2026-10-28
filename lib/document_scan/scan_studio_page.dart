@@ -6,6 +6,7 @@ import 'package:flutter/services.dart' show rootBundle;
 
 import '../core/suite_paths.dart';
 import '../images/photo_processor.dart';
+import '../ocr/text_extraction_page.dart';
 import '../workspace/file_gateway.dart';
 import 'camera_gateway.dart';
 import 'corner_editor.dart';
@@ -38,6 +39,7 @@ class ScanStudioPage extends StatefulWidget {
     this.scanProcessor,
     this.cleanupProcessor,
     this.pdfGenerator,
+    this.textExtractionBuilder,
   });
   final FileGateway files;
   final CameraGateway? camera;
@@ -47,6 +49,9 @@ class ScanStudioPage extends StatefulWidget {
   final Future<PhotoResult> Function(ScanRequest)? scanProcessor;
   final Future<PhotoResult> Function(DocumentCleanupRequest)? cleanupProcessor;
   final Future<Uint8List> Function(ScanPdfRequest)? pdfGenerator;
+
+  /// Test seam; production opens the real offline text-extraction screen.
+  final Widget Function(Uint8List pageBytes)? textExtractionBuilder;
 
   @override
   State<ScanStudioPage> createState() => _ScanStudioPageState();
@@ -321,6 +326,28 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
         title: const Text('Choose a fictional example'),
         children: [
           SimpleDialogOption(
+            key: const Key('sample-magic-page'),
+            onPressed: () =>
+                Navigator.pop(context, ['shadowed-practice-page.png']),
+            child: const Text(
+              'Shadowed practice report · compare enhancement modes',
+            ),
+          ),
+          SimpleDialogOption(
+            key: const Key('sample-angled-page'),
+            onPressed: () =>
+                Navigator.pop(context, ['angled-practice-page.jpg']),
+            child: const Text(
+              'Angled practice report · correct corners and clean',
+            ),
+          ),
+          SimpleDialogOption(
+            key: const Key('sample-clean-page'),
+            onPressed: () =>
+                Navigator.pop(context, ['clean-practice-page.png']),
+            child: const Text('Clean practice report · reference page'),
+          ),
+          SimpleDialogOption(
             key: const Key('sample-cleanup'),
             onPressed: () =>
                 Navigator.pop(context, ['shadowed-field-notes.png']),
@@ -451,11 +478,27 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
           DocumentCleanupDialog(page: page.image, processor: processCleanup),
     );
     if (cleaned != null &&
+        !identical(cleaned, page.image) &&
         mounted &&
         pages.isNotEmpty &&
         pages[selected].id == page.id) {
       await _edit((_) async => cleaned);
     }
+  }
+
+  Future<void> _openTextExtraction() async {
+    if (busy || pages.isEmpty) return;
+    final bytes = pages[selected].image.bytes;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          appBar: AppBar(title: const Text('Text extraction')),
+          body:
+              widget.textExtractionBuilder?.call(bytes) ??
+              TextExtractionPage(files: widget.files, initialImage: bytes),
+        ),
+      ),
+    );
   }
 
   Future<void> _undo() async {
@@ -974,6 +1017,12 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
                 onPressed: busy ? null : _reset,
                 child: const Text('Reset page'),
               ),
+              OutlinedButton.icon(
+                key: const Key('scan-extract-text'),
+                onPressed: busy ? null : _openTextExtraction,
+                icon: const Icon(Icons.text_fields),
+                label: const Text('Extract text from this page'),
+              ),
               OutlinedButton(
                 onPressed: busy ? null : _exportPage,
                 child: const Text('Export page PNG'),
@@ -982,7 +1031,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'Clean up & compare offers local lighting and adaptive black-and-white previews. The separate Black & white button uses a fixed threshold. Both can lose details; Reset returns to the imported page copy.',
+            'Clean up & compare offers Original, Lighten, shadow reduction, Magic Pro, grayscale and adaptive black-and-white previews. The separate Black & white button uses a fixed threshold. Processing can lose details; Reset returns to the imported page copy.',
           ),
           const SizedBox(height: 18),
           DropdownButtonFormField<ScanPaper>(
@@ -1021,7 +1070,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
         ],
         const SizedBox(height: 20),
         const Text(
-          'This tool makes image-only PDFs; OCR, automatic edge detection and a PDF reader are not yet available. Draft pages are stored privately until you discard them; export a copy for backup.',
+          'Prepare PDF here makes an image-only PDF. Extract text from this page opens the separate OCR workflow, which can export a searchable single-page PDF when the Android recognizer is available. Corner suggestions are optional and must be checked. An in-app PDF reader is not available. Draft pages are private until discarded; export a copy for backup.',
         ),
       ],
     );

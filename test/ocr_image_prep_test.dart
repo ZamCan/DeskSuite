@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:desksuite/images/photo_processor.dart';
 import 'package:desksuite/ocr/ocr_image_prep.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
@@ -44,6 +45,21 @@ void main() {
         )!;
         expect(decoded.width, 30);
         expect(decoded.height, 60);
+      },
+    );
+
+    test(
+      'accepts a bounded working scan PNG above the external picker limit',
+      () {
+        // A lossless, uncompressed scan copy can exceed 8 MiB even when its
+        // dimensions are modest. Native pickers still limit external imports.
+        final page = img.Image(width: 1450, height: 1450, numChannels: 4);
+        final bytes = Uint8List.fromList(img.encodePng(page, level: 0));
+        expect(bytes.length, greaterThan(maxPhotoInputBytes));
+        expect(bytes.length, lessThan(maxPhotoWorkingBytes));
+        final prepared = prepareImageForOcr(OcrImageRequest(bytes));
+        final decoded = img.decodePng(prepared)!;
+        expect([decoded.width, decoded.height], [1450, 1450]);
       },
     );
 

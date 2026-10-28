@@ -35,6 +35,15 @@ class _DocumentCleanupDialogState extends State<DocumentCleanupDialog> {
 
   Future<void> _preview() async {
     if (busy) return;
+    if (mode == DocumentCleanupMode.original) {
+      // This is the current working page, not a reset to the imported file.
+      setState(() {
+        result = widget.page;
+        showAfter = true;
+        error = null;
+      });
+      return;
+    }
     setState(() {
       busy = true;
       error = null;
@@ -66,6 +75,23 @@ class _DocumentCleanupDialogState extends State<DocumentCleanupDialog> {
   Widget build(BuildContext context) {
     final page = showAfter && result != null ? result! : widget.page;
     final textTheme = Theme.of(context).textTheme;
+    final hasAmount =
+        mode != DocumentCleanupMode.original &&
+        mode != DocumentCleanupMode.grayscale;
+    final amountLabel = mode == DocumentCleanupMode.adaptiveBlackAndWhite
+        ? 'Mark sensitivity'
+        : mode == DocumentCleanupMode.evenLighting
+        ? 'Lighting strength'
+        : 'Strength';
+    final description = switch (mode) {
+      DocumentCleanupMode.original => 'Keep the page as it was when this dialog opened. Reset page in the scan workspace returns to the imported page copy.',
+      DocumentCleanupMode.lighten => 'Lifts the whole page, including shadow. Highlights may clip; this does not remove shadows.',
+      DocumentCleanupMode.evenLighting => 'Tries to brighten shaded paper while retaining color. Severe shadows or artwork may still change.',
+      DocumentCleanupMode.magicPro => 'Normalizes uneven lighting and boosts document contrast in color. Shadows may remain, and colors or faint marks can change.',
+      DocumentCleanupMode.grayscale =>
+        'Converts the page to shades of gray; it does not remove shadows.',
+      DocumentCleanupMode.adaptiveBlackAndWhite => 'Makes only black and white pixels. Higher sensitivity keeps more dark marks but can retain shadows; light writing and color may be lost.',
+    };
     return Dialog(
       insetPadding: const EdgeInsets.all(16),
       child: ConstrainedBox(
@@ -159,8 +185,24 @@ class _DocumentCleanupDialogState extends State<DocumentCleanupDialog> {
                         ),
                         items: const [
                           DropdownMenuItem(
+                            value: DocumentCleanupMode.original,
+                            child: Text('Original · current page'),
+                          ),
+                          DropdownMenuItem(
+                            value: DocumentCleanupMode.lighten,
+                            child: Text('Lighten · color'),
+                          ),
+                          DropdownMenuItem(
                             value: DocumentCleanupMode.evenLighting,
-                            child: Text('Reduce uneven lighting · color'),
+                            child: Text('Reduce shadows · color'),
+                          ),
+                          DropdownMenuItem(
+                            value: DocumentCleanupMode.magicPro,
+                            child: Text('Magic Pro · clean color'),
+                          ),
+                          DropdownMenuItem(
+                            value: DocumentCleanupMode.grayscale,
+                            child: Text('Grayscale'),
                           ),
                           DropdownMenuItem(
                             value: DocumentCleanupMode.adaptiveBlackAndWhite,
@@ -173,38 +215,41 @@ class _DocumentCleanupDialogState extends State<DocumentCleanupDialog> {
                                 if (value == null) return;
                                 setState(() {
                                   mode = value;
+                                  // Each preset starts at its own recommended
+                                  // strength; users can adjust before preview.
+                                  amount = value == DocumentCleanupMode.magicPro
+                                      ? .9
+                                      : .7;
                                   _invalidate();
                                 });
                               },
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        '${mode == DocumentCleanupMode.evenLighting ? 'Lighting strength' : 'Mark sensitivity'}: ${(amount * 100).round()}%',
-                      ),
-                      Slider(
-                        key: const Key('cleanup-amount'),
-                        value: amount,
-                        min: 0,
-                        max: 1,
-                        divisions: 20,
-                        label: '${(amount * 100).round()}%',
-                        semanticFormatterCallback: (value) =>
-                            '${(value * 100).round()} percent',
-                        onChanged: busy
-                            ? null
-                            : (value) => setState(() {
-                                amount = value;
-                                _invalidate();
-                              }),
-                      ),
-                      Text(
-                        mode == DocumentCleanupMode.evenLighting
-                            ? 'Tries to brighten shaded paper while retaining color. Severe shadows or artwork may still change.'
-                            : 'Makes only black and white pixels. Higher sensitivity keeps more dark marks but can retain shadows; light writing and color may be lost.',
-                      ),
+                      if (hasAmount) ...[
+                        Text('$amountLabel: ${(amount * 100).round()}%'),
+                        Slider(
+                          key: const Key('cleanup-amount'),
+                          value: amount,
+                          min: 0,
+                          max: 1,
+                          divisions: 20,
+                          label: '${(amount * 100).round()}%',
+                          semanticFormatterCallback: (value) =>
+                              '${(value * 100).round()} percent',
+                          onChanged: busy
+                              ? null
+                              : (value) => setState(() {
+                                  amount = value;
+                                  _invalidate();
+                                }),
+                        ),
+                      ],
+                      Text(description),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Transparency is flattened to white. Check every page; cleanup cannot recover text hidden in the source.',
+                      Text(
+                        mode == DocumentCleanupMode.original
+                            ? 'Original keeps transparency. Check every page before export.'
+                            : 'Transparency is flattened to white. Check every page; cleanup cannot recover text hidden in the source.',
                       ),
                       if (error != null) ...[
                         const SizedBox(height: 8),
@@ -258,7 +303,11 @@ class _DocumentCleanupDialogState extends State<DocumentCleanupDialog> {
                     onPressed: busy || result == null
                         ? null
                         : () => Navigator.pop(context, result),
-                    child: const Text('Use cleaned page'),
+                    child: Text(
+                      mode == DocumentCleanupMode.original
+                          ? 'Keep current page'
+                          : 'Use cleaned page',
+                    ),
                   ),
                 ],
               ),

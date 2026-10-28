@@ -43,6 +43,52 @@ void main() {
     'Bright paper was unexpectedly changed.',
   );
   check(valueAt(color, 10, 30) < 35, 'Near-black ink was over-lifted.');
+  final magic = Uint8List.fromList(uneven);
+  cleanDocumentRgbaInPlace(
+    magic,
+    width,
+    height,
+    mode: DocumentCleanupMode.magicPro,
+    amount: 1,
+  );
+  check(
+    valueAt(magic, 10, 10) > 245 && valueAt(magic, 100, 10) > 245,
+    'Magic Pro did not normalize both synthetic paper areas.',
+  );
+  check(valueAt(magic, 10, 30) < 45, 'Magic Pro lost dark ink.');
+  final original = Uint8List.fromList([100, 80, 60, 128]);
+  cleanDocumentRgbaInPlace(
+    original,
+    1,
+    1,
+    mode: DocumentCleanupMode.original,
+    amount: 1,
+  );
+  check(
+    original[0] == 100 && original[3] == 128,
+    'Original changed the page or its alpha.',
+  );
+  final light = Uint8List.fromList([100, 80, 60, 255]);
+  cleanDocumentRgbaInPlace(
+    light,
+    1,
+    1,
+    mode: DocumentCleanupMode.lighten,
+    amount: 1,
+  );
+  check(light[0] == 145 && light[1] == 116, 'Lighten did not lift color.');
+  final gray = Uint8List.fromList([200, 100, 50, 255]);
+  cleanDocumentRgbaInPlace(
+    gray,
+    1,
+    1,
+    mode: DocumentCleanupMode.grayscale,
+    amount: .5,
+  );
+  check(
+    gray[0] == 124 && gray[1] == 124 && gray[2] == 124,
+    'Grayscale did not produce expected luminance.',
+  );
   final bw = Uint8List.fromList(uneven);
   cleanDocumentRgbaInPlace(
     bw,
@@ -135,6 +181,27 @@ void main() {
       pixels[i + 3] = random.nextBool() ? 0 : 255;
     }
     final original = Uint8List.fromList(pixels);
+    for (final mode in DocumentCleanupMode.values) {
+      final trial = Uint8List.fromList(original);
+      cleanDocumentRgbaInPlace(trial, w, h, mode: mode, amount: .5);
+      for (var i = 0; i < trial.length; i += 4) {
+        if (mode == DocumentCleanupMode.original) {
+          check(
+            trial[i] == original[i] && trial[i + 3] == original[i + 3],
+            'Original changed a randomized pixel.',
+          );
+        } else {
+          check(trial[i + 3] == 255, 'Cleanup did not flatten alpha.');
+          if (mode == DocumentCleanupMode.grayscale ||
+              mode == DocumentCleanupMode.adaptiveBlackAndWhite) {
+            check(
+              trial[i] == trial[i + 1] && trial[i + 1] == trial[i + 2],
+              'Gray output changed channel equality.',
+            );
+          }
+        }
+      }
+    }
     reduceImpulseNoiseRgbaInPlace(pixels, w, h);
     for (var i = 3; i < pixels.length; i += 4) {
       check(pixels[i] == original[i], 'Noise filter changed alpha.');

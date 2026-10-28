@@ -26,6 +26,9 @@ void main() {
         'report-2.png',
         'perspective-letter.png',
         'shadowed-field-notes.png',
+        'clean-practice-page.png',
+        'shadowed-practice-page.png',
+        'angled-practice-page.jpg',
         'practice-photo.jpg',
         'garden-clean-photo.jpg',
         'noisy-garden.png',
@@ -77,6 +80,32 @@ void main() {
       expect(bytes, orderedEquals(untouched));
     },
   );
+
+  test('practice report produces distinct real enhancement outputs', () async {
+    final bytes = await asset('shadowed-practice-page.png');
+    final original = Uint8List.fromList(bytes);
+    final before = img.decodePng(bytes)!;
+    img.Image result(DocumentCleanupMode mode, double amount) => img.decodePng(
+      processDocumentCleanup(
+        DocumentCleanupRequest(bytes, mode: mode, amount: amount),
+      ).bytes,
+    )!;
+    final light = result(DocumentCleanupMode.lighten, .7);
+    final shadow = result(DocumentCleanupMode.evenLighting, .7);
+    final magic = result(DocumentCleanupMode.magicPro, .9);
+    final bw = result(DocumentCleanupMode.adaptiveBlackAndWhite, .7);
+    expect(
+      light.getPixel(30, 500).r,
+      greaterThan(before.getPixel(30, 500).r + 25),
+    );
+    expect(shadow.getPixel(30, 500).r, greaterThan(light.getPixel(30, 500).r));
+    expect(magic.getPixel(30, 500).r, greaterThan(shadow.getPixel(30, 500).r));
+    final green = magic.getPixel(300, 1215);
+    expect(green.g, greaterThan(green.r));
+    expect(bw.getPixel(30, 500).r, 255);
+    expect(bw.getPixel(300, 1215).r, 0);
+    expect(bytes, orderedEquals(original));
+  });
 
   test('noisy garden sample really reduces an isolated speck', () async {
     final bytes = await asset('noisy-garden.png');

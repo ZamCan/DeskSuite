@@ -13,7 +13,7 @@
 
 ## Implemented, not fully validated
 
-- [ ] Local uneven-lighting / adaptive B&W document previews and selective photo-speck reduction, with realistic synthetic examples. Pixel cores passed a DDC/Node smoke check; Flutter codec, widget, integration and Android tests are still pending.
+- [ ] Document enhancement presets, optional reviewable bright-page corner suggestions and selective photo-speck reduction, with synthetic examples. Pixel cores passed DDC/Node smoke checks; new Flutter codec, widget, integration and Android tests are still pending.
 - [ ] Native Android camera capture/recovery, file picking, saving, lifecycle/process death, actual printer discovery/output, adaptive icons/splash and accessibility on representative devices.
 - [ ] Checked-in Android scaffold and external release-signing configuration: no integrated APK/AAB or device upgrade was built/tested in this execution.
 - [ ] Windows/Linux/iOS plugins, generated desktop runners, packaging and OS-specific paths.
@@ -36,7 +36,7 @@
 
 - [ ] Full suite backup, restore, migrations and cross-ID import for notes/catalogue, with crash and storage-full tests.
 - [ ] Transactional multi-instance database; complete POS, payment/refunds, sale lines, receipts, expense/profit reports and audit history.
-- [ ] Validate OCR accuracy/language behavior on representative real documents and Android devices; automatic page-edge detection with manual fallback.
+- [ ] Validate OCR accuracy/language behavior on representative real documents and Android devices; benchmark and extend the limited corner-suggestion heuristic with manual fallback.
 - [ ] Existing-PDF reader, search and page tools, PDF compression and accessible preview.
 - [ ] Rich document editor, spreadsheet/formulas, presentation editing and stronger DOCX/XLSX/PPTX interoperability, based on tested format engines and explicit fidelity boundaries.
 - [ ] Advanced image editing: arbitrary crop/selection, non-destructive layers/masks, richer adjustments and optional local segmentation; no model downloads without consent.
@@ -100,3 +100,11 @@ Require a signed, reproducible Android release with stable package ID and key cu
 - [x] Route the image through the existing embedded-image project format and shared renderer/export path, with cover fitting to the physical slot.
 - [x] Add controller tests for replacement, encode/decode, undo and rejection of a normal rectangle.
 - [ ] Confirm tests/analyzer/formatting in CI, then test actual Android picking and real print scaling. This is manual slot placement, not automatic multi-photo batching, face alignment or certified ID-photo processing.
+
+## 2026-10-28 — document enhancement and scan-to-OCR handoff
+
+- [x] Add Original, Lighten, Reduce shadows, Magic Pro color, Grayscale and adaptive B&W previews plus fictional clean/shadowed/angled samples.
+- [x] Add optional bright-page corner suggestions that require review and retain manual controls.
+- [x] Pass one selected working scan page to the existing OCR workflow, with a warning that reviewed text edits are not in the original-word searchable PDF layer.
+- [ ] Run new Flutter tests and verify genuine camera photos, native OCR accuracy, Android memory/performance, manual fallback, provider behavior and accessibility.
+- [ ] Add reviewed corrections to a correctly positioned PDF text layer and multipage searchable-PDF export; do not claim they already work.

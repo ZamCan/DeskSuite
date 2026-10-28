@@ -1,6 +1,6 @@
 # Master directive — current implementation status
 
-Status of the **source in this repository**, recorded 2026-10-27. It is not a
+Status of the **source in this repository**, updated 2026-10-28. It is not a
 declaration that the whole directive or a release is finished. The full
 [master engineering directive](MASTER_ENGINEERING_DIRECTIVE.md) and
 [owner instructions](OWNER_INSTRUCTIONS.md) are preserved alongside it; the
@@ -11,20 +11,19 @@ declaration that the whole directive or a release is finished. The full
 
 | Check | Result | Where |
 | --- | --- | --- |
-| `flutter test` (host, Linux, `--concurrency=1`) | **152 passed** | [validation](VALIDATION.md) |
-| `flutter analyze` | no issues | same |
-| `dart format --set-exit-if-changed` | clean | same |
-| `dart test/pixel_algorithms_smoke.dart` | PASS | same |
-| Android release build | **not built here** | Deferred to GitHub Actions or an offline Termux build, by owner instruction. |
+| Earlier baseline `4c15523` CI | Flutter analyze/test and matrix builds succeeded in the repository's independently running CI | [run 40634495478](https://github.com/ZamCan/DeskSuite/actions/runs/40634495478) |
+| Later main `1cef153` CI | Analysis failed on all four jobs; logs require authentication. The feature branch fixes a separately reproduced constant-expression error in that main snapshot, but other project errors cannot be excluded until Flutter runs. | [run 40635793861](https://github.com/ZamCan/DeskSuite/actions/runs/40635793861) |
+| New enhancement and corner pixel cores | DartPad 3.13.7 DDC/Node smoke checks passed, including 40 randomized images and synthetic corner/fallback cases | [validation](VALIDATION.md) |
+| New Flutter codec, widget, OCR-handoff and full-suite tests | **Written, not run in this workspace** | Flutter/Dart tools are absent from this snapshot |
+| Android/device and signed release for the new source | **Not built or tested here** | Existing CI was for the earlier baseline only; signing and device checks remain separate |
 
-Two failures reported by GitHub Actions on an earlier commit were diagnosed and
-fixed in this tree: `TessBaseAPI.end()` does not exist (the engine is released
-with `recycle()`), and a Windows-only widget test waited a fixed number of pump
-rounds for an image to decode.
+The baseline CI's successful build steps do not prove a signed release, actual
+camera/OCR behavior or the later changes in this feature branch. The owner asked
+that no Android toolchain be downloaded or packaging performed in this workspace.
 
-## Latest implementation slice
+## Earlier implementation slice — Photo print size
 
-Photo Studio now offers a **Print size** resize mode in addition to pixel dimensions. Users can specify print width/height in millimetres and a target DPI; the shared `lib/images/print_dimensions.dart` engine converts these to pixel dimensions and enforces the 8192-pixel side and 12-megapixel output bounds. Tests were added in `test/print_dimensions_test.dart` for conversion, invalid inputs and pixel-budget enforcement.
+Photo Studio offers a **Print size** resize mode in addition to pixel dimensions. Users can specify print width/height in millimetres and a target DPI; the shared `lib/images/print_dimensions.dart` engine converts these to pixel dimensions and enforces the 8192-pixel side and 12-megapixel output bounds. Tests were added in `test/print_dimensions_test.dart` for conversion, invalid inputs and pixel-budget enforcement.
 
 This is a source change only until the repository's formatter, analyzer, full host suite and Android build/device checks pass. It does not embed DPI metadata in exported images or guarantee printer calibration.
 
@@ -32,16 +31,17 @@ This is a source change only until the repository's formatter, analyzer, full ho
 
 | Target | Current result | Missing or unverified |
 | --- | --- | --- |
-| **A. Paper → searchable PDF** | Camera entry point, manual corners, projective correction, tone/rotation, multipage ordering, image PDF, and now **OCR text layer** (searchable PDF) are implemented. The text layer is verified by inflating the generated PDF and asserting each recognized word is present. | Automatic edge detection, in-app PDF reopening, camera and recognition behaviour on Android hardware. **Not complete on device.** |
-| **B. Image → exact-size output** | Photo Studio: fit or exact independent dimensions, PNG/JPEG, quality, output review, separate destination, speck reduction, compare, undo. Verified by decoding the exported file and asserting dimensions. | Percentage and physical-DPI resizing. Native provider behaviour untested. |
+| **A. Paper → searchable PDF** | Camera entry point, optional reviewed corner suggestion, projective correction, enhancement, multipage image PDF, and selected-page handoff to a **single-page searchable PDF** are implemented in source. The original OCR words form the PDF text layer; reviewed edits are exported to TXT/DOCX. | Broad/robust page detection, reviewed edits in PDF text layers, multipage searchable export, in-app PDF reopening, camera and recognition on Android hardware. **Not complete on device.** |
+| **B. Image → exact-size output** | Photo Studio: fit or exact independent dimensions, millimetre/DPI-to-pixel calculation, PNG/JPEG, quality, output review, separate destination, speck reduction, compare and undo. | Percentage resize and embedded DPI metadata. Native provider/printer behaviour untested. |
 | **C. Existing document → extracted text** | **Implemented.** Offline Tesseract recognition with English and English+Kiswahili models, EXIF-corrected bounded preparation, editable review, confidence warning, TXT/DOCX export and a searchable PDF. Text is extracted from documents through the separate converter (below). | Recognition accuracy on real photographs and printed pages, handwriting, and non-Latin scripts. |
 | **D. Convert and compress** | Office reader/writer (DOCX/XLSX/PPTX/ODT/ODS/ODP/RTF/TXT/HTML → PDF/TXT/CSV/ODT/ODS) with per-route fidelity and limits. Image re-encoding with quality control. | Existing-PDF compression and page operations, Office layout-faithful rendering (needs LibreOffice), batch conversion. |
 | **E. New-user sample tutorial** | Skippable, revisitable guides plus a sample library; each guide invokes the real engine (scan, cleanup, photo resize, OCR sample letter, office conversion). | Native/device runs of the guides. |
 
 ## Modules in this source
 
-- `lib/document_scan/` — camera boundary, manual corners, projective processor,
-  lighting and adaptive B&W cleanup, preview, image-PDF assembly, private draft.
+- `lib/document_scan/` — camera boundary, optional reviewable bright-page corner
+  suggestions and manual fallback, projective processor, Original/Lighten/shadow
+  reduction/Magic Pro/grayscale/adaptive B&W preview, image-PDF assembly and private draft.
 - `lib/images/` — bounded photo decoding, resize/rotate/crop, selective speck
   reduction, cleanup pixel engine.
 - `lib/ocr/` — Tesseract boundary, image preparation, searchable PDF builder,
@@ -69,8 +69,8 @@ environment.
 
 1. Verify the first Android build from CI (or an offline Termux build) and
    install it, then run the scanner, OCR and converter against real documents.
-2. Add automatic document edge detection with a manual fallback, and page preview
-   for imported photo pages.
+2. Benchmark and improve the limited corner-suggestion heuristic against real
+   camera images and difficult lighting, with manual fallback and device profiling.
 3. PDF import: render pages, extract existing text, reorder/split/compress —
    the largest remaining gap for "Acrobat-style" workflows.
 4. **Done for sales:** `lib/business/sale_receipt.dart` turns a recorded sale into
@@ -97,26 +97,26 @@ before deciding.
 Nothing in this table is a claim that an unmerged branch works.
 
 
-## Latest implementation slice — editable photo-sheet size presets
+## Historical slice — photo-sheet size examples
 
-The existing Photo Sheet dialog now offers editable example sizes (35 × 45 mm, 50.8 × 50.8 mm, 30 × 40 mm and 40 × 50 mm) in addition to custom dimensions. Editing either dimension switches the selector to Custom. The dialog explicitly warns that these are layout examples, not universal or official passport/ID requirements. This extends the existing shared physical print-sheet engine rather than creating a second photo-layout implementation.
+The earlier example-only dropdown has since been replaced by editable, source-referenced photo profiles and custom dimensions. Changing either size switches back to Custom. The tool remains a layout aid, not an eligibility, upload or official-acceptance check. See the current profile follow-up below.
 
-**Not yet implemented by this slice:** automatic person/pose/head-and-shoulder crop, background removal or replacement, editable segmentation masks, country/authority-specific verified presets, broad ID/card/poster/PPTX template packs, or SLM integration. These are now explicit in the master directive and roadmap and require engine/licence/performance evaluation and real workflow tests. This source change has not yet been run through Flutter format/analyze/tests or an Android build.
+Automatic person/pose/head-and-shoulder crop, background removal, editable segmentation masks, automatic authority-compliance validation, broad ID/card/poster/PPTX template packs, and SLM integration remain outstanding.
 
 
-## Latest implementation slice — photo background placement and size presets (2026-10-28)
+## Historical slice — photo background placement (2026-10-28)
 
 **Implemented in source**
-- Photo Sheet offers editable example dimensions (35 × 45 mm, 50.8 × 50.8 mm, 30 × 40 mm and 40 × 50 mm), plus Custom. These are layout examples only, not authority-verified requirements.
+- Photo Sheet's earlier example-size dropdown was subsequently replaced with source-referenced profiles and Custom; it is still a layout tool, not an automated compliance check.
 - Photo Studio offers **Place on background** for images that already contain transparency. It composites the transparent image onto selectable solid colours (white, warm off-white, light grey, pale blue, pale pink, pale green or charcoal), preserves the source image, uses the existing bounded image processor, creates an undoable working-copy edit, and exports an opaque PNG.
 - Unit and widget tests were added for alpha compositing, selected background colour, retained foreground pixels, rejection of non-opaque background values, and the Photo Studio import → choose background → export workflow.
 
 **Not implemented by this slice**
-- Automatic background removal / segmentation, editable foreground masks, hair-edge refinement, portrait or face detection, head/shoulder auto-crop, pose/landmark SLM guidance, verified country/authority presets, a broad editable template catalogue, or SLM runtime integration.
+- Automatic background removal / segmentation, editable foreground masks, hair-edge refinement, portrait or face detection, head/shoulder auto-crop, pose/landmark SLM guidance, authority-compliance checking, a broad editable template catalogue, or SLM runtime integration.
 - The solid-background action does **not** remove a background; it only places existing transparency onto a solid colour. It must not be presented as an automatic passport-photo maker.
 - New tests have been written but not run in this execution. Formatter, analyzer, full Flutter suite, CI and Android build/device behavior remain unverified for these latest commits.
 
-## Latest implementation slice — shared editable template catalogue (2026-10-28)
+## Historical slice — shared editable template catalogue (2026-10-28)
 
 **Implemented in source**
 - Added `lib/design/template_catalog.dart` as the single registry for stable template IDs, labels, descriptions and recommended physical dimensions.
@@ -125,7 +125,7 @@ The existing Photo Sheet dialog now offers editable example sizes (35 × 45 mm, 
 - Added catalogue tests for unique IDs, element bounds and project encode/decode, plus a widget test for choosing and creating a business-card design.
 
 **Scope boundary**
-- These are generic starter layouts, not finished template packs, official identity-card specifications, or verified government/school requirements. Logo/photo placeholders, image-frame editing, template thumbnails, user-authored templates, multi-page presentation editing and PPTX export are not implemented by this slice.
+- These are generic starter layouts, not finished template packs, official identity-card specifications, or verified government/school requirements. The later photo-slot action below adds manual replacement for that specific template; general image-frame editing, template thumbnails, user-authored templates, multi-page presentation editing and PPTX export remain unimplemented.
 - The new tests have been added but have **not** been run in this execution. Formatter, analyzer, full suite, CI and Android build/device checks remain unverified.
 
 ### Registry hardening addendum
@@ -134,20 +134,20 @@ The starter registry now records a catalogue schema version, source/provenance l
 
 ## CI follow-up — photo background picker overflow (2026-10-28)
 
-The first matrix run containing the template tests completed formatting and static analysis, and the new template catalogue tests passed. The full suite found one widget failure: a narrow-screen RenderFlex overflow in the photo background picker. The option labels now use a bounded, ellipsized flexible region. A fresh CI run triggered by this fix is required before calling the suite green.
+The first matrix run containing the template tests completed formatting and static analysis, and the new template catalogue tests passed. The full suite found one widget failure: a narrow-screen RenderFlex overflow in the photo background picker. The option labels were changed to use a bounded, ellipsized flexible region. The later independent CI run for `4c15523` passed; it does not validate this branch or the subsequently failing `1cef153` main snapshot.
 
 
 
-## Latest implementation slice — A4 photo print-sheet template (2026-10-28)
+## Historical slice — A4 photo print-sheet template (2026-10-28)
 
 Added a **Photo print sheet** entry to the shared editable template catalogue. It creates an A4 design with twenty 35 × 45 mm example slots arranged in four columns and five rows, plus header/footer guidance. Every slot is made from normal editable rectangle/text elements, so it follows the existing project save/render/export path and does not add a competing layout engine.
 
-**Boundary:** these are placeholders, not actual image frames or automatic photo placement. Dimensions are illustrative, not an official passport/ID standard; users must verify requirements and printer scaling. Tests have been added but remain pending the current CI run; no passing test or build claim is made here.
+**Boundary:** the initial shapes were placeholders rather than automatic image frames. A later manual slot-replacement action is described below; it does not align faces. Dimensions are illustrative, not an official passport/ID standard; users must verify requirements and printer scaling.
 
 
 ## CI follow-up — widget-test timing fixes (2026-10-28)
 
-The Android job reported 176 passing tests and three failures around asynchronous UI timing in navigation, scan-draft retry and unsaved-change recovery. The tests were updated to wait for the Creative Studio scrollable, disappearance of the saved-error state, and presence of the editor action respectively. These are pending revalidation; the suite is not marked green until a fresh CI run confirms the results.
+An earlier Android job reported 176 passing tests and three failures around asynchronous UI timing in navigation, scan-draft retry and unsaved-change recovery. The tests were updated to wait for the Creative Studio scrollable, disappearance of the saved-error state, and presence of the editor action respectively. A later independent run passed for `4c15523`; the feature branch and the subsequent `1cef153` snapshot are separate.
 
 
 ## Photo print-sheet image placement (2026-10-28)
@@ -157,4 +157,18 @@ The Creative Studio editor now has a dedicated **Fill photo slot with image** ac
 
 ## Photo-slot editing regression coverage (2026-10-28)
 
-The photo-sheet template test now expects 23 text objects: header, subtitle, twenty slot labels and footer. Added a controller-level regression test for replacing one 35 × 45 mm slot with an embedded image, removing the matching label, serializing/reopening the image bytes and undoing the replacement. Pending CI confirmation.
+The photo-sheet template test expects 23 text objects: header, subtitle, twenty slot labels and footer. A controller regression test covers replacing one 35 × 45 mm slot, removing its label, reopening image bytes and undo. After a subsequent heading change, these tests now count the exact slot labels rather than every string containing the dimensions. The updated tests have not run in Flutter in this workspace.
+
+## Scan enhancement, corner suggestions and OCR handoff (2026-10-28)
+
+- Added **Original**, global **Lighten**, local **Reduce shadows**, color **Magic Pro**, **Grayscale** and adaptive B&W to the reviewable cleanup dialog. Magic Pro is a bounded classical illumination/contrast heuristic, not an AI model or a promise of shadow removal. Original means the page as it entered the dialog; Reset page returns to the imported orientation-baked PNG copy.
+- Added a bounded (≤512 px thumbnail) bright-page corner suggestion. The wand is explicit; detected points may be wrong and must be reviewed before the existing projective correction. Manual dragging/coordinates remain available when no suggestion is found.
+- Added clean, shadowed and perspective fictional practice reports plus a real pixel-engine [comparison](magic-scan-evidence.png); the synthetic images are reproducible by `tools/generate_scan_practice.py` and are not camera or Android screenshots.
+- Added a direct selected-page handoff from the scan draft to the existing OCR screen. External picks remain capped at 8 MiB; scan working PNGs can use the existing 16 MiB internal bound. Recognition is not automatic. A preparation failure clears the previous source, and users must confirm if a searchable PDF will use uncorrected OCR words after they edit the text. TXT/DOCX keep edits; corrected searchable text and multipage searchable PDFs are not implemented.
+- Pixel-core and synthetic sample checks were executed in DDC/Node; Flutter codec/widget/host tests, real-page quality, performance on Android, native OCR/camera, signed builds and device installation are **not verified for these changes**. See [validation](VALIDATION.md).
+
+## Photo-sheet profile and analysis follow-up (2026-10-28)
+
+This branch includes the later main snapshot's Tanzania passport and e-Visa, ICAO guidance, U.S. and Canada profile entries. Their source links and context appear in the sheet dialog, but a layout does not validate or guarantee official acceptance. The dialog states that a PDF print sheet is not an upload file and does not enforce upload limits. Canada explicitly requires professional, unaltered paper photos; the U.S. requires an original unedited photo. The ICAO URL was corrected and its portrait-zone guidance is not presented as a universal submitted-image head-height rule. Users must check current requirements at the linked authority.
+
+The independently running CI for main `1cef153` failed at Flutter analysis; full logs were inaccessible. Separately, analyzing the actual profile registry with DartPad reproduced `const_eval_property_access` on `const ... = photoSpecifications.length`. This branch derives the custom index at runtime and makes the corresponding menu item non-const. Source tests also count exact slot labels instead of the changed heading. Actual project analysis and Flutter tests remain necessary; this is not proof that every cause of the CI failure has been resolved.

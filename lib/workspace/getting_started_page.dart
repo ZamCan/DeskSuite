@@ -37,8 +37,10 @@ class GettingStartedPage extends StatelessWidget {
         title: 'Extract text from a scan',
         description:
             'In Text extraction, choose an image or the sample letter, run the '
-            'offline recognizer, correct the words, then save TXT, DOCX or a '
-            'searchable PDF. Tables and handwriting are not reconstructed.',
+            'offline recognizer, correct the words and save TXT or DOCX. A '
+            'searchable single-page PDF uses the original OCR layer, not those '
+            'edits. You can also send a selected scan page directly. Tables '
+            'and handwriting are not reconstructed.',
         button: 'Open text extraction',
         onPressed: onText,
       ),
@@ -58,7 +60,7 @@ class GettingStartedPage extends StatelessWidget {
       _GuideCard(
         icon: Icons.auto_fix_high,
         title: 'Clean a shadowed page',
-        description: 'In Scan & assemble, choose Try an example → Shadowed field notes → Clean up & compare. Preview reduced uneven lighting, switch between Before and After, then try adaptive black & white. Use the result only after reviewing the text and colored chart; export a new PNG or image PDF.',
+        description: 'In Scan & assemble, choose Try an example → Shadowed practice report → Clean up & compare. Try Original, Lighten, shadow reduction, Magic Pro and adaptive black & white. Compare Before and After, inspect text and colored bars, then export a new PNG or image PDF.',
         button: 'Practise document cleanup',
         onPressed: onScan,
       ),
@@ -74,7 +76,7 @@ class GettingStartedPage extends StatelessWidget {
       _GuideCard(
         icon: Icons.crop_free,
         title: 'Correct a perspective page',
-        description: 'Choose the perspective letter example in Scan & assemble, select A4 portrait proportions, and move the four handles onto the paper corners. Correct the page and compare it with Reset page. Detection is manual.',
+        description: 'Choose the angled practice report in Scan & assemble and select A4 portrait proportions. In Corners & correct, try the wand suggestion or move the handles yourself. Check all four corners before correcting; Reset page returns to the imported copy.',
         button: 'Practise page correction',
         onPressed: onScan,
       ),
@@ -106,7 +108,7 @@ class GettingStartedPage extends StatelessWidget {
       Text('Important limits', style: Theme.of(context).textTheme.titleMedium),
       const SizedBox(height: 8),
       const Text(
-        'Scan PDFs contain images, not OCR or searchable text. A PDF reader, office-format editor, cloud sync and automatic page detection are not yet available. Export copies for backup; app-private data can be removed when the app is uninstalled.',
+        'Scan & assemble exports image-only PDFs. The separate Android OCR workflow can export a searchable single-page PDF; its recognition needs review. Corner suggestions are limited and may be wrong. The office editor has format and fidelity limits; an in-app PDF reader and cloud sync are not available. Export copies for backup; app-private data can be removed when the app is uninstalled.',
       ),
       const SizedBox(height: 8),
       const Text(

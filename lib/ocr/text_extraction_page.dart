@@ -21,6 +21,7 @@ class TextExtractionPage extends StatefulWidget {
     this.engine,
     this.sampleLoader,
     this.prepare,
+    this.initialImage,
   });
 
   final FileGateway files;
@@ -34,6 +35,9 @@ class TextExtractionPage extends StatefulWidget {
   /// Injected in tests so the widget does not need an isolate; production uses
   /// [prepareImageForOcrInBackground].
   final Future<Uint8List> Function(Uint8List bytes)? prepare;
+
+  /// Optional selected scan page. Recognition remains an explicit user action.
+  final Uint8List? initialImage;
 
   @override
   State<TextExtractionPage> createState() => _TextExtractionPageState();
@@ -51,13 +55,21 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
   OcrResult? _result;
   String? _error;
   String? _status;
-  bool _running = false;
+  bool _running = false, _preparing = false;
+  int _loadGeneration = 0;
   String? _sourceLabel;
 
   @override
   void initState() {
     super.initState();
     _checkAvailability();
+    final image = widget.initialImage;
+    if (image != null) {
+      _preparing = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _load(image, 'Selected scan page');
+      });
+    }
   }
 
   @override
@@ -82,9 +94,13 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
 
   Future<void> _load(Uint8List? bytes, String label) async {
     if (bytes == null) return;
+    final generation = ++_loadGeneration;
     setState(() {
+      _preparing = true;
       _error = null;
       _status = 'Preparing image…';
+      _original = null;
+      _prepared = null;
       _result = null;
       _text.clear();
       _sourceLabel = label;
@@ -95,31 +111,39 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
               (bytes) => prepareImageForOcrInBackground(
                 OcrImageRequest(bytes),
               ))(bytes);
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _original = bytes;
         _prepared = prepared;
         _status = null;
+        _preparing = false;
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _error = 'This image could not be prepared: $error';
         _status = null;
+        _preparing = false;
       });
     }
   }
 
   Future<void> _pick() async {
+    if (_running || _preparing) return;
+    setState(() => _preparing = true);
     try {
       final bytes = await widget.files.pickImage();
-      await _load(bytes, 'Imported image');
+      if (mounted) await _load(bytes, 'Imported image');
     } catch (error) {
       if (mounted) setState(() => _error = 'Import failed: $error');
+    } finally {
+      if (mounted) setState(() => _preparing = false);
     }
   }
 
   Future<void> _loadSample() async {
+    if (_running || _preparing) return;
+    setState(() => _preparing = true);
     try {
       final loader =
           widget.sampleLoader ??
@@ -128,17 +152,19 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
             return data.buffer.asUint8List();
           };
       final bytes = await loader();
-      await _load(bytes, 'Sample letter (example document)');
+      if (mounted) await _load(bytes, 'Sample letter (example document)');
     } catch (error) {
       if (mounted) {
         setState(() => _error = 'Sample could not be loaded: $error');
       }
+    } finally {
+      if (mounted) setState(() => _preparing = false);
     }
   }
 
   Future<void> _recognize() async {
     final prepared = _prepared;
-    if (prepared == null || _running) return;
+    if (prepared == null || _running || _preparing) return;
     setState(() {
       _running = true;
       _error = null;
@@ -243,6 +269,31 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
       );
       return;
     }
+    if (normalizeOcrText(_text.text) != normalizeOcrText(result.text)) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('PDF layer uses original OCR'),
+          content: const Text(
+            'Your text edits are saved in TXT or DOCX, but the PDF search layer '
+            'uses the original recognized words and positions. It will not '
+            'include your corrections. Continue with the original OCR layer?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              key: const Key('ocr-confirm-original-layer'),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Use original OCR layer'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || confirmed != true) return;
+    }
     try {
       final bytes = await buildSearchablePdf([
         SearchablePage(imageBytes: prepared, result: result),
@@ -269,7 +320,9 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
   }
 
   void _reset() {
+    _loadGeneration++;
     setState(() {
+      _preparing = false;
       _original = null;
       _prepared = null;
       _result = null;
@@ -388,20 +441,20 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
             children: [
               FilledButton.icon(
                 key: const Key('ocr-choose'),
-                onPressed: _running ? null : _pick,
+                onPressed: _running || _preparing ? null : _pick,
                 icon: const Icon(Icons.upload_file),
                 label: const Text('Choose image'),
               ),
               OutlinedButton.icon(
                 key: const Key('ocr-sample'),
-                onPressed: _running ? null : _loadSample,
+                onPressed: _running || _preparing ? null : _loadSample,
                 icon: const Icon(Icons.school_outlined),
                 label: const Text('Use sample letter'),
               ),
               if (_prepared != null)
                 TextButton.icon(
                   key: const Key('ocr-reset'),
-                  onPressed: _running ? null : _reset,
+                  onPressed: _running || _preparing ? null : _reset,
                   icon: const Icon(Icons.restart_alt),
                   label: const Text('Start over'),
                 ),
@@ -447,7 +500,7 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
               DropdownButton<String>(
                 key: const Key('ocr-language'),
                 value: _language,
-                onChanged: _running
+                onChanged: _running || _preparing
                     ? null
                     : (value) => setState(() => _language = value ?? 'eng'),
                 items: const [
@@ -460,7 +513,11 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
               ),
               FilledButton.icon(
                 key: const Key('ocr-run'),
-                onPressed: (_prepared == null || _running || _available != true)
+                onPressed:
+                    (_prepared == null ||
+                        _running ||
+                        _preparing ||
+                        _available != true)
                     ? null
                     : _recognize,
                 icon: _running
@@ -566,8 +623,8 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
             const SizedBox(height: 10),
             Text(
               'The searchable PDF keeps the page image and adds an invisible '
-              'text layer where words were found. It is not an editable '
-              'document.',
+              'layer of the original recognized words; edits above are only '
+              'included in TXT or DOCX. The PDF is not an editable document.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — scan enhancement and OCR handoff (not a release)
+
+- Added reviewable Original, Lighten, Reduce shadows, Magic Pro, Grayscale and adaptive B&W document modes, with three reproducible fictional practice pages and actual [pixel-engine comparison evidence](docs/engineering/magic-scan-evidence.png). These classical algorithms can lose detail or leave shadows; they are not a claim of CamScanner parity.
+- Added optional, reviewable bright-page corner suggestions with manual fallback, and a direct selected-scan-page handoff to the offline OCR screen. Scan multipage PDFs remain image-only; OCR searchable PDF handles one image and uses the original recognized words, with a warning after text edits. Corrected TXT/DOCX remain available.
+- Bounded internal scan PNGs up to 16 MiB can be prepared for OCR; external image picks remain at 8 MiB. Failed preparation no longer leaves the old image available under a new label. Added tests, but this branch has not run through Flutter or Android.
+- Integrated the later main snapshot's source-referenced photo-sheet profiles, corrected a Dart constant-expression error and clarified profile/upload and unaltered-photo limits. Updated template slot-label assertions for the new heading; these Flutter tests remain unrun.
+- Pixel smoke/sample tests passed under DartPad DDC/Node; the repository's separately run CI passed for the earlier `4c15523` baseline only. Later main `1cef153` failed analysis independently; full logs were unavailable, so this branch still needs a complete Flutter run. No device or signed-release result is claimed for the new code. See [validation](docs/engineering/VALIDATION.md).
+
 ## Unreleased — document and photo cleanup (not a release)
 
 - Added local, adjustable uneven-lighting and adaptive black-and-white cleanup for document images, with temporary before/after previews, cancel/apply, existing draft undo/reset, and PNG or image-PDF export. Transparency is flattened to white; color, artwork or light text can be altered.
@@ -13,9 +21,9 @@
 - Added skippable welcome, revisitable tutorials, fictional page/design samples and a synthetic practice photo; tutorials call the real processors. Added D+S master logo, Android adaptive/legacy/monochrome resources and splash; Android resource build/rendering remains unverified.
 - Added scan, draft failure/reopen, camera-fake, sample, responsive layout and navigation tests; user guide, conversion registry, engine evaluation and Pub dependency notice inventory.
 
-Host baseline (before these changes): 44 tests passed. Later targeted scan (7), Photo widgets (4), sample assets (2), scan processor (5), and conversion/navigation (3) passed; analyzer passed before a later test-assertion edit. A two-page image PDF was independently parsed and pixel/order checked. **The complete final suite has not been run**, and no current APK/AAB or device test was performed. See [validation](docs/engineering/VALIDATION.md).
+At that earlier stage, the host baseline had 44 tests, later targeted scan (7), Photo widgets (4), sample assets (2), scan processor (5), and conversion/navigation (3) passed; a two-page image PDF was independently parsed and pixel/order checked. Later validation is recorded separately in [validation](docs/engineering/VALIDATION.md).
 
-Still unavailable: OCR and searchable PDFs, existing-PDF reader/editing, office conversions, automatic page detection and cloud sync. This work is not release-ready.
+At the time of this older slice, OCR, searchable PDFs and office conversions were unavailable; they have since been added with limits described above. Existing-PDF reader/editing and cloud sync remain unavailable. This work is not release-ready.
 
 ## Earlier unreleased integrated foundation
 

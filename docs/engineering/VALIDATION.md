@@ -1,5 +1,23 @@
 # Validation record
 
+## Scan enhancement, suggestions and OCR handoff — 2026-10-28
+
+The repository's independently running [CI run 40634495478](https://github.com/ZamCan/DeskSuite/actions/runs/40634495478) completed successfully for **baseline commit `4c155232a09b20a290210c697a719ea8bb65a8f0`**, before these changes: its Flutter analysis/tests and Android, Linux, Windows and unsigned-iOS build steps succeeded. Later [run 40635793861](https://github.com/ZamCan/DeskSuite/actions/runs/40635793861) failed at Flutter analysis for main `1cef153ee782e4ed4feb859c3f34d313dc466d32`; authenticated logs were not accessible. Separately, DartPad analysis of its actual `photo_specifications.dart` reproduced `const_eval_property_access` for a `const` initialized from a list's `.length`. This feature branch changes that derived index to `final` and removes the corresponding `const` menu item; direct analysis of the modified registry reports no issues. That is not a complete project analyzer run, and it is not proven to be the only CI failure. Two source test predicates were also narrowed to exact slot labels after a main-branch heading started containing the same dimensions; those Flutter tests are unrun.
+
+A DDC/Node smoke check of the actual updated registry passed index, unique IDs, dimension/source invariants and the profile-scope warnings. Separately, the actual template generator composed with element/ID stubs produced 20 exact slot labels plus one heading containing the same dimensions, confirming why the two test predicates needed narrower matching. The composed smoke sources had only unused harness-import warnings. The actual photo-sheet dialog plus registry also analyzed without issues when composed with local type/signature stubs. These checks do not exercise real PDF generation, widgets, plugins or printing.
+
+Neither run is a test of this feature branch, a device install, or a verified signed release. We did not start these runs or download an Android toolchain/build packages in this workspace.
+
+For the **new code**, the actual dependency-free Dart pixel cores and standalone smoke scripts were analyzed and compiled with DartPad **Dart 3.13.7 DDC**, then executed locally under Node. Both passed: document modes including Original/Lighten/Magic Pro/gray/adaptive B&W, alpha/invalid input and 40 randomized images; plus synthetic perspective page suggestions, immutable inputs, blank/dark/edge-cut fallbacks and invalid dimensions. This is JavaScript/DDC evidence, not Dart VM, Flutter widget/codec, native-isolate or Android evidence.
+
+The actual Dart cleanup core processed the fictional `shadowed-practice-page.png` via local raw RGBA files. At (30, 500), paper RGB (134, 131, 123) became (176, 172, 162) with Lighten 0.7, (212, 207, 195) with shadow reduction 0.7, (250, 244, 229) with Magic Pro 0.9 and white with adaptive B&W 0.7. A green chart pixel stayed green in Magic Pro; it became black in B&W. This is a synthetic example, not an accuracy or shadow-removal guarantee. [Five-mode comparison](magic-scan-evidence.png) was composed from those actual Dart outputs and is **not an Android screenshot**.
+
+The same corner core was run on Pillow-downsampled synthetic assets locally. On the 1500 × 1900 angled practice scene, its normalized points were approximately (0.169, 0.102), (0.841, 0.063), (0.883, 0.908), (0.127, 0.932); the generator's intended corners are approximately (0.167, 0.103), (0.841, 0.063), (0.882, 0.908), (0.125, 0.932). The earlier perspective-letter fixture also produced close points; a full-frame shadowed page and the garden image returned no suggestion. These few artificial cases do **not** establish real-camera recall, false-positive rate or device performance. User images were not uploaded to the compiler.
+
+All changed Dart files were formatted using DartPad's 3.13.7 formatter. Analyzer checks on the actual cleanup dialog, corner editor, scan screen and OCR screen composed with local-interface stubs reported no code errors; the OCR composition had one redundant stub-import info. The actual corner core/wrapper also analyzed against codec stubs with no issues. Stubs do not validate the project's real `image` codec, file storage, widgets, isolates or platform channels. The three practice images regenerated to identical SHA-256 hashes and Pillow verified their formats and dimensions.
+
+Added Flutter tests cover the modes, generated sample, review/cancel/manual corner fallback, selected-page OCR handoff, bounded 8–16 MiB scan preparation, previous-source clearing on failed preparation, and explicit confirmation when reviewed text differs from the searchable-PDF OCR layer. They are **written but have not run** in Flutter here. Run the commands below on the owner's existing toolchain; independently test Android camera/OCR, low memory, providers, printing, signing, installation and real page quality.
+
 ## Cleanup slice checks on 2026-10-27
 
 The previously installed host Flutter/Dart tools were not present in this workspace snapshot. No Android tools were downloaded. To obtain real evidence without packaging, the **actual, dependency-free Dart pixel source** and checked-in `test/pixel_algorithms_smoke.dart` were analyzed and compiled with DartPad's Dart **3.13.7** DDC, then executed as JavaScript under Node. The standalone check passed, including uneven lighting, adaptive B&W, dark ink, alpha flattening, invalid settings, selective speck removal, transparent-neighborhood protection and 40 deterministic randomized images. This is a DDC/JavaScript run, **not a Dart VM, Flutter integration or Android-device test**.
@@ -72,6 +90,7 @@ The **complete suite has not been rerun after all feature additions**. Prior tar
 ```sh
 flutter pub get
 dart test/pixel_algorithms_smoke.dart
+dart test/page_corner_pixels_smoke.dart
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze --no-pub
 flutter test --no-pub --concurrency=1 --reporter expanded --timeout 120s

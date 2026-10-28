@@ -28,9 +28,12 @@ Uint8List prepareImageForOcr(OcrImageRequest request) {
   if (!request.maxDimension.isFinite || request.maxDimension < 320) {
     throw const FormatException('Invalid OCR image budget.');
   }
+  // Picked external images are already limited to 8 MiB by FileGateway. A
+  // processed scan page is an internal PNG and can be up to 16 MiB, so allow
+  // the shared working-image bound when handing a page directly to OCR.
   final decoded = decodeBoundedPhoto(
     request.bytes,
-    byteLimit: maxPhotoInputBytes,
+    byteLimit: maxPhotoWorkingBytes,
   );
   var image = decoded;
   final longEdge = math.max(image.width, image.height);

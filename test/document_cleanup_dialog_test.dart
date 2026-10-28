@@ -81,6 +81,68 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Magic Pro previews at its preset and Original is a no-op', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(420, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final requests = <DocumentCleanupRequest>[];
+    PhotoResult? chosen;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => FilledButton(
+              onPressed: () async {
+                chosen = await showDialog<PhotoResult>(
+                  context: context,
+                  builder: (_) => DocumentCleanupDialog(
+                    page: page,
+                    processor: (request) async {
+                      requests.add(request);
+                      return processDocumentCleanup(request);
+                    },
+                  ),
+                );
+              },
+              child: const Text('Open cleanup'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open cleanup'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('cleanup-mode')));
+    await tester.tap(find.byKey(const Key('cleanup-mode')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Magic Pro · clean color').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('cleanup-preview')));
+    await tester.tap(find.byKey(const Key('cleanup-preview')));
+    await tester.pumpAndSettle();
+    expect(requests.single.mode, DocumentCleanupMode.magicPro);
+    expect(requests.single.amount, .9);
+    expect(find.byKey(const Key('cleanup-after-image')), findsOneWidget);
+
+    await tester.ensureVisible(find.byKey(const Key('cleanup-mode')));
+    await tester.tap(find.byKey(const Key('cleanup-mode')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Original · current page').last);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('cleanup-amount')), findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('cleanup-preview')));
+    await tester.tap(find.byKey(const Key('cleanup-preview')));
+    await tester.pumpAndSettle();
+    expect(requests, hasLength(1)); // Original does not invoke the processor.
+    await tester.tap(find.byKey(const Key('cleanup-use')));
+    await tester.pumpAndSettle();
+    expect(identical(chosen, page), isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('preview failure is visible and cannot apply a result', (
     tester,
   ) async {
