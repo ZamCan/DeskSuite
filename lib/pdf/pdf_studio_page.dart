@@ -399,7 +399,7 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
                               const SizedBox(height: 14),
                               FilledButton.icon(
                                 key: const Key('pdf-studio-open'),
-                                onPressed: _opening || _combining ? null : _open,
+                                onPressed: _opening || _combining || _combineMode ? null : _open,
                                 icon: const Icon(Icons.folder_open_outlined),
                                 label: Text(_opening ? 'Opening…' : 'Open PDF'),
                               ),
