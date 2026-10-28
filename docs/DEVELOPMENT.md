@@ -68,4 +68,4 @@ Copy-Item -Force assets/brand/desksuite-windows.ico windows/runner/resources/app
 flutter build windows --release
 ```
 
-These are instructions and source-level asset configuration, not reported build results. Windows bundles need their runtime files; an AppImage requires additional packaging and testing. iOS requires macOS/Xcode and Apple provisioning; no iOS build was performed. Plugins and app-private storage must be validated per platform.
+The AppImage packaging definition also uses the selected PNG. These are instructions and source-level asset configuration, not reported build results. Windows bundles need their runtime files; an AppImage requires additional packaging and testing. iOS requires macOS/Xcode and Apple provisioning; no iOS build was performed. Plugins and app-private storage must be validated per platform.

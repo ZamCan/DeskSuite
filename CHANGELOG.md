@@ -2,7 +2,7 @@
 
 ## Unreleased — selected desktop icon and section artwork (not a release)
 
-- Kept the owner's chosen blue dimensional DS scan-frame PNG as the single app logo. Generated a multi-resolution Windows ICO from it and placed it in the default runner resource path. A user-local Linux desktop launcher installer uses the same selected mark; platform builds and visual appearance remain unverified.
+- Kept the owner's chosen blue dimensional DS scan-frame PNG as the single app logo. Generated a multi-resolution Windows ICO from it, placed it in the default runner resource path, and configured the Linux AppImage icon to use the same selected mark. A user-local Linux desktop launcher installer is available; platform builds and visual appearance remain unverified.
 - Reused six earlier candidates as decorative artwork for actionable Home tool cards, section title bars and relevant guide cards, without replacing the logo. Added source assets, reproducible thumbnail generation, accessibility/fallback handling and Flutter tests; actual widget/device tests remain unrun.
 - Eight host brand-asset tests passed, including pixel-for-pixel checks of every ICO frame and static Home-card wiring; three user-local Linux launcher tests passed, including launching a fictional executable through GIO with a quoted path. Targeted DartPad analyses passed with project dependencies stubbed. This is not evidence of an actual desktop or Android build.
 

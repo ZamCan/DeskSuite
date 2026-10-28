@@ -48,6 +48,7 @@ dart test/page_corner_pixels_smoke.dart # standalone corner-suggestion checks
 dart test/compression_dimensions_smoke.dart # bounded byte-target geometry
 python3 tools/test_brand_assets.py   # requires Pillow
 python3 tools/test_linux_launcher.py # user-local launcher and optional GIO launch test
+python3 tools/test_desktop_packaging.py # inspect packaging definitions, not a build
 node tools/test_office_renderer.mjs  # WASM + four fictional fixtures; optional upstream fixture directory
 node tools/test_office_viewer_ui.mjs # fake-DOM controls, not Android security
 python3 tools/generate_office_notices.py

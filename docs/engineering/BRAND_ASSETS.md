@@ -21,7 +21,8 @@ The existing sapphire, indigo and emerald accents are part of those earlier illu
 
 ## Desktop launchers
 
-- `assets/brand/desksuite-windows.ico` is generated solely from the selected in-app mark at 16, 20, 24, 32, 40, 48, 64, 96, 128 and 256 pixels. The identical checked-in `windows/runner/resources/app_icon.ico` is the Flutter Windows runner's default resource path. The rest of the Windows runner is not checked in. After generating the runner, copy the ICO to that path again, particularly if `flutter create --overwrite` was used. No Windows build, taskbar or desktop shortcut was verified here.
+- `assets/brand/desksuite-windows.ico` is generated solely from the selected in-app mark at 16, 20, 24, 32, 40, 48, 64, 96, 128 and 256 pixels. The identical checked-in `windows/runner/resources/app_icon.ico` is the Flutter Windows runner's default resource path. The rest of the Windows runner is not checked in. After generating the runner, copy the ICO to that path again, particularly if `flutter create --overwrite` was used. The Windows CI definition does this explicitly before building. No Windows build, taskbar or desktop shortcut was verified here.
+- The Linux AppImage definition uses `assets/brand/desksuite-mark.png` as `AppDir/desksuite.png` and points its desktop entry at that icon; the previous unrelated SVG was removed. The AppImage itself has not been built or inspected here.
 - `tools/install_linux_launcher.py` can create a **user-local** desktop entry and selected PNG icon for an existing complete Linux bundle. It reads the GTK `APPLICATION_ID` from the generated runner, or accepts `--app-id`. It does not build, install system-wide, move a bundle or download anything. Paths with `=`, `%` or control characters are rejected; keep the bundle in a stable path. A host test launched a fictional executable through GIO with spaces, quotes, dollar signs, backticks and backslashes in its path, but no actual DeskSuite Linux build was tested. See [development and local builds](../DEVELOPMENT.md).
 
 
@@ -42,6 +43,7 @@ Regenerate the raster assets using Python 3 and Pillow (no Flutter/Android toolc
 python3 tools/generate_brand_assets.py
 python3 tools/test_brand_assets.py
 python3 tools/test_linux_launcher.py
+python3 tools/test_desktop_packaging.py
 ```
 
 The corner-matte procedure is deliberately specific to this source image; if the canonical source changes, review the matte, safe zone, asset hash and tests rather than assuming it works for an arbitrary image. The test regenerates into a temporary directory and compares bytes produced by the installed Pillow version; PNG compression or resampling can differ across Pillow versions. Inspect the PNGs and XML before committing. Host checks parsed all resource XML, verified asset dimensions/safe-square placement, checked every ICO frame against a resize of the selected mark and regenerated identical bytes under the installed Pillow. They did **not** compile Android resources or exercise real adaptive masks, themed icons, Flutter asset loading, splash behavior, Windows resources or small-size appearance on a device. Verify all of these with the owner's existing tools before release.
