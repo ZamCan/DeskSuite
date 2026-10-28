@@ -50,7 +50,7 @@ Use stable Dart interfaces for orchestration and deterministic local processing;
 
 ## 5. Visual design contract
 
-Create a distinctive, warm, premium professional identity with restrained paper/ink/terracotta/neutral materials and clear hierarchy. Do not default to generic dark-blue AI styling, emoji icons, or a web-dashboard card for every operation.
+Use the owner-selected dimensional blue DS scan-frame identity with clear, premium hierarchy. Avoid unrelated visual systems, emoji as brand marks, or a web-dashboard card for every operation.
 
 - Shared spacing, typography, colour, shape, elevation, focus and motion tokens.
 - Navigation is consistent across phone and desktop; frequent actions remain obvious and accessible.

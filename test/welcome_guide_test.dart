@@ -47,7 +47,11 @@ void main() {
       });
       final repo = ProjectRepository(Directory('${temp.path}/documents'));
       await tester.pumpWidget(
-        DeskSuiteApp(repository: repo, fileGateway: WelcomeFiles()),
+        DeskSuiteApp(
+          showStartupAnimation: false,
+          repository: repo,
+          fileGateway: WelcomeFiles(),
+        ),
       );
       await waitIo(tester);
       expect(find.byKey(const Key('welcome-introduction')), findsOneWidget);
@@ -58,7 +62,11 @@ void main() {
       expect(await tester.runAsync(repo.readWelcomeSeen), isTrue);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpWidget(
-        DeskSuiteApp(repository: repo, fileGateway: WelcomeFiles()),
+        DeskSuiteApp(
+          showStartupAnimation: false,
+          repository: repo,
+          fileGateway: WelcomeFiles(),
+        ),
       );
       await waitIo(tester);
       expect(find.byKey(const Key('welcome-introduction')), findsNothing);

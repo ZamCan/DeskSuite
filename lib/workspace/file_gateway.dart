@@ -2,6 +2,9 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 
+import '../core/file_limits.dart';
+import '../core/image_limits.dart';
+
 /// Isolates platform pickers from the editor and keeps imports size bounded.
 abstract class FileGateway {
   Future<Uint8List?> pickImage();
@@ -62,8 +65,10 @@ class NativeFileGateway implements FileGateway, DocumentPicker {
   }
 
   @override
-  Future<Uint8List?> pickImage() =>
-      _pick(extensions: ['png', 'jpg', 'jpeg', 'webp'], limit: 8 * 1024 * 1024);
+  Future<Uint8List?> pickImage() => _pick(
+    extensions: ['png', 'jpg', 'jpeg', 'webp'],
+    limit: maxPhotoInputBytes,
+  );
   @override
   Future<Uint8List?> pickProject() =>
       _pick(extensions: ['dsdesign', 'dsproject'], limit: 32 * 1024 * 1024);
@@ -92,7 +97,7 @@ class NativeFileGateway implements FileGateway, DocumentPicker {
       ],
     );
     if (file == null) return null;
-    final bytes = await _readBounded(file.readAsByteStream(), 48 * 1024 * 1024);
+    final bytes = await _readBounded(file.readAsByteStream(), maxDocumentBytes);
     return (bytes: bytes, name: file.name);
   }
 

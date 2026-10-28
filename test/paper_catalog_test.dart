@@ -3,17 +3,52 @@ import 'package:desksuite/printing/paper_catalog.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('shared catalog covers small sheets, A/B/C series, US sizes and posters', () {
-    expect(paperSheetPresets.length, greaterThanOrEqualTo(50));
-    expect(paperSheetPresets.any((p) => p.label.startsWith('A10')), isTrue);
-    expect(paperSheetPresets.any((p) => p.label.startsWith('A0 poster')), isTrue);
-    expect(paperSheetPresets.any((p) => p.label.startsWith('B0 poster')), isTrue);
-    expect(paperSheetPresets.any((p) => p.label.startsWith('C10 envelope')), isTrue);
-    expect(paperSheetPresets.any((p) => p.label.startsWith('US Legal')), isTrue);
-    expect(paperSheetPresets.any((p) => p.label.startsWith('Photo 3.5 × 5')), isTrue);
-    expect(paperSheetPresets.any((p) => p.label.startsWith('Large format 48 × 72')), isTrue);
-    expect(paperSheetPresets.every((p) => p.widthMm > 0 && p.heightMm > 0), isTrue);
+  test('PDF dimensions reject non-finite and out-of-range values', () {
+    expect(validPdfPageDimensions(20, 2500), isTrue);
+    expect(validPdfPageDimensions(2500, 20), isTrue);
+    expect(validPdfPageDimensions(double.nan, 210), isFalse);
+    expect(validPdfPageDimensions(210, double.infinity), isFalse);
+    expect(validPdfPageDimensions(19.9, 210), isFalse);
+    expect(validPdfPageDimensions(210, 2500.1), isFalse);
   });
+
+  test(
+    'shared catalog covers small sheets, A/B/C series, US sizes and posters',
+    () {
+      expect(paperSheetPresets.length, greaterThanOrEqualTo(50));
+      expect(paperSheetPresets.any((p) => p.label.startsWith('A10')), isTrue);
+      expect(
+        paperSheetPresets.any((p) => p.label.startsWith('A0 poster')),
+        isTrue,
+      );
+      expect(
+        paperSheetPresets.any((p) => p.label.startsWith('B0 poster')),
+        isTrue,
+      );
+      expect(
+        paperSheetPresets.any((p) => p.label.startsWith('C10 envelope')),
+        isTrue,
+      );
+      expect(
+        paperSheetPresets.any((p) => p.label.startsWith('US Legal')),
+        isTrue,
+      );
+      expect(
+        paperSheetPresets.any((p) => p.label.startsWith('Photo 3.5 × 5')),
+        isTrue,
+      );
+      expect(
+        paperSheetPresets.any(
+          (p) => p.label.startsWith('Large format 48 × 72'),
+        ),
+        isTrue,
+      );
+      expect(
+        paperSheetPresets.every((p) => p.widthMm > 0 && p.heightMm > 0),
+        isTrue,
+      );
+    },
+  );
 
   test('large poster canvases are valid physical documents', () {
     final poster = DesignDocument.blank(
@@ -24,7 +59,11 @@ void main() {
     expect(poster.widthMm, 1219.2);
     expect(poster.heightMm, 1828.8);
     expect(
-      () => DesignDocument.blank(name: 'Out of bounds', widthMm: 2501, heightMm: 500),
+      () => DesignDocument.blank(
+        name: 'Out of bounds',
+        widthMm: 2501,
+        heightMm: 500,
+      ),
       throwsFormatException,
     );
   });

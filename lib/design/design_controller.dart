@@ -74,28 +74,55 @@ class DesignController extends ChangeNotifier {
     _commit(next);
   }
 
-  /// Replaces one 35 × 45 mm template slot and its printed label with an
-  /// actual image layer. The operation is a single undoable edit.
+  List<DesignElement> _legacyPhotoLabels(DesignElement slot) => document
+      .elements
+      .where(
+        (element) =>
+            element.kind == ElementKind.text &&
+            element.text.contains('35 × 45 mm') &&
+            element.x >= slot.x &&
+            element.x < slot.x + slot.width &&
+            element.y >= slot.y &&
+            element.y < slot.y + slot.height,
+      )
+      .toList();
+
+  /// Explicitly marked ID slots or the original labelled 35 × 45 mm slots.
+  /// Ordinary rectangles must never be replaced by this action.
+  bool get canFillSelectedPhotoPlaceholder {
+    final slot = selected;
+    if (slot == null || slot.kind != ElementKind.rectangle) return false;
+    return slot.text == photoPlaceholderMarker ||
+        (slot.width == 35 &&
+            slot.height == 45 &&
+            _legacyPhotoLabels(slot).isNotEmpty);
+  }
+
+  /// Replace the selected supported slot with an image as one undoable edit.
+  /// New marked slots never remove text/artwork that overlaps them; the older
+  /// printed 35 × 45 mm slot retains its original label-removal behavior.
   void replaceSelectedPhotoPlaceholder(DesignElement imageElement) {
     final slot = selected;
     if (slot == null || slot.kind != ElementKind.rectangle) {
       throw StateError('Select a photo placeholder rectangle first.');
     }
-    if (imageElement.kind != ElementKind.image || imageElement.imageBytes == null) {
+    if (imageElement.kind != ElementKind.image ||
+        imageElement.imageBytes == null) {
       throw const FormatException('Choose a valid image for the photo slot.');
     }
-    final labels = document.elements.where((element) =>
-      element.kind == ElementKind.text &&
-      element.text.contains('35 × 45 mm') &&
-      element.x >= slot.x && element.x < slot.x + slot.width &&
-      element.y >= slot.y && element.y < slot.y + slot.height
-    ).toList();
-    if (slot.width != 35 || slot.height != 45 || labels.isEmpty) {
+    if (!canFillSelectedPhotoPlaceholder) {
       throw StateError('The selected rectangle is not a supported photo slot.');
     }
-    if (imageElement.x != slot.x || imageElement.y != slot.y ||
-        imageElement.width != slot.width || imageElement.height != slot.height) {
-      throw const FormatException('The photo must match the placeholder dimensions.');
+    final labels = slot.text == photoPlaceholderMarker
+        ? const <DesignElement>[]
+        : _legacyPhotoLabels(slot);
+    if (imageElement.x != slot.x ||
+        imageElement.y != slot.y ||
+        imageElement.width != slot.width ||
+        imageElement.height != slot.height) {
+      throw const FormatException(
+        'The photo must match the placeholder dimensions.',
+      );
     }
     final elements = <DesignElement>[];
     for (final element in document.elements) {

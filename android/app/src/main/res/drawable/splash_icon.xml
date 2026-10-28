@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A simplified vector version of the selected mark for Android's splash. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="1024" android:viewportHeight="1024">
+    <!-- Android 12 masks the outer third: keep stroked artwork in the inner circle. -->
+    <group android:pivotX="512" android:pivotY="512"
+        android:scaleX="0.78" android:scaleY="0.78">
+        <path android:fillColor="@android:color/transparent" android:strokeColor="#75EAF3"
+            android:strokeWidth="17" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M210,333 L210,263 Q210,238 235,238 L294,238 M730,238 L789,238 Q814,238 814,263 L814,333 M210,691 L210,761 Q210,786 235,786 L294,786 M730,786 L789,786 Q814,786 814,761 L814,691" />
+        <path android:fillColor="@android:color/transparent" android:strokeColor="#F4FAFF"
+            android:strokeWidth="82" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M295,318 L390,318 C540,318 617,388 617,512 C617,636 540,706 390,706 L295,706 Z" />
+        <path android:fillColor="@android:color/transparent" android:strokeColor="#42D8E8"
+            android:strokeWidth="70" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M748,358 C713,327 674,316 635,319 C578,323 543,352 543,394 C543,440 582,457 644,471 C713,486 747,509 747,548 C747,591 711,617 662,619 C619,620 579,604 548,578" />
+        <path android:fillColor="@android:color/transparent" android:strokeColor="#83C5E4"
+            android:strokeWidth="12" android:strokeLineCap="round"
+            android:pathData="M377,422 L456,422 M377,463 L432,463" />
+        <path android:fillColor="@android:color/transparent" android:strokeColor="#45E7E6"
+            android:strokeWidth="15" android:strokeLineCap="round"
+            android:pathData="M363,548 L480,548" />
+    </group>
+</vector>

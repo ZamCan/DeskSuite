@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../app/section_artwork.dart';
+import '../app/theme.dart';
+
 /// Short, revisitable guides link to the real processing tools. The bundled
 /// material is fictional and never replaces a user's existing files.
 class GettingStartedPage extends StatelessWidget {
@@ -9,77 +12,122 @@ class GettingStartedPage extends StatelessWidget {
     required this.onPhoto,
     required this.onText,
     required this.onOffice,
+    required this.onPdf,
     required this.onEditableExample,
   });
   final VoidCallback onScan;
   final VoidCallback onPhoto;
   final VoidCallback onText;
   final VoidCallback onOffice;
+  final VoidCallback onPdf;
   final VoidCallback onEditableExample;
 
   @override
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
     children: [
-      Text(
-        'Getting started',
-        style: Theme.of(context).textTheme.headlineSmall
-            ?.copyWith(fontWeight: FontWeight.w800),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const BrandMark(size: 52),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'DESKSUITE GUIDE',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Getting started',
+                  style: Theme.of(context).textTheme.headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
       const SizedBox(height: 8),
       const Text(
-        'Practise with fictional examples before working on your own files. No account is required.',
+        'Practise with fictional examples. The same local engines work on images you choose. No account is required.',
       ),
       const SizedBox(height: 20),
       _GuideCard(
         key: const Key('guide-extract-text'),
+        artwork: SectionArt.text,
         icon: Icons.text_snippet_outlined,
         title: 'Extract text from a scan',
         description:
             'In Text extraction, choose an image or the sample letter, run the '
-            'built-in text recognizer, correct the words, then save TXT, DOCX or a '
-            'searchable PDF. Tables and handwriting are not reconstructed.',
+            'offline recognizer, correct the words and save TXT or DOCX. A '
+            'searchable single-page PDF uses the original OCR layer, not those '
+            'edits. Tables and handwriting are not reconstructed.',
         button: 'Open text extraction',
         onPressed: onText,
       ),
       const SizedBox(height: 12),
       _GuideCard(
         key: const Key('guide-convert-office'),
+        artwork: SectionArt.office,
         icon: Icons.sync_alt_rounded,
         title: 'Convert an office document',
-        description:
-            'In Document converter, open a DOCX, XLSX, PPTX, ODT, ODS, ODP or '
-            'RTF file and save a PDF, text, CSV or OpenDocument copy. Each route '
-            'states what is preserved and what is lost.',
+        description: 'In Document converter, browse fictional DOCX, XLSX and PPTX templates or open your own file. Save an unchanged template, or convert readable content with the fidelity limits shown. Edited PPTX layouts and legacy DOC/XLS/PPT conversion are unavailable.',
         button: 'Open document converter',
         onPressed: onOffice,
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        key: const Key('guide-pdf'),
+        icon: Icons.picture_as_pdf_outlined,
+        title: 'Work with an existing PDF',
+        description:
+            'Open a PDF from this device in PDF Studio. Review the pages, '
+            'make supported changes and save a separate copy. Encrypted PDFs '
+            'cannot be opened; complex documents and layout need review.',
+        button: 'Open PDF Studio',
+        onPressed: onPdf,
+      ),
+      const SizedBox(height: 12),
+      _GuideCard(
+        key: const Key('guide-clean-page'),
+        artwork: SectionArt.scan,
         icon: Icons.auto_fix_high,
         title: 'Clean a shadowed page',
-        description: 'In Scan & assemble, choose Try an example → Shadowed field notes → Clean up & compare. Preview reduced uneven lighting, switch between Before and After, then try adaptive black & white. Use the result only after reviewing the text and colored chart; export a new PNG or image PDF.',
+        description: 'In Scan & assemble, choose Try an example → Shadowed field notes → Clean up & compare. Try reducing uneven lighting and adaptive black and white. Compare before and after, inspect text and colored charts, then export a new PNG or image PDF.',
         button: 'Practise document cleanup',
         onPressed: onScan,
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        key: const Key('guide-scan-pages'),
+        artwork: SectionArt.scan,
         icon: Icons.document_scanner_outlined,
         title: 'Make a multipage image PDF',
-        description: 'Open Scan & assemble, choose Try an example → Two-page report, reorder the pages and select Prepare PDF. Choose a new destination and open the PDF to check it.',
+        description: 'Open Scan & assemble, choose Try an example → Two-page report or a three-page practice pack, reorder the pages and select Prepare PDF. Examples are added only if the entire pack fits the draft limits. Choose a new destination and inspect the PDF.',
         button: 'Open scan workspace',
         onPressed: onScan,
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        key: const Key('guide-correct-page'),
+        artwork: SectionArt.scan,
         icon: Icons.crop_free,
         title: 'Correct a perspective page',
-        description: 'Choose the perspective letter example in Scan & assemble, select A4 portrait proportions, and move the four handles onto the paper corners. Correct the page and compare it with Reset page. Detection is manual.',
+        description: 'Choose the perspective letter in Scan & assemble and select A4 portrait proportions. In Corners & correct, try a suggestion or move the handles yourself. Check all four corners before correcting; Reset page returns to the imported copy.',
         button: 'Practise page correction',
         onPressed: onScan,
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        key: const Key('guide-clean-photo'),
+        artwork: SectionArt.photo,
         icon: Icons.filter_center_focus,
         title: 'Reduce photo specks',
         description: 'In Photo Studio, choose Try a noisy garden photo, then Reduce isolated specks. Pinch to inspect the detail, choose Compare original, and use Undo if needed. The filter targets isolated black or white dots; it cannot remove blur or scratches and may soften fine details. Export a separate copy.',
@@ -88,6 +136,8 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        key: const Key('guide-resize-image'),
+        artwork: SectionArt.photo,
         icon: Icons.photo_size_select_large_outlined,
         title: 'Resize an image',
         description: 'In Photo Studio, choose Try a sample image → Resize. Enter 512 pixels for width, keep the aspect ratio, then export and review the actual dimensions and encoded file size.',
@@ -96,6 +146,8 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        key: const Key('guide-edit-design'),
+        artwork: SectionArt.design,
         icon: Icons.edit_document,
         title: 'Edit an example design',
         description: 'Open an editable fictional letter as a new DeskSuite design copy. Its text objects can be edited in Creative Studio; it is not a DOCX or a word-processing document.',
@@ -106,11 +158,11 @@ class GettingStartedPage extends StatelessWidget {
       Text('Important limits', style: Theme.of(context).textTheme.titleMedium),
       const SizedBox(height: 8),
       const Text(
-        'Scan PDFs contain page images, not selectable or searchable OCR text. PDF Studio opens supported existing PDFs and saves edits as a separate copy. Office conversion preserves supported content rather than every original layout detail. Page-corner suggestions must be reviewed and corrected before export. Export important work before uninstalling because app-private files may be removed.',
+        'Scan & assemble exports image-only PDFs. The separate Android OCR workflow can export a searchable single-page PDF; its recognition needs review. Corner suggestions are limited and may be wrong. PDF Studio and the office editor have format and fidelity limits. Cloud sync is not available. Export copies for backup; app-private data can be removed when the app is uninstalled.',
       ),
       const SizedBox(height: 8),
       const Text(
-        'The practice photograph is synthetic. The forms, names and invoices are fictional and are not official documents.',
+        'The practice images are synthetic or AI-generated. The forms, names, ID layouts and invoices are fictional and are not official documents.',
       ),
     ],
   );
@@ -120,12 +172,14 @@ class _GuideCard extends StatelessWidget {
   const _GuideCard({
     super.key,
     required this.icon,
+    this.artwork,
     required this.title,
     required this.description,
     required this.button,
     required this.onPressed,
   });
   final IconData icon;
+  final String? artwork;
   final String title, description, button;
   final VoidCallback onPressed;
   @override
@@ -138,7 +192,21 @@ class _GuideCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: Theme.of(context).colorScheme.primary),
+              if (artwork case final asset?)
+                SectionArtwork(asset: asset, size: 40, fallback: icon)
+              else
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+                ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(

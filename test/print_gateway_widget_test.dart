@@ -68,6 +68,49 @@ void main() {
     },
   );
 
+  testWidgets('large pages offer a bounded lower-DPI export', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final dir = (await tester.runAsync(
+      () => Directory.systemTemp.createTemp('desksuite_large_page_'),
+    ))!;
+    addTearDown(() async {
+      if (await dir.exists()) await dir.delete(recursive: true);
+    });
+    final repo = ProjectRepository(dir);
+    final document = DesignDocument.blank(
+      name: 'Large poster',
+      widthMm: 1219.2,
+      heightMm: 1828.8,
+    );
+    await tester.runAsync(() => repo.save(document));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EditorScreen(
+          document: document,
+          repository: repo,
+          files: NoFiles(),
+        ),
+      ),
+    );
+    await settleIo(tester);
+    await tester.tap(find.byTooltip('Export design'));
+    await tester.pumpAndSettle();
+    final tooLarge = tester.widget<ListTile>(
+      find.widgetWithText(ListTile, 'PDF page · 150 dpi'),
+    );
+    expect(tooLarge.onTap, isNull);
+    expect(find.byKey(const Key('export-reduced-pdf')), findsOneWidget);
+    expect(find.byKey(const Key('export-reduced-png')), findsOneWidget);
+    expect(find.byKey(const Key('export-reduced-print')), findsOneWidget);
+    expect(find.byKey(const ValueKey('export-pdf-60')), findsOneWidget);
+    expect(find.byKey(const ValueKey('export-png-36')), findsOneWidget);
+    expect(find.byKey(const ValueKey('export-pdf-72')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'design print action passes a correctly sized PDF to the adapter',
     (tester) async {

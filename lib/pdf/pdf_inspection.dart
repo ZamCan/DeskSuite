@@ -1,12 +1,14 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show compute;
 import 'package:pdf_document/pdf_document.dart';
+
+import '../core/file_limits.dart';
 
 /// What DeskSuite can prove about a PDF before offering to edit it.
 ///
-/// Everything here is read from the document itself by the same engine that
-/// renders and edits it, so the page count, the encryption state and the page
-/// sizes in the UI are the engine's, not a guess from the file name.
+/// The inspection parser reads the page count, encryption state and first-page
+/// size from the document, rather than guessing from the file name.
 class PdfInspection {
   const PdfInspection({
     required this.pageCount,
@@ -70,7 +72,7 @@ bool looksLikePdf(Uint8List bytes) {
 }
 
 /// Largest PDF DeskSuite will parse in memory on a phone.
-const int maxPdfBytes = 48 * 1024 * 1024;
+const int maxPdfBytes = maxDocumentBytes;
 
 /// Reads page count, size and encryption state, or throws [PdfOpenFailure] with
 /// a specific reason. The bytes are not modified.
@@ -106,7 +108,27 @@ PdfInspection inspectPdf(Uint8List bytes, {String password = ''}) {
       'reader does not support. Your original file has not been changed.',
     );
   }
-  final count = document.pageCount;
+  // Some parsers defer checking encryption and the page tree until getters.
+  // This editor cannot preserve encryption or unlock protected documents.
+  final bool encrypted;
+  final int count;
+  try {
+    encrypted = document.cos.isEncrypted;
+    if (encrypted) {
+      throw const PdfOpenFailure(
+        'This PDF is encrypted. Password unlocking and encrypted output are not '
+        'available; choose a different file.',
+      );
+    }
+    count = document.pageCount;
+  } on PdfOpenFailure {
+    rethrow;
+  } catch (_) {
+    throw const PdfOpenFailure(
+      'This PDF could not be read. Its page information may be damaged or '
+      'unsupported. Choose another file or verify it in another reader.',
+    );
+  }
   if (count < 1) {
     throw const PdfOpenFailure(
       'This PDF has no pages to show. Your original file has not been changed.',
@@ -115,20 +137,35 @@ PdfInspection inspectPdf(Uint8List bytes, {String password = ''}) {
   var widthPt = 0.0;
   var heightPt = 0.0;
   try {
-    final box = document.page(0).cropBox;
-    widthPt = box.width;
-    heightPt = box.height;
+    final page = document.page(0);
+    try {
+      final box = page.cropBox;
+      widthPt = box.width;
+      heightPt = box.height;
+    } catch (_) {
+      // A page with an unusual box is still a page; the size label says so.
+    }
   } catch (_) {
-    // A page with an unusual box is still a page; the size label says so.
+    throw const PdfOpenFailure(
+      'The first PDF page could not be read. The file may be damaged or '
+      'unsupported; verify it in another reader before editing.',
+    );
   }
   return PdfInspection(
     pageCount: count,
     byteLength: bytes.length,
-    isEncrypted: document.cos.isEncrypted,
+    isEncrypted: encrypted,
     firstPageWidthPt: widthPt,
     firstPageHeightPt: heightPt,
   );
 }
+
+/// Runs parsing off the UI isolate on native platforms. The returned report
+/// contains only primitive fields; this does not prove low-memory safety.
+Future<PdfInspection> inspectPdfInBackground(Uint8List bytes) =>
+    compute(_inspectPdfDefault, bytes);
+
+PdfInspection _inspectPdfDefault(Uint8List bytes) => inspectPdf(bytes);
 
 /// A file name derived from the picked name: no directories, no traversal, no
 /// characters that break Android's file names, and never empty.

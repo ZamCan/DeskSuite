@@ -1,5 +1,38 @@
 # Validation record
 
+## Selective consolidation — 2026-10-28
+
+Public main `177a10f80f51c31ba6de7cc7bb2e321f6e9e07c4` completed [CI run 40704429058](https://github.com/ZamCan/DeskSuite/actions/runs/40704429058). That run predates and **does not validate** this consolidation. No Flutter/Dart SDK, Android SDK, `adb` or LibreOffice was available here; no Android toolchain was installed and no APK/AAB was built, signed or installed. No complete Flutter analyzer, Flutter widget/model suite, native build, or device run was performed for the consolidated tree.
+
+Actual host evidence (not a native/device test):
+
+- Full 18-head bundle restored all recorded refs and passed `git fsck`; Office template assets and byte-identical brand regeneration passed Python checks. Fictional OpenDocument.core fixtures and all six original templates rendered through the bundled WASM under Node; viewer DOM was faked. Java preview URL policy was tested and factory compiled against handwritten Android/Flutter stubs. Android WebView isolation/fidelity was **not** tested.
+- Office ZIP preflight exercised valid/malformed inputs, 3,000 mutations and CRC vectors. Extracted ID-slot fill, Office original save, scan samples, UI routing, image optimization, photo processing, OCR preparation and PDF inspection/split/combine control flows passed DartPad/Node with fake parsers, codecs, gateways or interfaces. The Office detection/reuse flow opened one **fake** package per operation.
+- Actual cleanup pixels passed 40 randomized cases; compression geometry passed 2,000 sequences; raster budgets covered 56 media presets, and image-detail estimates covered 5,000 geometries. ID catalog/controller and 2500-mm geometry were exercised with stubs. Selected Flutter UI sources were analyzed with interface stubs, not the real dependency graph. These checks do not establish actual codecs, real PDF parsing, widget interaction or native behavior.
+- New/modified Flutter regression tests for PDF safety, combine preservation, ID slots, Office, scan/OCR, branding, print and photo behavior are present but **unrun**. `git diff --check` is a whitespace check, not a Flutter test.
+
+### Run on the owner's existing toolchain
+
+```sh
+flutter pub get --offline  # if dependencies already cached; otherwise follow owner's local policy
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze --no-pub
+flutter test --no-pub --concurrency=1 --reporter expanded --timeout 120s
+dart test/pixel_algorithms_smoke.dart
+python3 tools/validate-brand-assets.py
+python3 tools/test_brand_assets.py
+python3 tools/test_office_template_assets.py
+node tools/test_office_renderer.mjs
+node tools/test_office_viewer_ui.mjs
+```
+
+Then independently verify real PDF open/save/combine/page-export/split results, Office output and the disabled-by-default preview on representative files, Android camera/picker/OCR lifecycle, low-memory behavior, accessibility and physical printing. Test signing/upgrades locally with the **existing** key. The current main push/PR workflow packages online; resolve that policy before publishing. See [consolidation record](CONSOLIDATION_2026-10-28.md).
+
+## Historical validation below
+
+The following sections describe earlier commits/workspaces and must not be read as a pass for the consolidated tree.
+
+
 ## Consolidated main build — 2026-10-28
 
 Source commit: `7f1920ef361f013a26ee43032c807707432f9a3a`  

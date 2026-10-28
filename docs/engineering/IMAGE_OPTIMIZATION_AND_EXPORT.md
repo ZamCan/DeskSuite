@@ -8,7 +8,7 @@ Photo Studio has an **Optimise & export** workflow implemented in `lib/images/im
 - **Aspect ratio:** preserved by default. A user can explicitly turn it off when exact dimensions matter more than proportions. With preservation enabled, the result fits inside the selected box and may have smaller dimensions.
 - **Compression modes:** choose JPEG quality; request a percentage reduction from source bytes; or target a file size in KB.
 - **Quality strategy:** for byte targets, lower JPEG quality before gradually reducing resolution. The app reports actual output bytes, dimensions, quality and measured reduction. A target is rejected if it cannot be reached within safety limits; output is not promised to match a target exactly.
-- **Preservation:** optimisation works on a new copy. It does not overwrite the source image.
+- **Preservation:** optimisation works on a new copy. Choose a different destination to avoid overwriting the source image; the platform save dialog may permit replacement.
 - **Export types:** JPEG, an image-only PDF, and a standalone HTML page embedding the JPEG for offline viewing.
 - **Bounds:** source image is limited by the existing 8 MB/12-megapixel image pipeline; output is bounded to 8192 pixels per side and 12 megapixels.
 

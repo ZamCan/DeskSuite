@@ -18,7 +18,8 @@ This roadmap is the short, current action list. The full scope and product requi
 - [x] Offline corner suggestions that remain editable and never auto-apply without user confirmation.
 - [ ] Validate camera capture, permission/provider behavior, app backgrounding, process death and low-memory recovery on the phone.
 - [ ] Add robust automatic page detection only after evaluating real-document false positives and manual fallback.
-- [ ] Evaluate PDF combine/inspection/split/reorder/rotate as isolated, tested engine slices.
+- [x] Integrate bounded PDF combine/inspection and page/split callbacks in source.
+- [ ] Validate those callbacks, independent files and device memory on the exact consolidated tree.
 - [ ] Validate encrypted, malformed, large and complex PDFs; independently open every exported result.
 - [ ] Add PDF text search/extraction, accessible preview and structural compression only with a tested compatible engine.
 - [ ] Add encrypted output only after key handling and format interoperability are reviewed.
@@ -38,7 +39,8 @@ This roadmap is the short, current action list. The full scope and product requi
 
 - [x] Bounded package readers and content-level editing/conversion for the explicitly supported document routes.
 - [ ] Improve editability and round-trip preservation for DOCX/XLSX/PPTX/ODF, including images, styles, formulas, page breaks and tables.
-- [ ] Evaluate the separate Office preview/WebAssembly candidate only after security sandbox, binary provenance/licences, ZIP-bomb protections, accessibility, file-size limits and device memory are independently reviewed.
+- [x] Retain an opt-in, disabled-by-default Android Office WASM preview in source.
+- [ ] Independently verify its sandbox, binary provenance/licences, accessibility, fidelity and device memory before enabling or distributing.
 - [ ] Compare any Office rendering engine against real reference documents and independent desktop office suites; document fidelity limits by route.
 - [ ] Add true rich-text editing, spreadsheet formulas, presentation editing and export formats only through a maintained, tested engine.
 - [ ] Keep conversion routes explicit when a format or operation is unsupported; never imply that a file was converted when only its text was extracted.

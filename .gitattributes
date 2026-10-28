@@ -1,3 +1,8 @@
 # Keep Windows batch launchers usable while storing normalized text in Git.
 *.bat text eol=crlf
 *.sh text eol=lf
+
+# Preserve upstream renderer glue and licence notices exactly.
+android/app/src/main/assets/office_engine/odr-core.mjs -text -whitespace
+third_party/opendocument-core/* -text -whitespace
+assets/licenses/office-engine-notices.txt -text -whitespace

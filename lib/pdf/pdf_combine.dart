@@ -7,7 +7,7 @@ import 'pdf_inspection.dart';
 
 /// Raised with a message a user can act on, never with a raw parser trace.
 const int maxPdfCombineDocuments = 10;
-const int maxPdfCombineBytes = 48 * 1024 * 1024;
+const int maxPdfCombineBytes = maxPdfBytes;
 
 class PdfCombineFailure implements Exception {
   const PdfCombineFailure(this.message);
@@ -112,7 +112,6 @@ PdfCombineResult combinePdfs(List<Uint8List> sources) {
 /// `-combined`, sanitised the same way as every other PDF export.
 String combinedPdfName(String firstSourceName) =>
     '${pdfBaseName(firstSourceName)}-combined.pdf';
-
 
 /// Isolate-safe adapter for UI use. Only sendable byte lists and primitive
 /// result values cross the isolate boundary; parser work stays off the UI.

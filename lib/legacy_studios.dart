@@ -20,16 +20,18 @@ import 'core/suite_paths.dart';
 import 'images/photo_processor.dart';
 import 'images/image_optimizer.dart';
 import 'images/print_dimensions.dart';
+import 'images/resize_dimensions.dart';
+import 'document_scan/scan_pdf.dart';
 import 'printing/print_gateway.dart';
 import 'printing/design_export.dart' show effectiveImageDpi;
 import 'printing/photo_sheet.dart';
 import 'printing/photo_sheet_dialog.dart';
 import 'workspace/file_gateway.dart';
 
-const ink = Color(0xFF292B29);
-const paper = Color(0xFFF7F5EF);
-const accent = Color(0xFFB56B45);
-const muted = Color(0xFF777970);
+const ink = Color(0xFF15243A);
+const paper = Color(0xFFF3F7FC);
+const accent = Color(0xFF1C58AC);
+const muted = Color(0xFF596B81);
 
 class LocalStore {
   static final LocalFileStore _files = LocalFileStore(suiteRoot);
@@ -293,7 +295,7 @@ class _EditorPageState extends State<EditorPage> {
       'y': 30.0 + (p.items.length * 17) % 180,
       'w': kind == 'text' ? 250.0 : 110.0,
       'h': kind == 'text' ? 65.0 : 100.0,
-      'color': kind == 'circle' ? 0xFFB56B45 : 0xFF292B29,
+      'color': kind == 'circle' ? 0xFF1C58AC : 0xFF15243A,
       'size': 24.0,
     };
     setState(() {
@@ -317,7 +319,7 @@ class _EditorPageState extends State<EditorPage> {
         'y': 80.0,
         'w': 230.0,
         'h': 160.0,
-        'color': 0xFF292B29,
+        'color': 0xFF15243A,
         'size': 24.0,
         'imageData': base64Encode(bytes),
       };
@@ -743,6 +745,7 @@ class _PhotoPageState extends State<PhotoPage> {
   bool showingOriginal = false;
   bool isExample = false;
   bool isNoisyExample = false;
+  bool isStillLifeExample = false;
 
   void note(String value) {
     if (mounted) {
@@ -790,6 +793,7 @@ class _PhotoPageState extends State<PhotoPage> {
           showingOriginal = false;
           isExample = false;
           isNoisyExample = false;
+          isStillLifeExample = false;
         });
       }
     } catch (error) {
@@ -803,12 +807,14 @@ class _PhotoPageState extends State<PhotoPage> {
     }
   }
 
-  Future<void> loadExample({bool noisy = false}) async {
+  Future<void> loadExample({bool noisy = false, bool stillLife = false}) async {
     if (busy || !await confirmReplace() || !mounted) return;
     setState(() => busy = true);
     try {
       final data = await rootBundle.load(
-        noisy
+        stillLife
+            ? 'assets/samples/studio-still-life.jpg'
+            : noisy
             ? 'assets/samples/noisy-garden.png'
             : 'assets/samples/practice-photo.jpg',
       );
@@ -824,8 +830,9 @@ class _PhotoPageState extends State<PhotoPage> {
           original = result;
           undoPhoto = null;
           showingOriginal = false;
-          isExample = !noisy;
-          isNoisyExample = noisy;
+          isExample = !noisy && !stillLife;
+          isNoisyExample = noisy && !stillLife;
+          isStillLifeExample = stillLife;
         });
       }
     } catch (_) {
@@ -858,6 +865,7 @@ class _PhotoPageState extends State<PhotoPage> {
     int? width,
     int? height,
     bool keepAspect = true,
+    PhotoResampling resampling = PhotoResampling.linear,
     int backgroundColor = 0xFFFFFFFF,
   }) async {
     final current = photo;
@@ -871,6 +879,7 @@ class _PhotoPageState extends State<PhotoPage> {
           width: width,
           height: height,
           keepAspect: keepAspect,
+          resampling: resampling,
           backgroundColor: backgroundColor,
         ),
       );
@@ -942,10 +951,7 @@ class _PhotoPageState extends State<PhotoPage> {
       ),
     );
     if (selected != null && mounted) {
-      await apply(
-        PhotoAction.flattenBackground,
-        backgroundColor: selected,
-      );
+      await apply(PhotoAction.flattenBackground, backgroundColor: selected);
     }
   }
 
@@ -962,7 +968,9 @@ class _PhotoPageState extends State<PhotoPage> {
         PhotoAction.resize,
         width: size.width,
         height: size.height,
-        keepAspect: size.keepAspect,
+        // The dialog already rounded the final dimensions.
+        keepAspect: false,
+        resampling: size.resampling,
       );
     }
   }
@@ -1050,41 +1058,44 @@ class _PhotoPageState extends State<PhotoPage> {
     }
   }
 
-
   Future<void> optimizeAndExport() async {
     final current = photo;
     if (current == null || busy) return;
     final options = await showDialog<_ImageOptimizationOptions>(
       context: context,
-      builder: (_) => _ImageOptimizationDialog(width: current.width, height: current.height),
+      builder: (_) => _ImageOptimizationDialog(
+        width: current.width,
+        height: current.height,
+      ),
     );
     if (options == null || !mounted) return;
     setState(() => busy = true);
     try {
-      final result = await optimizeImageInBackground(ImageOptimizationRequest(
-        bytes: current.bytes,
-        sizeTarget: options.sizeTarget,
-        mode: options.mode,
-        quality: options.quality,
-        reductionPercent: options.reductionPercent,
-        targetBytes: options.targetBytes,
-      ));
+      final result = await optimizeImageInBackground(
+        ImageOptimizationRequest(
+          bytes: current.bytes,
+          sizeTarget: options.sizeTarget,
+          mode: options.mode,
+          quality: options.quality,
+          reductionPercent: options.reductionPercent,
+          targetBytes: options.targetBytes,
+        ),
+      );
       Uint8List output = result.bytes;
       var name = 'desksuite-optimized.jpg';
       var mime = 'image/jpeg';
       if (options.format == _ImageExportFormat.pdf) {
-        final document = pw.Document();
-        final image = pw.MemoryImage(result.bytes);
-        document.addPage(pw.Page(
-          pageFormat: PdfPageFormat(result.width.toDouble(), result.height.toDouble()),
-          build: (_) => pw.Center(child: pw.Image(image, fit: pw.BoxFit.contain)),
-        ));
-        output = Uint8List.fromList(await document.save());
+        // Reuse the same bounded image-PDF writer as document scanning; only
+        // this explicit optimizer path permits its validated JPEG output.
+        output = await createScanPdfInBackground(
+          ScanPdfRequest([result.bytes], allowJpeg: true),
+        );
         name = 'desksuite-optimized.pdf';
         mime = 'application/pdf';
       } else if (options.format == _ImageExportFormat.html) {
         final encoded = base64Encode(result.bytes);
-        final html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DeskSuite image export</title><style>body{margin:0;padding:2rem;background:#f7f5ef;color:#292b29;font:16px system-ui,sans-serif}main{max-width:960px;margin:auto}img{display:block;max-width:100%;height:auto;margin:1.5rem auto}p{overflow-wrap:anywhere}</style></head><body><main><h1>DeskSuite image export</h1><p>${result.width} × ${result.height} px · JPEG quality ${result.quality}</p><img alt="Optimised image" src="data:image/jpeg;base64,$encoded"></main></body></html>';
+        final html =
+            '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DeskSuite image export</title><style>body{margin:0;padding:2rem;background:#f7f5ef;color:#292b29;font:16px system-ui,sans-serif}main{max-width:960px;margin:auto}img{display:block;max-width:100%;height:auto;margin:1.5rem auto}p{overflow-wrap:anywhere}</style></head><body><main><h1>DeskSuite image export</h1><p>${result.width} × ${result.height} px · JPEG quality ${result.quality}</p><img alt="Optimised image" src="data:image/jpeg;base64,$encoded"></main></body></html>';
         output = Uint8List.fromList(utf8.encode(html));
         name = 'desksuite-optimized.html';
         mime = 'text/html';
@@ -1097,26 +1108,45 @@ class _PhotoPageState extends State<PhotoPage> {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Review optimised export'),
-          content: SingleChildScrollView(child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Image.memory(result.bytes, height: 160, fit: BoxFit.contain),
-              const SizedBox(height: 12),
-              Text('Image: ${result.width} × ${result.height} px'),
-              Text('JPEG quality: ${result.quality}/100'),
-              Text('Image bytes: ${result.bytes.length} · source bytes: ${result.originalBytes}'),
-              Text('Measured image-size reduction: $reduction%'),
-              Text('Export file: ${output.length} bytes'),
-              const SizedBox(height: 8),
-              const Text('The source is unchanged. Compression results depend on image content; a target may be impossible without excessive quality loss.'),
-              if (options.format == _ImageExportFormat.pdf) const Text('This PDF is not password/PIN encrypted. Do not use it for confidential material.'),
-              if (options.format == _ImageExportFormat.html) const Text('The HTML embeds the image locally; it is not a secure or access-controlled page.'),
-            ],
-          )),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.memory(result.bytes, height: 160, fit: BoxFit.contain),
+                const SizedBox(height: 12),
+                Text('Image: ${result.width} × ${result.height} px'),
+                Text('JPEG quality: ${result.quality}/100'),
+                Text(
+                  'Image bytes: ${result.bytes.length} · working image bytes: ${result.originalBytes}',
+                ),
+                Text('Measured image-size reduction: $reduction%'),
+                Text('Export file: ${output.length} bytes'),
+                const SizedBox(height: 8),
+                const Text(
+                  'Choose a different save destination to preserve the source. Compression results depend on image content; a target may be impossible without excessive quality loss.',
+                ),
+                if (options.format == _ImageExportFormat.pdf)
+                  const Text(
+                    'One image is fitted on A4 with 10 mm margins. This PDF is not password/PIN encrypted.',
+                  ),
+                if (options.format == _ImageExportFormat.html)
+                  const Text(
+                    'The HTML embeds the image locally; it is not a secure or access-controlled page.',
+                  ),
+              ],
+            ),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-            FilledButton(key: const Key('photo-optimizer-save'), onPressed: () => Navigator.pop(context, true), child: const Text('Save a copy')),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              key: const Key('photo-optimizer-save'),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Save a copy'),
+            ),
           ],
         ),
       );
@@ -1125,10 +1155,16 @@ class _PhotoPageState extends State<PhotoPage> {
       }
       final saved = await files.save(name: name, bytes: output, mimeType: mime);
       if (saved) {
-        note('Optimised copy exported. Original image remains unchanged.');
+        note(
+          'Optimised image exported. Verify the saved file and destination.',
+        );
       }
     } catch (error) {
-      note(error is FormatException ? error.message : 'Optimisation/export failed. The source image is unchanged.');
+      note(
+        error is FormatException
+            ? error.message
+            : 'Optimisation/export failed. Your working image is unchanged.',
+      );
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -1264,6 +1300,14 @@ class _PhotoPageState extends State<PhotoPage> {
                         icon: const Icon(Icons.auto_fix_high),
                         label: const Text('Try a noisy garden photo'),
                       ),
+                      TextButton.icon(
+                        key: const Key('photo-still-life-example'),
+                        onPressed: busy
+                            ? null
+                            : () => loadExample(stillLife: true),
+                        icon: const Icon(Icons.photo_library_outlined),
+                        label: const Text('Try a studio still life'),
+                      ),
                     ],
                   ),
                 ),
@@ -1310,6 +1354,10 @@ class _PhotoPageState extends State<PhotoPage> {
           const Text(
             'Synthetic garden with added black and white specks: reduce specks, pinch to zoom, then compare with the original.',
           ),
+        if (isStillLifeExample)
+          const Text(
+            'Fictional studio still life: try centre crop, rotate, resize or optimise, then compare and export a copy.',
+          ),
         const Text(
           'Pinch the preview to inspect details. Reducing isolated specks can soften fine details; it does not remove blur, scratches or every kind of noise.',
         ),
@@ -1329,6 +1377,12 @@ class _PhotoPageState extends State<PhotoPage> {
               onPressed: busy ? null : () => loadExample(noisy: true),
               icon: const Icon(Icons.school_outlined),
               label: const Text('Noisy garden example'),
+            ),
+            OutlinedButton.icon(
+              key: const Key('photo-still-life-example'),
+              onPressed: busy ? null : () => loadExample(stillLife: true),
+              icon: const Icon(Icons.photo_library_outlined),
+              label: const Text('Studio still life'),
             ),
             OutlinedButton(
               key: const Key('photo-compare'),
@@ -1430,10 +1484,12 @@ class _PhotoPageState extends State<PhotoPage> {
   );
 }
 
+enum _PhotoResizeMode { pixels, printSize, percentage }
+
 class _PhotoSize {
-  const _PhotoSize(this.width, this.height, this.keepAspect);
+  const _PhotoSize(this.width, this.height, this.resampling);
   final int width, height;
-  final bool keepAspect;
+  final PhotoResampling resampling;
 }
 
 class _ResizePhotoDialog extends StatefulWidget {
@@ -1451,8 +1507,10 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
   late final TextEditingController physicalWidth;
   late final TextEditingController physicalHeight;
   late final TextEditingController dpi;
+  final percentage = TextEditingController(text: '100');
   bool keepAspect = true;
-  bool physicalMode = false;
+  _PhotoResizeMode mode = _PhotoResizeMode.pixels;
+  PhotoResampling resampling = PhotoResampling.linear;
 
   @override
   void initState() {
@@ -1460,7 +1518,8 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
     final initialWidth = math.min(widget.width, 1600);
     width = TextEditingController(text: '$initialWidth');
     height = TextEditingController(
-      text: '${math.max(1, (widget.height * initialWidth / widget.width).round())}',
+      text:
+          '${math.max(1, (widget.height * initialWidth / widget.width).round())}',
     );
     physicalWidth = TextEditingController(text: '100');
     physicalHeight = TextEditingController(
@@ -1476,6 +1535,7 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
     physicalWidth.dispose();
     physicalHeight.dispose();
     dpi.dispose();
+    percentage.dispose();
     super.dispose();
   }
 
@@ -1487,13 +1547,45 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
   String? validatePhysical(String? value) {
     final n = double.tryParse(value ?? '');
     return n == null || !n.isFinite || n <= 0 || n > 2000
-        ? 'Enter a size from 0 to 2000 mm'
+        ? 'Use more than 0 and at most 2000 mm'
         : null;
   }
 
   String? validateDpi(String? value) {
     final n = int.tryParse(value ?? '');
     return n == null || n < 1 || n > 2400 ? 'Use 1–2400 DPI' : null;
+  }
+
+  String? validatePercentage(String? value) {
+    final n = double.tryParse(value ?? '');
+    if (n == null) return 'Use a percentage from 1 to 1000.';
+    try {
+      percentagePhotoDimensions(
+        sourceWidth: widget.width,
+        sourceHeight: widget.height,
+        percent: n,
+      );
+      return null;
+    } on FormatException catch (error) {
+      return error.message;
+    }
+  }
+
+  String get percentageSummary {
+    final n = double.tryParse(percentage.text);
+    if (n != null) {
+      try {
+        final result = percentagePhotoDimensions(
+          sourceWidth: widget.width,
+          sourceHeight: widget.height,
+          percent: n,
+        );
+        return 'Output: ${result.width} × ${result.height} pixels';
+      } on FormatException {
+        // The field validator describes the problem when the user submits.
+      }
+    }
+    return 'Enter a percentage that fits the image limits.';
   }
 
   void updateHeight(String value) {
@@ -1507,13 +1599,13 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
 
   void updatePhysicalHeight(String value) {
     final n = double.tryParse(value);
-    if (keepAspect && n != null && n > 0) {
-      physicalHeight.text =
-          (n * widget.height / widget.width).toStringAsFixed(2);
+    if (keepAspect && n != null && n.isFinite && n > 0) {
+      physicalHeight.text = (n * widget.height / widget.width).toStringAsFixed(
+        2,
+      );
     }
     setState(() {});
   }
-
 
   @override
   Widget build(BuildContext context) => AlertDialog(
@@ -1524,19 +1616,33 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SegmentedButton<bool>(
+            DropdownButtonFormField<_PhotoResizeMode>(
               key: const Key('photo-resize-mode'),
-              segments: const [
-                ButtonSegment(value: false, label: Text('Pixels')),
-                ButtonSegment(value: true, label: Text('Print size')),
+              initialValue: mode,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: 'Resize by'),
+              items: const [
+                DropdownMenuItem(
+                  value: _PhotoResizeMode.pixels,
+                  child: Text('Pixels'),
+                ),
+                DropdownMenuItem(
+                  value: _PhotoResizeMode.printSize,
+                  child: Text('Print size'),
+                ),
+                DropdownMenuItem(
+                  value: _PhotoResizeMode.percentage,
+                  child: Text('Percentage'),
+                ),
               ],
-              selected: {physicalMode},
-              onSelectionChanged: (value) {
-                setState(() => physicalMode = value.first);
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => mode = value);
+                }
               },
             ),
             const SizedBox(height: 12),
-            if (!physicalMode) ...[
+            if (mode == _PhotoResizeMode.pixels) ...[
               TextFormField(
                 key: const Key('photo-width'),
                 controller: width,
@@ -1554,12 +1660,16 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
                 validator: validateSide,
                 onChanged: (_) => setState(() {}),
               ),
-            ] else ...[
+            ] else if (mode == _PhotoResizeMode.printSize) ...[
               TextFormField(
                 key: const Key('photo-print-width-mm'),
                 controller: physicalWidth,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Print width (mm)'),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'Print width (mm)',
+                ),
                 validator: validatePhysical,
                 onChanged: updatePhysicalHeight,
               ),
@@ -1567,8 +1677,12 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
                 key: const Key('photo-print-height-mm'),
                 controller: physicalHeight,
                 enabled: !keepAspect,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Print height (mm)'),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'Print height (mm)',
+                ),
                 validator: validatePhysical,
                 onChanged: (_) => setState(() {}),
               ),
@@ -1576,39 +1690,92 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
                 key: const Key('photo-print-dpi'),
                 controller: dpi,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Target resolution (DPI)'),
+                decoration: const InputDecoration(
+                  labelText: 'Target resolution (DPI)',
+                ),
                 validator: validateDpi,
               ),
               const Text(
-                'Print size determines the pixel dimensions from millimetres and DPI. The image is resampled; DPI metadata and printer calibration are not guaranteed by this export.',
+                'Millimetres and DPI determine pixel dimensions. The image is resampled; DPI metadata and printer calibration are not guaranteed.',
                 textAlign: TextAlign.start,
               ),
+            ] else ...[
+              TextFormField(
+                key: const Key('photo-scale-percent'),
+                controller: percentage,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(labelText: 'Scale (%)'),
+                validator: validatePercentage,
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                percentageSummary,
+                key: const Key('photo-percentage-summary'),
+              ),
+              const Text(
+                'Percentage applies to the current working copy and preserves proportions as closely as whole pixels allow.',
+              ),
             ],
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Keep aspect ratio'),
-              value: keepAspect,
-              onChanged: (value) {
-                setState(() => keepAspect = value ?? true);
-                if (keepAspect) {
-                  if (physicalMode) {
-                    updatePhysicalHeight(physicalWidth.text);
-                  } else {
-                    updateHeight(width.text);
+            if (mode != _PhotoResizeMode.percentage) ...[
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Keep aspect ratio'),
+                value: keepAspect,
+                onChanged: (value) {
+                  setState(() => keepAspect = value ?? true);
+                  if (keepAspect) {
+                    if (mode == _PhotoResizeMode.printSize) {
+                      updatePhysicalHeight(physicalWidth.text);
+                    } else {
+                      updateHeight(width.text);
+                    }
                   }
+                },
+              ),
+              const Text(
+                'Turning off aspect preservation forces exact dimensions and may distort the image.',
+              ),
+            ],
+            const SizedBox(height: 8),
+            DropdownButtonFormField<PhotoResampling>(
+              key: const Key('photo-resampling'),
+              initialValue: resampling,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: 'Resampling'),
+              items: const [
+                DropdownMenuItem(
+                  value: PhotoResampling.nearest,
+                  child: Text(
+                    'Nearest · preserve pixel edges',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: PhotoResampling.linear,
+                  child: Text('Linear · balanced'),
+                ),
+                DropdownMenuItem(
+                  value: PhotoResampling.cubic,
+                  child: Text(
+                    'Cubic · smoother, slower',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => resampling = value);
                 }
               },
             ),
             const Text(
-              'Keep aspect ratio preserves proportions. Turn it off to force exact dimensions, which may distort the image. Output is limited to 12 megapixels.',
+              'Output is limited to 12 megapixels and 8192 pixels per side. Enlarging adds interpolated pixels, not new detail.',
             ),
-            if (!physicalMode &&
-                ((int.tryParse(width.text) ?? 0) > widget.width ||
-                    (int.tryParse(height.text) ?? 0) > widget.height))
-              const Padding(
-                padding: EdgeInsets.only(top: 8),
-                child: Text('Enlargement adds interpolated pixels, not new detail.'),
-              ),
           ],
         ),
       ),
@@ -1621,41 +1788,44 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
       FilledButton(
         onPressed: () {
           if (!form.currentState!.validate()) return;
-          var w = int.parse(width.text);
-          var h = int.parse(height.text);
-          if (physicalMode) {
-            final targetDpi = int.parse(dpi.text);
-            try {
-              final dimensions = printDimensionsToPixels(
-                widthMm: double.parse(physicalWidth.text),
-                heightMm: double.parse(physicalHeight.text),
-                dpi: targetDpi,
-              );
-              w = dimensions.width;
-              h = dimensions.height;
-            } on FormatException catch (error) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(error.message)),
-              );
-              return;
+          try {
+            late int w, h;
+            switch (mode) {
+              case _PhotoResizeMode.pixels:
+                w = int.parse(width.text);
+                h = keepAspect
+                    ? math.max(1, (w * widget.height / widget.width).round())
+                    : int.parse(height.text);
+              case _PhotoResizeMode.printSize:
+                final dimensions = printDimensionsToPixels(
+                  widthMm: double.parse(physicalWidth.text),
+                  heightMm: double.parse(physicalHeight.text),
+                  dpi: int.parse(dpi.text),
+                );
+                w = dimensions.width;
+                h = keepAspect
+                    ? math.max(1, (w * widget.height / widget.width).round())
+                    : dimensions.height;
+              case _PhotoResizeMode.percentage:
+                final dimensions = percentagePhotoDimensions(
+                  sourceWidth: widget.width,
+                  sourceHeight: widget.height,
+                  percent: double.parse(percentage.text),
+                );
+                w = dimensions.width;
+                h = dimensions.height;
             }
             if (w < 1 || h < 1 || w > maxPhotoSide || h > maxPhotoSide) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Print size exceeds the 8192-pixel side limit.')),
-              );
-              return;
+              throw const FormatException('Output side must be 1–8192 pixels.');
             }
-            if (keepAspect) {
-              h = math.max(1, (w * widget.height / widget.width).round());
+            if (w * h > maxPhotoPixels) {
+              throw const FormatException('Output exceeds 12 megapixels.');
             }
+            Navigator.pop(context, _PhotoSize(w, h, resampling));
+          } on FormatException catch (error) {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(error.message)));
           }
-          if (w * h > maxPhotoPixels) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Output exceeds 12 megapixels.')),
-            );
-            return;
-          }
-          Navigator.pop(context, _PhotoSize(w, h, keepAspect));
         },
         child: const Text('Resize'),
       ),
@@ -2482,11 +2652,17 @@ class EmptyState extends StatelessWidget {
   );
 }
 
-
 enum _ImageExportFormat { jpeg, pdf, html }
 
 class _ImageOptimizationOptions {
-  const _ImageOptimizationOptions({required this.sizeTarget, required this.mode, required this.quality, required this.reductionPercent, required this.targetBytes, required this.format});
+  const _ImageOptimizationOptions({
+    required this.sizeTarget,
+    required this.mode,
+    required this.quality,
+    required this.reductionPercent,
+    required this.targetBytes,
+    required this.format,
+  });
   final ImageSizeTarget sizeTarget;
   final ImageCompressionMode mode;
   final int quality, reductionPercent, targetBytes;
@@ -2497,7 +2673,8 @@ class _ImageOptimizationDialog extends StatefulWidget {
   const _ImageOptimizationDialog({required this.width, required this.height});
   final int width, height;
   @override
-  State<_ImageOptimizationDialog> createState() => _ImageOptimizationDialogState();
+  State<_ImageOptimizationDialog> createState() =>
+      _ImageOptimizationDialogState();
 }
 
 class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
@@ -2516,8 +2693,14 @@ class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
     width.text = '${widget.width}';
     height.text = '${widget.height}';
   }
+
   @override
-  void dispose() { width.dispose(); height.dispose(); targetKb.dispose(); super.dispose(); }
+  void dispose() {
+    width.dispose();
+    height.dispose();
+    targetKb.dispose();
+    super.dispose();
+  }
 
   String label(ImageSizePreset value) => switch (value) {
     ImageSizePreset.original => 'Original dimensions',
@@ -2533,106 +2716,275 @@ class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
   @override
   Widget build(BuildContext context) => AlertDialog(
     title: const Text('Image optimisation & export'),
-    content: SizedBox(width: 440, child: SingleChildScrollView(child: Column(
-      mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Work on a new copy. The original image is not overwritten. JPEG is used for predictable lossy file-size optimisation.'),
-        const SizedBox(height: 12),
-        DropdownButtonFormField<ImageSizePreset>(
-          key: const Key('optimizer-dimensions'), initialValue: preset, isExpanded: true,
-          decoration: const InputDecoration(labelText: 'Pixel dimensions'),
-          items: [for (final value in ImageSizePreset.values) DropdownMenuItem(value: value, child: Text(label(value)))],
-          onChanged: (value) => setState(() {
-            if (value == null) {
-              return;
-            }
-            preset = value;
-            switch (value) {
-              case ImageSizePreset.original: width.text = '${widget.width}'; height.text = '${widget.height}';
-              case ImageSizePreset.px120x150: width.text = '120'; height.text = '150';
-              case ImageSizePreset.px300x300: width.text = '300'; height.text = '300';
-              case ImageSizePreset.px300x400: width.text = '300'; height.text = '400';
-              case ImageSizePreset.px600x600: width.text = '600'; height.text = '600';
-              case ImageSizePreset.px600x800: width.text = '600'; height.text = '800';
-              case ImageSizePreset.px1200x1500: width.text = '1200'; height.text = '1500';
-              case ImageSizePreset.custom: break;
-            }
-          }),
-        ),
-        if (preset != ImageSizePreset.original) ...[
-          Row(children: [
-            Expanded(child: TextField(key: const Key('optimizer-width'), controller: width, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Width (px)'), onChanged: (_) {
-              if (preset != ImageSizePreset.custom) {
-                setState(() => preset = ImageSizePreset.custom);
-              }
-            })),
-            const SizedBox(width: 12),
-            Expanded(child: TextField(key: const Key('optimizer-height'), controller: height, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Height (px)'), onChanged: (_) {
-              if (preset != ImageSizePreset.custom) {
-                setState(() => preset = ImageSizePreset.custom);
-              }
-            })),
-          ]),
-          CheckboxListTile(contentPadding: EdgeInsets.zero, value: keepAspect, title: const Text('Preserve aspect ratio'), onChanged: (value) => setState(() => keepAspect = value ?? true)),
-          const Text('With aspect ratio on, the result fits inside the selected box and may be smaller than its listed dimensions. Turn it off to force exact dimensions.', style: TextStyle(fontSize: 12)),
-        ],
-        const SizedBox(height: 12),
-        DropdownButtonFormField<ImageCompressionMode>(
-          key: const Key('optimizer-mode'), initialValue: mode,
-          decoration: const InputDecoration(labelText: 'Compression target'),
-          items: const [
-            DropdownMenuItem(value: ImageCompressionMode.quality, child: Text('Best visual quality / choose quality')),
-            DropdownMenuItem(value: ImageCompressionMode.reduceByPercent, child: Text('Reduce file size by percentage')),
-            DropdownMenuItem(value: ImageCompressionMode.targetBytes, child: Text('Target file size in KB')),
+    content: SizedBox(
+      width: 440,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Work offline on a copy. Choose a different save destination to preserve your original. JPEG is lossy; transparency is flattened onto white.',
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<ImageSizePreset>(
+              key: const Key('optimizer-dimensions'),
+              initialValue: preset,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: 'Pixel dimensions'),
+              items: [
+                for (final value in ImageSizePreset.values)
+                  DropdownMenuItem(value: value, child: Text(label(value))),
+              ],
+              onChanged: (value) => setState(() {
+                if (value == null) {
+                  return;
+                }
+                preset = value;
+                switch (value) {
+                  case ImageSizePreset.original:
+                    width.text = '${widget.width}';
+                    height.text = '${widget.height}';
+                  case ImageSizePreset.px120x150:
+                    width.text = '120';
+                    height.text = '150';
+                  case ImageSizePreset.px300x300:
+                    width.text = '300';
+                    height.text = '300';
+                  case ImageSizePreset.px300x400:
+                    width.text = '300';
+                    height.text = '400';
+                  case ImageSizePreset.px600x600:
+                    width.text = '600';
+                    height.text = '600';
+                  case ImageSizePreset.px600x800:
+                    width.text = '600';
+                    height.text = '800';
+                  case ImageSizePreset.px1200x1500:
+                    width.text = '1200';
+                    height.text = '1500';
+                  case ImageSizePreset.custom:
+                    break;
+                }
+              }),
+            ),
+            if (preset != ImageSizePreset.original) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      key: const Key('optimizer-width'),
+                      controller: width,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Width (px)',
+                      ),
+                      onChanged: (_) {
+                        if (preset != ImageSizePreset.custom) {
+                          setState(() => preset = ImageSizePreset.custom);
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      key: const Key('optimizer-height'),
+                      controller: height,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Height (px)',
+                      ),
+                      onChanged: (_) {
+                        if (preset != ImageSizePreset.custom) {
+                          setState(() => preset = ImageSizePreset.custom);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: keepAspect,
+                title: const Text('Preserve aspect ratio'),
+                onChanged: (value) =>
+                    setState(() => keepAspect = value ?? true),
+              ),
+              const Text(
+                'With aspect ratio on, the result fits inside the selected box and may be smaller than its listed dimensions. Turn it off to force exact dimensions.',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+            const SizedBox(height: 12),
+            DropdownButtonFormField<ImageCompressionMode>(
+              key: const Key('optimizer-mode'),
+              initialValue: mode,
+              isExpanded: true,
+              decoration: const InputDecoration(
+                labelText: 'Compression target',
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: ImageCompressionMode.quality,
+                  child: Text('Choose JPEG quality'),
+                ),
+                DropdownMenuItem(
+                  value: ImageCompressionMode.reduceByPercent,
+                  child: Text(
+                    'Reduce file size by percentage',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: ImageCompressionMode.targetBytes,
+                  child: Text('Target file size in KB'),
+                ),
+              ],
+              onChanged: (value) => setState(() {
+                if (value != null) {
+                  mode = value;
+                }
+              }),
+            ),
+            if (mode == ImageCompressionMode.quality) ...[
+              Text('JPEG quality: $quality / 100'),
+              Slider(
+                value: quality.toDouble(),
+                min: 30,
+                max: 100,
+                divisions: 14,
+                label: '$quality',
+                onChanged: (value) => setState(() => quality = value.round()),
+              ),
+            ],
+            if (mode == ImageCompressionMode.reduceByPercent) ...[
+              Text('Requested reduction: $reductionPercent%'),
+              Slider(
+                value: reductionPercent.toDouble(),
+                min: 5,
+                max: 95,
+                divisions: 18,
+                label: '$reductionPercent%',
+                onChanged: (value) =>
+                    setState(() => reductionPercent = value.round()),
+              ),
+              const Text(
+                'Targets a reduction from the current working image bytes; actual output can differ. Resolution is reduced gradually only if quality adjustment is not enough.',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+            if (mode == ImageCompressionMode.targetBytes)
+              TextField(
+                controller: targetKb,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Target size (KB)',
+                ),
+              ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<_ImageExportFormat>(
+              key: const Key('optimizer-export-format'),
+              initialValue: format,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: 'Export format'),
+              items: const [
+                DropdownMenuItem(
+                  value: _ImageExportFormat.jpeg,
+                  child: Text('JPEG image'),
+                ),
+                DropdownMenuItem(
+                  value: _ImageExportFormat.pdf,
+                  child: Text(
+                    'A4 image PDF (not encrypted)',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: _ImageExportFormat.html,
+                  child: Text('Standalone HTML page'),
+                ),
+              ],
+              onChanged: (value) => setState(() {
+                if (value != null) {
+                  format = value;
+                }
+              }),
+            ),
+            if (format == _ImageExportFormat.pdf)
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: Text(
+                  'The image is fitted on A4 with 10 mm margins. This PDF is not encrypted or access-controlled; verify the saved file before use.',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
+            if (format == _ImageExportFormat.html)
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: Text(
+                  'HTML embeds the image for offline viewing. A PIN screen without cryptographic protection would not secure the image, so PIN protection is not simulated.',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
           ],
-          onChanged: (value) => setState(() {
-            if (value != null) {
-              mode = value;
-            }
-          }),
         ),
-        if (mode == ImageCompressionMode.quality) ...[
-          Text('JPEG quality: $quality / 100'),
-          Slider(value: quality.toDouble(), min: 30, max: 100, divisions: 14, label: '$quality', onChanged: (value) => setState(() => quality = value.round())),
-        ],
-        if (mode == ImageCompressionMode.reduceByPercent) ...[
-          Text('Requested reduction: $reductionPercent%'),
-          Slider(value: reductionPercent.toDouble(), min: 5, max: 95, divisions: 18, label: '$reductionPercent%', onChanged: (value) => setState(() => reductionPercent = value.round())),
-          const Text('Targets a reduction from source bytes; actual output can differ. Resolution is reduced gradually only if quality adjustment is not enough.', style: TextStyle(fontSize: 12)),
-        ],
-        if (mode == ImageCompressionMode.targetBytes)
-          TextField(controller: targetKb, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Target size (KB)')),
-        const SizedBox(height: 12),
-        DropdownButtonFormField<_ImageExportFormat>(
-          key: const Key('optimizer-export-format'), initialValue: format,
-          decoration: const InputDecoration(labelText: 'Export format'),
-          items: const [
-            DropdownMenuItem(value: _ImageExportFormat.jpeg, child: Text('JPEG image')),
-            DropdownMenuItem(value: _ImageExportFormat.pdf, child: Text('PDF document (not encrypted)')),
-            DropdownMenuItem(value: _ImageExportFormat.html, child: Text('Standalone HTML page')),
-          ],
-          onChanged: (value) => setState(() { if (value != null) format = value; }),
-        ),
-        if (format == _ImageExportFormat.pdf) const Padding(padding: EdgeInsets.only(top: 8), child: Text('PIN/password-protected PDF is not offered yet because the current PDF pipeline has no verified encryption path. Do not treat an ordinary PDF as secure.', style: TextStyle(fontSize: 12))),
-        if (format == _ImageExportFormat.html) const Padding(padding: EdgeInsets.only(top: 8), child: Text('HTML keeps the image embedded for viewing. A PIN screen without cryptographic protection would not secure the image, so PIN protection is not simulated.', style: TextStyle(fontSize: 12))),
-      ],
-    ))),
+      ),
+    ),
     actions: [
-      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-      FilledButton(onPressed: () {
-        final w = int.tryParse(width.text), h = int.tryParse(height.text), kb = int.tryParse(targetKb.text);
-        if (preset == ImageSizePreset.custom && (w == null || h == null || w < 1 || h < 1 || w > maxPhotoSide || h > maxPhotoSide)) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter custom dimensions from 1 to 8192 px.'))); return;
-        }
-        if (mode == ImageCompressionMode.targetBytes && (kb == null || kb < 1 || kb > 20480)) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a target from 1 to 20480 KB.'))); return;
-        }
-        Navigator.pop(context, _ImageOptimizationOptions(
-          sizeTarget: ImageSizeTarget(preset: preset, width: w, height: h, keepAspect: keepAspect),
-          mode: mode, quality: quality, reductionPercent: reductionPercent,
-          targetBytes: (kb ?? 200) * 1024, format: format,
-        ));
-      }, child: const Text('Optimise & preview')),
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(
+        onPressed: () {
+          final w = int.tryParse(width.text),
+              h = int.tryParse(height.text),
+              kb = int.tryParse(targetKb.text);
+          if (preset == ImageSizePreset.custom &&
+              (w == null ||
+                  h == null ||
+                  w < 1 ||
+                  h < 1 ||
+                  w > maxPhotoSide ||
+                  h > maxPhotoSide)) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Enter custom dimensions from 1 to 8192 px.'),
+              ),
+            );
+            return;
+          }
+          if (mode == ImageCompressionMode.targetBytes &&
+              (kb == null || kb < 1 || kb > 20480)) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Enter a target from 1 to 20480 KB.'),
+              ),
+            );
+            return;
+          }
+          Navigator.pop(
+            context,
+            _ImageOptimizationOptions(
+              sizeTarget: ImageSizeTarget(
+                preset: preset,
+                width: w,
+                height: h,
+                keepAspect: keepAspect,
+              ),
+              mode: mode,
+              quality: quality,
+              reductionPercent: reductionPercent,
+              targetBytes: (kb ?? 200) * 1024,
+              format: format,
+            ),
+          );
+        },
+        child: const Text('Optimise & preview'),
+      ),
     ],
   );
 }

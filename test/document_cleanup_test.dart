@@ -42,6 +42,100 @@ void main() {
     expect(grayAt(pixels, 128, 10, 30), lessThan(35));
   });
 
+  test('Original preserves bytes and alpha; Lighten is adjustable', () {
+    final original = Uint8List.fromList([100, 80, 60, 128, 0, 0, 0, 255]);
+    final untouched = Uint8List.fromList(original);
+    cleanDocumentRgbaInPlace(
+      original,
+      2,
+      1,
+      mode: DocumentCleanupMode.original,
+      amount: 1,
+    );
+    expect(original, orderedEquals(untouched));
+
+    final input = Uint8List.fromList([100, 80, 60, 255, 0, 0, 0, 255]);
+    final noLift = Uint8List.fromList(input);
+    final bright = Uint8List.fromList(input);
+    cleanDocumentRgbaInPlace(
+      noLift,
+      2,
+      1,
+      mode: DocumentCleanupMode.lighten,
+      amount: 0,
+    );
+    cleanDocumentRgbaInPlace(
+      bright,
+      2,
+      1,
+      mode: DocumentCleanupMode.lighten,
+      amount: 1,
+    );
+    expect(noLift, orderedEquals(input));
+    expect(bright, [145, 116, 87, 255, 0, 0, 0, 255]);
+  });
+
+  test('zero-strength color modes only flatten transparency', () {
+    for (final mode in [
+      DocumentCleanupMode.lighten,
+      DocumentCleanupMode.evenLighting,
+      DocumentCleanupMode.magicPro,
+    ]) {
+      final pixels = Uint8List.fromList([200, 100, 0, 128, 0, 0, 0, 0]);
+      cleanDocumentRgbaInPlace(pixels, 2, 1, mode: mode, amount: 0);
+      expect(pixels, [
+        227,
+        177,
+        127,
+        255,
+        255,
+        255,
+        255,
+        255,
+      ], reason: mode.name);
+    }
+  });
+
+  test('Magic Pro normalizes shaded paper and keeps dark text and color', () {
+    final pixels = unevenPixels();
+    final chart = (15 * 128 + 15) * 4;
+    pixels.setRange(chart, chart + 4, [35, 90, 50, 255]);
+    final zero = Uint8List.fromList(pixels);
+    final strong = Uint8List.fromList(pixels);
+    cleanDocumentRgbaInPlace(
+      zero,
+      128,
+      64,
+      mode: DocumentCleanupMode.magicPro,
+      amount: 0,
+    );
+    cleanDocumentRgbaInPlace(
+      strong,
+      128,
+      64,
+      mode: DocumentCleanupMode.magicPro,
+      amount: 1,
+    );
+    expect(zero, orderedEquals(pixels));
+    expect(grayAt(strong, 128, 10, 10), greaterThan(245));
+    expect(grayAt(strong, 128, 100, 10), greaterThan(245));
+    expect(grayAt(strong, 128, 10, 30), lessThan(45));
+    expect(strong[chart + 1], greaterThan(strong[chart]));
+    expect(strong[chart + 1], greaterThan(strong[chart + 2]));
+  });
+
+  test('Grayscale uses luminance and flattens transparency', () {
+    final pixels = Uint8List.fromList([200, 100, 50, 255, 0, 0, 0, 0]);
+    cleanDocumentRgbaInPlace(
+      pixels,
+      2,
+      1,
+      mode: DocumentCleanupMode.grayscale,
+      amount: .7,
+    );
+    expect(pixels, [124, 124, 124, 255, 255, 255, 255, 255]);
+  });
+
   test('adaptive B&W uses local paper and adjustable mark sensitivity', () {
     final pixels = unevenPixels();
     cleanDocumentRgbaInPlace(
@@ -141,6 +235,11 @@ void main() {
       );
       final input = Uint8List.fromList(img.encodePng(image));
       final original = Uint8List.fromList(input);
+      final unchanged = processDocumentCleanup(
+        DocumentCleanupRequest(input, mode: DocumentCleanupMode.original),
+      );
+      expect(unchanged.bytes, orderedEquals(input));
+      expect(identical(unchanged.bytes, input), isFalse);
       final result = processDocumentCleanup(
         DocumentCleanupRequest(
           input,

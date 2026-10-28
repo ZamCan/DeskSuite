@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 
+import '../core/file_limits.dart';
 import 'office_zip_guard.dart';
 
 /// Bounded reader for ZIP-based office packages (OOXML and ODF).
@@ -12,7 +13,7 @@ import 'office_zip_guard.dart';
 /// uncompressed bytes so a compression bomb cannot exhaust memory.
 /// Documented resource limits for office package reading.
 abstract final class OfficePackageLimits {
-  static const int maxArchiveBytes = 48 * 1024 * 1024;
+  static const int maxArchiveBytes = maxDocumentBytes;
   static const int maxEntryBytes = 24 * 1024 * 1024;
   static const int maxTotalBytes = 64 * 1024 * 1024;
   static const int maxEntries = 4000;
@@ -22,9 +23,9 @@ class OfficePackage {
   OfficePackage._(this._files, this.totalBytes);
 
   static const int maxArchiveBytes = OfficePackageLimits.maxArchiveBytes;
-  static const int maxEntryBytes = 24 * 1024 * 1024;
-  static const int maxTotalBytes = 64 * 1024 * 1024;
-  static const int maxEntries = 4000;
+  static const int maxEntryBytes = OfficePackageLimits.maxEntryBytes;
+  static const int maxTotalBytes = OfficePackageLimits.maxTotalBytes;
+  static const int maxEntries = OfficePackageLimits.maxEntries;
 
   final Map<String, Uint8List> _files;
   final int totalBytes;
@@ -76,7 +77,7 @@ class OfficePackage {
       final guarded = guardedEntries[entry.name];
       if (guarded == null ||
           content.length != guarded.size ||
-          _crc32(content) != guarded.crc32) {
+          officeZipCrc32(content) != guarded.crc32) {
         throw FormatException(
           'The document part "${entry.name}" failed integrity validation.',
         );
@@ -135,21 +136,4 @@ class OfficePackage {
     }
     return segments.join('/');
   }
-}
-
-final List<int> _crc32Table = List<int>.generate(256, (index) {
-  var value = index;
-  for (var bit = 0; bit < 8; bit++) {
-    value = (value & 1) != 0 ? (value >> 1) ^ 0xedb88320 : value >> 1;
-  }
-  return value & 0xffffffff;
-}, growable: false);
-
-/// Standard ZIP CRC-32, applied after bounded decompression and before XML use.
-int _crc32(Uint8List bytes) {
-  var crc = 0xffffffff;
-  for (final byte in bytes) {
-    crc = (crc >> 8) ^ _crc32Table[(crc ^ byte) & 0xff];
-  }
-  return (crc ^ 0xffffffff) & 0xffffffff;
 }

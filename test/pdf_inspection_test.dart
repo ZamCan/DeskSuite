@@ -63,6 +63,13 @@ void main() {
       expect(report.sizeLabel, isNotEmpty);
     });
 
+    test('background inspection returns the same bounded report', () async {
+      final bytes = await _pdf(pages: 2);
+      final report = await inspectPdfInBackground(bytes);
+      expect(report.pageCount, 2);
+      expect(report.isEncrypted, isFalse);
+    });
+
     test('reads a landscape page as wider than tall', () async {
       final bytes = await _pdf(format: PdfPageFormat.a4.landscape);
       final report = inspectPdf(bytes);

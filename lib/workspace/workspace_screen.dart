@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../app/section_artwork.dart';
 import '../app/theme.dart';
 import '../design/design_document.dart';
 import '../design/template_catalog.dart';
@@ -20,6 +21,7 @@ import 'file_gateway.dart';
 import 'getting_started_page.dart';
 import 'new_design_dialog.dart';
 import 'project_repository.dart';
+import 'shortcut_search.dart';
 import 'workspace_widgets.dart';
 
 class WorkspaceScreen extends StatefulWidget {
@@ -51,6 +53,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   int _refreshVersion = 0;
   bool _showWelcome = false;
   Uint8List? _recoveredCapture;
+  final _shortcutSearch = TextEditingController();
+  String _shortcutQuery = '';
 
   @override
   void initState() {
@@ -73,6 +77,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         });
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _shortcutSearch.dispose();
+    super.dispose();
   }
 
   Future<void> _loadWelcome() async {
@@ -272,6 +282,94 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       ? _lightStudio(create())
       : const SizedBox.shrink();
 
+  /// Each enum value resolves to its own real page, independent of enum order.
+  /// The exhaustive switch makes an unmapped new section a compile-time error.
+  Widget _sectionPage(WorkspaceSection section) => switch (section) {
+    WorkspaceSection.workspace => _workspace(),
+    WorkspaceSection.projects => _projectPage(),
+    WorkspaceSection.settings => _settings(),
+    WorkspaceSection.design =>
+      _visited.contains(section)
+          ? CreativeStudioPage(
+              repository: widget.repository,
+              files: widget.files,
+              onEarlierEditor: _openEarlierStudio,
+            )
+          : const SizedBox.shrink(),
+    WorkspaceSection.photos => _visitedStudio(
+      section,
+      () => legacy.PhotoPage(files: widget.files),
+    ),
+    WorkspaceSection.notes => _visitedStudio(
+      section,
+      () => const legacy.NotesPage(),
+    ),
+    WorkspaceSection.printing => _visitedStudio(
+      section,
+      () => const legacy.PrintPage(),
+    ),
+    WorkspaceSection.business => _visitedStudio(
+      section,
+      () => legacy.BusinessPage(files: widget.files),
+    ),
+    WorkspaceSection.scans =>
+      _visited.contains(section)
+          ? ScanStudioPage(
+              files: widget.files,
+              camera: widget.camera,
+              recoveredCapture: _recoveredCapture,
+            )
+          : const SizedBox.shrink(),
+    WorkspaceSection.guide =>
+      _visited.contains(section)
+          ? GettingStartedPage(
+              onScan: () => _navigate(WorkspaceSection.scans),
+              onPhoto: () => _navigate(WorkspaceSection.photos),
+              onText: () => _navigate(WorkspaceSection.text),
+              onOffice: () => _navigate(WorkspaceSection.office),
+              onPdf: () => _navigate(WorkspaceSection.pdfStudio),
+              onEditableExample: _openEditableExample,
+            )
+          : const SizedBox.shrink(),
+    WorkspaceSection.conversions =>
+      _visited.contains(section)
+          ? ConversionCatalogPage(
+              onOpen: (target) => _navigate(switch (target) {
+                ConversionTarget.photos => WorkspaceSection.photos,
+                ConversionTarget.scans => WorkspaceSection.scans,
+                ConversionTarget.projects => WorkspaceSection.projects,
+                ConversionTarget.design => WorkspaceSection.design,
+                ConversionTarget.notes => WorkspaceSection.notes,
+                ConversionTarget.text => WorkspaceSection.text,
+                ConversionTarget.office => WorkspaceSection.office,
+                ConversionTarget.pdfStudio => WorkspaceSection.pdfStudio,
+              }),
+            )
+          : const SizedBox.shrink(),
+    WorkspaceSection.text =>
+      _visited.contains(section)
+          ? TextExtractionPage(files: widget.files)
+          : const SizedBox.shrink(),
+    WorkspaceSection.office =>
+      _visited.contains(section)
+          ? OfficeConvertPage(
+              picker: widget.files is DocumentPicker
+                  ? widget.files as DocumentPicker
+                  : const _NoDocumentPicker(),
+              files: widget.files,
+            )
+          : const SizedBox.shrink(),
+    WorkspaceSection.pdfStudio =>
+      _visited.contains(section)
+          ? PdfStudioPage(
+              picker: widget.files is DocumentPicker
+                  ? widget.files as DocumentPicker
+                  : const _NoDocumentPicker(),
+              files: widget.files,
+            )
+          : const SizedBox.shrink(),
+  };
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
@@ -296,94 +394,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       child: IndexedStack(
                         index: _section.index,
                         children: [
-                          _workspace(),
-                          _projectPage(),
-                          _settings(),
-                          _visited.contains(WorkspaceSection.design)
-                              ? CreativeStudioPage(
-                                  repository: widget.repository,
-                                  files: widget.files,
-                                  onEarlierEditor: _openEarlierStudio,
-                                )
-                              : const SizedBox.shrink(),
-                          _visitedStudio(
-                            WorkspaceSection.photos,
-                            () => legacy.PhotoPage(files: widget.files),
-                          ),
-                          _visitedStudio(
-                            WorkspaceSection.notes,
-                            () => const legacy.NotesPage(),
-                          ),
-                          _visitedStudio(
-                            WorkspaceSection.printing,
-                            () => const legacy.PrintPage(),
-                          ),
-                          _visitedStudio(
-                            WorkspaceSection.business,
-                            () => legacy.BusinessPage(files: widget.files),
-                          ),
-                          _visited.contains(WorkspaceSection.scans)
-                              ? ScanStudioPage(
-                                  files: widget.files,
-                                  camera: widget.camera,
-                                  recoveredCapture: _recoveredCapture,
-                                )
-                              : const SizedBox.shrink(),
-                          _visited.contains(WorkspaceSection.guide)
-                              ? GettingStartedPage(
-                                  onScan: () =>
-                                      _navigate(WorkspaceSection.scans),
-                                  onPhoto: () =>
-                                      _navigate(WorkspaceSection.photos),
-                                  onText: () =>
-                                      _navigate(WorkspaceSection.text),
-                                  onOffice: () =>
-                                      _navigate(WorkspaceSection.office),
-                                  onEditableExample: _openEditableExample,
-                                )
-                              : const SizedBox.shrink(),
-                          _visited.contains(WorkspaceSection.conversions)
-                              ? ConversionCatalogPage(
-                                  onOpen: (target) =>
-                                      _navigate(switch (target) {
-                                        ConversionTarget.photos =>
-                                          WorkspaceSection.photos,
-                                        ConversionTarget.scans =>
-                                          WorkspaceSection.scans,
-                                        ConversionTarget.projects =>
-                                          WorkspaceSection.projects,
-                                        ConversionTarget.design =>
-                                          WorkspaceSection.design,
-                                        ConversionTarget.notes =>
-                                          WorkspaceSection.notes,
-                                        ConversionTarget.text =>
-                                          WorkspaceSection.text,
-                                        ConversionTarget.office =>
-                                          WorkspaceSection.office,
-                                        ConversionTarget.pdfStudio =>
-                                          WorkspaceSection.pdfStudio,
-                                      }),
-                                )
-                              : const SizedBox.shrink(),
-                          _visited.contains(WorkspaceSection.text)
-                              ? TextExtractionPage(files: widget.files)
-                              : const SizedBox.shrink(),
-                          _visited.contains(WorkspaceSection.office)
-                              ? OfficeConvertPage(
-                                  picker: widget.files is DocumentPicker
-                                      ? widget.files as DocumentPicker
-                                      : const _NoDocumentPicker(),
-                                  files: widget.files,
-                                )
-                              : const SizedBox.shrink(),
-                          _visited.contains(WorkspaceSection.pdfStudio)
-                              ? PdfStudioPage(
-                                  picker: widget.files is DocumentPicker
-                                      ? widget.files as DocumentPicker
-                                      : const _NoDocumentPicker(),
-                                  files: widget.files,
-                                )
-                              : const SizedBox.shrink(),
+                          for (final section in WorkspaceSection.values)
+                            KeyedSubtree(
+                              key: ValueKey('workspace-page-${section.name}'),
+                              child: _sectionPage(section),
+                            ),
                         ],
                       ),
                     ),
@@ -412,6 +427,17 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               ),
             ),
           if (!wide) const SizedBox(width: 6),
+          if (_section == WorkspaceSection.workspace) ...[
+            const BrandMark(size: 32),
+            const SizedBox(width: 10),
+          ] else if (artworkForSection(_section) case final artwork?) ...[
+            SectionArtwork(
+              key: ValueKey('section-header-art-${_section.name}'),
+              asset: artwork,
+              size: 32,
+            ),
+            const SizedBox(width: 10),
+          ],
           Expanded(
             child: Text(
               switch (_section) {
@@ -487,6 +513,175 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             ),
           ),
         ],
+        const SizedBox(height: 28),
+        _heading('Your tools', 'Choose a local workflow or find a shortcut.'),
+        const SizedBox(height: 12),
+        TextField(
+          key: const Key('home-shortcut-search'),
+          controller: _shortcutSearch,
+          textInputAction: TextInputAction.search,
+          onChanged: (value) => setState(() => _shortcutQuery = value),
+          onSubmitted: (_) => FocusScope.of(context).unfocus(),
+          decoration: InputDecoration(
+            labelText: 'Find a shortcut',
+            hintText: 'Scan, PDF, photo…',
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: _shortcutQuery.isEmpty
+                ? null
+                : IconButton(
+                    key: const Key('home-clear-shortcut-search'),
+                    tooltip: 'Clear shortcut search',
+                    onPressed: () => setState(() {
+                      _shortcutSearch.clear();
+                      _shortcutQuery = '';
+                    }),
+                    icon: const Icon(Icons.close),
+                  ),
+          ),
+        ),
+        if (_shortcutQuery.trim().isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              '${homeShortcutSearchTerms.keys.where((section) => matchesHomeShortcut(section, _shortcutQuery)).length} '
+              'of ${homeShortcutSearchTerms.length} shortcuts',
+              key: const Key('home-shortcut-result-count'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ],
+        const SizedBox(height: 12),
+        if (homeShortcutSearchTerms.keys.any(
+          (section) => matchesHomeShortcut(section, _shortcutQuery),
+        ))
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 820
+                  ? 3
+                  : constraints.maxWidth >= 520
+                  ? 2
+                  : 1;
+              final width =
+                  (constraints.maxWidth - (columns - 1) * 12) / columns;
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.scans,
+                    _shortcutQuery,
+                  ))
+                    SizedBox(
+                      width: width,
+                      child: WorkspaceToolCard(
+                        key: const Key('home-open-scan'),
+                        section: WorkspaceSection.scans,
+                        title: 'Scan documents',
+                        description: 'Capture, clean and assemble pages.',
+                        onNavigate: _navigate,
+                      ),
+                    ),
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.pdfStudio,
+                    _shortcutQuery,
+                  ))
+                    SizedBox(
+                      width: width,
+                      child: WorkspaceToolCard(
+                        key: const Key('home-open-pdf'),
+                        section: WorkspaceSection.pdfStudio,
+                        title: 'Work with a PDF',
+                        description: 'Review pages and save a separate copy.',
+                        fallbackIcon: Icons.picture_as_pdf_outlined,
+                        onNavigate: _navigate,
+                      ),
+                    ),
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.photos,
+                    _shortcutQuery,
+                  ))
+                    SizedBox(
+                      width: width,
+                      child: WorkspaceToolCard(
+                        key: const Key('home-open-photo'),
+                        section: WorkspaceSection.photos,
+                        title: 'Edit a photo',
+                        description: 'Adjust and resize an image.',
+                        onNavigate: _navigate,
+                      ),
+                    ),
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.text,
+                    _shortcutQuery,
+                  ))
+                    SizedBox(
+                      width: width,
+                      child: WorkspaceToolCard(
+                        key: const Key('home-open-text'),
+                        section: WorkspaceSection.text,
+                        title: 'Extract text',
+                        description: 'Recognize and review words in an image.',
+                        onNavigate: _navigate,
+                      ),
+                    ),
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.office,
+                    _shortcutQuery,
+                  ))
+                    SizedBox(
+                      width: width,
+                      child: WorkspaceToolCard(
+                        key: const Key('home-open-converter'),
+                        section: WorkspaceSection.office,
+                        title: 'Convert file',
+                        description:
+                            'Read and convert supported document content.',
+                        onNavigate: _navigate,
+                      ),
+                    ),
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.design,
+                    _shortcutQuery,
+                  ))
+                    SizedBox(
+                      width: width,
+                      child: WorkspaceToolCard(
+                        key: const Key('home-open-design'),
+                        section: WorkspaceSection.design,
+                        title: 'Creative Studio',
+                        description: 'Design an editable layout for print.',
+                        onNavigate: _navigate,
+                      ),
+                    ),
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.projects,
+                    _shortcutQuery,
+                  ))
+                    SizedBox(
+                      width: width,
+                      child: WorkspaceToolCard(
+                        key: const Key('home-open-projects'),
+                        section: WorkspaceSection.projects,
+                        title: 'Files & Projects',
+                        description: 'Open locally saved design projects.',
+                        onNavigate: _navigate,
+                      ),
+                    ),
+                ],
+              );
+            },
+          )
+        else
+          const Card(
+            child: Padding(
+              padding: EdgeInsets.all(18),
+              child: Text(
+                'No matching shortcuts. Try a different search or clear it.',
+                key: Key('home-shortcut-empty'),
+              ),
+            ),
+          ),
         const SizedBox(height: 34),
         Row(
           children: [

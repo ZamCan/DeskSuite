@@ -1,48 +1,30 @@
 # DeskSuite — current engineering status
 
-**Status date:** 2026-10-28  
-**Product:** DeskSuite — Android-first creative, office, document, print-production and stationery-business workspace  
-**Current source:** main at the consolidated PDF/scan baseline plus the offline page-corner suggestion engine. See the [current main commit](https://github.com/ZamCan/DeskSuite/commits/main).
+**Recorded:** 2026-10-28. This describes the selective consolidation source, not a signed or device-verified release. Public `main` at the start of this work was `177a10f80f51c31ba6de7cc7bb2e321f6e9e07c4`; the consolidation is based on that commit. See [branch consolidation](CONSOLIDATION_2026-10-28.md), [validation](VALIDATION.md) and the full [master directive](MASTER_ENGINEERING_DIRECTIVE.md).
 
-This is an implementation report, not a claim of production readiness. The full requirements remain in [MASTER_ENGINEERING_DIRECTIVE.md](MASTER_ENGINEERING_DIRECTIVE.md); initial findings are in [BASELINE_AUDIT.md](BASELINE_AUDIT.md); the selective branch review is in [BRANCH_AUDIT_2026-10-28.md](BRANCH_AUDIT_2026-10-28.md).
+## Validation and publishing state
 
-## Validation state
+- The **earlier public main** at `177a10f` completed its build matrix in [run 40704429058](https://github.com/ZamCan/DeskSuite/actions/runs/40704429058). That run does **not** validate the later selective consolidation.
+- Current work passed the host, DartPad/Node and stub checks recorded in [VALIDATION.md](VALIDATION.md). A complete Flutter analysis and test run, native compilation, installation and device tests have **not** run on this consolidation.
+- At the time of the audit no remote ref had been changed or deleted. The 18 heads were backed up and independently restored. Recheck current refs before any future action; do not treat this dated record as proof that main has since been updated.
+- The active push/PR workflow packages Android and desktop artifacts. The owner has requested local packaging without online toolchain downloads; resolve that conflict before pushing to `main` or changing the workflow. No credentials or signing keys belong in Git.
 
-- The previous main snapshot `7f1920ef` passed `flutter analyze`, the full Flutter test suite, Android APK/AAB compilation, Windows/Linux builds and unsigned iOS validation in [CI run 40689024580](https://github.com/ZamCan/DeskSuite/actions/runs/40689024580).
-- The offline page-corner suggestion feature passed the four-platform matrix on its exact feature branch in [CI run 40690205064](https://github.com/ZamCan/DeskSuite/actions/runs/40690205064).
-- The merged main tree contains both sets of work. Follow the [main-branch CI runs](https://github.com/ZamCan/DeskSuite/actions/workflows/build.yml?query=branch%3Amain) and verify the run whose head SHA matches the current `main` before treating the source as validated. Documentation and audit updates followed the earlier build run, so its result is not a substitute for the latest-head run.
-- No physical-device installation, camera lifecycle, real printer, independent-reader PDF fidelity or signed upgrade has been verified here.
+## Source capability inventory
 
-## Implemented source capabilities
-
-| Area | Present in source | Boundary that must remain explicit |
+| Area | Present in this source | Limits and release gates |
 | --- | --- | --- |
-| Scan & assemble | Local image import, Android camera-capture entry point, manual perspective correction, optional bounded page-corner suggestions, rotation/tone cleanup, multipage ordering, draft recovery and image-based PDF/PNG export. | Corner suggestions are heuristic and require review/correction. Automatic universal edge detection, device camera/provider lifecycle and process-death recovery need device validation. Scan PDF output is image-based. |
-| OCR | Local Tesseract bridge and English / English+Kiswahili models, image preparation, editable text review, TXT/DOCX export and searchable-PDF text layer. | OCR accuracy is not guaranteed; the OCR screen is separate from scan PDF export. Test real pages and the target phone. |
-| Photo Studio / images | Bounded decode, rotate/crop/resize, physical-size-to-pixel conversion, JPEG quality/size optimisation, selective speck reduction, background placement for existing transparency, output review and separate-copy export. | No automatic background removal, biometric crop, universal passport compliance or calibrated DPI/print guarantee. |
-| Creative Studio | Shared editable design document, text/shapes/images, starter layouts, photo-sheet layout and image-slot placement, stamps/signatures, history, save/reopen and PNG/PDF export. | Starter templates are examples, not authority-approved designs. Complex multi-page/presentation authoring and PPTX export are not complete. |
-| PDF Studio | Existing-PDF import, bounded edit/review and save-as-copy flow. The integration candidate adds ordered combination of up to 10 PDFs / 48 MiB aggregate input with output page-count validation. | The new combine path still needs CI, independent-reader and physical-device validation. Split, structural compression and encrypted output remain unimplemented; complex/protected PDFs may fail. |
-| Office | Bounded package reading and content-level editing/conversion for supported DOCX/XLSX/PPTX/ODF/RTF/text/HTML routes. | Not a full Word/Excel/PowerPoint layout editor. Formula, macro, image, font and complex-layout fidelity is limited; full layout rendering needs a separately evaluated engine. |
-| Printing | Paper/physical-size catalogues, photo sheets, print-check PDF and OS print handoff boundary. | Printer discovery, margins/scaling, colour, stock compatibility and actual device output need testing. |
-| Stationery Business | Local starter catalogue/stock and recorded sale log with reprintable A5 PDF receipt. | Not a complete transactional POS: baskets, supplier purchasing, refunds, expenses, customer balances, audit ledger and reliable profit reports remain missing. |
-| App shell and brand | One shared workspace, warm paper/ink/terracotta identity, bundled SVG/raster mark, native Flutter mark, Android adaptive/monochrome/legacy icons and splash resources; this polish branch adds a branded local-startup view and warm selected/unselected navigation icon tiles. | Test launcher appearance, accessibility, small screens and OS-specific behavior on physical devices. |
+| Scan & assemble | Import/camera, manual correction and optional corner suggestions, six local cleanup modes with comparison, page ordering, private draft/recovery, image PDF or page PNG export, and selected-page handoff to Text extraction. | Suggestions and cleanup are heuristics. Scan PDF itself is image-only; native camera, draft recovery, OCR handoff and device memory are unverified. |
+| OCR | Android Tesseract bridge, bundled English/Kiswahili models, bounded preparation, editable review, TXT/DOCX and searchable image-PDF. | Searchable PDF uses the original recognized words and positions, not later text corrections. Recognition quality, native lifecycle and coordinates need device/independent-reader tests. |
+| Photo | Bounded decode, crop/rotate/resize, percentage and physical sizing, speck reduction, preview/undo, optimized JPEG and shared single-image PDF export. Fictional still-life and noisy-garden examples use the same processor. | No automatic background removal, biometric certification or print-calibration guarantee. Source is preserved only if a different save destination is chosen. |
+| Creative Studio | Editable shapes/text/images, stamps/signatures, projects, fictional ID badge templates with photo slots, a photo layout and flattened PNG/PDF export. Shared physical sizes and adaptive lower-DPI choices are bounded. | Templates are not official documents; a drawn signature is not a cryptographic signature. Verify file handling and physical print scaling. |
+| PDF Studio | Bounded existing-PDF inspection and editing, ordered combine of up to 10 PDFs/48 MiB total, page export and bounded split callbacks. Replacement/close ask about unsaved edits; output is inspected before saving. | Encrypted input is refused; inspection checks do not prove every page or PDF feature is valid. Split supports at most 100 outputs and 48 MiB combined output. Real editor callbacks, independent readers and low-memory devices remain unverified. Pick a different destination to protect originals. |
+| Office | Bounded, integrity-checked OOXML/ODF package reader; content-level editing/conversion; six fictional genuine OOXML templates and unchanged-byte saving. An opt-in Android read-only OpenDocument.core WASM preview is present, disabled by default. | Content export loses formatting, media and formulas; edited PPTX and legacy DOC/XLS/PPT conversion are unavailable. The experimental preview is not a converter and is unverified on Android. [Office support](OFFICE_SUPPORT.md) records isolation, fidelity and licence gates. |
+| Printing | Shared size/stock catalogues, bounded photo sheet and design export, OS print handoff. Editable designs use 10–2500 mm sides; scan/Office PDF page validation and photo-sheet pages use 20–2500 mm. | Driver scaling, physical media, colour and hardware output require real printer tests. Stock/GSM are notes, not driver controls. |
+| Branding and workspace | Owner-selected blue dimensional DS icon in the app/Android/Windows/AppImage assets, animated startup, selected internal section artwork, search and guided sample routes. | Android launchers, platform resources, accessibility and animation behavior need device verification. |
+| Business and storage | Local starter stock/catalogue/sale log, receipt and per-feature private files. | Not a complete POS, transactional ledger or full backup/restore. Uninstalling or clearing data may remove private data. |
 
-## Build and signing
+## Owner's local validation and signing
 
-- Android application ID: `com.zamcan.desksuite`.
-- Keep the existing private keystore and `android/key.properties` on the owner's machine only. They are ignored by Git.
-- CI can compile APK/AAB artifacts, but it does not possess the owner's private signing key; **do not treat a CI artifact as a signed update**.
-- To preserve an installed app's data, build locally with the same signing identity. Use `bash tools/build-android.sh release` after confirming the existing key configuration. The script refuses release mode if `android/key.properties` is missing.
-- Never paste the keystore password into chat or commit the keystore/properties file. Verify the resulting APK certificate before installing.
+Use the **existing** Flutter/Dart and Android toolchains on the owner's machine. Do not download Android toolchains or create a new key to update an existing installation. After safely importing this source, run the commands in [validation](VALIDATION.md), especially `flutter analyze --no-pub` and the full `flutter test --no-pub` suite. Resolve failures before promotion. Inspect Office output in independent applications; test PDF open/save/combine/split, OCR, scanner, photo, accessibility, file providers and printing on real devices.
 
-See [DEVELOPMENT.md](../DEVELOPMENT.md) for the local build workflow and [VALIDATION.md](VALIDATION.md) for the recorded host results.
-
-## Next actions, in order
-
-1. Confirm the latest main CI run passes on its exact head.
-2. Pull `main` in Termux without discarding local work, verify the existing signing-key configuration without printing secrets, and build a signed APK with the owner's existing key.
-3. Install as an update, then inspect Home/navigation, Scan & assemble, OCR, Photo Studio, PDF Studio, Office, Creative Studio, Print and Business on the phone. Record crashes, overflows, permission/provider errors and output-file failures.
-4. Fix device-found issues before adding large new engines.
-5. Validate the selected PDF inspection/combination and Office ZIP preflight changes in this branch. Evaluate richer print-image optimisation and Office preview separately with dependency/licence, memory, security and real-file tests. Do not merge the experimental Office WebAssembly branch wholesale.
-6. Complete POS transactions, backup/restore, PDF page operations, native file-provider integration, printer/device testing and Office interoperability before claiming a release-ready product.
-
+Keep application ID `com.zamcan.desksuite` and the existing private signing identity. Back up private data and export important documents before any update. Build and verify a signed APK/AAB locally with the existing key only after tests pass. No signed installation or release readiness is claimed here.

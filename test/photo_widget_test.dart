@@ -13,7 +13,8 @@ import 'support/reveal.dart';
 
 class PhotoFiles implements FileGateway {
   PhotoFiles({Uint8List? source})
-    : original = source ??
+    : original =
+          source ??
           Uint8List.fromList(img.encodePng(img.Image(width: 4, height: 2)));
   final Uint8List original;
   Uint8List? exported;
@@ -132,6 +133,42 @@ void main() {
     expect(files.original, orderedEquals(untouched));
     expect(tester.takeException(), isNull);
   });
+  testWidgets('studio still life goes through the real crop and PNG export', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final files = PhotoFiles();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PhotoPage(
+            files: files,
+            processor: (request) async => processPhoto(request),
+          ),
+        ),
+      ),
+    );
+    await reveal(tester, find.byKey(const Key('photo-still-life-example')));
+    await tester.tap(find.byKey(const Key('photo-still-life-example')));
+    await settleIo(tester);
+    await expectWorkingSize(tester, '1200 × 896 px · working copy');
+    await reveal(tester, find.byKey(const Key('photo-crop')));
+    await tester.tap(find.byKey(const Key('photo-crop')));
+    await settleIo(tester);
+    await expectWorkingSize(tester, '896 × 896 px · working copy');
+    await reveal(tester, find.byKey(const Key('photo-png')));
+    await tester.tap(find.byKey(const Key('photo-png')));
+    await settleIo(tester);
+    await tester.tap(find.byKey(const Key('photo-save-copy')));
+    await settleIo(tester);
+    final decoded = img.decodePng(files.exported!)!;
+    expect([decoded.width, decoded.height], [896, 896]);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('exact dimensions require an explicit aspect-ratio choice', (
     tester,
   ) async {
@@ -307,6 +344,197 @@ void main() {
     },
   );
 
+  testWidgets('sample tutorial performs a 50 percent resize and exports', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final files = PhotoFiles();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PhotoPage(
+            files: files,
+            processor: (request) async => processPhoto(request),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('photo-example')));
+    await settleIo(tester);
+    await expectWorkingSize(tester, '1376 × 768 px · working copy');
+    await reveal(tester, find.byKey(const Key('photo-resize')));
+    await tester.tap(find.byKey(const Key('photo-resize')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('photo-resize-mode')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Percentage').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('photo-scale-percent')), '50');
+    await tester.pump();
+    expect(find.text('Output: 688 × 384 pixels'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Resize'));
+    await settleIo(tester);
+    await expectWorkingSize(tester, '688 × 384 px · working copy');
+    await reveal(tester, find.byKey(const Key('photo-png')));
+    await tester.tap(find.byKey(const Key('photo-png')));
+    await settleIo(tester);
+    await tester.tap(find.byKey(const Key('photo-save-copy')));
+    await settleIo(tester);
+    final decoded = img.decodePng(files.exported!)!;
+    expect([decoded.width, decoded.height], [688, 384]);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'percentage resize uses rounded dimensions and selected resampling',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final source = Uint8List.fromList(
+        img.encodePng(img.Image(width: 3, height: 1)),
+      );
+      final files = PhotoFiles(source: source);
+      final requests = <PhotoRequest>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PhotoPage(
+              files: files,
+              processor: (request) async {
+                requests.add(request);
+                return processPhoto(request);
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const Key('photo-choose')));
+      await settleIo(tester);
+      await reveal(tester, find.byKey(const Key('photo-resize')));
+      await tester.tap(find.byKey(const Key('photo-resize')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('photo-resize-mode')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Percentage').last);
+      await tester.pumpAndSettle();
+      final percentage = find.byKey(const Key('photo-scale-percent'));
+      await tester.enterText(percentage, '0');
+      await tester.tap(find.widgetWithText(FilledButton, 'Resize'));
+      await tester.pumpAndSettle();
+      expect(find.text('Use a percentage from 1 to 1000.'), findsOneWidget);
+      await tester.enterText(percentage, '333.33');
+      await tester.pump();
+      expect(find.text('Output: 10 × 3 pixels'), findsOneWidget);
+      final resampling = find.byKey(const Key('photo-resampling'));
+      await reveal(tester, resampling);
+      await tester.tap(resampling);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Nearest · preserve pixel edges').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Resize'));
+      await settleIo(tester);
+      await expectWorkingSize(tester, '10 × 3 px · working copy');
+      final request = requests.lastWhere(
+        (item) => item.action == PhotoAction.resize,
+      );
+      expect([request.width, request.height], [10, 3]);
+      expect(request.keepAspect, isFalse);
+      expect(request.resampling, PhotoResampling.nearest);
+      expect(files.original, orderedEquals(source));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('print-size resize ignores invalid hidden pixel fields', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final requests = <PhotoRequest>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PhotoPage(
+            files: PhotoFiles(),
+            processor: (request) async {
+              requests.add(request);
+              return processPhoto(request);
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('photo-choose')));
+    await settleIo(tester);
+    await reveal(tester, find.byKey(const Key('photo-resize')));
+    await tester.tap(find.byKey(const Key('photo-resize')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('photo-width')), '');
+    await tester.tap(find.byKey(const Key('photo-resize-mode')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Print size').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('photo-print-width-mm')), '1');
+    await reveal(tester, find.byKey(const Key('photo-print-dpi')));
+    await tester.enterText(find.byKey(const Key('photo-print-dpi')), '100');
+    await tester.tap(find.widgetWithText(FilledButton, 'Resize'));
+    await settleIo(tester);
+    final request = requests.lastWhere(
+      (item) => item.action == PhotoAction.resize,
+    );
+    expect([request.width, request.height], [4, 2]);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('optimizer previews and saves an A4 PDF copy', (tester) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final files = PhotoFiles();
+    final source = Uint8List.fromList(files.original);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PhotoPage(
+            files: files,
+            processor: (request) async => processPhoto(request),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('photo-choose')));
+    await settleIo(tester);
+    await reveal(tester, find.byKey(const Key('photo-optimizer')));
+    await tester.tap(find.byKey(const Key('photo-optimizer')));
+    await tester.pumpAndSettle();
+    final picker = find.byKey(const Key('optimizer-export-format'));
+    await reveal(tester, picker);
+    await tester.tap(picker);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('A4 image PDF (not encrypted)').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Optimise & preview'));
+    await settleUntil(tester, find.text('Review optimised export'));
+    expect(
+      find.textContaining('One image is fitted inside an A4 page'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('photo-optimizer-save')));
+    await settleIo(tester);
+    expect(files.exportedName, 'desksuite-optimized.pdf');
+    expect(String.fromCharCodes(files.exported!.take(5)), '%PDF-');
+    expect(files.original, orderedEquals(source));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'photo sheet validates capacity, exports a PDF and sends a print job',
     (tester) async {
@@ -366,52 +594,54 @@ void main() {
     },
   );
 
-  testWidgets('solid background action composites transparent pixels and exports', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(360, 720);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets(
+    'solid background action composites transparent pixels and exports',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    final transparent = img.Image(width: 2, height: 1, numChannels: 4);
-    transparent.setPixelRgba(0, 0, 255, 0, 0, 0);
-    transparent.setPixelRgba(1, 0, 255, 0, 0, 255);
-    final files = PhotoFiles(source: Uint8List.fromList(img.encodePng(transparent)));
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: PhotoPage(
-            files: files,
-            processor: (request) async => processPhoto(request),
+      final transparent = img.Image(width: 2, height: 1, numChannels: 4);
+      transparent.setPixelRgba(0, 0, 255, 0, 0, 0);
+      transparent.setPixelRgba(1, 0, 255, 0, 0, 255);
+      final files = PhotoFiles(
+        source: Uint8List.fromList(img.encodePng(transparent)),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PhotoPage(
+              files: files,
+              processor: (request) async => processPhoto(request),
+            ),
           ),
         ),
-      ),
-    );
-    await tester.tap(find.byKey(const Key('photo-choose')));
-    await settleIo(tester);
-    await reveal(tester, find.byKey(const Key('photo-background')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('photo-background')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Pale blue'));
-    await settleIo(tester);
-    await reveal(tester, find.byKey(const Key('photo-png')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('photo-png')));
-    await settleIo(tester);
-    await tester.tap(find.byKey(const Key('photo-save-copy')));
-    await settleIo(tester);
+      );
+      await tester.tap(find.byKey(const Key('photo-choose')));
+      await settleIo(tester);
+      await reveal(tester, find.byKey(const Key('photo-background')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('photo-background')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Pale blue'));
+      await settleIo(tester);
+      await reveal(tester, find.byKey(const Key('photo-png')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('photo-png')));
+      await settleIo(tester);
+      await tester.tap(find.byKey(const Key('photo-save-copy')));
+      await settleIo(tester);
 
-    final output = img.decodePng(files.exported!)!;
-    expect([output.width, output.height], [2, 1]);
-    expect(output.getPixel(0, 0).r, closeTo(220, 1));
-    expect(output.getPixel(0, 0).g, closeTo(235, 1));
-    expect(output.getPixel(0, 0).b, closeTo(250, 1));
-    expect(output.getPixel(1, 0).r, 255);
-    expect(output.getPixel(1, 0).g, 0);
-    expect(output.getPixel(1, 0).b, 0);
-    expect(tester.takeException(), isNull);
-  });
-
+      final output = img.decodePng(files.exported!)!;
+      expect([output.width, output.height], [2, 1]);
+      expect(output.getPixel(0, 0).r, closeTo(220, 1));
+      expect(output.getPixel(0, 0).g, closeTo(235, 1));
+      expect(output.getPixel(0, 0).b, closeTo(250, 1));
+      expect(output.getPixel(1, 0).r, 255);
+      expect(output.getPixel(1, 0).g, 0);
+      expect(output.getPixel(1, 0).b, 0);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

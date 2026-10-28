@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/physical_page_limits.dart';
 import '../design/design_document.dart';
 import '../design/template_catalog.dart';
 import '../printing/paper_catalog.dart';
@@ -44,23 +45,27 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
     if (!_form.currentState!.validate()) return;
     final width = double.parse(_width.text);
     final height = double.parse(_height.text);
-    final doc = DesignDocument.blank(
-      name: _name.text,
-      widthMm: width,
-      heightMm: height,
-    ).copyWith(
-      elements: buildDesignTemplateElements(
-        _template,
-        widthMm: width,
-        heightMm: height,
-      ),
-    );
+    final doc =
+        DesignDocument.blank(
+          name: _name.text,
+          widthMm: width,
+          heightMm: height,
+        ).copyWith(
+          elements: buildDesignTemplateElements(
+            _template,
+            widthMm: width,
+            heightMm: height,
+          ),
+        );
     Navigator.of(context).pop(doc);
   }
 
   String? _dimension(String? value) {
     final number = double.tryParse(value ?? '');
-    return number == null || !number.isFinite || number < 10 || number > 2500
+    return number == null ||
+            !number.isFinite ||
+            number < minPhysicalPageMm ||
+            number > maxPhysicalPageMm
         ? 'Use 10–2500 mm'
         : null;
   }
@@ -96,7 +101,9 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                 key: const Key('design-template-picker'),
                 initialValue: _template,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Starting template'),
+                decoration: const InputDecoration(
+                  labelText: 'Starting template',
+                ),
                 items: [
                   for (final item in designTemplateCatalog)
                     DropdownMenuItem(
@@ -131,6 +138,14 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                 designTemplateDefinition(_template).description,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+              if (_template == DesignTemplate.identityBadge ||
+                  _template == DesignTemplate.memberCard ||
+                  _template == DesignTemplate.eventBadge) ...[
+                const SizedBox(height: 8),
+                const Text(
+                  'After creating, select the coloured photo area, choose Edit object, then Fill photo slot with image. You can also select Photo placeholder from Layers. These are generic examples, not government IDs or certified photo layouts.',
+                ),
+              ],
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
                 key: ValueKey(_preset),
@@ -158,7 +173,8 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                     _preset = value;
                     if (value < paperSheetPresets.length) {
                       _width.text = paperSheetPresets[value].widthMm.toString();
-                      _height.text = paperSheetPresets[value].heightMm.toString();
+                      _height.text = paperSheetPresets[value].heightMm
+                          .toString();
                     }
                   });
                 },
@@ -194,7 +210,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                       ),
                       validator: _dimension,
                       onChanged: (_) =>
-                          setState(() => _preset = paperSheetPresets.length - 1),
+                          setState(() => _preset = paperSheetPresets.length),
                     ),
                   ),
                   IconButton(

@@ -200,11 +200,18 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
     if (_output == OfficeEditOutput.pdf) {
       final width = double.tryParse(_pdfWidth.text);
       final height = double.tryParse(_pdfHeight.text);
-      if (width == null || height == null || width < 20 || height < 20 || width > 2500 || height > 2500) {
-        setState(() => _error = 'Enter both PDF page dimensions from 20 to 2500 mm.');
+      if (width == null ||
+          height == null ||
+          !validPdfPageDimensions(width, height)) {
+        setState(
+          () => _error = 'Enter both PDF page dimensions from 20 to 2500 mm.',
+        );
         return;
       }
-      pdfPageFormat = PdfPageFormat(width * PdfPageFormat.mm, height * PdfPageFormat.mm);
+      pdfPageFormat = PdfPageFormat(
+        width * PdfPageFormat.mm,
+        height * PdfPageFormat.mm,
+      );
     }
     setState(() {
       _saving = true;
@@ -256,7 +263,7 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
       setState(() {
         _saving = false;
         _status = saved
-            ? 'Exported edited-$base.$extension. Your original was not changed.'
+            ? 'Exported the edited copy. Choose a different destination to preserve the source.'
             : 'Export cancelled. No file was written.';
       });
     } catch (error) {
@@ -369,7 +376,7 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
                           'Edit the text and table values DeskSuite can read. '
                           'This is not a layout-faithful Word/Excel editor: '
                           'images, page layout, fonts, charts, formulas and '
-                          'macros may not survive export. The source stays untouched.',
+                          'macros may not survive export. Choose a different save destination to preserve the source.',
                         ),
                         const SizedBox(height: 14),
                         TextField(
@@ -418,8 +425,11 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
                               for (var i = 0; i < paperSheetPresets.length; i++)
                                 DropdownMenuItem(
                                   value: i,
-                                  child: Text(paperSheetPresets[i].label,
-                                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                                  child: Text(
+                                    paperSheetPresets[i].label,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               DropdownMenuItem(
                                 value: paperSheetPresets.length,
@@ -434,11 +444,20 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
                                 child: TextField(
                                   key: const Key('office-editor-pdf-width'),
                                   controller: _pdfWidth,
-                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                  decoration: const InputDecoration(labelText: 'Width (mm)'),
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  decoration: const InputDecoration(
+                                    labelText: 'Width (mm)',
+                                  ),
                                   onChanged: (_) {
-                                    if (_pdfPresetIndex != paperSheetPresets.length) {
-                                      setState(() => _pdfPresetIndex = paperSheetPresets.length);
+                                    if (_pdfPresetIndex !=
+                                        paperSheetPresets.length) {
+                                      setState(
+                                        () => _pdfPresetIndex =
+                                            paperSheetPresets.length,
+                                      );
                                     }
                                   },
                                 ),
@@ -448,11 +467,20 @@ class _OfficeContentEditorPageState extends State<OfficeContentEditorPage> {
                                 child: TextField(
                                   key: const Key('office-editor-pdf-height'),
                                   controller: _pdfHeight,
-                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                  decoration: const InputDecoration(labelText: 'Height (mm)'),
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  decoration: const InputDecoration(
+                                    labelText: 'Height (mm)',
+                                  ),
                                   onChanged: (_) {
-                                    if (_pdfPresetIndex != paperSheetPresets.length) {
-                                      setState(() => _pdfPresetIndex = paperSheetPresets.length);
+                                    if (_pdfPresetIndex !=
+                                        paperSheetPresets.length) {
+                                      setState(
+                                        () => _pdfPresetIndex =
+                                            paperSheetPresets.length,
+                                      );
                                     }
                                   },
                                 ),

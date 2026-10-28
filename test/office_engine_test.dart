@@ -35,6 +35,27 @@ void main() {
       );
     });
 
+    test(
+      'background detection reports the same real container format',
+      () async {
+        final detected = await detectOfficeFileInBackground(docxFixture());
+        expect(detected.format, OfficeFormat.docx);
+      },
+    );
+
+    test('content inspection exposes one validated package for reuse', () {
+      final inspection = inspectOfficeFile(
+        docxFixture(),
+        fileName: 'sample.docx',
+      );
+      expect(inspection.detected.format, OfficeFormat.docx);
+      expect(inspection.package, isNotNull);
+      expect(inspection.package!.contains('word/document.xml'), isTrue);
+      final text = inspectOfficeFile(Uint8List.fromList(utf8.encode('hello')));
+      expect(text.detected.format, OfficeFormat.txt);
+      expect(text.package, isNull);
+    });
+
     test('never trusts a misleading extension', () {
       // An ODT named .docx is still an ODT.
       final detected = detectOfficeFile(odtFixture(), fileName: 'letter.docx');
@@ -47,7 +68,13 @@ void main() {
         fileName: 'old.xls',
       );
       expect(detected.format, OfficeFormat.xls);
-      expect(detected.detail, contains('cannot be read'));
+      expect(detected.detail, contains('suggested by the filename'));
+      final ambiguous = detectOfficeFile(
+        legacyOleFixture(),
+        fileName: 'protected.docx',
+      );
+      expect(ambiguous.format, OfficeFormat.ole);
+      expect(ambiguous.detail, contains('unconfirmed'));
     });
 
     test('writable flags match real built-in output formats', () {

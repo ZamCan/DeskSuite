@@ -1,5 +1,8 @@
 # Continuous integration and release builds
 
+> **Owner policy / current consolidation:** the active `main` push/PR workflow below downloads toolchains and packages Android and desktop builds. The owner wants to run packaging locally using existing tools. Do not trigger this workflow or change CI policy without resolving that conflict. An intentional `[skip ci]` would skip validation too and may leave required checks pending; it is not a test pass. For an existing installation, retain the existing signing key—do not generate or upload a replacement key merely because the historical example below describes one.
+
+
 ## Two files, one reason
 
 The **active** workflow is [`.github/workflows/build.yml`](../.github/workflows/build.yml):

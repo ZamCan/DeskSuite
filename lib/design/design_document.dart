@@ -2,11 +2,17 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../core/ids.dart';
+import '../core/physical_page_limits.dart';
 
 const int currentDesignVersion = 1;
 const int maxProjectBytes = 32 * 1024 * 1024;
 const int maxImportedImageBytes = 8 * 1024 * 1024;
 const int maxDesignElements = 100;
+
+/// Reserved rectangle metadata, stored in the existing text field so older
+/// project files remain readable. This marks user-replaceable photo areas;
+/// it makes no claim that their dimensions meet official ID requirements.
+const String photoPlaceholderMarker = 'desksuite.photo-placeholder.v1';
 
 /// All physical geometry is measured in millimetres, independent of the screen.
 enum ElementKind { text, rectangle, ellipse, image }
@@ -176,10 +182,10 @@ class DesignDocument {
         name.length > 100 ||
         !widthMm.isFinite ||
         !heightMm.isFinite ||
-        widthMm < 10 ||
-        heightMm < 10 ||
-        widthMm > 2500 ||
-        heightMm > 2500 ||
+        widthMm < minPhysicalPageMm ||
+        heightMm < minPhysicalPageMm ||
+        widthMm > maxPhysicalPageMm ||
+        heightMm > maxPhysicalPageMm ||
         backgroundColor < 0 ||
         backgroundColor > 0xffffffff ||
         elements.length > maxDesignElements ||

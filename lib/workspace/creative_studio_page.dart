@@ -234,6 +234,12 @@ class _CreativeStudioPageState extends State<CreativeStudioPage> {
                 label: const Text('Import project'),
               ),
               OutlinedButton.icon(
+                key: const Key('new-id-badge'),
+                onPressed: () => _newDesign(DesignTemplate.identityBadge),
+                icon: const Icon(Icons.badge_outlined),
+                label: const Text('ID badge templates'),
+              ),
+              OutlinedButton.icon(
                 onPressed: () => _newDesign(DesignTemplate.editorial),
                 icon: const Icon(Icons.auto_awesome_mosaic_outlined),
                 label: const Text('Poster template'),

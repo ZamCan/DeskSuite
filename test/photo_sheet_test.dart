@@ -65,30 +65,50 @@ void main() {
     expect(miniature.positions(), hasLength(1));
   });
 
-  test('poster-size custom media is supported within the production bounds', () {
-    final poster = PhotoSheetSpec(
-      pageWidthMm: 1219.2,
-      pageHeightMm: 1828.8,
-      photoWidthMm: 50,
-      photoHeightMm: 50,
-      marginMm: 20,
-      spacingMm: 5,
+  test('sheet page bounds match the shared PDF validator', () {
+    PhotoSheetSpec sheet(double side) => PhotoSheetSpec(
+      pageWidthMm: side,
+      pageHeightMm: 100,
+      photoWidthMm: 5,
+      photoHeightMm: 5,
+      marginMm: 0,
+      spacingMm: 0,
       copies: 1,
     );
-    expect(poster.capacity, greaterThan(0));
-    expect(
-      () => PhotoSheetSpec(
-        pageWidthMm: 2501,
-        pageHeightMm: 100,
+    expect(sheet(20).pageWidthMm, 20);
+    expect(sheet(2500).pageWidthMm, 2500);
+    for (final side in [19.9, 2500.1, double.infinity, double.nan]) {
+      expect(() => sheet(side), throwsFormatException);
+    }
+  });
+
+  test(
+    'poster-size custom media is supported within the production bounds',
+    () {
+      final poster = PhotoSheetSpec(
+        pageWidthMm: 1219.2,
+        pageHeightMm: 1828.8,
         photoWidthMm: 50,
         photoHeightMm: 50,
-        marginMm: 0,
-        spacingMm: 0,
+        marginMm: 20,
+        spacingMm: 5,
         copies: 1,
-      ),
-      throwsFormatException,
-    );
-  });
+      );
+      expect(poster.capacity, greaterThan(0));
+      expect(
+        () => PhotoSheetSpec(
+          pageWidthMm: 2501,
+          pageHeightMm: 100,
+          photoWidthMm: 50,
+          photoHeightMm: 50,
+          marginMm: 0,
+          spacingMm: 0,
+          copies: 1,
+        ),
+        throwsFormatException,
+      );
+    },
+  );
 
   test('repeated photo sheet produces a real physically sized A4 PDF', () async {
     final bytes = Uint8List.fromList(

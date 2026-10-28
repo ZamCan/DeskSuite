@@ -1,11 +1,32 @@
+/// Shared bounds for PDF pages in the scan and Office pipelines.
+/// This is not a statement about physical printer capabilities.
+const double minPdfPageMm = 20;
+const double maxPdfPageMm = 2500;
+
+bool validPdfPageDimensions(double widthMm, double heightMm) =>
+    widthMm.isFinite &&
+    heightMm.isFinite &&
+    widthMm >= minPdfPageMm &&
+    heightMm >= minPdfPageMm &&
+    widthMm <= maxPdfPageMm &&
+    heightMm <= maxPdfPageMm;
+
 /// Shared physical media presets for photo sheets and editable design canvases.
 /// Dimensions are sheet/canvas sizes in millimetres, not passport-photo rules or proof of printer support.
 const paperSheetPresets = <({String label, double widthMm, double heightMm})>[
   (label: 'A4 portrait — 210 × 297 mm', widthMm: 210, heightMm: 297),
   (label: 'A4 landscape — 297 × 210 mm', widthMm: 297, heightMm: 210),
   (label: 'A5 portrait — 148 × 210 mm', widthMm: 148, heightMm: 210),
-  (label: '4 × 6 inch photo — 101.6 × 152.4 mm', widthMm: 101.6, heightMm: 152.4),
-  (label: 'ID-1 / CR80 card — 85.60 × 53.98 mm', widthMm: 85.60, heightMm: 53.98),
+  (
+    label: '4 × 6 inch photo — 101.6 × 152.4 mm',
+    widthMm: 101.6,
+    heightMm: 152.4,
+  ),
+  (
+    label: 'ID-1 / CR80 card — 85.60 × 53.98 mm',
+    widthMm: 85.60,
+    heightMm: 53.98,
+  ),
   (label: 'Business card — 85 × 55 mm', widthMm: 85, heightMm: 55),
   (label: 'Name badge — 90 × 55 mm', widthMm: 90, heightMm: 55),
   (label: 'Badge insert — 90 × 60 mm', widthMm: 90, heightMm: 60),
@@ -81,17 +102,20 @@ const printStockProfiles = <PrintStockProfile>[
   PrintStockProfile(
     id: 'photo-satin',
     label: 'Satin / lustre photo paper',
-    description: 'Lower-glare photo surface; confirm the manufacturer’s media profile.',
+    description:
+        'Lower-glare photo surface; confirm the manufacturer’s media profile.',
   ),
   PrintStockProfile(
     id: 'photo-matte',
     label: 'Matte photo paper',
-    description: 'Non-gloss photo surface; printer coating and ink compatibility vary.',
+    description:
+        'Non-gloss photo surface; printer coating and ink compatibility vary.',
   ),
   PrintStockProfile(
     id: 'plain-smooth',
     label: 'Plain smooth paper',
-    description: 'General office paper; this does not imply archival or photo quality.',
+    description:
+        'General office paper; this does not imply archival or photo quality.',
   ),
   PrintStockProfile(
     id: 'cardstock',

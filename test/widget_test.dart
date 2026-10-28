@@ -22,14 +22,20 @@ class _NoFiles implements FileGateway {
 }
 
 void main() {
-  testWidgets('DeskSuite starts without a static connectivity status', (tester) async {
+  testWidgets('DeskSuite starts without a static connectivity status', (
+    tester,
+  ) async {
     final dir = await tester.runAsync(
       () => Directory.systemTemp.createTemp('desksuite_smoke_'),
     );
     expect(dir, isNotNull);
     final repo = ProjectRepository(dir!);
     await tester.pumpWidget(
-      DeskSuiteApp(repository: repo, fileGateway: _NoFiles()),
+      DeskSuiteApp(
+        showStartupAnimation: false,
+        repository: repo,
+        fileGateway: _NoFiles(),
+      ),
     );
     for (var i = 0; i < 100 && find.text('Workspace').evaluate().isEmpty; i++) {
       await tester.pump(const Duration(milliseconds: 20));

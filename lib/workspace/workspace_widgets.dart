@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../app/section_artwork.dart';
 import '../app/theme.dart';
 import 'project_repository.dart';
 
@@ -21,6 +22,93 @@ enum WorkspaceSection {
   pdfStudio,
 }
 
+/// Section identities are decorative. The selected DS mark remains the app logo.
+String? artworkForSection(WorkspaceSection section) => switch (section) {
+  WorkspaceSection.scans => SectionArt.scan,
+  WorkspaceSection.photos => SectionArt.photo,
+  WorkspaceSection.text => SectionArt.text,
+  WorkspaceSection.office => SectionArt.office,
+  WorkspaceSection.design => SectionArt.design,
+  WorkspaceSection.projects => SectionArt.projects,
+  _ => null,
+};
+
+/// A labelled, keyboard- and screen-reader-accessible route to a real tool.
+class WorkspaceToolCard extends StatelessWidget {
+  const WorkspaceToolCard({
+    super.key,
+    required this.section,
+    required this.title,
+    required this.description,
+    required this.onNavigate,
+    this.fallbackIcon = Icons.grid_view_rounded,
+  });
+
+  /// The same section determines both the illustration and the destination.
+  final WorkspaceSection section;
+  final String title;
+  final String description;
+  final ValueChanged<WorkspaceSection> onNavigate;
+
+  /// Used for real tools without one of the six approved section illustrations.
+  final IconData fallbackIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    final artwork = artworkForSection(section);
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () => onNavigate(section),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              if (artwork != null)
+                SectionArtwork(asset: artwork)
+              else
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    fallbackIcon,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.north_east, size: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class WorkspaceSidebar extends StatelessWidget {
   const WorkspaceSidebar({
     super.key,
@@ -34,12 +122,15 @@ class WorkspaceSidebar extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     Widget item(IconData icon, String label, WorkspaceSection value) {
       final selected = section == value;
+      final artwork = artworkForSection(value);
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
         child: ListTile(
           key: Key('nav-${value.name}'),
           dense: true,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           selected: selected,
           selectedTileColor: scheme.primary.withValues(alpha: .09),
           selectedColor: scheme.primary,
@@ -52,11 +143,18 @@ class WorkspaceSidebar extends StatelessWidget {
               borderRadius: BorderRadius.circular(9),
             ),
             alignment: Alignment.center,
-            child: Icon(
-              icon,
-              size: 19,
-              color: selected ? scheme.primary : scheme.onSurfaceVariant,
-            ),
+            child: artwork == null
+                ? Icon(
+                    icon,
+                    size: 19,
+                    color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                  )
+                : SectionArtwork(
+                    key: ValueKey('nav-section-art-${value.name}'),
+                    asset: artwork,
+                    size: 28,
+                    fallback: icon,
+                  ),
           ),
           title: Text(
             label,
@@ -66,6 +164,7 @@ class WorkspaceSidebar extends StatelessWidget {
         ),
       );
     }
+
     return Material(
       color: scheme.surface,
       child: ListView(
@@ -144,7 +243,11 @@ class WorkspaceSidebar extends StatelessWidget {
             'Document converter',
             WorkspaceSection.office,
           ),
-          item(Icons.picture_as_pdf_outlined, 'PDF Studio', WorkspaceSection.pdfStudio),
+          item(
+            Icons.picture_as_pdf_outlined,
+            'PDF Studio',
+            WorkspaceSection.pdfStudio,
+          ),
           item(Icons.print_outlined, 'Print Studio', WorkspaceSection.printing),
           item(
             Icons.storefront_outlined,

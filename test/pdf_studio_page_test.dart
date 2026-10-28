@@ -44,9 +44,7 @@ class PdfFiles implements FileGateway {
 Future<Uint8List> samplePdf() async {
   final document = pw.Document();
   document.addPage(
-    pw.Page(
-      build: (_) => pw.Center(child: pw.Text('DeskSuite PDF test')),
-    ),
+    pw.Page(build: (_) => pw.Center(child: pw.Text('DeskSuite PDF test'))),
   );
   return document.save();
 }
@@ -99,8 +97,16 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('pdf-studio-open')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
+    for (
+      var i = 0;
+      i < 100 && find.byType(PdfEditorView).evaluate().isEmpty;
+      i++
+    ) {
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 10)),
+      );
+    }
 
     expect(find.byType(PdfEditorView), findsOneWidget);
     expect(find.textContaining('invoice'), findsWidgets);
@@ -148,7 +154,9 @@ void main() {
       ]);
     final files = PdfFiles();
     await tester.pumpWidget(
-      MaterialApp(home: PdfStudioPage(picker: picker, files: files)),
+      MaterialApp(
+        home: PdfStudioPage(picker: picker, files: files),
+      ),
     );
 
     await tester.tap(find.byKey(const Key('pdf-studio-combine')));
@@ -164,7 +172,12 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('report.pdf'), findsOneWidget);
-    expect(tester.widget<FilledButton>(find.byKey(const Key('pdf-combine-save'))).onPressed, isNotNull);
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('pdf-combine-save')))
+          .onPressed,
+      isNotNull,
+    );
 
     await tester.tap(find.byTooltip('Move up').last);
     await tester.pump();

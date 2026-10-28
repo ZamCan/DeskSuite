@@ -1,29 +1,19 @@
-# PDF Studio engine and support boundaries
+# PDF Studio: engine and support boundaries
 
-Recorded 2026-10-27 for the initial PDF Studio integration.
+Recorded 2026-10-28 for the selective consolidation. `dart_pdf_editor` 10.0.0 supplies the offline editor and `pdf_document` 10.0.0 supplies bounded inspection and ordered merging. Both are pinned; their real integration still needs full Flutter and device testing.
 
-## Engine choice
+## Implemented source
 
-DeskSuite pins `dart_pdf_editor: 10.0.0` and uses its `PdfEditorView` inside `lib/pdf/pdf_studio_page.dart`. The package documents a pure-Dart renderer/editor with no platform views or native PDF libraries, and support for Android, iOS, Linux, macOS, Windows and web. It is Apache-2.0 licensed. Upstream documentation: https://pub.dev/packages/dart_pdf_editor.
+- Open through the shared document picker. Reject over-48-MiB input, invalid headers, encrypted files, zero-page documents and certain damaged page trees/first pages before loading the editor. Inspection runs off the native UI isolate.
+- A new editor identity is created for every successful open, including files with the same name. Replacing or closing an open PDF asks the user to confirm loss of unsaved edits.
+- The editor can return edited bytes, page exports or split outputs. Each is inspected before a save dialog. Split preflights every part before writing any, accepts at most 100 parts and 48 MiB aggregate output, stops on cancellation/error and reports confirmed partial writes.
+- Combine up to 10 PDFs within 48 MiB aggregate input in the selected order. Each input and the result are inspected and the resulting page count is checked.
+- The save picker proposes new names but **can overwrite an existing file** if that is the selected destination. Choose a different location/name, retain an independent original and verify each saved file.
 
-The version is pinned because this is a new dependency with a fast release cadence. Re-evaluate version compatibility and security before upgrading. The package adds a substantial editing engine and dependencies; installed APK size, cold-start cost, peak memory and rendering performance have not yet been measured on target phones.
+Inspection is a limited structural check, not a complete validator: successfully opening the first page and page tree does not guarantee every page, digital signature, form, object or feature is intact. Byte caps are not peak-memory caps. Password unlocking, encrypted output and guaranteed structural compression are unavailable. Complex, malformed or unusually large PDFs may fail.
 
-## Current integration
+Scan & assemble produces image-only PDFs; its selected-page OCR handoff opens Text extraction separately. OCR searchable PDF has an image and original recognized-word layer, not editable text. New-design and Office content PDFs use the existing PDF writer; these are distinct from editing an imported PDF.
 
-- Opens an existing PDF selected through DeskSuite's document picker.
-- Validates the PDF signature before passing the bytes to the editor.
-- Enforces a 48 MiB input and edited-output limit to reduce avoidable memory pressure on phones.
-- Embeds the editor's supported viewing, search, annotation, page, stamp and form tools.
-- Exports through DeskSuite's file gateway as `edited-<source-name>.pdf`.
-- Never writes directly over the selected source bytes.
-- Does not require a cloud service or API at runtime.
+## Release checks
 
-## Not a blanket compatibility guarantee
-
-A signature check only confirms that the bytes begin with a PDF header; it does not prove the whole document is valid. Password-protected, malformed, encrypted or complex real-world documents may fail or use significant memory. Files over the 48 MiB app limit are rejected before editor initialization. Users should keep an independently verified original. Native save-provider behavior and accessibility still need device tests.
-
-The engine is not yet validated against a broad production PDF corpus. CI must pass on the repository's supported targets before merging. Follow-up validation should include scanned PDFs, large mixed image/vector documents, forms, links, embedded fonts, rotations, annotations, page reordering/deletion, save/reopen comparisons, and memory pressure on low-RAM Android devices.
-
-## Scope boundaries
-
-PDF Studio is the existing-PDF reader/editor. Scan & assemble remains a separate workflow that accepts images and exports image-only PDFs. OCR remains available through Text extraction and is not automatically applied to every PDF. DeskSuite's generated design PDFs and Office content PDFs continue to use the existing `pdf` writer; they are separate from editing an imported PDF.
+Run the full Flutter test suite and analyzer on the exact source, then exercise real picker/editor/page-export/split/combine flows, cancellation and low-memory devices. Verify output and page order in an independent PDF reader and test a representative corpus including rotations, forms, fonts, annotations, damaged/encrypted files and digital signatures. No current signed installation or Android-device result is claimed.

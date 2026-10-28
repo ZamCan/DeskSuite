@@ -5,6 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../images/photo_processor.dart';
+import '../printing/paper_catalog.dart';
 
 const int maxScanPages = 8;
 const int maxScanTotalBytes = 32 * 1024 * 1024;
@@ -19,14 +20,16 @@ class ScanPdfRequest {
     this.autoRotatePaper = true,
     this.pageWidthMm,
     this.pageHeightMm,
+    this.allowJpeg = false,
   });
 
-  /// Pages are orientation-baked PNGs produced by the scanning pipeline.
+  /// Scans use normalized PNGs; the optimizer may explicitly pass a JPEG.
   final List<Uint8List> pages;
   final ScanPaper paper;
   final bool autoRotatePaper;
   final double? pageWidthMm;
   final double? pageHeightMm;
+  final bool allowJpeg;
 }
 
 Future<Uint8List> createScanPdfInBackground(ScanPdfRequest request) =>
@@ -48,7 +51,9 @@ Future<Uint8List> createScanPdf(ScanPdfRequest request) async {
         'Document pages exceed the 32 MB working limit.',
       );
     }
-    if (detectPhotoFormat(bytes) != PhotoFormat.png) {
+    final format = detectPhotoFormat(bytes);
+    if (format != PhotoFormat.png &&
+        !(request.allowJpeg && format == PhotoFormat.jpeg)) {
       throw const FormatException(
         'Document pages must be normalized PNG images.',
       );
@@ -68,10 +73,7 @@ Future<Uint8List> createScanPdf(ScanPdfRequest request) async {
     if (request.pageWidthMm != null && request.pageHeightMm != null) {
       pageWidth = request.pageWidthMm!;
       pageHeight = request.pageHeightMm!;
-      if (pageWidth < 20 ||
-          pageHeight < 20 ||
-          pageWidth > 2500 ||
-          pageHeight > 2500) {
+      if (!validPdfPageDimensions(pageWidth, pageHeight)) {
         throw const FormatException(
           'PDF page dimensions must be between 20 and 2500 mm.',
         );

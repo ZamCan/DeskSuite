@@ -14,6 +14,7 @@ DeskSuite repository code is licensed under [Apache-2.0](LICENSE). Direct runtim
 | printing | 5.15.1 | [Apache-2.0](third_party/printing.LICENSE) |
 | archive | 4.5.2 | MIT |
 | xml | 7.0.1 | MIT |
+| OpenDocument.core C++/WASM preview | 7.6.1, memory section modified | MPL-2.0 and additional static dependency notices: [in-app collected notices](assets/licenses/office-engine-notices.txt), [source, hashes and modification](third_party/odr-source/README.md). Exact binary closure and release obligations remain under review. |
 | Tesseract4Android (JitPack `cz.adaptech.tesseract4android:tesseract4android:4.9.0`) | 4.9.0 | Apache-2.0 wrapper; bundles Tesseract OCR 5.5.1 (Apache-2.0), Leptonica 1.85.0 (BSD-2-Clause), libjpeg v9f (IJG), libpng 1.6.48 (libpng licence). These native notices must be reproduced in a distributed APK/AAB. |
 | tessdata_fast language models (`eng`, `swa`) | fetched from `tesseract-ocr/tessdata_fast` | Apache-2.0 (repository licence); LSTM data, Tesseract 4/5 engine only |
 | Noto Sans Regular/Bold (embedded PDF font) | 2022 release | [SIL Open Font License 1.1](third_party/noto-fonts.OFL.txt) |
@@ -37,5 +38,5 @@ The [Pub notice collection](third_party/pub-packages.LICENSES.txt) contains root
 - **Embedded font:** `assets/fonts/NotoSans-*.ttf` (OFL-1.1) is embedded in
   generated PDFs. The OFL requires the licence text to accompany the font; it is
   reproduced at [third_party/noto-fonts.OFL.txt](third_party/noto-fonts.OFL.txt).
-- **No LibreOffice engine is bundled.** It is an optional external engine; see
+- **No LibreOffice engine or executable adapter is bundled/configured.** The experimental read-only OpenDocument.core preview is distinct; see
   [office support](docs/engineering/OFFICE_SUPPORT.md).

@@ -159,7 +159,11 @@ void main() {
     if (lastError != null) throw lastError;
   });
 
-  Widget screen({CameraGateway? camera, Uint8List? recovered}) => MaterialApp(
+  Widget screen({
+    CameraGateway? camera,
+    Uint8List? recovered,
+    Widget Function(Uint8List)? textExtractionBuilder,
+  }) => MaterialApp(
     home: Scaffold(
       body: ScanStudioPage(
         files: files,
@@ -170,6 +174,7 @@ void main() {
         scanProcessor: (request) async => processScan(request),
         cleanupProcessor: (request) async => processDocumentCleanup(request),
         pdfGenerator: createScanPdf,
+        textExtractionBuilder: textExtractionBuilder,
       ),
     ),
   );
@@ -223,6 +228,41 @@ void main() {
       expect(files.name, 'desksuite-document.pdf');
       expect(String.fromCharCodes(files.exported!.take(5)), '%PDF-');
       expect(files.imported, orderedEquals(untouched));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'sends the selected working page to text extraction without changing the draft',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      Uint8List? sent;
+      await tester.pumpWidget(
+        screen(
+          textExtractionBuilder: (bytes) {
+            sent = Uint8List.fromList(bytes);
+            return const Center(child: Text('Selected scan page for OCR'));
+          },
+        ),
+      );
+      await waitIo(tester);
+      await tapVisible(tester, find.byKey(const Key('scan-import')));
+      await waitIo(tester);
+      await settleUntil(tester, find.textContaining('1 of 8 pages'));
+      await tapVisible(tester, find.byKey(const Key('scan-rotate')));
+      await waitIo(tester);
+      final before = (await readDraft(tester, store)).single.image;
+      await tapVisible(tester, find.byKey(const Key('scan-extract-text')));
+      await tester.pumpAndSettle();
+      expect(find.text('Selected scan page for OCR'), findsOneWidget);
+      expect(sent, orderedEquals(before.bytes));
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      final after = (await readDraft(tester, store)).single.image;
+      expect(after.bytes, orderedEquals(before.bytes));
       expect(tester.takeException(), isNull);
     },
   );
@@ -289,7 +329,10 @@ void main() {
       expect(String.fromCharCodes(files.exported!.take(5)), '%PDF-');
       final persistedAfterExport = await readDraft(tester, store);
       expect(persistedAfterExport, hasLength(1));
-      expect(tester.state(find.byType(ScanStudioPage)), same(scanStateBeforeExport));
+      expect(
+        tester.state(find.byType(ScanStudioPage)),
+        same(scanStateBeforeExport),
+      );
       // The PDF action is near the bottom of a lazy ListView. After saving,
       // the page-count label and page tile at the top may be unmounted until
       // we scroll back; wait for a real page tile by revealing it, not by
@@ -355,6 +398,41 @@ void main() {
       await waitIo(tester);
       expect(files.exported, isNotNull);
       expect(String.fromCharCodes(files.exported!.take(5)), '%PDF-');
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'three-page office packs preserve existing drafts and reject overflow atomically',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(screen());
+      await waitIo(tester);
+      await tapVisible(tester, find.byKey(const Key('scan-import')));
+      await settleUntil(tester, find.textContaining('1 of 8 pages'));
+      final first = (await readDraft(tester, store)).single.id;
+      for (final expected in [4, 7]) {
+        await tapVisible(tester, find.byKey(const Key('scan-samples')));
+        await tapVisible(tester, find.byKey(const Key('sample-office-pack')));
+        await settleUntil(tester, find.textContaining('$expected of 8 pages'));
+        expect((await readDraft(tester, store)).first.id, first);
+      }
+      final before = await readDraft(tester, store);
+      await tapVisible(tester, find.byKey(const Key('scan-samples')));
+      await tapVisible(tester, find.byKey(const Key('sample-office-pack')));
+      await settleUntil(
+        tester,
+        find.textContaining('would exceed the 8-page draft limit'),
+      );
+      final after = await readDraft(tester, store);
+      expect(after.map((p) => p.id), orderedEquals(before.map((p) => p.id)));
+      expect(after, hasLength(7));
+      await tapVisible(tester, find.byKey(const Key('scan-pdf')));
+      await waitIo(tester, rounds: 45);
+      expect(find.textContaining('7 page(s)'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

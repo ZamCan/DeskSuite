@@ -1,4 +1,5 @@
 import '../core/ids.dart';
+import '../core/physical_page_limits.dart';
 import 'design_document.dart';
 
 /// Reusable, editable starting layouts. Templates produce ordinary
@@ -14,6 +15,8 @@ enum DesignTemplate {
   flyer,
   photoPrintSheet,
   presentationCover,
+  memberCard,
+  eventBadge,
 }
 
 class DesignTemplateDefinition {
@@ -67,16 +70,33 @@ const designTemplateCatalog = <DesignTemplateDefinition>[
   ),
   DesignTemplateDefinition(
     id: 'identity-badge',
-    label: 'Identity badge',
-    description: 'Portrait badge layout with name, role and ID placeholder.',
+    label: 'Staff ID badge',
+    description: 'Editable fictional staff badge with a fillable photo area; not an official identity document.',
     widthMm: 54,
     heightMm: 86,
     template: DesignTemplate.identityBadge,
   ),
   DesignTemplateDefinition(
+    id: 'member-card',
+    label: 'Member ID card',
+    description: 'Landscape fictional membership card with editable details and a fillable photo area.',
+    widthMm: 85,
+    heightMm: 54,
+    template: DesignTemplate.memberCard,
+  ),
+  DesignTemplateDefinition(
+    id: 'event-badge',
+    label: 'Event ID badge',
+    description: 'Portrait fictional event badge with editable name, event and photo area.',
+    widthMm: 54,
+    heightMm: 86,
+    template: DesignTemplate.eventBadge,
+  ),
+  DesignTemplateDefinition(
     id: 'certificate',
     label: 'Certificate',
-    description: 'Landscape certificate with title, recipient and signature lines.',
+    description:
+        'Landscape certificate with title, recipient and signature lines.',
     widthMm: 297,
     heightMm: 210,
     template: DesignTemplate.certificate,
@@ -117,11 +137,13 @@ List<DesignElement> buildDesignTemplateElements(
 }) {
   if (!widthMm.isFinite ||
       !heightMm.isFinite ||
-      widthMm < 10 ||
-      heightMm < 10 ||
-      widthMm > 1200 ||
-      heightMm > 1200) {
-    throw const FormatException('Template dimensions must be between 10 and 1200 mm.');
+      widthMm < minPhysicalPageMm ||
+      heightMm < minPhysicalPageMm ||
+      widthMm > maxPhysicalPageMm ||
+      heightMm > maxPhysicalPageMm) {
+    throw const FormatException(
+      'Template dimensions must be between 10 and 2500 mm.',
+    );
   }
   if (template == DesignTemplate.blank) return const [];
   final w = widthMm;
@@ -146,6 +168,15 @@ List<DesignElement> buildDesignTemplateElements(
       color: color,
     );
   }
+
+  DesignElement photoSlot(double x, double y, double width, double height) =>
+      rect(
+        x,
+        y,
+        width,
+        height,
+        0xffd7e4f2,
+      ).copyWith(text: photoPlaceholderMarker);
 
   DesignElement text(
     String value,
@@ -181,77 +212,356 @@ List<DesignElement> buildDesignTemplateElements(
     case DesignTemplate.editorial:
       return [
         rect(0, 0, w, h * .34, 0xffbd694f),
-        text('YOUR\nHEADLINE', w * .08, h * .42, w * .84, h * .18,
-            size: w * .19, bold: true),
-        text('Add your details here.', w * .08, h * .72, w * .78, h * .12,
-            size: w * .065),
+        text(
+          'YOUR\nHEADLINE',
+          w * .08,
+          h * .42,
+          w * .84,
+          h * .18,
+          size: w * .19,
+          bold: true,
+        ),
+        text(
+          'Add your details here.',
+          w * .08,
+          h * .72,
+          w * .78,
+          h * .12,
+          size: w * .065,
+        ),
       ];
     case DesignTemplate.businessCard:
       return [
         rect(0, 0, w * .12, h, 0xffbd694f),
-        text('YOUR BRAND', w * .2, h * .16, w * .74, h * .2,
-            size: w * .105, bold: true),
-        text('Name / Position', w * .2, h * .45, w * .74, h * .15,
-            size: w * .065),
-        text('phone · email · website', w * .2, h * .68, w * .74, h * .2,
-            size: w * .045),
+        text(
+          'YOUR BRAND',
+          w * .2,
+          h * .16,
+          w * .74,
+          h * .2,
+          size: w * .105,
+          bold: true,
+        ),
+        text(
+          'Name / Position',
+          w * .2,
+          h * .45,
+          w * .74,
+          h * .15,
+          size: w * .065,
+        ),
+        text(
+          'phone · email · website',
+          w * .2,
+          h * .68,
+          w * .74,
+          h * .2,
+          size: w * .045,
+        ),
       ];
     case DesignTemplate.identityBadge:
       return [
         rect(0, 0, w, h * .22, 0xffbd694f),
-        text('ORGANISATION', w * .08, h * .07, w * .84, h * .1,
-            size: w * .095, color: 0xffffffff, bold: true,
-            alignment: TextAlignment.center),
-        rect(w * .3, h * .29, w * .4, h * .26, 0xffe8e1d5),
-        text('FULL NAME', w * .08, h * .61, w * .84, h * .1,
-            size: w * .095, bold: true, alignment: TextAlignment.center),
-        text('Role · ID number', w * .08, h * .73, w * .84, h * .08,
-            size: w * .065, alignment: TextAlignment.center),
-        text('VALID UNTIL', w * .08, h * .87, w * .84, h * .06,
-            size: w * .045, alignment: TextAlignment.center),
+        text(
+          'ORGANISATION',
+          w * .08,
+          h * .07,
+          w * .84,
+          h * .1,
+          size: w * .095,
+          color: 0xffffffff,
+          bold: true,
+          alignment: TextAlignment.center,
+        ),
+        photoSlot(w * .3, h * .29, w * .4, h * .26),
+        text(
+          'SELECT PHOTO AREA',
+          w * .08,
+          h * .56,
+          w * .84,
+          h * .04,
+          size: w * .045,
+          color: 0xff596d82,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'FULL NAME',
+          w * .08,
+          h * .61,
+          w * .84,
+          h * .1,
+          size: w * .095,
+          bold: true,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'Role · ID number',
+          w * .08,
+          h * .73,
+          w * .84,
+          h * .08,
+          size: w * .065,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'EXAMPLE · VALID UNTIL',
+          w * .08,
+          h * .87,
+          w * .84,
+          h * .06,
+          size: w * .045,
+          alignment: TextAlignment.center,
+        ),
+      ];
+    case DesignTemplate.memberCard:
+      return [
+        rect(0, 0, w, h * .25, 0xff18395f),
+        text(
+          'MEMBER CARD',
+          w * .07,
+          h * .06,
+          w * .86,
+          h * .13,
+          size: w * .075,
+          color: 0xffffffff,
+          bold: true,
+        ),
+        photoSlot(w * .07, h * .33, w * .24, h * .43),
+        text(
+          'SELECT PHOTO AREA',
+          w * .05,
+          h * .78,
+          w * .29,
+          h * .07,
+          size: w * .042,
+          color: 0xff596d82,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'MEMBER NAME',
+          w * .37,
+          h * .37,
+          w * .57,
+          h * .13,
+          size: w * .075,
+          bold: true,
+        ),
+        text(
+          'Member number: [0000]',
+          w * .37,
+          h * .55,
+          w * .57,
+          h * .10,
+          size: w * .049,
+        ),
+        text(
+          'Valid until: [date]',
+          w * .37,
+          h * .68,
+          w * .57,
+          h * .10,
+          size: w * .049,
+        ),
+        text(
+          'FICTIONAL EXAMPLE',
+          w * .37,
+          h * .86,
+          w * .55,
+          h * .07,
+          size: w * .042,
+          color: 0xff596d82,
+        ),
+      ];
+    case DesignTemplate.eventBadge:
+      return [
+        rect(0, 0, w, h * .25, 0xff144f69),
+        text(
+          'EVENT PASS',
+          w * .08,
+          h * .07,
+          w * .84,
+          h * .10,
+          size: w * .10,
+          color: 0xffffffff,
+          bold: true,
+          alignment: TextAlignment.center,
+        ),
+        photoSlot(w * .28, h * .30, w * .44, h * .27),
+        text(
+          'SELECT PHOTO AREA',
+          w * .08,
+          h * .58,
+          w * .84,
+          h * .04,
+          size: w * .045,
+          color: 0xff596d82,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'ATTENDEE NAME',
+          w * .08,
+          h * .65,
+          w * .84,
+          h * .10,
+          size: w * .085,
+          bold: true,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'Event · [date]',
+          w * .08,
+          h * .77,
+          w * .84,
+          h * .07,
+          size: w * .065,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'FICTIONAL EXAMPLE',
+          w * .08,
+          h * .90,
+          w * .84,
+          h * .05,
+          size: w * .045,
+          color: 0xff596d82,
+          alignment: TextAlignment.center,
+        ),
       ];
     case DesignTemplate.certificate:
       return [
         rect(5, 5, w - 10, h - 10, 0xffe9dfcc),
         rect(9, 9, w - 18, h - 18, 0xffffffff),
-        text('CERTIFICATE', w * .1, h * .18, w * .8, h * .15,
-            size: w * .11, color: 0xff8c5139, bold: true,
-            alignment: TextAlignment.center),
-        text('OF ACHIEVEMENT', w * .1, h * .33, w * .8, h * .1,
-            size: w * .055, bold: true, alignment: TextAlignment.center),
-        text('Presented to', w * .1, h * .49, w * .8, h * .07,
-            size: w * .04, alignment: TextAlignment.center),
-        text('RECIPIENT NAME', w * .1, h * .57, w * .8, h * .12,
-            size: w * .075, bold: true, alignment: TextAlignment.center),
-        text('For outstanding contribution', w * .1, h * .7, w * .8, h * .07,
-            size: w * .035, alignment: TextAlignment.center),
-        text('Date __________     Signature __________', w * .1, h * .82,
-            w * .8, h * .07, size: w * .03,
-            alignment: TextAlignment.center),
+        text(
+          'CERTIFICATE',
+          w * .1,
+          h * .18,
+          w * .8,
+          h * .15,
+          size: w * .11,
+          color: 0xff8c5139,
+          bold: true,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'OF ACHIEVEMENT',
+          w * .1,
+          h * .33,
+          w * .8,
+          h * .1,
+          size: w * .055,
+          bold: true,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'Presented to',
+          w * .1,
+          h * .49,
+          w * .8,
+          h * .07,
+          size: w * .04,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'RECIPIENT NAME',
+          w * .1,
+          h * .57,
+          w * .8,
+          h * .12,
+          size: w * .075,
+          bold: true,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'For outstanding contribution',
+          w * .1,
+          h * .7,
+          w * .8,
+          h * .07,
+          size: w * .035,
+          alignment: TextAlignment.center,
+        ),
+        text(
+          'Date __________     Signature __________',
+          w * .1,
+          h * .82,
+          w * .8,
+          h * .07,
+          size: w * .03,
+          alignment: TextAlignment.center,
+        ),
       ];
     case DesignTemplate.flyer:
       return [
         rect(0, 0, w, h * .26, 0xffbd694f),
-        text('EVENT / OFFER', w * .07, h * .07, w * .86, h * .13,
-            size: w * .105, color: 0xffffffff, bold: true),
-        text('A clear, memorable headline', w * .07, h * .34, w * .86,
-            h * .15, size: w * .075, bold: true),
-        text('Describe what is happening, who it is for and why people should care.',
-            w * .07, h * .52, w * .84, h * .18, size: w * .045),
+        text(
+          'EVENT / OFFER',
+          w * .07,
+          h * .07,
+          w * .86,
+          h * .13,
+          size: w * .105,
+          color: 0xffffffff,
+          bold: true,
+        ),
+        text(
+          'A clear, memorable headline',
+          w * .07,
+          h * .34,
+          w * .86,
+          h * .15,
+          size: w * .075,
+          bold: true,
+        ),
+        text(
+          'Describe what is happening, who it is for and why people should care.',
+          w * .07,
+          h * .52,
+          w * .84,
+          h * .18,
+          size: w * .045,
+        ),
         rect(w * .07, h * .76, w * .55, h * .11, 0xff292722),
-        text('DATE · TIME · PLACE', w * .09, h * .785, w * .51, h * .055,
-            size: w * .035, color: 0xffffffff, bold: true),
-        text('Contact / registration details', w * .07, h * .9, w * .86,
-            h * .06, size: w * .035),
+        text(
+          'DATE · TIME · PLACE',
+          w * .09,
+          h * .785,
+          w * .51,
+          h * .055,
+          size: w * .035,
+          color: 0xffffffff,
+          bold: true,
+        ),
+        text(
+          'Contact / registration details',
+          w * .07,
+          h * .9,
+          w * .86,
+          h * .06,
+          size: w * .035,
+        ),
       ];
     case DesignTemplate.photoPrintSheet:
       // Twenty editable placeholders for a practical A4 layout. These are
       // ordinary shapes/text, not image frames and not authority-certified IDs.
       final elements = <DesignElement>[
-        text('A4 MULTI-PHOTO LAYOUT EXAMPLE', 10, 5, w - 20, 10,
-            size: 5, bold: true),
-        text('Example only · verify photo spec, media and scale',
-            10, 16, w - 20, 7, size: 3.5, color: 0xff777970),
+        text(
+          'A4 MULTI-PHOTO LAYOUT EXAMPLE',
+          10,
+          5,
+          w - 20,
+          10,
+          size: 5,
+          bold: true,
+        ),
+        text(
+          'Example only · verify photo spec, media and scale',
+          10,
+          16,
+          w - 20,
+          7,
+          size: 3.5,
+          color: 0xff777970,
+        ),
       ];
       const columns = 4;
       const rows = 5;
@@ -268,24 +578,61 @@ List<DesignElement> buildDesignTemplateElements(
           final y = startY + row * (photoHeight + gapY);
           elements
             ..add(rect(x, y, photoWidth, photoHeight, 0xffe8e1d5))
-            ..add(text('PHOTO\n35 × 45 mm', x + 1, y + 17,
-                photoWidth - 2, 12, size: 4.5,
-                alignment: TextAlignment.center));
+            ..add(
+              text(
+                'PHOTO\n35 × 45 mm',
+                x + 1,
+                y + 17,
+                photoWidth - 2,
+                12,
+                size: 4.5,
+                alignment: TextAlignment.center,
+              ),
+            );
         }
       }
-      elements.add(text('Cut carefully · print at 100% scale', 10, 279,
-          w - 20, 8, size: 3.5, color: 0xff777970));
+      elements.add(
+        text(
+          'Cut carefully · print at 100% scale',
+          10,
+          279,
+          w - 20,
+          8,
+          size: 3.5,
+          color: 0xff777970,
+        ),
+      );
       return elements;
     case DesignTemplate.presentationCover:
       return [
         rect(0, 0, w * .34, h, 0xffbd694f),
         rect(w * .34, 0, w * .66, h, 0xfff7f5ef),
-        text('PRESENTATION TITLE', w * .42, h * .24, w * .52, h * .28,
-            size: w * .075, bold: true),
-        text('Subtitle or project description', w * .42, h * .56, w * .5,
-            h * .15, size: w * .035),
-        text('AUTHOR · DATE', w * .42, h * .79, w * .5, h * .08,
-            size: w * .028, color: 0xff777970),
+        text(
+          'PRESENTATION TITLE',
+          w * .42,
+          h * .24,
+          w * .52,
+          h * .28,
+          size: w * .075,
+          bold: true,
+        ),
+        text(
+          'Subtitle or project description',
+          w * .42,
+          h * .56,
+          w * .5,
+          h * .15,
+          size: w * .035,
+        ),
+        text(
+          'AUTHOR · DATE',
+          w * .42,
+          h * .79,
+          w * .5,
+          h * .08,
+          size: w * .028,
+          color: 0xff777970,
+        ),
       ];
   }
 }

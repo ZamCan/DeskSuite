@@ -10,6 +10,10 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        flutterEngine.platformViewsController.registry.registerViewFactory(
+            OfficePreviewFactory.VIEW_TYPE,
+            OfficePreviewFactory()
+        )
         val channel = OcrChannel(applicationContext)
         ocr = channel
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, OcrChannel.CHANNEL)

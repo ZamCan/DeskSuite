@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 
 import '../printing/paper_catalog.dart';
@@ -8,6 +9,8 @@ import '../workspace/file_gateway.dart';
 import 'office_content_editor_page.dart';
 import 'office_engine.dart';
 import 'office_format.dart';
+import 'office_preview_page.dart';
+import 'office_template_catalog.dart';
 
 /// Convert a supported document with a real engine, showing the detected
 /// format, only the routes that can actually run, the fidelity of each route
@@ -42,6 +45,7 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
   late final OfficeEngine _engine = widget.engine ?? OfficeEngine();
   Uint8List? _source;
   String? _sourceName;
+  OfficeTemplateDefinition? _template;
   DetectedFile? _detected;
   List<OfficeRoute> _routes = const [];
   OfficeRoute? _selected;
@@ -78,7 +82,7 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
       final picked = widget.pickDocument == null
           ? await _pickFromStore()
           : await widget.pickDocument!();
-      if (picked == null) return;
+      if (picked == null || !mounted) return;
       await _load(picked.bytes, picked.name);
     } catch (error) {
       if (mounted) {
@@ -94,26 +98,72 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
     if (_busy) return;
     setState(() => _error = null);
     final loader = widget.sampleLoader;
+    OfficeTemplateDefinition? template;
     if (loader == null) {
-      setState(
-        () => _error =
-            'No sample document is bundled in this build. Choose a file '
-            'instead.',
+      template = await showDialog<OfficeTemplateDefinition>(
+        context: context,
+        builder: (context) => SimpleDialog(
+          title: const Text('Choose a fictional Office template'),
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(24, 0, 24, 8),
+              child: Text(
+                'Save an unchanged original for full editing in a compatible '
+                'Office app. DeskSuite edits readable content, not exact layout; '
+                'it cannot write edited PPTX or convert legacy DOC/XLS/PPT.',
+              ),
+            ),
+            for (final item in officeTemplateCatalog)
+              SimpleDialogOption(
+                key: Key('office-template-${item.id}'),
+                onPressed: () => Navigator.pop(context, item),
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(switch (item.kind) {
+                    OfficeTemplateKind.word => Icons.description_outlined,
+                    OfficeTemplateKind.spreadsheet =>
+                      Icons.table_chart_outlined,
+                    OfficeTemplateKind.presentation => Icons.slideshow_outlined,
+                  }),
+                  title: Text(item.title),
+                  subtitle: Text(item.description),
+                ),
+              ),
+          ],
+        ),
       );
-      return;
+      if (template == null || !mounted) return;
     }
+    setState(() => _busy = true);
     try {
-      final sample = await loader();
-      if (sample == null) return;
-      await _load(sample.bytes, sample.name);
+      if (loader != null) {
+        final sample = await loader();
+        if (sample == null || !mounted) return;
+        await _load(sample.bytes, sample.name);
+      } else {
+        final item = template!;
+        final data = await rootBundle.load(item.assetPath);
+        if (!mounted) return;
+        await _load(
+          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+          item.fileName,
+          template: item,
+        );
+      }
     } catch (error) {
       if (mounted) {
         setState(() => _error = 'The sample could not be loaded: $error');
       }
+    } finally {
+      if (mounted && _busy) setState(() => _busy = false);
     }
   }
 
-  Future<void> _load(Uint8List bytes, String name) async {
+  Future<void> _load(
+    Uint8List bytes,
+    String name, {
+    OfficeTemplateDefinition? template,
+  }) async {
     setState(() {
       _busy = true;
       _output = null;
@@ -121,11 +171,27 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
       _selected = null;
       _routes = const [];
       _detected = null;
+      _error = null;
       _source = bytes;
       _sourceName = name;
+      _template = template;
     });
     try {
-      final detected = detectOfficeFile(bytes, fileName: name);
+      final detected = await detectOfficeFileInBackground(
+        bytes,
+        fileName: name,
+      );
+      final expected = switch (template?.kind) {
+        OfficeTemplateKind.word => OfficeFormat.docx,
+        OfficeTemplateKind.spreadsheet => OfficeFormat.xlsx,
+        OfficeTemplateKind.presentation => OfficeFormat.pptx,
+        null => null,
+      };
+      if (expected != null && detected.format != expected) {
+        throw const FormatException(
+          'The bundled template has an unexpected format.',
+        );
+      }
       final routes = await _engine.routesFor(detected.format);
       if (!mounted) return;
       setState(() {
@@ -146,6 +212,38 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
     }
   }
 
+  Future<void> _saveOriginalTemplate() async {
+    final template = _template;
+    final source = _source;
+    if (_busy || template == null || source == null || _detected == null) {
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+      _status = null;
+    });
+    try {
+      final saved = await widget.files.save(
+        name: 'copy-${template.fileName}',
+        bytes: source,
+        mimeType: template.mimeType,
+      );
+      if (!mounted) return;
+      setState(
+        () => _status = saved
+            ? 'Saved an unchanged copy of the bundled template.'
+            : 'Save cancelled. Nothing was written.',
+      );
+    } catch (error) {
+      if (mounted) {
+        setState(() => _error = 'Could not save the template: $error');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _convert() async {
     final source = _source;
     final route = _selected;
@@ -154,11 +252,18 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
     if (route.to == OfficeFormat.pdf && !route.requiresExternalEngine) {
       final width = double.tryParse(_pdfWidth.text);
       final height = double.tryParse(_pdfHeight.text);
-      if (width == null || height == null || width < 20 || height < 20 || width > 2500 || height > 2500) {
-        setState(() => _error = 'Enter both PDF page dimensions from 20 to 2500 mm.');
+      if (width == null ||
+          height == null ||
+          !validPdfPageDimensions(width, height)) {
+        setState(
+          () => _error = 'Enter both PDF page dimensions from 20 to 2500 mm.',
+        );
         return;
       }
-      pdfPageFormat = PdfPageFormat(width * PdfPageFormat.mm, height * PdfPageFormat.mm);
+      pdfPageFormat = PdfPageFormat(
+        width * PdfPageFormat.mm,
+        height * PdfPageFormat.mm,
+      );
     }
     setState(() {
       _busy = true;
@@ -190,7 +295,11 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
 
   Future<void> _save() async {
     final output = _output;
-    if (output == null) return;
+    if (output == null || _busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
     try {
       final saved = await widget.files.save(
         name: output.fileName,
@@ -200,11 +309,13 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
       if (!mounted) return;
       setState(
         () => _status = saved
-            ? 'Saved ${output.fileName}. Your original file was not changed.'
+            ? 'Saved the converted output. Choose a different destination to preserve the source.'
             : 'Save cancelled. Nothing was written.',
       );
     } catch (error) {
       if (mounted) setState(() => _error = 'Could not save: $error');
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -214,6 +325,8 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
     OfficeFormat.ods => 'application/vnd.oasis.opendocument.spreadsheet',
     OfficeFormat.docx =>
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    OfficeFormat.xlsx =>
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     _ => 'text/plain',
   };
 
@@ -240,7 +353,7 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
         Text(
           'Reads DOCX, XLSX, PPTX, ODT, ODS, ODP, RTF and text files on this '
           'device. Only conversion routes that can really run are offered, and '
-          'the original file is never modified.',
+          'choose a different save destination to preserve the original.',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -273,7 +386,7 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
                       key: const Key('office-sample'),
                       onPressed: _busy ? null : _loadSample,
                       icon: const Icon(Icons.school_outlined),
-                      label: const Text('Use sample document'),
+                      label: const Text('Browse templates & samples'),
                     ),
                   ],
                 ),
@@ -290,9 +403,74 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
                     value: _source == null ? '—' : _size(_source!.length),
                   ),
                   _InfoRow(
-                    label: 'Source preserved',
-                    value: 'Yes — output is written to a new file you choose.',
+                    label: 'Protect source',
+                    value: 'Choose a different save destination to avoid overwriting an existing file.',
                   ),
+                  if (_template != null) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      'Selected template: ${_template!.title}',
+                      style: theme.textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _template!.kind == OfficeTemplateKind.presentation
+                          ? 'Save the original slides for editing in a compatible presentation app. DeskSuite cannot export edited PPTX layouts.'
+                          : _template!.kind == OfficeTemplateKind.spreadsheet
+                          ? 'The unchanged workbook includes formulas and styles. DeskSuite content exports flatten formulas and formatting.'
+                          : 'The unchanged DOCX keeps its layout. DeskSuite content exports are simplified.',
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      key: const Key('office-save-template'),
+                      onPressed: _busy ? null : _saveOriginalTemplate,
+                      icon: const Icon(Icons.save_alt),
+                      label: const Text('Save unchanged template'),
+                    ),
+                  ],
+                  if (canPreviewOfficeFormat(_detected!.format)) ...[
+                    const SizedBox(height: 12),
+                    if (officePreviewEnabled &&
+                        officePreviewPlatformSupported) ...[
+                      OutlinedButton.icon(
+                        key: const Key('office-preview-original'),
+                        onPressed:
+                            _busy ||
+                                _source == null ||
+                                _sourceName == null ||
+                                _source!.length > officePreviewMaxBytes
+                            ? null
+                            : () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => OfficePreviewPage(
+                                    source: _source!,
+                                    sourceName: _sourceName!,
+                                  ),
+                                ),
+                              ),
+                        icon: const Icon(Icons.visibility_outlined),
+                        label: const Text(
+                          'Preview original layout (experimental)',
+                        ),
+                      ),
+                      if (_source != null &&
+                          _source!.length > officePreviewMaxBytes)
+                        const Text(
+                          'Experimental preview supports files up to 8 MB.',
+                        ),
+                    ] else if (_detected!.format.isLegacyBinary)
+                      const Text(
+                        'Legacy DOC, XLS and PPT conversion is unavailable. '
+                        'The original-layout preview is still being validated '
+                        'and is disabled in this build.',
+                      )
+                    else if (_detected!.format == OfficeFormat.ole)
+                      const Text(
+                        'This compound file could be a legacy or encrypted '
+                        'Office document; its exact type is unconfirmed. '
+                        'Preview and conversion are unavailable in this build.',
+                      ),
+                  ],
                   if (_detected!.format.isReadable) ...[
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
@@ -401,13 +579,18 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
                       key: const Key('office-pdf-paper-preset'),
                       initialValue: _pdfPresetIndex,
                       isExpanded: true,
-                      decoration: const InputDecoration(labelText: 'PDF physical page size'),
+                      decoration: const InputDecoration(
+                        labelText: 'PDF physical page size',
+                      ),
                       items: [
                         for (var i = 0; i < paperSheetPresets.length; i++)
                           DropdownMenuItem(
                             value: i,
-                            child: Text(paperSheetPresets[i].label,
-                                maxLines: 1, overflow: TextOverflow.ellipsis),
+                            child: Text(
+                              paperSheetPresets[i].label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         DropdownMenuItem(
                           value: paperSheetPresets.length,
@@ -422,11 +605,18 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
                           child: TextField(
                             key: const Key('office-pdf-width'),
                             controller: _pdfWidth,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            decoration: const InputDecoration(labelText: 'Width (mm)'),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: 'Width (mm)',
+                            ),
                             onChanged: (_) {
                               if (_pdfPresetIndex != paperSheetPresets.length) {
-                                setState(() => _pdfPresetIndex = paperSheetPresets.length);
+                                setState(
+                                  () => _pdfPresetIndex =
+                                      paperSheetPresets.length,
+                                );
                               }
                             },
                           ),
@@ -436,11 +626,18 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
                           child: TextField(
                             key: const Key('office-pdf-height'),
                             controller: _pdfHeight,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            decoration: const InputDecoration(labelText: 'Height (mm)'),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: 'Height (mm)',
+                            ),
                             onChanged: (_) {
                               if (_pdfPresetIndex != paperSheetPresets.length) {
-                                setState(() => _pdfPresetIndex = paperSheetPresets.length);
+                                setState(
+                                  () => _pdfPresetIndex =
+                                      paperSheetPresets.length,
+                                );
                               }
                             },
                           ),
@@ -515,7 +712,7 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
                     children: [
                       FilledButton.icon(
                         key: const Key('office-save'),
-                        onPressed: _save,
+                        onPressed: _busy ? null : _save,
                         icon: const Icon(Icons.save_alt),
                         label: const Text('Save output'),
                       ),

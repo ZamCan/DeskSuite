@@ -1,22 +1,32 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-/// Two deliberately limited document treatments, not general photo restoration.
-enum DocumentCleanupMode { evenLighting, adaptiveBlackAndWhite }
+import '../core/image_limits.dart';
 
-const int _maxCleanupSide = 8192;
-const int _maxCleanupPixels = 12000000;
+/// Local document treatments, not general photo restoration. Original means
+/// the page as it entered the cleanup dialog, not necessarily the imported file.
+enum DocumentCleanupMode {
+  original,
+  lighten,
+  evenLighting,
+  magicPro,
+  grayscale,
+  adaptiveBlackAndWhite,
+}
+
 const int _maxGridSide = 24;
 
 /// Modifies tightly packed, straight-alpha RGBA pixels in place. The caller
-/// must first make a private copy; this function does not preserve its input.
-/// Transparent pixels are composited onto white. It does not infer lost text.
+/// must first make a private copy. Original is an exact no-op, including alpha;
+/// all other treatments composite transparency onto white. Lost text cannot be
+/// inferred.
 ///
-/// A 90th-percentile luminance is estimated in a bounded grid of local tiles.
-/// The interpolated estimate is used to either lift shaded paper while
-/// protecting very dark ink, or produce a local-threshold black-and-white
-/// image. Dense artwork, severe shadows and light writing can be altered.
-/// [amount] is 0–1: lighting strength or black-and-white mark sensitivity.
+/// Local treatments estimate a 90th-percentile paper luminance in a bounded
+/// grid. Magic Pro normalizes that illumination and applies a contrast curve;
+/// it is a heuristic, not an AI model or a guarantee of shadow-free output.
+/// Dense artwork, severe shadows and faint writing can be altered. [amount]
+/// is 0–1 for lightening, color enhancement or B&W sensitivity; it is ignored
+/// for Original and Grayscale.
 void cleanDocumentRgbaInPlace(
   Uint8List pixels,
   int width,
@@ -27,14 +37,51 @@ void cleanDocumentRgbaInPlace(
   // Reject invalid requests before changing a single pixel.
   if (width < 1 ||
       height < 1 ||
-      width > _maxCleanupSide ||
-      height > _maxCleanupSide ||
-      width * height > _maxCleanupPixels ||
+      width > maxPhotoSide ||
+      height > maxPhotoSide ||
+      width * height > maxPhotoPixels ||
       pixels.length != width * height * 4 ||
       !amount.isFinite ||
       amount < 0 ||
       amount > 1) {
     throw const FormatException('Invalid cleanup dimensions or setting.');
+  }
+
+  if (mode == DocumentCleanupMode.original) return;
+
+  // Zero-strength color treatments only flatten transparency. Avoid allocating
+  // histograms and traversing the page twice when the slider is at zero.
+  // Grayscale and B&W are still active at zero: their amount has different
+  // semantics, so they must not take this shortcut.
+  if (amount == 0 &&
+      (mode == DocumentCleanupMode.lighten ||
+          mode == DocumentCleanupMode.evenLighting ||
+          mode == DocumentCleanupMode.magicPro)) {
+    for (var offset = 0; offset < pixels.length; offset += 4) {
+      _flattenOnWhite(pixels, offset);
+    }
+    return;
+  }
+
+  // Simple global treatments do not need the local-paper histograms.
+  if (mode == DocumentCleanupMode.lighten ||
+      mode == DocumentCleanupMode.grayscale) {
+    for (var offset = 0; offset < pixels.length; offset += 4) {
+      _flattenOnWhite(pixels, offset);
+      final r = pixels[offset], g = pixels[offset + 1], b = pixels[offset + 2];
+      if (mode == DocumentCleanupMode.grayscale) {
+        final luma = (77 * r + 150 * g + 29 * b) >> 8;
+        pixels[offset] = pixels[offset + 1] = pixels[offset + 2] = luma;
+      } else {
+        // A global exposure lift, not shadow removal. Black stays black and
+        // bright highlights may clip. Source colors can still be changed.
+        final factor = 1 + .45 * amount;
+        pixels[offset] = (r * factor).round().clamp(0, 255);
+        pixels[offset + 1] = (g * factor).round().clamp(0, 255);
+        pixels[offset + 2] = (b * factor).round().clamp(0, 255);
+      }
+    }
+    return;
   }
 
   // At most 24 * 24 * 256 counters (~576 KiB), regardless of page size.
@@ -48,14 +95,7 @@ void cleanDocumentRgbaInPlace(
     final tileRow = ((y * rows) ~/ height) * columns;
     for (var x = 0; x < width; x++) {
       final offset = (y * width + x) * 4;
-      final alpha = pixels[offset + 3];
-      if (alpha != 255) {
-        final white = 255 * (255 - alpha);
-        pixels[offset] = (pixels[offset] * alpha + white + 127) ~/ 255;
-        pixels[offset + 1] = (pixels[offset + 1] * alpha + white + 127) ~/ 255;
-        pixels[offset + 2] = (pixels[offset + 2] * alpha + white + 127) ~/ 255;
-        pixels[offset + 3] = 255;
-      }
+      _flattenOnWhite(pixels, offset);
       final luma =
           (77 * pixels[offset] +
               150 * pixels[offset + 1] +
@@ -81,6 +121,11 @@ void cleanDocumentRgbaInPlace(
     }
   }
 
+  // A quantized lookup avoids a costly power operation for every full-size
+  // pixel. Background values are rounded to the nearest luminance level.
+  final magicCurve = mode == DocumentCleanupMode.magicPro
+      ? _makeMagicCurve()
+      : null;
   final left = Uint8List(width), right = Uint8List(width);
   final horizontalMix = Float64List(width);
   for (var x = 0; x < width; x++) {
@@ -114,6 +159,15 @@ void cleanDocumentRgbaInPlace(
         pixels[offset] = value;
         pixels[offset + 1] = value;
         pixels[offset + 2] = value;
+      } else if (mode == DocumentCleanupMode.magicPro) {
+        // Illumination normalization followed by a contrast curve. Amplifying
+        // each RGB channel equally largely preserves hue until clipping. The
+        // background gain is capped; deeply obscured detail remains lost.
+        final corrected = magicCurve![background.round() * 256 + luma];
+        final factor = luma == 0 ? 1.0 : 1 + (corrected / luma - 1) * amount;
+        pixels[offset] = (r * factor).round().clamp(0, 255);
+        pixels[offset + 1] = (g * factor).round().clamp(0, 255);
+        pixels[offset + 2] = (b * factor).round().clamp(0, 255);
       } else {
         // Do not darken bright pages. Limit amplification and avoid lifting
         // near-black ink as much as paper; RGB scaling retains color where it
@@ -127,4 +181,28 @@ void cleanDocumentRgbaInPlace(
       }
     }
   }
+}
+
+void _flattenOnWhite(Uint8List pixels, int offset) {
+  final alpha = pixels[offset + 3];
+  if (alpha == 255) return;
+  final white = 255 * (255 - alpha);
+  pixels[offset] = (pixels[offset] * alpha + white + 127) ~/ 255;
+  pixels[offset + 1] = (pixels[offset + 1] * alpha + white + 127) ~/ 255;
+  pixels[offset + 2] = (pixels[offset + 2] * alpha + white + 127) ~/ 255;
+  pixels[offset + 3] = 255;
+}
+
+Uint8List _makeMagicCurve() {
+  final curve = Uint8List(256 * 256);
+  for (var paper = 48; paper < 256; paper++) {
+    final gain = (255 / paper).clamp(1.0, 2.5);
+    for (var luma = 0; luma < 256; luma++) {
+      final normalized = (luma * gain / 255).clamp(0.0, 1.0);
+      curve[paper * 256 + luma] = (255 * math.pow(normalized, 1.5))
+          .round()
+          .clamp(0, 255);
+    }
+  }
+  return curve;
 }

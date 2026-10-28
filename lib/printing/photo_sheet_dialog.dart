@@ -61,19 +61,21 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
     final weightText = paperWeight.text.trim();
     final weight = weightText.isEmpty ? null : int.tryParse(weightText);
     if (weightText.isNotEmpty && weight == null) {
-      throw const FormatException('Paper weight must be a whole number of gsm.');
+      throw const FormatException(
+        'Paper weight must be a whole number of gsm.',
+      );
     }
     return PhotoSheetSpec(
-    mediaStockId: mediaStockId,
-    paperWeightGsm: weight,
-    pageWidthMm: double.parse(pageWidth.text),
-    pageHeightMm: double.parse(pageHeight.text),
-    photoWidthMm: double.parse(photoWidth.text),
-    photoHeightMm: double.parse(photoHeight.text),
-    marginMm: double.parse(margin.text),
-    spacingMm: double.parse(spacing.text),
-    copies: int.parse(copies.text),
-  )..positions();
+      mediaStockId: mediaStockId,
+      paperWeightGsm: weight,
+      pageWidthMm: double.parse(pageWidth.text),
+      pageHeightMm: double.parse(pageHeight.text),
+      photoWidthMm: double.parse(photoWidth.text),
+      photoHeightMm: double.parse(photoHeight.text),
+      marginMm: double.parse(margin.text),
+      spacingMm: double.parse(spacing.text),
+      copies: int.parse(copies.text),
+    )..positions();
   }
 
   Widget _field(
@@ -126,8 +128,8 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
 
   PhotoSpecification? get _selectedSpecification =>
       photoPreset < photoSpecifications.length
-          ? photoSpecifications[photoPreset]
-          : null;
+      ? photoSpecifications[photoPreset]
+      : null;
 
   @override
   Widget build(BuildContext context) {
@@ -201,12 +203,18 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
                 key: const Key('sheet-media-stock'),
                 initialValue: mediaStockId,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Paper surface / stock'),
+                decoration: const InputDecoration(
+                  labelText: 'Paper surface / stock',
+                ),
                 items: [
                   for (final profile in printStockProfiles)
                     DropdownMenuItem(
                       value: profile.id,
-                      child: Text(profile.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        profile.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                 ],
                 onChanged: (value) => setState(() {
@@ -257,7 +265,11 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
                 const SizedBox(height: 4),
                 Text(
                   profile.hasPublishedDimensions
-                      ? '${profile.dimensionRule == PhotoDimensionRule.maximum ? 'Published maximum envelope' : profile.dimensionRule == PhotoDimensionRule.recommended ? 'International guidance / recommended print size' : 'Published print size'}: ${profile.widthMm} × ${profile.heightMm} mm'
+                      ? '${profile.dimensionRule == PhotoDimensionRule.maximum
+                            ? 'Published maximum envelope'
+                            : profile.dimensionRule == PhotoDimensionRule.recommended
+                            ? 'International guidance / recommended print size'
+                            : 'Published print size'}: ${profile.widthMm} × ${profile.heightMm} mm'
                       : 'Physical print dimensions are not stated in this source. Do not infer an official size.',
                   style: const TextStyle(fontSize: 12),
                 ),
@@ -272,14 +284,19 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
                   ),
                 if (profile.headHeightMinFraction != null)
                   Text(
-                    'ICAO portrait guidance: head height ${(profile.headHeightMinFraction! * 100).round()}–${(profile.headHeightMaxFraction! * 100).round()}% of image height.',
+                    'Published head height: ${(profile.headHeightMinFraction! * 100).round()}–${(profile.headHeightMaxFraction! * 100).round()}% of image height.',
                     style: const TextStyle(fontSize: 12),
                   ),
-                if (profile.maxFileBytes != null)
+                if (profile.maxFileBytes != null) ...[
                   Text(
                     'Digital upload limit: ${(profile.maxFileBytes! / 1024).round()} KB · formats: ${profile.fileFormats.join(', ')}.',
                     style: const TextStyle(fontSize: 12),
                   ),
+                  const Text(
+                    'This tool makes a print/PDF sheet, not an upload file. It does not enforce upload size, format or photo eligibility.',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
                 Text(
                   'Source: ${profile.sourceTitle} · verified ${profile.verifiedOn}. Check the authority for current rules.',
                   style: Theme.of(context).textTheme.bodySmall,

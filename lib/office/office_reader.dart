@@ -102,13 +102,15 @@ class OfficeDocument {
 /// Reads the content of a supported office document. Runs comfortably on the UI
 /// isolate for typical documents; call it through [readOfficeInBackground] for
 /// user files so a large workbook cannot stall a frame.
-OfficeDocument readOfficeDocument(Uint8List bytes, {String? fileName}) {
-  final detected = detectOfficeFile(bytes, fileName: fileName);
-  // ZIP packages are opened once and handed to the reader so a large document
-  // is not inflated twice.
-  final package = detected.format.isOpenXml || detected.format.isOpenDocument
-      ? OfficePackage.open(bytes)
-      : null;
+OfficeDocument readOfficeDocument(Uint8List bytes, {String? fileName}) =>
+    readInspectedOfficeDocument(inspectOfficeFile(bytes, fileName: fileName));
+
+/// Reads an already inspected source without opening and inflating its ZIP
+/// parts a second time. The inspection must be used within this operation.
+OfficeDocument readInspectedOfficeDocument(OfficeFileInspection inspection) {
+  final bytes = inspection.bytes;
+  final detected = inspection.detected;
+  final package = inspection.package;
   return switch (detected.format) {
     OfficeFormat.docx => _readDocx(package!),
     OfficeFormat.xlsx => _readXlsx(package!),
@@ -119,7 +121,7 @@ OfficeDocument readOfficeDocument(Uint8List bytes, {String? fileName}) {
     OfficeFormat.rtf => _readRtf(bytes),
     final other => throw OfficeContentUnsupported(
       'This build cannot read ${other.label} content. '
-      '${other == OfficeFormat.pdf ? 'Open it with a PDF tool.' : 'Convert it with an installed office engine first.'}',
+      '${other == OfficeFormat.pdf ? 'Open it with a PDF tool.' : 'Convert it in a compatible external application first.'}',
     ),
   };
 }
@@ -342,8 +344,7 @@ OfficeDocument _readXlsx(OfficePackage package) {
     }
   }
   notes.add(
-    'Cell values and formulas are carried as text; cell formatting, '
-    'charts and pivot tables are not.',
+    'Cached formula results, or formulas without a cached result, are carried as text; formulas are not recalculated. Cell formatting, charts and pivot tables are not preserved.',
   );
   return OfficeDocument(
     format: OfficeFormat.xlsx,
@@ -405,8 +406,8 @@ String _xlsxCellValue(XmlElement cell, List<String> shared) {
       .where((e) => e.localName == 'f')
       .map((e) => e.innerText)
       .firstOrNull;
-  if (value == null) {
-    return formula == null ? '' : '=$formula';
+  if (value == null || value.isEmpty) {
+    return formula == null || formula.isEmpty ? '' : '=$formula';
   }
   if (type == 's') {
     final index = int.tryParse(value);

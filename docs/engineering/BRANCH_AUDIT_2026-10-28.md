@@ -1,5 +1,8 @@
 # Repository branch audit — 2026-10-28
 
+> **Superseded status, 2026-10-28:** This is the historical main-polish audit, not the current consolidation decision. The owner subsequently selected the blue dimensional DS icon; the selected artwork, starter templates and opt-in Android OpenDocument.core WASM preview are now selectively present in the consolidation source. The older warm-brand and “preview deferred” conclusions below are historical. The earlier external-file branch does contain a native channel/provider, but its cached read-only handoff remains unintegrated and unverified. See [current all-head consolidation](CONSOLIDATION_2026-10-28.md) and [current status](CURRENT_STATUS.md). No remote branch deletion is implied by the historical recommendations below.
+
+
 ## Scope and method
 
 This is a **branch-tip and feature-consolidation audit**, not a claim that every line in every historical commit has been manually proven correct. The audit compared fetched branch tips against the current `main` tree by path and blob hash, inspected changed feature modules and tests for the main open branches, reviewed the main CI history, and checked app identity, signing configuration, brand resources and current capability documentation.

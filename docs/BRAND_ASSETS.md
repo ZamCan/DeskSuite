@@ -1,22 +1,10 @@
-# DeskSuite brand assets and Android identity
+# DeskSuite brand assets and platform identity
 
-## Canonical source
+The owner-selected launcher identity is the blue dimensional **DS scan-frame** mark. `assets/brand/desksuite-icon-source.png` is the selected original; `assets/brand/desksuite-mark.png` is its processed in-app image. The earlier warm vector logo is not the selected launcher identity.
 
-- `assets/brand/desksuite-mark.svg` is the transparent master vector mark. Keep the open-page crease and interlocking D/S geometry intact.
-- `assets/brand/desksuite-app-icon.svg` is the desktop/AppImage icon variant with the same mark over the warm ink background.
-- `lib/app/theme.dart` draws the mark natively in the Flutter interface so the app does not need a runtime SVG renderer.
-- `lib/app/startup_view.dart` uses that same mark and palette while local storage initializes. It has no fixed delay, so it cannot hold the user on a splash once the workspace is ready.
-- Android vector resources under `android/app/src/main/res/drawable/` provide adaptive foreground and monochrome icon artwork. Adaptive icon XML supplies the background separately; do not bake a second background into the foreground vector.
-- Legacy density icons, adaptive/monochrome resources and splash XML are already part of the Android project. Their actual appearance still needs physical-device checks.
+- `lib/app/theme.dart` displays the selected mark and shared blue palette. `lib/app/brand_launch.dart` draws a short startup treatment with the scan frame and then reveals that same image; system reduced-motion settings skip the animation.
+- Android's density icons and adaptive foreground/background resources are generated from the selected image. The monochrome icon is a simplified themed-icon resource. Windows uses `windows/runner/resources/app_icon.ico`; the AppImage SVG embeds the exact in-app PNG. These are platform adaptations, not different logo selections.
+- Six other selected design candidates were repurposed only as internal Scan, Photo, Text, Office, Creative Studio and Projects artwork. Their originals are in `assets/brand/section-sources/` and smaller UI copies in `assets/brand/sections/`.
+- Regenerate with `python3 tools/generate_brand_assets.py` using Pillow; `python3 tools/validate-brand-assets.py` checks the selected source hash and resource references. `python3 tools/test_brand_assets.py` exercises regeneration. These are structural/host checks, not OS rendering tests.
 
-## Palette and usage
-
-- Ink: `#292824`
-- Paper: `#FBF8F1`
-- Terracotta: `#ED9A7A`
-- Keep surfaces warm and professional. Avoid unrelated blue gradients, emoji as brand marks, or rasterized text at launcher scale.
-- The transparent SVG is the source of truth. The launcher uses the application label “DeskSuite”; do not add a small wordmark to the icon.
-
-## Validation and release gate
-
-The brand SVGs are bundled as assets and validated for their viewBox and canonical palette. Android resource compilation must pass in CI. A physical launcher/splash appearance check is still required on an Android 8+ device and a themed-icon check on Android 13+ before release.
+Physical launcher masks, Android 13+ monochrome theming, native splash transitions, Windows/Linux appearance, accessibility and small-size readability must still be checked on target devices. Do not replace the selected app icon with an internal section illustration.

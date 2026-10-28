@@ -67,12 +67,11 @@ class OfficeConversion {
   int get sizeBytes => bytes.length;
 }
 
-/// Optional external office engine (LibreOffice/soffice).
+/// Capability seam for an external office conversion engine.
 ///
-/// LibreOffice cannot be embedded in a normal Android APK. It *is* available as
-/// a Termux package and on desktop, so DeskSuite exposes it as an opt-in engine:
-/// when an executable is detected, high-fidelity conversions become available;
-/// when it is not, they are reported as unavailable rather than faked.
+/// No executable discovery, Termux integration or LibreOffice adapter is
+/// configured in this build. The separately bundled experimental preview is
+/// read-only and does not provide conversion.
 abstract class ExternalOfficeEngine {
   String get label;
   Future<bool> isAvailable();
@@ -100,9 +99,7 @@ class NoExternalOfficeEngine implements ExternalOfficeEngine {
     required OfficeFormat to,
   }) async {
     throw UnsupportedError(
-      'LibreOffice was not found. Install it (for example `pkg install '
-      'libreoffice` in Termux) and configure its path to enable rendered '
-      'office conversions.',
+      'No external office conversion engine is configured in this build.',
     );
   }
 }
@@ -442,7 +439,8 @@ class _TextOutput {
 }
 
 _TextOutput _writeText(_TextRequest request) {
-  final detected = detectOfficeFile(request.bytes, fileName: request.name);
+  final inspection = inspectOfficeFile(request.bytes, fileName: request.name);
+  final detected = inspection.detected;
   if (detected.format == OfficeFormat.txt) {
     return _TextOutput(request.bytes, const []);
   }
@@ -452,7 +450,7 @@ _TextOutput _writeText(_TextRequest request) {
       const ['HTML styling, images and scripts were not rendered.'],
     );
   }
-  final document = readOfficeDocument(request.bytes, fileName: request.name);
+  final document = readInspectedOfficeDocument(inspection);
   if (request.csv) {
     final buffer = StringBuffer();
     for (final block in document.blocks) {

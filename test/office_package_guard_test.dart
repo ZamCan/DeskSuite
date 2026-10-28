@@ -18,6 +18,14 @@ int _directory(Uint8List bytes) {
 }
 
 void main() {
+  test('shared CRC-32 matches the standard ZIP check value', () {
+    expect(
+      officeZipCrc32(Uint8List.fromList(utf8.encode('123456789'))),
+      0xcbf43926,
+    );
+    expect(officeZipCrc32(Uint8List(0)), 0);
+  });
+
   test('preflights and reads a valid stored package', () {
     final package = OfficePackage.open(base64.decode(_fixture));
     expect(package.textOf('word/document.xml'), contains('DeskSuite office'));

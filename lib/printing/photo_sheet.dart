@@ -35,10 +35,7 @@ class PhotoSheetSpec {
       spacingMm,
     ];
     if (!values.every((value) => value.isFinite) ||
-        pageWidthMm < 20 ||
-        pageHeightMm < 20 ||
-        pageWidthMm > 2500 ||
-        pageHeightMm > 2500 ||
+        !validPdfPageDimensions(pageWidthMm, pageHeightMm) ||
         photoWidthMm < 5 ||
         photoHeightMm < 5 ||
         photoWidthMm > 250 ||
@@ -125,7 +122,8 @@ Future<Uint8List> generatePhotoSheet(PhotoSheetRequest request) async {
   final pdf = pw.Document(
     title: 'DeskSuite photo sheet',
     author: 'DeskSuite (ZamCan)',
-    subject: 'Intended media: $stockNote. Printer support must be checked separately.',
+    subject:
+        'Intended media: $stockNote. Printer support must be checked separately.',
     creator: 'DeskSuite photo-sheet engine',
     compress: true,
   );

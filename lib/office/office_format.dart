@@ -1,9 +1,12 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show compute;
+
 import 'office_package.dart';
 
-/// Office/package formats DeskSuite can identify from real file content, never
-/// from the filename extension alone.
+/// Office/package formats DeskSuite can identify from their containers.
+/// Legacy OLE2 formats share a signature, so their subtype is only a filename
+/// hint until a renderer examines their contents.
 enum OfficeFormat {
   docx('DOCX', 'Word document'),
   xlsx('XLSX', 'Excel workbook'),
@@ -14,6 +17,7 @@ enum OfficeFormat {
   doc('DOC'),
   xls('XLS'),
   ppt('PPT'),
+  ole('OLE2', 'Compound document; exact type unconfirmed'),
   rtf('RTF'),
   pdf('PDF'),
   txt('TXT'),
@@ -35,6 +39,7 @@ enum OfficeFormat {
       this == OfficeFormat.doc ||
       this == OfficeFormat.xls ||
       this == OfficeFormat.ppt;
+  bool get isOfficeCompound => isLegacyBinary || this == OfficeFormat.ole;
 
   /// Formats this build can read content from.
   bool get isReadable =>
@@ -68,26 +73,23 @@ DetectedFile detectOfficeFile(Uint8List bytes, {String? fileName}) {
   if (bytes.isEmpty) {
     throw const FormatException('The selected file is empty.');
   }
-  if (_startsWith(bytes, _zipMagic) ||
-      _startsWith(bytes, [0x50, 0x4b, 0x05, 0x06])) {
-    // A ZIP's parts are compressed, so the container must be opened with the
-    // bounded reader before its type can be established honestly.
-    return DetectedFile(
-      detectPackageFormat(OfficePackage.open(bytes)),
-      'ZIP package',
-    );
+  if (_isZipContainer(bytes)) {
+    return inspectOfficeFile(bytes, fileName: fileName).detected;
   }
   if (_startsWith(bytes, [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1])) {
     // OLE2 compound file: legacy .doc/.xls/.ppt share this container.
     final hint = _extensionOf(fileName);
     final format = switch (hint) {
+      'doc' => OfficeFormat.doc,
       'xls' => OfficeFormat.xls,
       'ppt' => OfficeFormat.ppt,
-      _ => OfficeFormat.doc,
+      _ => OfficeFormat.ole,
     };
     return DetectedFile(
       format,
-      'Legacy OLE2 compound document — content cannot be read by this build',
+      format == OfficeFormat.ole
+          ? 'OLE2 signature; exact type unconfirmed'
+          : 'OLE2 signature; type suggested by the filename extension',
     );
   }
   if (_startsWith(bytes, [0x7b, 0x5c, 0x72, 0x74, 0x66])) {
@@ -109,6 +111,52 @@ DetectedFile detectOfficeFile(Uint8List bytes, {String? fileName}) {
     'ODT, ODS, ODP, RTF, TXT and HTML.',
   );
 }
+
+/// Detects user-supplied formats away from the native UI isolate. The bounded
+/// archive is not retained after detection; use [inspectOfficeFile] within a
+/// content-read operation to reuse its already validated parts.
+Future<DetectedFile> detectOfficeFileInBackground(
+  Uint8List bytes, {
+  String? fileName,
+}) => compute(_detectOfficeFileWorker, (bytes: bytes, fileName: fileName));
+
+DetectedFile _detectOfficeFileWorker(
+  ({Uint8List bytes, String? fileName}) input,
+) => detectOfficeFile(input.bytes, fileName: input.fileName);
+
+/// A format and its original bytes, together with the validated ZIP parts when
+/// applicable. This is short-lived and must not outlive the current read.
+class OfficeFileInspection {
+  const OfficeFileInspection._(this.bytes, this.detected, this.package);
+  final Uint8List bytes;
+  final DetectedFile detected;
+  final OfficePackage? package;
+}
+
+/// Detects a document while retaining the already-validated ZIP package for
+/// the current read operation. Non-ZIP input has no package. Callers that only
+/// need the format can use [detectOfficeFile] without retaining inflated parts.
+OfficeFileInspection inspectOfficeFile(Uint8List bytes, {String? fileName}) {
+  if (!_isZipContainer(bytes)) {
+    return OfficeFileInspection._(
+      bytes,
+      detectOfficeFile(bytes, fileName: fileName),
+      null,
+    );
+  }
+  // OfficePackage enforces compressed/uncompressed budgets, integrity checks
+  // and ZIP preflight before its parts are used by the content reader.
+  final package = OfficePackage.open(bytes);
+  return OfficeFileInspection._(
+    bytes,
+    DetectedFile(detectPackageFormat(package), 'ZIP package'),
+    package,
+  );
+}
+
+bool _isZipContainer(Uint8List bytes) =>
+    _startsWith(bytes, _zipMagic) ||
+    _startsWith(bytes, [0x50, 0x4b, 0x05, 0x06]);
 
 /// Identifies an office format from the parts a package actually contains.
 OfficeFormat detectPackageFormat(OfficePackage package) {

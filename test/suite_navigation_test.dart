@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:desksuite/app/section_artwork.dart';
+import 'package:desksuite/app/theme.dart';
 import 'package:desksuite/main.dart';
 import 'package:desksuite/design/design_document.dart';
 import 'package:desksuite/workspace/creative_studio_page.dart';
 import 'package:desksuite/workspace/file_gateway.dart';
 import 'package:desksuite/workspace/project_repository.dart';
+import 'package:desksuite/workspace/workspace_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -57,6 +60,143 @@ Future<void> navigate(WidgetTester tester, String label) async {
 }
 
 void main() {
+  testWidgets('home tool cards open the real local workflows', (tester) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final temp = (await tester.runAsync(
+      () => Directory.systemTemp.createTemp('desksuite-shortcuts-'),
+    ))!;
+    addTearDown(() async {
+      if (await temp.exists()) await temp.delete(recursive: true);
+    });
+    const channel = MethodChannel('plugins.flutter.io/path_provider');
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      channel,
+      (call) async => '${temp.path}/support',
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        channel,
+        null,
+      ),
+    );
+    final root = Directory('${temp.path}/projects');
+    await tester.runAsync(() async {
+      await root.create(recursive: true);
+      await File('${root.path}/welcome.json')
+          .writeAsString('{"version":1,"seen":true}');
+    });
+    final repo = ProjectRepository(root);
+    await tester.pumpWidget(
+      DeskSuiteApp(
+        showStartupAnimation: false,
+        repository: repo,
+        fileGateway: NoFiles(),
+      ),
+    );
+    await settleIo(tester);
+    expect(find.byType(BrandMark), findsWidgets);
+    expect(find.byType(WorkspaceToolCard), findsNWidgets(7));
+    final search = find.byKey(const Key('home-shortcut-search'));
+    await reveal(tester, search);
+    await tester.enterText(search, 'PHOTO');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('home-open-photo')), findsOneWidget);
+    expect(find.byKey(const Key('home-open-scan')), findsNothing);
+    expect(find.text('1 of 7 shortcuts'), findsOneWidget);
+    await tester.enterText(search, 'not-a-real-shortcut');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('home-shortcut-empty')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('home-clear-shortcut-search')));
+    await tester.pumpAndSettle();
+    expect(find.byType(WorkspaceToolCard), findsNWidgets(7));
+    final routes = <String, (String, WorkspaceSection, String)>{
+      'home-open-scan': (
+        'scan-import',
+        WorkspaceSection.scans,
+        SectionArt.scan,
+      ),
+      'home-open-photo': (
+        'photo-choose',
+        WorkspaceSection.photos,
+        SectionArt.photo,
+      ),
+      'home-open-text': ('ocr-choose', WorkspaceSection.text, SectionArt.text),
+      'home-open-converter': (
+        'office-choose',
+        WorkspaceSection.office,
+        SectionArt.office,
+      ),
+      'home-open-design': (
+        'new-design',
+        WorkspaceSection.design,
+        SectionArt.design,
+      ),
+      'home-open-projects': (
+        'projects-page',
+        WorkspaceSection.projects,
+        SectionArt.projects,
+      ),
+    };
+    var first = true;
+    for (final route in routes.entries) {
+      if (!first) await navigate(tester, 'Home');
+      first = false;
+      final (targetKey, section, expectedArt) = route.value;
+      final shortcut = find.byKey(Key(route.key));
+      await reveal(tester, shortcut);
+      expect(tester.widget<WorkspaceToolCard>(shortcut).section, section);
+      final cardArt = find.descendant(
+        of: shortcut,
+        matching: find.byType(SectionArtwork),
+      );
+      expect(tester.widget<SectionArtwork>(cardArt).asset, expectedArt);
+      await tester.tap(shortcut);
+      await settleUntil(tester, find.byKey(Key(targetKey)));
+      expect(
+        find.byKey(ValueKey('workspace-page-${section.name}')),
+        findsOneWidget,
+      );
+      final headerArt = find.byKey(
+        ValueKey('section-header-art-${section.name}'),
+      );
+      expect(headerArt, findsOneWidget);
+      expect(tester.widget<SectionArtwork>(headerArt).asset, expectedArt);
+      if (section == WorkspaceSection.photos) {
+        final sample = find.byKey(const Key('photo-example'));
+        await reveal(tester, sample);
+        await tester.tap(sample);
+        await settleUntil(tester, find.byKey(const Key('photo-zoom')));
+      }
+      expect(tester.takeException(), isNull, reason: route.key);
+    }
+    // PDF uses an honest standard icon rather than a new launcher logo.
+    await navigate(tester, 'Home');
+    final pdfShortcut = find.byKey(const Key('home-open-pdf'));
+    await reveal(tester, pdfShortcut);
+    expect(
+      tester.widget<WorkspaceToolCard>(pdfShortcut).section,
+      WorkspaceSection.pdfStudio,
+    );
+    expect(
+      find.descendant(of: pdfShortcut, matching: find.byType(SectionArtwork)),
+      findsNothing,
+    );
+    await tester.tap(pdfShortcut);
+    await settleUntil(tester, find.byKey(const Key('pdf-open')));
+    expect(
+      find.byKey(const ValueKey('workspace-page-pdfStudio')),
+      findsOneWidget,
+    );
+    // Switching sections should not recreate a visited page and lose its work.
+    await navigate(tester, 'Photo Studio');
+    expect(find.byKey(const Key('photo-zoom')), findsOneWidget);
+    expect(find.byKey(const Key('photo-example')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'main workspace opens live studios and imports an earlier project into its existing documents root',
     (tester) async {
@@ -117,7 +257,9 @@ void main() {
         heightMm: 297,
       );
       await tester.runAsync(() => repo.save(existing));
-      await tester.pumpWidget(DeskSuiteApp(fileGateway: NoFiles()));
+      await tester.pumpWidget(
+        DeskSuiteApp(showStartupAnimation: false, fileGateway: NoFiles()),
+      );
       await settleIo(tester);
       await navigate(tester, 'Creative Studio');
       final legacy = find.byKey(const ValueKey('legacy-123'));

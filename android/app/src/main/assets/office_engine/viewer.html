@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DeskSuite document preview</title>
+  <link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+  <header>
+    <div>
+      <strong>Original-layout preview</strong>
+      <span>Read-only · experimental · on this device</span>
+    </div>
+    <nav aria-label="Document views">
+      <button id="previous" type="button" disabled aria-label="Previous view">Previous</button>
+      <span id="position" aria-live="polite"></span>
+      <button id="next" type="button" disabled aria-label="Next view">Next</button>
+    </nav>
+  </header>
+  <p id="status" role="status" aria-live="polite">Starting the local document renderer…</p>
+  <p class="disclaimer">Layout can differ from Office. Links, external media, scripts, editing and printing are disabled.</p>
+  <iframe id="document" title="Read-only document preview" sandbox="" hidden></iframe>
+  <script type="module" src="viewer.js"></script>
+</body>
+</html>

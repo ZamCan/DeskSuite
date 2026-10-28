@@ -24,7 +24,8 @@ Future<PhotoResult> processDocumentCleanupInBackground(
   DocumentCleanupRequest request,
 ) => compute(processDocumentCleanup, request);
 
-/// Produces a new PNG and never changes the encoded input. The converted
+/// Returns a private copy of the current encoded page for Original; all other
+/// modes produce a new PNG. The encoded input is never modified. The converted
 /// image owns its own pixels; the pixel engine may safely modify that copy.
 PhotoResult processDocumentCleanup(DocumentCleanupRequest request) {
   if (!request.amount.isFinite || request.amount < 0 || request.amount > 1) {
@@ -34,6 +35,13 @@ PhotoResult processDocumentCleanup(DocumentCleanupRequest request) {
     request.bytes,
     byteLimit: maxPhotoWorkingBytes,
   );
+  if (request.mode == DocumentCleanupMode.original) {
+    return PhotoResult(
+      Uint8List.fromList(request.bytes),
+      decoded.width,
+      decoded.height,
+    );
+  }
   final working = decoded.convert(
     format: img.Format.uint8,
     numChannels: 4,

@@ -4,12 +4,14 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show compute;
 import 'package:image/image.dart' as img;
 
+import '../core/image_limits.dart';
 import 'image_cleanup_pixels.dart';
 
-const int maxPhotoInputBytes = 8 * 1024 * 1024;
-const int maxPhotoWorkingBytes = 16 * 1024 * 1024;
-const int maxPhotoPixels = 12000000;
-const int maxPhotoSide = 8192;
+export '../core/image_limits.dart'
+    show maxPhotoInputBytes, maxPhotoWorkingBytes, maxPhotoPixels, maxPhotoSide;
+
+/// Resampling choices are explicit; interpolation cannot restore lost detail.
+enum PhotoResampling { nearest, linear, cubic }
 
 enum PhotoAction {
   inspect,
@@ -30,6 +32,7 @@ class PhotoRequest {
     this.width,
     this.height,
     this.keepAspect = true,
+    this.resampling = PhotoResampling.linear,
     this.quality = 90,
     this.backgroundColor = 0xFFFFFFFF,
   });
@@ -38,7 +41,9 @@ class PhotoRequest {
   final int? width;
   final int? height;
   final bool keepAspect;
+  final PhotoResampling resampling;
   final int quality;
+
   /// Opaque ARGB colour used by [PhotoAction.flattenBackground].
   final int backgroundColor;
 }
@@ -108,6 +113,19 @@ img.Image decodeBoundedPhoto(Uint8List bytes, {required int byteLimit}) {
   final frame = decoder.decodeFrame(0);
   if (frame == null) throw const FormatException('Image could not be decoded.');
   return img.bakeOrientation(frame);
+}
+
+/// Returns a new RGB raster on white before JPEG encoding. This also preserves
+/// the previous JPEG path's behavior for opaque or indexed input images.
+img.Image photoOnWhite(img.Image source) {
+  final white = img.Image(
+    width: source.width,
+    height: source.height,
+    numChannels: 3,
+  );
+  img.fill(white, color: img.ColorRgb8(255, 255, 255));
+  img.compositeImage(white, source);
+  return white;
 }
 
 /// Checks the encoded format and dimensions before any output is handed to
@@ -200,11 +218,24 @@ PhotoResult processPhoto(PhotoRequest request) {
       if (width * height > maxPhotoPixels) {
         throw const FormatException('Output exceeds 12 megapixels.');
       }
+      // The image package otherwise forces nearest-neighbour on indexed
+      // palettes. Expand those pixels when a different method was requested.
+      if (image.hasPalette && request.resampling != PhotoResampling.nearest) {
+        image = image.convert(
+          format: img.Format.uint8,
+          numChannels: image.hasAlpha ? 4 : 3,
+          noAnimation: true,
+        );
+      }
       image = img.copyResize(
         image,
         width: width,
         height: height,
-        interpolation: img.Interpolation.linear,
+        interpolation: switch (request.resampling) {
+          PhotoResampling.nearest => img.Interpolation.nearest,
+          PhotoResampling.linear => img.Interpolation.linear,
+          PhotoResampling.cubic => img.Interpolation.cubic,
+        },
       );
     case PhotoAction.flattenBackground:
       final color = request.backgroundColor;
@@ -238,13 +269,7 @@ PhotoResult processPhoto(PhotoRequest request) {
         throw const FormatException('JPEG quality must be 1–100.');
       }
       // JPEG cannot store transparency; flatten against white deliberately.
-      final white = img.Image(
-        width: image.width,
-        height: image.height,
-        numChannels: 3,
-      );
-      img.fill(white, color: img.ColorRgb8(255, 255, 255));
-      img.compositeImage(white, image);
+      final white = photoOnWhite(image);
       return validateEncodedPhoto(
         Uint8List.fromList(img.encodeJpg(white, quality: request.quality)),
         image.width,

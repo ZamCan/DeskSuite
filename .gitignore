@@ -23,3 +23,7 @@ android/key.properties
 *.exe
 *.msi
 *.AppImage
+
+# Python-generated host-check caches
+__pycache__/
+*.pyc
