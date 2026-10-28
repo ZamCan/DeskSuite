@@ -6,6 +6,7 @@ import 'package:flutter/services.dart' show rootBundle;
 
 import '../core/suite_paths.dart';
 import '../images/photo_processor.dart';
+import '../printing/paper_catalog.dart';
 import '../workspace/file_gateway.dart';
 import 'camera_gateway.dart';
 import 'corner_editor.dart';
@@ -64,6 +65,10 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
   PhotoResult? undoImage;
   String? undoId;
   ScanPaper paper = ScanPaper.a4;
+  int paperPresetIndex = 0;
+  bool autoRotatePaper = true;
+  final pageWidthController = TextEditingController(text: '210');
+  final pageHeightController = TextEditingController(text: '297');
   CorrectionAspect correctionAspect = CorrectionAspect.estimated;
 
   Future<PhotoResult> Function(PhotoRequest) get processPhoto =>
@@ -78,6 +83,28 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
     super.initState();
     recovered = widget.recoveredCapture;
     _load();
+  }
+
+  @override
+  void dispose() {
+    pageWidthController.dispose();
+    pageHeightController.dispose();
+    super.dispose();
+  }
+
+  void _selectPaperPreset(int? index) {
+    if (index == null) return;
+    setState(() {
+      paperPresetIndex = index;
+      if (index < paperSheetPresets.length) {
+        final preset = paperSheetPresets[index];
+        pageWidthController.text = preset.widthMm.toString();
+        pageHeightController.text = preset.heightMm.toString();
+        paper = preset.label.startsWith('US Letter')
+            ? ScanPaper.letter
+            : ScanPaper.a4;
+      }
+    });
   }
 
   @override
@@ -610,7 +637,12 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
       final pdf = await (widget.pdfGenerator ?? createScanPdfInBackground)(
         ScanPdfRequest([
           for (final page in pages) page.image.bytes,
-        ], paper: paper),
+        ],
+          paper: paper,
+          pageWidthMm: double.tryParse(pageWidthController.text),
+          pageHeightMm: double.tryParse(pageHeightController.text),
+          autoRotatePaper: autoRotatePaper,
+        ),
       );
       if (!mounted) return;
       final save = await showDialog<bool>(
@@ -619,7 +651,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
           title: const Text('PDF ready to save'),
           content: SingleChildScrollView(
             child: Text(
-              '${pages.length} page(s) · ${paper == ScanPaper.a4 ? 'A4' : 'US Letter'} · ${pdf.length} bytes\n\nThe page images shown in the draft are embedded in order, with 10 mm margins. Landscape images use landscape paper. This is an image PDF: it does not contain OCR or searchable text.',
+              '${pages.length} page(s) · ${pageWidthController.text} × ${pageHeightController.text} mm · ${pdf.length} bytes\n\nThe page images shown in the draft are embedded in order, with 10 mm margins. ${autoRotatePaper ? 'Paper orientation follows each page image.' : 'The selected paper orientation is retained.'} This is an image PDF: it does not contain OCR or searchable text.',
             ),
           ),
           actions: [
@@ -985,21 +1017,67 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
             'Clean up & compare offers local lighting and adaptive black-and-white previews. The separate Black & white button uses a fixed threshold. Both can lose details; Reset returns to the imported page copy.',
           ),
           const SizedBox(height: 18),
-          DropdownButtonFormField<ScanPaper>(
-            initialValue: paper,
-            decoration: const InputDecoration(labelText: 'PDF page size'),
-            items: const [
-              DropdownMenuItem(value: ScanPaper.a4, child: Text('A4')),
+          DropdownButtonFormField<int>(
+            key: const Key('scan-paper-preset'),
+            initialValue: paperPresetIndex,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'PDF sheet / page size'),
+            items: [
+              for (var i = 0; i < paperSheetPresets.length; i++)
+                DropdownMenuItem(
+                  value: i,
+                  child: Text(
+                    paperSheetPresets[i].label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               DropdownMenuItem(
-                value: ScanPaper.letter,
-                child: Text('US Letter'),
+                value: paperSheetPresets.length,
+                child: const Text('Custom dimensions'),
               ),
             ],
+            onChanged: busy ? null : _selectPaperPreset,
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  key: const Key('scan-page-width'),
+                  controller: pageWidthController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'Width (mm)'),
+                  onChanged: (_) {
+                    if (paperPresetIndex != paperSheetPresets.length) {
+                      setState(() => paperPresetIndex = paperSheetPresets.length);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  key: const Key('scan-page-height'),
+                  controller: pageHeightController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'Height (mm)'),
+                  onChanged: (_) {
+                    if (paperPresetIndex != paperSheetPresets.length) {
+                      setState(() => paperPresetIndex = paperSheetPresets.length);
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+          CheckboxListTile(
+            key: const Key('scan-auto-rotate-paper'),
+            contentPadding: EdgeInsets.zero,
+            value: autoRotatePaper,
+            title: const Text('Rotate paper to match each page image'),
             onChanged: busy
                 ? null
-                : (value) {
-                    if (value != null) setState(() => paper = value);
-                  },
+                : (value) => setState(() => autoRotatePaper = value ?? true),
           ),
           const SizedBox(height: 12),
           Wrap(
