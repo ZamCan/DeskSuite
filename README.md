@@ -53,3 +53,8 @@ A debug APK is for local testing only. For release use a stable private key and 
 The maintained Android application ID remains `com.zamcan.desksuite`. Older prototype builds with ID `com.zamcan.desksuite.desksuite` are separate installations with separate private data; different signing keys also prevent in-place updates. Export and verify backups before uninstalling or migrating.
 
 Repository code: [Apache-2.0](LICENSE). Dependency and sample attribution: [third-party notices](THIRD_PARTY_NOTICES.md). Android native/transitive binary licences must still be reviewed for the actual release.
+
+
+## Photo Studio: current implementation boundary
+
+The Photo Studio supports local transformations, pixel/physical print sizing, photo-sheet layout presets and **solid-colour placement behind pixels that are already transparent**. The latter is not background removal. Automatic segmentation, mask editing, hair refinement, face/pose detection, authority-verified ID-photo compliance and broad editable template packs are planned and not yet shipped. See [current engineering status](docs/engineering/CURRENT_STATUS.md) and [roadmap](docs/ROADMAP.md).
