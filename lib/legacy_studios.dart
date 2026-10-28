@@ -857,6 +857,7 @@ class _PhotoPageState extends State<PhotoPage> {
     int? width,
     int? height,
     bool keepAspect = true,
+    int backgroundColor = 0xFFFFFFFF,
   }) async {
     final current = photo;
     if (current == null || busy) return;
@@ -869,6 +870,7 @@ class _PhotoPageState extends State<PhotoPage> {
           width: width,
           height: height,
           keepAspect: keepAspect,
+          backgroundColor: backgroundColor,
         ),
       );
       if (mounted) {
@@ -884,6 +886,59 @@ class _PhotoPageState extends State<PhotoPage> {
       );
     } finally {
       if (mounted) setState(() => busy = false);
+    }
+  }
+
+  Future<void> placeOnBackground() async {
+    if (photo == null || busy) return;
+    const options = <(int, String, Color)>[
+      (0xFFFFFFFF, 'White', Color(0xFFFFFFFF)),
+      (0xFFF5F0E6, 'Warm off-white', Color(0xFFF5F0E6)),
+      (0xFFE8E8E8, 'Light grey', Color(0xFFE8E8E8)),
+      (0xFFDCEBFA, 'Pale blue', Color(0xFFDCEBFA)),
+      (0xFFF8E3E8, 'Pale pink', Color(0xFFF8E3E8)),
+      (0xFFE0F0E3, 'Pale green', Color(0xFFE0F0E3)),
+      (0xFF222222, 'Charcoal', Color(0xFF222222)),
+    ];
+    final selected = await showDialog<int>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Place transparency on a background'),
+        children: [
+          for (final option in options)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, option.$1),
+              child: Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: option.$3,
+                      border: Border.all(color: Colors.black26),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(option.$2),
+                ],
+              ),
+            ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(24, 8, 24, 16),
+            child: Text(
+              'This places an already-transparent image on a solid colour. It does not remove the original background. Use an image with transparency first.',
+              style: TextStyle(fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (selected != null && mounted) {
+      await apply(
+        PhotoAction.flattenBackground,
+        backgroundColor: selected,
+      );
     }
   }
 
@@ -1220,6 +1275,12 @@ class _PhotoPageState extends State<PhotoPage> {
                   : () => apply(PhotoAction.reduceImpulseNoise),
               icon: const Icon(Icons.auto_fix_high),
               label: const Text('Reduce isolated specks'),
+            ),
+            OutlinedButton.icon(
+              key: const Key('photo-background'),
+              onPressed: busy ? null : placeOnBackground,
+              icon: const Icon(Icons.wallpaper_outlined),
+              label: const Text('Place on background'),
             ),
             OutlinedButton.icon(
               key: const Key('photo-resize'),
