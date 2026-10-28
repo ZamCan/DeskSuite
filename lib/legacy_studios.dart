@@ -1061,7 +1061,7 @@ class _PhotoPageState extends State<PhotoPage> {
     if (options == null || !mounted) return;
     setState(() => busy = true);
     try {
-      final result = await processPhotoInBackground(ImageOptimizationRequest(
+      final result = await optimizeImageInBackground(ImageOptimizationRequest(
         bytes: current.bytes,
         sizeTarget: options.sizeTarget,
         mode: options.mode,

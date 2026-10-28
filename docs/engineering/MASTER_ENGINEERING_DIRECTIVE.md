@@ -109,6 +109,10 @@ For every capability, record the implementation location, dependencies, tests an
 
 Preserve useful existing functionality and working architectural decisions. Avoid unnecessary rewrites.
 
+### Image optimisation and export acceptance gate
+
+Image optimisation must distinguish pixel dimensions, encoded byte size, visual quality, print dimensions/DPI and authority-specific passport/ID rules. Provide preset and custom dimensions plus original-size retention; preserve aspect ratio by default and require an explicit choice before stretching. For target-byte output, reduce JPEG quality first and resample only as needed; report actual dimensions, quality and bytes, preserve the source, and reject impossible targets rather than claim success. Export PDF, HTML and image formats through real encoders. Never call a PDF or HTML PIN-protected unless a reviewed cryptographic/access-control implementation is present and tested. Current image optimiser supports JPEG, PDF and standalone HTML exports; PDF is currently unencrypted and PIN protection is intentionally unavailable pending verified encryption support.
+
 ## 4. PRODUCT ARCHITECTURE
 
 Design DeskSuite as one integrated application with clear internal modules and service boundaries.

@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show compute;
+
 import 'package:image/image.dart' as img;
 
 import 'photo_processor.dart';
@@ -71,6 +73,9 @@ class ImageOptimizationResult {
 /// Offline JPEG optimisation. The source bytes are never mutated. When a byte
 /// target is requested, quality is reduced first; only then is resolution
 /// reduced gradually, avoiding unnecessary blur when quality alone is enough.
+Future<ImageOptimizationResult> optimizeImageInBackground(ImageOptimizationRequest request) =>
+    compute(optimizeImage, request);
+
 ImageOptimizationResult optimizeImage(ImageOptimizationRequest request) {
   if (request.bytes.isEmpty || request.bytes.length > maxPhotoInputBytes) {
     throw const FormatException('Choose a non-empty image up to 8 MB.');
