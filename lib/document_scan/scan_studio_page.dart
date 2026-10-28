@@ -1107,7 +1107,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
         ],
         const SizedBox(height: 20),
         const Text(
-          'This tool makes image-only PDFs; OCR, automatic edge detection and a PDF reader are not yet available. Draft pages are stored privately until you discard them; export a copy for backup.',
+          'This tool creates image-only PDFs. Use Text extraction to review OCR and create searchable PDFs, or PDF Studio to open and edit an existing PDF. Draft pages stay on this device until discarded; export a copy for backup.',
         ),
       ],
     );

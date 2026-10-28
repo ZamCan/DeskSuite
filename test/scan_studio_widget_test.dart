@@ -267,6 +267,8 @@ void main() {
       await tapVisible(tester, find.byKey(const Key('scan-save-pdf')));
       await waitIo(tester);
       expect(String.fromCharCodes(files.exported!.take(5)), '%PDF-');
+      final persistedAfterExport = await readDraft(tester, store);
+      expect(persistedAfterExport, hasLength(1));
       await settleUntil(tester, find.textContaining('1 of 8 pages'));
       expect(find.byType(ScanStudioPage), findsOneWidget);
       expect(find.byKey(const Key('scan-page-0')), findsOneWidget);

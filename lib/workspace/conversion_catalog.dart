@@ -23,7 +23,7 @@ const conversionRoutes = <ConversionRoute>[
   ),
   ConversionRoute(
     title: 'Images → multipage image PDF',
-    detail: 'Scan & assemble accepts up to eight images and places them in order on A4 or Letter pages. The PDF is not searchable.',
+    detail: 'Scan & assemble accepts up to eight images and places them in order on shared ISO A/B/C, US/ANSI, photo, card/badge, label or poster media, or custom 20–2500 mm pages. It creates image-only PDFs; reviewed OCR/searchable output is a separate Text extraction workflow.',
     target: ConversionTarget.scans,
   ),
   ConversionRoute(

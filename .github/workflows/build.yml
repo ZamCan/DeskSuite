@@ -22,7 +22,15 @@ jobs:
         with:
           channel: stable
           cache: true
-      - run: flutter pub get
+      - run: flutter pub get --enforce-lockfile
+      - name: Generate hosted package licence inventory
+        run: python3 tools/generate_pub_notices.py
+      - name: Capture resolved package notices for audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: desksuite-resolved-pub-notices
+          path: third_party/pub-packages.LICENSES.txt
+          if-no-files-found: error
       - name: Capture resolved lockfile for release audit
         uses: actions/upload-artifact@v4
         with:
