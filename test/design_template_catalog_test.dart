@@ -14,6 +14,12 @@ void main() {
         designTemplateCatalog.length,
       );
       expect(designTemplateCatalog.length, greaterThanOrEqualTo(7));
+      for (final definition in designTemplateCatalog) {
+        expect(definition.id, isNotEmpty);
+        expect(definition.schemaVersion, designTemplateCatalogVersion);
+        expect(definition.source, isNotEmpty);
+        expect(definition.license, isNotEmpty);
+      }
     });
 
     test('every template creates bounded editable elements', () {
@@ -48,6 +54,45 @@ void main() {
           );
         }
       }
+    });
+
+    test('all layouts remain valid at narrow and wide custom canvas sizes', () {
+      for (final definition in designTemplateCatalog) {
+        for (final size in [(10.0, 10.0), (1200.0, 10.0), (10.0, 1200.0)]) {
+          final elements = buildDesignTemplateElements(
+            definition.template,
+            widthMm: size.$1,
+            heightMm: size.$2,
+          );
+          for (final element in elements) {
+            expect(element.width, greaterThanOrEqualTo(1));
+            expect(element.height, greaterThanOrEqualTo(1));
+            expect(element.x, greaterThanOrEqualTo(0));
+            expect(element.y, greaterThanOrEqualTo(0));
+            expect(element.x + element.width, lessThanOrEqualTo(size.$1 + .01));
+            expect(element.y + element.height, lessThanOrEqualTo(size.$2 + .01));
+          }
+        }
+      }
+    });
+
+    test('rejects non-finite or unsupported canvas dimensions', () {
+      expect(
+        () => buildDesignTemplateElements(
+          DesignTemplate.flyer,
+          widthMm: double.infinity,
+          heightMm: 297,
+        ),
+        throwsFormatException,
+      );
+      expect(
+        () => buildDesignTemplateElements(
+          DesignTemplate.flyer,
+          widthMm: 9,
+          heightMm: 297,
+        ),
+        throwsFormatException,
+      );
     });
 
     test('template output round-trips through the shared project format', () {
