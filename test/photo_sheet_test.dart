@@ -67,6 +67,20 @@ void main() {
     }
   });
 
+  test('small label and miniature media sizes remain valid', () {
+    final miniature = PhotoSheetSpec(
+      pageWidthMm: 26,
+      pageHeightMm: 37,
+      photoWidthMm: 5,
+      photoHeightMm: 5,
+      marginMm: 0,
+      spacingMm: 0,
+      copies: 1,
+    );
+    expect(miniature.capacity, greaterThan(0));
+    expect(miniature.positions(), hasLength(1));
+  });
+
   test('the default 4 × 6 media can fit the default four photos', () {
     final sheet = PhotoSheetSpec(
       pageWidthMm: 101.6,
