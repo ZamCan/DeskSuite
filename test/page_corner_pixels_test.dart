@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:desksuite/document_scan/page_corner_pixels.dart';
-import 'package:desksuite/document_scan/page_corner_suggestion.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'page_corner_pixels_smoke.dart' as fixture;
