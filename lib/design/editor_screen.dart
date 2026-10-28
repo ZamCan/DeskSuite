@@ -473,6 +473,7 @@ class _EditorScreenState extends State<EditorScreen>
         return false;
       }
     }
+
     final can150 = canExportAt(150);
     final can300 = canExportAt(300);
     final can100 = canExportAt(100);
@@ -510,10 +511,14 @@ class _EditorScreenState extends State<EditorScreen>
               if (printChoice != null)
                 ListTile(
                   leading: const Icon(Icons.print_outlined),
-                  title: Text('Print using system dialog · ${_choiceDpi(printChoice)} dpi'),
-                  subtitle: Text(posterMode
-                      ? 'Large-format raster detail; printer scaling and media still need checking'
-                      : 'Printer services and margins vary by device'),
+                  title: Text(
+                    'Print using system dialog · ${_choiceDpi(printChoice)} dpi',
+                  ),
+                  subtitle: Text(
+                    posterMode
+                        ? 'Large-format raster detail; printer scaling and media still need checking'
+                        : 'Printer services and margins vary by device',
+                  ),
                   onTap: () => Navigator.pop(context, printChoice),
                 ),
               if (can150)
@@ -534,7 +539,9 @@ class _EditorScreenState extends State<EditorScreen>
                 ListTile(
                   leading: const Icon(Icons.picture_as_pdf_outlined),
                   title: const Text('Large-format PDF · 100 dpi'),
-                  subtitle: const Text('Lower raster density to stay within the device pixel budget'),
+                  subtitle: const Text(
+                    'Lower raster density to stay within the device pixel budget',
+                  ),
                   onTap: () => Navigator.pop(context, _ExportChoice.pdf100),
                 ),
               if (posterMode && can72)
@@ -548,14 +555,18 @@ class _EditorScreenState extends State<EditorScreen>
                 ListTile(
                   leading: const Icon(Icons.picture_as_pdf_outlined),
                   title: const Text('Large-format PDF · 60 dpi'),
-                  subtitle: const Text('For large-format viewing-distance artwork'),
+                  subtitle: const Text(
+                    'For large-format viewing-distance artwork',
+                  ),
                   onTap: () => Navigator.pop(context, _ExportChoice.pdf60),
                 ),
               if (posterMode && can36)
                 ListTile(
                   leading: const Icon(Icons.picture_as_pdf_outlined),
                   title: const Text('Banner PDF · 36 dpi'),
-                  subtitle: const Text('Low raster density; inspect output before production'),
+                  subtitle: const Text(
+                    'Low raster density; inspect output before production',
+                  ),
                   onTap: () => Navigator.pop(context, _ExportChoice.pdf36),
                 ),
               if (can150)
@@ -1075,7 +1086,22 @@ int _choiceDpi(_ExportChoice choice) => switch (choice) {
 };
 
 enum _ExportChoice {
-  print36, print60, print72, print100, print150,
-  pdf36, pdf60, pdf72, pdf100, pdf150, pdf300,
-  png36, png60, png72, png100, png150, png300, project
+  print36,
+  print60,
+  print72,
+  print100,
+  print150,
+  pdf36,
+  pdf60,
+  pdf72,
+  pdf100,
+  pdf150,
+  pdf300,
+  png36,
+  png60,
+  png72,
+  png100,
+  png150,
+  png300,
+  project,
 }

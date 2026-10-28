@@ -56,14 +56,14 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
       );
     }
     return PhotoSheetSpec(
-    pageWidthMm: double.parse(pageWidth.text),
-    pageHeightMm: double.parse(pageHeight.text),
-    photoWidthMm: double.parse(photoWidth.text),
-    photoHeightMm: double.parse(photoHeight.text),
-    marginMm: double.parse(margin.text),
-    spacingMm: double.parse(spacing.text),
-    copies: int.parse(copies.text),
-  )..positions();
+      pageWidthMm: double.parse(pageWidth.text),
+      pageHeightMm: double.parse(pageHeight.text),
+      photoWidthMm: double.parse(photoWidth.text),
+      photoHeightMm: double.parse(photoHeight.text),
+      marginMm: double.parse(margin.text),
+      spacingMm: double.parse(spacing.text),
+      copies: int.parse(copies.text),
+    )..positions();
   }
 
   Widget _field(
@@ -116,8 +116,8 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
 
   PhotoSpecification? get _selectedSpecification =>
       photoPreset < photoSpecifications.length
-          ? photoSpecifications[photoPreset]
-          : null;
+      ? photoSpecifications[photoPreset]
+      : null;
 
   @override
   Widget build(BuildContext context) {
@@ -220,7 +220,11 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
                 const SizedBox(height: 4),
                 Text(
                   profile.hasPublishedDimensions
-                      ? '${profile.dimensionRule == PhotoDimensionRule.maximum ? 'Published maximum envelope' : profile.dimensionRule == PhotoDimensionRule.recommended ? 'International guidance / recommended print size' : 'Published print size'}: ${profile.widthMm} × ${profile.heightMm} mm'
+                      ? '${profile.dimensionRule == PhotoDimensionRule.maximum
+                            ? 'Published maximum envelope'
+                            : profile.dimensionRule == PhotoDimensionRule.recommended
+                            ? 'International guidance / recommended print size'
+                            : 'Published print size'}: ${profile.widthMm} × ${profile.heightMm} mm'
                       : 'Physical print dimensions are not stated in this source. Do not infer an official size.',
                   style: const TextStyle(fontSize: 12),
                 ),

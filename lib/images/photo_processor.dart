@@ -39,6 +39,7 @@ class PhotoRequest {
   final int? height;
   final bool keepAspect;
   final int quality;
+
   /// Opaque ARGB colour used by [PhotoAction.flattenBackground].
   final int backgroundColor;
 }

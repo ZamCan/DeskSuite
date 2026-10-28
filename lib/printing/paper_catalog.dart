@@ -4,8 +4,16 @@ const paperSheetPresets = <({String label, double widthMm, double heightMm})>[
   (label: 'A4 portrait — 210 × 297 mm', widthMm: 210, heightMm: 297),
   (label: 'A4 landscape — 297 × 210 mm', widthMm: 297, heightMm: 210),
   (label: 'A5 portrait — 148 × 210 mm', widthMm: 148, heightMm: 210),
-  (label: '4 × 6 inch photo — 101.6 × 152.4 mm', widthMm: 101.6, heightMm: 152.4),
-  (label: 'ID-1 / CR80 card — 85.60 × 53.98 mm', widthMm: 85.60, heightMm: 53.98),
+  (
+    label: '4 × 6 inch photo — 101.6 × 152.4 mm',
+    widthMm: 101.6,
+    heightMm: 152.4,
+  ),
+  (
+    label: 'ID-1 / CR80 card — 85.60 × 53.98 mm',
+    widthMm: 85.60,
+    heightMm: 53.98,
+  ),
   (label: 'Business card — 85 × 55 mm', widthMm: 85, heightMm: 55),
   (label: 'Name badge — 90 × 55 mm', widthMm: 90, heightMm: 55),
   (label: 'Badge insert — 90 × 60 mm', widthMm: 90, heightMm: 60),

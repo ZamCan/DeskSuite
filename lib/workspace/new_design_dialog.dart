@@ -44,17 +44,18 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
     if (!_form.currentState!.validate()) return;
     final width = double.parse(_width.text);
     final height = double.parse(_height.text);
-    final doc = DesignDocument.blank(
-      name: _name.text,
-      widthMm: width,
-      heightMm: height,
-    ).copyWith(
-      elements: buildDesignTemplateElements(
-        _template,
-        widthMm: width,
-        heightMm: height,
-      ),
-    );
+    final doc =
+        DesignDocument.blank(
+          name: _name.text,
+          widthMm: width,
+          heightMm: height,
+        ).copyWith(
+          elements: buildDesignTemplateElements(
+            _template,
+            widthMm: width,
+            heightMm: height,
+          ),
+        );
     Navigator.of(context).pop(doc);
   }
 
@@ -96,7 +97,9 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                 key: const Key('design-template-picker'),
                 initialValue: _template,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Starting template'),
+                decoration: const InputDecoration(
+                  labelText: 'Starting template',
+                ),
                 items: [
                   for (final item in designTemplateCatalog)
                     DropdownMenuItem(
@@ -158,7 +161,8 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                     _preset = value;
                     if (value < paperSheetPresets.length) {
                       _width.text = paperSheetPresets[value].widthMm.toString();
-                      _height.text = paperSheetPresets[value].heightMm.toString();
+                      _height.text = paperSheetPresets[value].heightMm
+                          .toString();
                     }
                   });
                 },
@@ -193,8 +197,9 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                         labelText: 'Height (mm)',
                       ),
                       validator: _dimension,
-                      onChanged: (_) =>
-                          setState(() => _preset = paperSheetPresets.length - 1),
+                      onChanged: (_) => setState(
+                        () => _preset = paperSheetPresets.length - 1,
+                      ),
                     ),
                   ),
                   IconButton(
