@@ -80,3 +80,10 @@ flutter test --no-pub --concurrency=1 --reporter expanded --timeout 120s
 ```
 
 Test at least camera cancellation and interrupted-activity recovery, content providers, save cancellation, corrupt/large images, disk-full behavior, upgrades from the same application ID/signing key, compact/landscape/large-text layouts, offline use, launch icon/splash, and a real PDF viewer. Test results must be recorded from the actual device and build; do not infer them from the host tests.
+
+
+## 2026-10-28 source changes — not yet run through Flutter
+
+Added a photo background-compositing path to the existing bounded photo processor and a Photo Studio action for placing already-transparent content on a selected solid colour. Added tests for compositing and invalid translucent colour values. The Photo Sheet preset UI was also added in the previous slice.
+
+These source changes have **not** been run through Dart formatting, Flutter analysis, the full Flutter test suite or an Android build in this execution. Do not interpret the added tests as passing tests. Run the command sequence above on the maintained toolchain and record the actual result before claiming verification.
