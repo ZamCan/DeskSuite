@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0+2 — consolidated Android-first integration (validation build)
+
+- Consolidated the scan, offline OCR/searchable-PDF, photo editing/optimization, Office content workflows, existing-PDF Studio, Creative Studio, print production, starter stationery inventory/POS, and shared brand assets into the main product.
+- Added existing-PDF Studio navigation and save-as-copy workflow, scan recovery/widget regression coverage, editable design stamps/signatures, broader print media and photo-sheet templates, and canonical launcher/splash artwork validation.
+- Preserved explicit capability limits: Office editing is content-level rather than full layout parity; automatic page detection/background removal, PDF encryption, full accounting/POS, SLM runtime and full backup/restore are not complete.
+- This is an integration-validation version, not a production release. CI and physical Android camera, OCR, PDF, printing and update-install checks remain required.
+
 ## Unreleased — document and photo cleanup (not a release)
 
 - Added local, adjustable uneven-lighting and adaptive black-and-white cleanup for document images, with temporary before/after previews, cancel/apply, existing draft undo/reset, and PNG or image-PDF export. Transparency is flattened to white; color, artwork or light text can be altered.
