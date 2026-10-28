@@ -122,5 +122,23 @@ void main() {
       expect(combinedPdfName('...pdf'), 'document-combined.pdf');
       expect(combinedPdfName('scan'), 'scan-combined.pdf');
     });
+
+    test('background merge validates and returns transferable result bytes', () async {
+      final a = await _pdf(pages: 1, label: 'cover');
+      final b = await _pdf(pages: 2, label: 'report');
+      final result = await combinePdfsInBackground([a, b]);
+      expect(result.documentCount, 2);
+      expect(result.pageCount, 3);
+      expect(looksLikePdf(result.bytes), isTrue);
+    });
+
+    test('rejects aggregate input above the bounded working budget', () async {
+      final tooLarge = Uint8List(maxPdfCombineBytes + 1);
+      tooLarge.setRange(0, 5, '%PDF-'.codeUnits);
+      expect(
+        () => combinePdfs([tooLarge, Uint8List.fromList('%PDF-'.codeUnits)]),
+        throwsA(isA<PdfCombineFailure>()),
+      );
+    });
   });
 }
