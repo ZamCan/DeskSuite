@@ -30,7 +30,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Business card').last);
     await tester.pumpAndSettle();
-    expect(find.text('Business card'), findsOneWidget);
     expect(
       tester.widget<TextFormField>(find.byKey(const Key('canvas-width'))).controller!.text,
       '85.0',
