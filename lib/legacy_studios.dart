@@ -1089,7 +1089,9 @@ class _PhotoPageState extends State<PhotoPage> {
         name = 'desksuite-optimized.html';
         mime = 'text/html';
       }
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       final reduction = result.reductionPercent.toStringAsFixed(1);
       final confirmed = await showDialog<bool>(
         context: context,
@@ -2535,7 +2537,9 @@ class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
           decoration: const InputDecoration(labelText: 'Pixel dimensions'),
           items: [for (final value in ImageSizePreset.values) DropdownMenuItem(value: value, child: Text(label(value)))],
           onChanged: (value) => setState(() {
-            if (value == null) return;
+            if (value == null) {
+              return;
+            }
             preset = value;
             switch (value) {
               case ImageSizePreset.original: width.text = '${widget.width}'; height.text = '${widget.height}';
@@ -2567,7 +2571,11 @@ class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
             DropdownMenuItem(value: ImageCompressionMode.reduceByPercent, child: Text('Reduce file size by percentage')),
             DropdownMenuItem(value: ImageCompressionMode.targetBytes, child: Text('Target file size in KB')),
           ],
-          onChanged: (value) => setState(() { if (value != null) mode = value; }),
+          onChanged: (value) => setState(() {
+            if (value != null) {
+              mode = value;
+            }
+          }),
         ),
         if (mode == ImageCompressionMode.quality) ...[
           Text('JPEG quality: $quality / 100'),
