@@ -4,7 +4,7 @@ The authoritative product brief is [MASTER_ENGINEERING_DIRECTIVE.md](MASTER_ENGI
 
 The owner also gave these operational instructions during the project conversation:
 
-- Preserve existing work, data, useful functionality, the application ID and all branches. Inspect before modifying or cleaning up; do not rewrite history or force-push.
+- Preserve existing work, data, useful functionality, the application ID and `main` history. Inspect all branch tips before modifying or cleaning up; do not rewrite `main` history or force-push. The owner's later directive on 2026-10-28 supersedes the earlier request to retain every branch: after the full audit, retire redundant/superseded remote refs and leave `main` as the sole branch.
 - Prioritize genuine, tested, local-first Android workflows over mock controls or superficial feature coverage. Essential workflows must not require an account, paid API, analytics or silent model downloads.
 - Do not install or download Android toolchains or perform online APK packaging here. The owner has existing Termux/Debian-side tools and intends to clone/pull and build packages locally. Use already available tools where appropriate; report build, signing and device-test blockers honestly.
 - Keep credentials and signing keys out of code, commits, logs and artifacts. A token mentioned in a separate chat is not assumed to be available here; do not invent or repeat one.
