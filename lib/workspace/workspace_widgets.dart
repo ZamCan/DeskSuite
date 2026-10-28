@@ -35,6 +35,7 @@ class WorkspaceSidebar extends StatelessWidget {
     Widget item(IconData icon, String label, WorkspaceSection value) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: ListTile(
+        key: Key('nav-${value.name}'),
         dense: true,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         selected: section == value,

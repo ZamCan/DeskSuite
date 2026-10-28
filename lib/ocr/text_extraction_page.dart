@@ -446,6 +446,8 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
             children: [
               DropdownButton<String>(
                 key: const Key('ocr-language'),
+                // The combined English + Kiswahili label exceeds a narrow Wrap line.
+                isExpanded: true,
                 value: _language,
                 onChanged: _running
                     ? null
