@@ -3,51 +3,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../images/photo_processor.dart';
+import 'paper_catalog.dart';
 import 'design_export.dart' show effectiveImageDpi;
 import 'photo_sheet.dart';
 import 'photo_specifications.dart';
-
-/// Common sheet/media presets. These describe the physical sheet, not
-/// finished passport/ID-photo dimensions or printer-supported media.
-const paperSheetPresets = <({String label, double widthMm, double heightMm})>[
-  (label: 'A4 portrait — 210 × 297 mm', widthMm: 210, heightMm: 297),
-  (label: 'A4 landscape — 297 × 210 mm', widthMm: 297, heightMm: 210),
-  (label: 'A5 portrait — 148 × 210 mm', widthMm: 148, heightMm: 210),
-  (label: '4 × 6 inch photo — 101.6 × 152.4 mm', widthMm: 101.6, heightMm: 152.4),
-  (label: 'A0 poster — 841 × 1189 mm', widthMm: 841, heightMm: 1189),
-  (label: 'A1 poster — 594 × 841 mm', widthMm: 594, heightMm: 841),
-  (label: 'A2 poster — 420 × 594 mm', widthMm: 420, heightMm: 594),
-  (label: 'A3 — 297 × 420 mm', widthMm: 297, heightMm: 420),
-  (label: 'A6 — 105 × 148 mm', widthMm: 105, heightMm: 148),
-  (label: 'A7 — 74 × 105 mm', widthMm: 74, heightMm: 105),
-  (label: 'A8 — 52 × 74 mm', widthMm: 52, heightMm: 74),
-  (label: 'A9 — 37 × 52 mm', widthMm: 37, heightMm: 52),
-  (label: 'A10 — 26 × 37 mm', widthMm: 26, heightMm: 37),
-  (label: 'B0 poster — 1000 × 1414 mm', widthMm: 1000, heightMm: 1414),
-  (label: 'B1 poster — 707 × 1000 mm', widthMm: 707, heightMm: 1000),
-  (label: 'B2 poster — 500 × 707 mm', widthMm: 500, heightMm: 707),
-  (label: 'B3 — 353 × 500 mm', widthMm: 353, heightMm: 500),
-  (label: 'B4 — 250 × 353 mm', widthMm: 250, heightMm: 353),
-  (label: 'B5 — 176 × 250 mm', widthMm: 176, heightMm: 250),
-  (label: 'B6 — 125 × 176 mm', widthMm: 125, heightMm: 176),
-  (label: 'B7 — 88 × 125 mm', widthMm: 88, heightMm: 125),
-  (label: 'B8 — 62 × 88 mm', widthMm: 62, heightMm: 88),
-  (label: 'B9 — 44 × 62 mm', widthMm: 44, heightMm: 62),
-  (label: 'B10 — 31 × 44 mm', widthMm: 31, heightMm: 44),
-  (label: 'US Letter — 8.5 × 11 in', widthMm: 215.9, heightMm: 279.4),
-  (label: 'US Legal — 8.5 × 14 in', widthMm: 215.9, heightMm: 355.6),
-  (label: 'US Tabloid — 11 × 17 in', widthMm: 279.4, heightMm: 431.8),
-  (label: 'US Ledger — 17 × 11 in', widthMm: 431.8, heightMm: 279.4),
-  (label: 'ANSI E — 34 × 44 in poster', widthMm: 863.6, heightMm: 1117.6),
-  (label: 'Photo 3.5 × 5 in', widthMm: 88.9, heightMm: 127),
-  (label: 'Photo 5 × 7 in', widthMm: 127, heightMm: 177.8),
-  (label: 'Photo 8 × 10 in', widthMm: 203.2, heightMm: 254),
-  (label: 'Poster 12 × 18 in', widthMm: 304.8, heightMm: 457.2),
-  (label: 'Poster 18 × 24 in', widthMm: 457.2, heightMm: 609.6),
-  (label: 'Poster 24 × 36 in', widthMm: 609.6, heightMm: 914.4),
-  (label: 'Large format 36 × 48 in', widthMm: 914.4, heightMm: 1219.2),
-  (label: 'Large format 48 × 72 in', widthMm: 1219.2, heightMm: 1828.8),
-];
 
 class PhotoSheetChoice {
   const PhotoSheetChoice(this.spec, {required this.print});

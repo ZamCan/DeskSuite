@@ -178,8 +178,8 @@ class DesignDocument {
         !heightMm.isFinite ||
         widthMm < 10 ||
         heightMm < 10 ||
-        widthMm > 1200 ||
-        heightMm > 1200 ||
+        widthMm > 2500 ||
+        heightMm > 2500 ||
         backgroundColor < 0 ||
         backgroundColor > 0xffffffff ||
         elements.length > maxDesignElements ||

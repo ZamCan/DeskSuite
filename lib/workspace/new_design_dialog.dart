@@ -2,22 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../design/design_document.dart';
 import '../design/template_catalog.dart';
-
-class _Preset {
-  const _Preset(this.label, this.width, this.height);
-  final String label;
-  final double width;
-  final double height;
-}
-
-const _presets = <_Preset>[
-  _Preset('A4 · 210 × 297 mm', 210, 297),
-  _Preset('A5 · 148 × 210 mm', 148, 210),
-  _Preset('A3 · 297 × 420 mm', 297, 420),
-  _Preset('Business card · 85 × 55 mm', 85, 55),
-  _Preset('Square · 108 × 108 mm', 108, 108),
-  _Preset('Custom size', 210, 297),
-];
+import '../printing/paper_catalog.dart';
 
 class NewDesignDialog extends StatefulWidget {
   const NewDesignDialog({super.key, this.template = DesignTemplate.blank});
@@ -42,7 +27,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
     if (_template != DesignTemplate.blank) {
       _width.text = definition.widthMm.toString();
       _height.text = definition.heightMm.toString();
-      _preset = _presets.length - 1;
+      _preset = paperSheetPresets.length - 1;
       _name.text = definition.label;
     }
   }
@@ -75,8 +60,8 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
 
   String? _dimension(String? value) {
     final number = double.tryParse(value ?? '');
-    return number == null || !number.isFinite || number < 10 || number > 1200
-        ? 'Use 10–1200 mm'
+    return number == null || !number.isFinite || number < 10 || number > 2500
+        ? 'Use 10–2500 mm'
         : null;
   }
 
@@ -130,7 +115,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                     _template = value;
                     _width.text = definition.widthMm.toString();
                     _height.text = definition.heightMm.toString();
-                    _preset = _presets.length - 1;
+                    _preset = paperSheetPresets.length - 1;
                     if (_name.text.trim().isEmpty ||
                         _name.text == 'Untitled design' ||
                         designTemplateCatalog.any(
@@ -153,23 +138,27 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Canvas preset'),
                 items: [
-                  for (var i = 0; i < _presets.length; i++)
+                  for (var i = 0; i < paperSheetPresets.length; i++)
                     DropdownMenuItem(
                       value: i,
                       child: Text(
-                        _presets[i].label,
+                        paperSheetPresets[i].label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                  DropdownMenuItem(
+                    value: paperSheetPresets.length,
+                    child: const Text('Custom size'),
+                  ),
                 ],
                 onChanged: (value) {
                   if (value == null) return;
                   setState(() {
                     _preset = value;
-                    if (value != _presets.length - 1) {
-                      _width.text = _presets[value].width.toStringAsFixed(0);
-                      _height.text = _presets[value].height.toStringAsFixed(0);
+                    if (value < paperSheetPresets.length) {
+                      _width.text = paperSheetPresets[value].widthMm.toString();
+                      _height.text = paperSheetPresets[value].heightMm.toString();
                     }
                   });
                 },
@@ -189,7 +178,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                       ),
                       validator: _dimension,
                       onChanged: (_) =>
-                          setState(() => _preset = _presets.length - 1),
+                          setState(() => _preset = paperSheetPresets.length - 1),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -205,7 +194,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                       ),
                       validator: _dimension,
                       onChanged: (_) =>
-                          setState(() => _preset = _presets.length - 1),
+                          setState(() => _preset = paperSheetPresets.length - 1),
                     ),
                   ),
                   IconButton(
@@ -214,7 +203,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                       final before = _width.text;
                       _width.text = _height.text;
                       _height.text = before;
-                      _preset = _presets.length - 1;
+                      _preset = paperSheetPresets.length - 1;
                     }),
                     icon: const Icon(Icons.swap_horiz),
                   ),
