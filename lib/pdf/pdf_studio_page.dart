@@ -169,7 +169,9 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
     } catch (error) {
       if (mounted) setState(() => _error = 'Could not combine these PDFs: $error');
     } finally {
-      if (mounted) setState(() => _combining = false);
+      if (mounted) {
+        setState(() => _combining = false);
+      }
     }
   }
 
