@@ -5,6 +5,7 @@ import 'package:flutter/services.dart' show rootBundle;
 
 import '../app/theme.dart';
 import '../design/design_document.dart';
+import '../design/template_catalog.dart';
 import '../design/editor_screen.dart';
 import '../document_scan/camera_gateway.dart';
 import '../document_scan/scan_studio_page.dart';
