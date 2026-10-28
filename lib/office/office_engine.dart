@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show compute;
+import 'package:pdf/pdf.dart';
 
 import 'office_format.dart';
 import 'office_pdf.dart';
@@ -296,6 +297,7 @@ class OfficeEngine {
     required Uint8List bytes,
     required OfficeRoute route,
     String? sourceName,
+    PdfPageFormat pdfPageFormat = PdfPageFormat.a4,
   }) async {
     final base = _baseName(sourceName);
     if (route.requiresExternalEngine) {
@@ -324,6 +326,7 @@ class OfficeEngine {
               : utf8.decode(bytes, allowMalformed: true);
           final pdf = await buildOfficePdf(
             _textDocument(text, isHtml ? 'HTML document' : 'Text document'),
+            format: pdfPageFormat,
           );
           _assertPdf(pdf);
           return OfficeConversion(
@@ -340,7 +343,7 @@ class OfficeEngine {
           _readForConversion,
           _ReadRequest(bytes, sourceName),
         );
-        final pdf = await buildOfficePdf(document);
+        final pdf = await buildOfficePdf(document, format: pdfPageFormat);
         _assertPdf(pdf);
         return OfficeConversion(
           bytes: pdf,
