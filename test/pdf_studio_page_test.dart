@@ -1,12 +1,12 @@
 import 'dart:typed_data';
 
+import 'package:desksuite/pdf/pdf_inspection.dart';
 import 'package:desksuite/pdf/pdf_studio_page.dart';
 import 'package:desksuite/workspace/file_gateway.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-
 
 Future<Uint8List> _pdf(int pages) async {
   final document = pw.Document();
@@ -30,6 +30,22 @@ class FakePicker implements DocumentPicker {
   Future<PickedDocument?> pickDocument() async {
     calls++;
     return result;
+  }
+}
+
+/// Hands out documents in order and then reports "the user cancelled", which
+/// is how the combine dialog ends: it is dismissed or the picker is backed out
+/// of.
+class QueuePicker implements DocumentPicker {
+  QueuePicker(this.queue);
+  final List<PickedDocument> queue;
+  int calls = 0;
+
+  @override
+  Future<PickedDocument?> pickDocument() async {
+    calls++;
+    if (queue.isEmpty) return null;
+    return queue.removeAt(0);
   }
 }
 
@@ -132,6 +148,167 @@ void main() {
     await tester.tap(find.byKey(const Key('pdf-open')));
     await _settle(tester);
   }
+
+  testWidgets('combines two real PDFs into one new file', (tester) async {
+    tester.view.physicalSize = const Size(380, 760);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final files = RecordingFiles();
+    final picker = QueuePicker([
+      (bytes: onePage, name: '/tmp/Cover.pdf'),
+      (bytes: twoPages, name: '/tmp/Report.pdf'),
+    ]);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PdfStudioPage(
+            picker: picker,
+            files: files,
+            editorBuilder: _stubEditor,
+          ),
+        ),
+      ),
+    );
+    await _settle(tester);
+
+    await tester.tap(find.byKey(const Key('pdf-combine')));
+    await _settle(tester);
+    expect(find.text('No PDFs added yet.'), findsOneWidget);
+    // Two documents are required before the action is offered.
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('combine-save')))
+          .onPressed,
+      isNull,
+    );
+
+    await tester.tap(find.byKey(const Key('combine-add')));
+    await _settle(tester);
+    expect(find.byKey(const Key('combine-row-0')), findsOneWidget);
+    expect(find.text('1 file(s) · 1 page(s)'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('combine-add')));
+    await _settle(tester);
+    expect(find.byKey(const Key('combine-row-1')), findsOneWidget);
+    expect(find.text('2 file(s) · 3 page(s)'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('combine-save')));
+    await _settle(tester);
+
+    expect(files.names, ['Cover-combined.pdf']);
+    final written = files.bytes;
+    expect(written, isNotNull);
+    // The written file really is a four-page... here three-page PDF.
+    final inspection = inspectPdf(written!);
+    expect(inspection.pageCount, 3);
+    expect(
+      find.textContaining('Combined 2 PDFs into Cover-combined.pdf'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a cancelled combine writes nothing and says so', (tester) async {
+    tester.view.physicalSize = const Size(380, 760);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final files = RecordingFiles();
+    final picker = QueuePicker([(bytes: onePage, name: 'a.pdf')]);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PdfStudioPage(
+            picker: picker,
+            files: files,
+            editorBuilder: _stubEditor,
+          ),
+        ),
+      ),
+    );
+    await _settle(tester);
+
+    await tester.tap(find.byKey(const Key('pdf-combine')));
+    await _settle(tester);
+    await tester.tap(find.byKey(const Key('combine-add')));
+    await _settle(tester);
+    await tester.tap(find.byKey(const Key('combine-cancel')));
+    await _settle(tester);
+
+    expect(files.names, isEmpty);
+    expect(find.textContaining('Combining cancelled'), findsOneWidget);
+  });
+
+  testWidgets('a non-PDF added to a combine is refused with a reason', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(380, 760);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final files = RecordingFiles();
+    final picker = QueuePicker([
+      (bytes: Uint8List.fromList('not a pdf'.codeUnits), name: 'notes.txt'),
+    ]);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PdfStudioPage(
+            picker: picker,
+            files: files,
+            editorBuilder: _stubEditor,
+          ),
+        ),
+      ),
+    );
+    await _settle(tester);
+
+    await tester.tap(find.byKey(const Key('pdf-combine')));
+    await _settle(tester);
+    await tester.tap(find.byKey(const Key('combine-add')));
+    await _settle(tester);
+
+    expect(find.byKey(const Key('combine-error')), findsOneWidget);
+    expect(find.byKey(const Key('combine-row-0')), findsNothing);
+    expect(files.names, isEmpty);
+  });
+
+  testWidgets('a file can be taken back out of a combine', (tester) async {
+    tester.view.physicalSize = const Size(380, 760);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final files = RecordingFiles();
+    final picker = QueuePicker([
+      (bytes: onePage, name: 'a.pdf'),
+      (bytes: twoPages, name: 'b.pdf'),
+    ]);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PdfStudioPage(
+            picker: picker,
+            files: files,
+            editorBuilder: _stubEditor,
+          ),
+        ),
+      ),
+    );
+    await _settle(tester);
+
+    await tester.tap(find.byKey(const Key('pdf-combine')));
+    await _settle(tester);
+    await tester.tap(find.byKey(const Key('combine-add')));
+    await _settle(tester);
+    await tester.tap(find.byKey(const Key('combine-add')));
+    await _settle(tester);
+    await tester.tap(find.byKey(const Key('combine-remove-0')));
+    await _settle(tester);
+
+    expect(find.byKey(const Key('combine-row-1')), findsNothing);
+    expect(find.text('1 file(s) · 2 page(s)'), findsOneWidget);
+    expect(files.names, isEmpty);
+  });
 
   testWidgets('opens a real PDF, reports its pages and saves an edited copy', (
     tester,

@@ -11,6 +11,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import 'app/brand.dart';
 import 'business/inventory.dart';
 import 'business/sale_receipt.dart';
 import 'core/local_file_store.dart';
@@ -26,10 +27,13 @@ import 'printing/photo_sheet.dart';
 import 'printing/photo_sheet_dialog.dart';
 import 'workspace/file_gateway.dart';
 
-const ink = Color(0xFF292B29);
-const paper = Color(0xFFF7F5EF);
-const accent = Color(0xFFB56B45);
-const muted = Color(0xFF777970);
+// These four names are used throughout the older studios. They now resolve to
+// the single brand palette in `app/brand.dart` instead of a near-identical
+// second set of hex values that had drifted from the theme.
+const ink = ZamCanBrand.ink;
+const paper = ZamCanBrand.paper;
+const accent = ZamCanBrand.accent;
+const muted = ZamCanBrand.muted;
 
 class LocalStore {
   static final LocalFileStore _files = LocalFileStore(suiteRoot);
@@ -893,13 +897,13 @@ class _PhotoPageState extends State<PhotoPage> {
   Future<void> placeOnBackground() async {
     if (photo == null || busy) return;
     const options = <(int, String, Color)>[
-      (0xFFFFFFFF, 'White', Color(0xFFFFFFFF)),
-      (0xFFF5F0E6, 'Warm off-white', Color(0xFFF5F0E6)),
-      (0xFFE8E8E8, 'Light grey', Color(0xFFE8E8E8)),
-      (0xFFDCEBFA, 'Pale blue', Color(0xFFDCEBFA)),
-      (0xFFF8E3E8, 'Pale pink', Color(0xFFF8E3E8)),
-      (0xFFE0F0E3, 'Pale green', Color(0xFFE0F0E3)),
-      (0xFF222222, 'Charcoal', Color(0xFF222222)),
+      (0xFFFFFFFF, 'White', ZamCanBrand.swatchWhite),
+      (0xFFF5F0E6, 'Warm off-white', ZamCanBrand.swatchWarm),
+      (0xFFE8E8E8, 'Light grey', ZamCanBrand.swatchGrey),
+      (0xFFDCEBFA, 'Pale blue', ZamCanBrand.swatchBlue),
+      (0xFFF8E3E8, 'Pale pink', ZamCanBrand.swatchPink),
+      (0xFFE0F0E3, 'Pale green', ZamCanBrand.swatchGreen),
+      (0xFF222222, 'Charcoal', ZamCanBrand.swatchCharcoal),
     ];
     final selected = await showDialog<int>(
       context: context,
@@ -2481,7 +2485,7 @@ class InfoNote extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
-      color: const Color(0xFFF0EAE0),
+      color: ZamCanBrand.paperWarm,
       borderRadius: BorderRadius.circular(14),
     ),
     child: Row(

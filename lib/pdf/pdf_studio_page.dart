@@ -4,7 +4,12 @@ import 'package:dart_pdf_editor/dart_pdf_editor.dart';
 import 'package:flutter/material.dart';
 
 import '../workspace/file_gateway.dart';
+import 'pdf_combine.dart';
 import 'pdf_inspection.dart';
+
+// `pdfBaseName` lives with the other PDF primitives; re-exported so callers of
+// this screen keep a single import.
+export 'pdf_inspection.dart' show pdfBaseName;
 
 /// Builds the editor surface for [bytes], reporting edited bytes through
 /// [onSave]. Injected in tests so the screen's own open, inspect, save and
@@ -46,6 +51,10 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
   String? _error;
   String? _status;
   bool _busy = false;
+
+  /// Set while the "combine PDFs" dialog is on screen, so the button cannot be
+  /// pressed twice and the page can report a combine failure in its own banner.
+  bool _combining = false;
 
   Future<void> _open() async {
     if (_busy) return;
@@ -119,6 +128,52 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
       }
     } finally {
       if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// Lets the user gather several PDFs and writes them out as one new file.
+  Future<void> _combine() async {
+    if (_busy || _combining) return;
+    setState(() {
+      _combining = true;
+      _error = null;
+      _status = null;
+    });
+    try {
+      final sources = await showDialog<List<_PdfSource>>(
+        context: context,
+        builder: (context) => _CombineDialog(picker: widget.picker),
+      );
+      if (!mounted || sources == null) {
+        if (mounted) {
+          setState(() => _status = 'Combining cancelled. No file was written.');
+        }
+        return;
+      }
+      setState(() => _status = 'Combining ${sources.length} PDFs…');
+      final result = combinePdfs([for (final source in sources) source.bytes]);
+      final name = combinedPdfName(sources.first.name);
+      final saved = await widget.files.save(
+        name: name,
+        bytes: result.bytes,
+        mimeType: 'application/pdf',
+      );
+      if (!mounted) return;
+      setState(() {
+        _status = saved
+            ? 'Combined ${result.documentCount} PDFs into $name · '
+                  '${result.pageCount} page(s) · ${result.inspection.sizeLabel}. '
+                  'The source files were not changed.'
+            : 'Save cancelled. No combined file was written.';
+      });
+    } on PdfCombineFailure catch (failure) {
+      if (mounted) setState(() => _error = failure.message);
+    } catch (error) {
+      if (mounted) {
+        setState(() => _error = 'Could not combine those PDFs: $error');
+      }
+    } finally {
+      if (mounted) setState(() => _combining = false);
     }
   }
 
@@ -282,15 +337,28 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
               const Text(
                 'Open a PDF from this device to read it, reorder, rotate or '
                 'delete pages, add text and ink, fill forms, split or export '
-                'pages. Every result is written as a new file; the file you '
-                'opened is never modified.',
+                'pages, or join several PDFs into one in the order you pick. '
+                'Every result is written as a new file; the file you opened is '
+                'never modified.',
               ),
               const SizedBox(height: 14),
-              FilledButton.icon(
-                key: const Key('pdf-open'),
-                onPressed: _busy ? null : _open,
-                icon: const Icon(Icons.folder_open_outlined),
-                label: Text(_busy ? 'Opening…' : 'Open PDF'),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  FilledButton.icon(
+                    key: const Key('pdf-open'),
+                    onPressed: _busy ? null : _open,
+                    icon: const Icon(Icons.folder_open_outlined),
+                    label: Text(_busy ? 'Opening…' : 'Open PDF'),
+                  ),
+                  OutlinedButton.icon(
+                    key: const Key('pdf-combine'),
+                    onPressed: _busy || _combining ? null : _combine,
+                    icon: const Icon(Icons.merge_type),
+                    label: Text(_combining ? 'Combining…' : 'Combine PDFs'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -374,20 +442,158 @@ class _Banner extends StatelessWidget {
   );
 }
 
-/// A file name derived from the picked name: no directories, no traversal, no
-/// characters that break Android's file names, and never empty.
-String pdfBaseName(String name) {
-  final leaf = name.split(RegExp(r"[/\\]")).last;
-  final dot = leaf.lastIndexOf('.');
-  final value = dot > 0 ? leaf.substring(0, dot) : leaf;
-  final safe = value
-      // Anything that is not a letter, digit, space, underscore or hyphen
-      // becomes a hyphen, so a name can never escape the export directory.
-      .replaceAll(RegExp(r'[^A-Za-z0-9 _-]+'), '-')
-      .trim()
-      // Collapse runs of separators so "a  b--c" does not become "a--b--c".
-      .replaceAll(RegExp(r'[\s_-]+'), '-')
-      .replaceAll(RegExp(r'^-+|-+$'), '');
-  if (safe.isEmpty) return 'document';
-  return safe.length > 60 ? safe.substring(0, 60) : safe;
+/// One PDF chosen for combining: the bytes plus the name to show and to build
+/// the output file name from.
+class _PdfSource {
+  _PdfSource({required this.name, required this.bytes, required this.pages});
+  final String name;
+  final Uint8List bytes;
+  final int pages;
+}
+
+/// Collects the PDFs to join. Picking is one file at a time because that is
+/// what the platform picker offers on every supported device; the list, its
+/// order and the page total are shown before anything is written.
+class _CombineDialog extends StatefulWidget {
+  const _CombineDialog({required this.picker});
+
+  final DocumentPicker picker;
+
+  @override
+  State<_CombineDialog> createState() => _CombineDialogState();
+}
+
+class _CombineDialogState extends State<_CombineDialog> {
+  final _sources = <_PdfSource>[];
+  String? _error;
+  bool _picking = false;
+
+  int get _pageTotal => _sources.fold(0, (sum, source) => sum + source.pages);
+
+  Future<void> _add() async {
+    if (_picking) return;
+    setState(() {
+      _picking = true;
+      _error = null;
+    });
+    try {
+      final picked = await widget.picker.pickDocument();
+      if (!mounted) return;
+      if (picked == null) {
+        setState(() => _error = 'No file was chosen.');
+        return;
+      }
+      final report = inspectPdf(picked.bytes);
+      setState(() {
+        _sources.add(
+          _PdfSource(
+            name: picked.name,
+            bytes: Uint8List.fromList(picked.bytes),
+            pages: report.pageCount,
+          ),
+        );
+      });
+    } on PdfOpenFailure catch (failure) {
+      if (mounted) setState(() => _error = failure.message);
+    } catch (error) {
+      if (mounted) setState(() => _error = 'Could not read that file: $error');
+    } finally {
+      if (mounted) setState(() => _picking = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AlertDialog(
+      title: const Text('Combine PDFs'),
+      content: SizedBox(
+        width: 420,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Add two or more PDFs. They are joined in the order shown, and '
+              'the result is saved as one new file.',
+            ),
+            const SizedBox(height: 12),
+            if (_sources.isEmpty)
+              Text(
+                'No PDFs added yet.',
+                key: const Key('combine-empty'),
+                style: theme.textTheme.bodySmall,
+              )
+            else
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _sources.length,
+                  itemBuilder: (context, index) {
+                    final source = _sources[index];
+                    return ListTile(
+                      key: Key('combine-row-$index'),
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      leading: const Icon(Icons.picture_as_pdf_outlined),
+                      title: Text(
+                        source.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text('${source.pages} page(s)'),
+                      trailing: IconButton(
+                        key: Key('combine-remove-$index'),
+                        tooltip: 'Remove ${source.name}',
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: () =>
+                            setState(() => _sources.removeAt(index)),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            if (_error != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                _error!,
+                key: const Key('combine-error'),
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ],
+            const SizedBox(height: 8),
+            Text(
+              _sources.isEmpty
+                  ? 'Total: 0 page(s)'
+                  : '${_sources.length} file(s) · $_pageTotal page(s)',
+              key: const Key('combine-total'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          key: const Key('combine-cancel'),
+          onPressed: _picking ? null : () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        TextButton.icon(
+          key: const Key('combine-add'),
+          onPressed: _picking ? null : _add,
+          icon: const Icon(Icons.add),
+          label: Text(_picking ? 'Choosing…' : 'Add PDF'),
+        ),
+        FilledButton(
+          key: const Key('combine-save'),
+          onPressed: _sources.length < 2
+              ? null
+              : () => Navigator.of(context).pop(_sources),
+          child: const Text('Combine & save'),
+        ),
+      ],
+    );
+  }
 }

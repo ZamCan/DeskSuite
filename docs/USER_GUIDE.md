@@ -87,10 +87,16 @@ does not bundle; see the office support notes in the engineering documentation.
    screen says the export was cancelled — it never reports a file it did not
    write.
 
+**Combine PDFs** on the same screen joins two or more documents into one new
+file. Add them one at a time, check the page total in the dialog, remove a
+mistake, then choose *Combine & save*; the result is written as
+`<first-name>-combined.pdf` and the sources are untouched.
+
 What this does not do: it does not re-typeset the text already inside a page
-(annotations and form fields sit on top of the page), it does not merge two
-different PDFs into one, it cannot compress to a target size, and it refuses a
-password-protected PDF instead of guessing at the password. Files over 96 MB are
+(annotations and form fields sit on top of the page), it has no drag-to-reorder
+inside one combine pass (remove and re-add instead), it cannot compress to a
+target size, and it refuses a password-protected PDF instead of guessing at the
+password. Files over 96 MB are
 refused on a phone. Very large or damaged PDFs may open with fewer pages than a
 desktop reader shows.
 
@@ -127,7 +133,7 @@ Other bundled forms, names and invoices are fictional and are not official docum
 
 ## Find other supported routes
 
-Open **Conversion routes** to jump to Photo Studio, Scan & assemble, Files & Projects, Creative Studio or Notes for an implemented operation. Routes without an engine are marked unavailable. See [conversion details](CONVERSIONS.md) and [formats](FILE_FORMATS.md). Existing PDFs cannot be opened, merged or compressed by the scan tool; existing pages are **images in the scan draft**, not pages imported from a PDF.
+Open **Conversion routes** to jump to Photo Studio, Scan & assemble, Files & Projects, Creative Studio or Notes for an implemented operation. Routes without an engine are marked unavailable. See [conversion details](CONVERSIONS.md) and [formats](FILE_FORMATS.md). Existing PDFs are opened, edited and combined in **PDF & Documents**, not by the scan tool; existing pages there are **images in the scan draft**, not pages imported from a PDF, and PDFs still cannot be compressed to a target size.
 
 ## Protect your work and troubleshoot
 

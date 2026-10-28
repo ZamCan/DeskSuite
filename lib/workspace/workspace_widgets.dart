@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../app/brand.dart';
+import '../app/zamcan_mark.dart';
+
 import '../app/theme.dart';
 import 'project_repository.dart';
 
@@ -56,29 +59,9 @@ class WorkspaceSidebar extends StatelessWidget {
           const SizedBox(height: 24),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              children: [
-                BrandMark(),
-                SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'DeskSuite',
-                      style: TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -.6,
-                      ),
-                    ),
-                    Text(
-                      'CREATIVE WORKSPACE',
-                      style: TextStyle(fontSize: 9, letterSpacing: 1.05),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            // One lockup, used by the sidebar, the onboarding and the boot
+            // screen: the same mark and the same wordmark everywhere.
+            child: ZamCanLockup(compact: true),
           ),
           const SizedBox(height: 35),
           _navLabel(context, 'WORKSPACE'),
@@ -260,35 +243,35 @@ class _WelcomeArt extends CustomPainter {
     canvas.save();
     canvas.translate(8, 0);
     canvas.rotate(.075);
-    canvas.drawRRect(rect, Paint()..color = const Color(0xffe7dfd4));
+    canvas.drawRRect(rect, Paint()..color = ZamCanBrand.paperShade);
     canvas.restore();
-    canvas.drawRRect(rect, Paint()..color = const Color(0xfff8f3eb));
+    canvas.drawRRect(rect, Paint()..color = ZamCanBrand.paperWarm);
     canvas.drawRRect(
       rect,
       Paint()
-        ..color = const Color(0xffd5cbc0)
+        ..color = ZamCanBrand.paperEdge
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
     canvas.drawRect(
       const Rect.fromLTWH(52, 33, 107, 48),
-      Paint()..color = const Color(0xffc77c60),
+      Paint()..color = ZamCanBrand.accent,
     );
     canvas.drawRect(
       const Rect.fromLTWH(52, 94, 64, 7),
-      Paint()..color = const Color(0xff393630),
+      Paint()..color = ZamCanBrand.inkSoft,
     );
     canvas.drawRect(
       const Rect.fromLTWH(52, 106, 84, 7),
-      Paint()..color = const Color(0xff393630),
+      Paint()..color = ZamCanBrand.inkSoft,
     );
     canvas.drawRect(
       const Rect.fromLTWH(52, 129, 48, 3),
-      Paint()..color = const Color(0xffb5a89a),
+      Paint()..color = ZamCanBrand.paperRule,
     );
     canvas.drawRect(
       const Rect.fromLTWH(52, 137, 72, 3),
-      Paint()..color = const Color(0xffb5a89a),
+      Paint()..color = ZamCanBrand.paperRule,
     );
   }
 
@@ -382,7 +365,7 @@ class ProjectTile extends StatelessWidget {
         width: 48,
         height: 54,
         decoration: BoxDecoration(
-          color: const Color(0xffeee6dd),
+          color: ZamCanBrand.paperShade,
           borderRadius: BorderRadius.circular(8),
         ),
         child: const Icon(Icons.description_outlined, color: accent),

@@ -129,3 +129,21 @@ PdfInspection inspectPdf(Uint8List bytes, {String password = ''}) {
     firstPageHeightPt: heightPt,
   );
 }
+
+/// A file name derived from the picked name: no directories, no traversal, no
+/// characters that break Android's file names, and never empty.
+String pdfBaseName(String name) {
+  final leaf = name.split(RegExp(r"[/\\]")).last;
+  final dot = leaf.lastIndexOf('.');
+  final value = dot > 0 ? leaf.substring(0, dot) : leaf;
+  final safe = value
+      // Anything that is not a letter, digit, space, underscore or hyphen
+      // becomes a hyphen, so a name can never escape the export directory.
+      .replaceAll(RegExp(r'[^A-Za-z0-9 _-]+'), '-')
+      .trim()
+      // Collapse runs of separators so "a  b--c" does not become "a--b--c".
+      .replaceAll(RegExp(r'[\s_-]+'), '-')
+      .replaceAll(RegExp(r'^-+|-+$'), '');
+  if (safe.isEmpty) return 'document';
+  return safe.length > 60 ? safe.substring(0, 60) : safe;
+}

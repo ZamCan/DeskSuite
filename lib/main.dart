@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'app/boot_sequence.dart';
+import 'app/brand.dart';
 import 'app/theme.dart';
 import 'document_scan/camera_gateway.dart';
 import 'core/suite_paths.dart';
@@ -24,10 +26,17 @@ class DeskSuiteApp extends StatefulWidget {
     this.repository,
     this.fileGateway,
     this.cameraGateway,
+    this.showBoot = true,
+    this.bootDuration = const Duration(milliseconds: 2600),
   });
   final ProjectRepository? repository;
   final FileGateway? fileGateway;
   final CameraGateway? cameraGateway;
+
+  /// The branded start screen. On by default; tests that only need the
+  /// workspace turn it off instead of pumping two seconds of animation.
+  final bool showBoot;
+  final Duration bootDuration;
   @override
   State<DeskSuiteApp> createState() => _DeskSuiteAppState();
 }
@@ -37,6 +46,7 @@ class _DeskSuiteAppState extends State<DeskSuiteApp> {
   late final CameraGateway? _camera;
   late final Future<CameraRecovery> _cameraRecovery;
   bool _dark = false;
+  bool _booted = false;
 
   @override
   void initState() {
@@ -64,7 +74,7 @@ class _DeskSuiteAppState extends State<DeskSuiteApp> {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'DeskSuite',
+    title: '${ZamCanBrand.product} · ${ZamCanBrand.company}',
     debugShowCheckedModeBanner: false,
     theme: deskTheme(Brightness.light),
     darkTheme: deskTheme(Brightness.dark),
@@ -97,9 +107,19 @@ class _DeskSuiteAppState extends State<DeskSuiteApp> {
             ),
           );
         }
-        if (!snapshot.hasData) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+        // The boot screen covers the wait for local storage instead of a bare
+        // spinner, and stays until `_booted` so the hand-over happens once.
+        if (!snapshot.hasData || (widget.showBoot && !_booted)) {
+          if (!widget.showBoot) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          return BootSequence(
+            duration: widget.bootDuration,
+            onComplete: () {
+              if (mounted && !_booted) setState(() => _booted = true);
+            },
           );
         }
         final repo = snapshot.requireData;

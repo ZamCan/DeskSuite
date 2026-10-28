@@ -15,21 +15,24 @@ void main() {
 
   test('filling a photo slot replaces its label and is undoable', () {
     final definition = designTemplateDefinition(DesignTemplate.photoPrintSheet);
-    final document = DesignDocument.blank(
-      name: definition.label,
-      widthMm: definition.widthMm,
-      heightMm: definition.heightMm,
-    ).copyWith(
-      elements: buildDesignTemplateElements(
-        definition.template,
-        widthMm: definition.widthMm,
-        heightMm: definition.heightMm,
-      ),
-    );
+    final document =
+        DesignDocument.blank(
+          name: definition.label,
+          widthMm: definition.widthMm,
+          heightMm: definition.heightMm,
+        ).copyWith(
+          elements: buildDesignTemplateElements(
+            definition.template,
+            widthMm: definition.widthMm,
+            heightMm: definition.heightMm,
+          ),
+        );
     final controller = DesignController(document);
-    final slot = document.elements.firstWhere((element) =>
-      element.kind == ElementKind.rectangle &&
-      element.width == 35 && element.height == 45
+    final slot = document.elements.firstWhere(
+      (element) =>
+          element.kind == ElementKind.rectangle &&
+          element.width == 35 &&
+          element.height == 45,
     );
     controller.select(slot.id);
     final image = DesignElement(
@@ -45,40 +48,88 @@ void main() {
     controller.replaceSelectedPhotoPlaceholder(image);
 
     expect(controller.selectedId, image.id);
-    expect(controller.document.elements.where((element) =>
-      element.kind == ElementKind.image && element.id == image.id), hasLength(1));
-    expect(controller.document.elements.where((element) =>
-      element.kind == ElementKind.text && element.text.contains('35 × 45 mm') &&
-      element.x >= slot.x && element.x < slot.x + slot.width &&
-      element.y >= slot.y && element.y < slot.y + slot.height), isEmpty);
-    expect(controller.document.elements.where((element) =>
-      element.kind == ElementKind.rectangle && element.id == slot.id), isEmpty);
+    expect(
+      controller.document.elements.where(
+        (element) =>
+            element.kind == ElementKind.image && element.id == image.id,
+      ),
+      hasLength(1),
+    );
+    expect(
+      controller.document.elements.where(
+        (element) =>
+            element.kind == ElementKind.text &&
+            element.text.contains('35 × 45 mm') &&
+            element.x >= slot.x &&
+            element.x < slot.x + slot.width &&
+            element.y >= slot.y &&
+            element.y < slot.y + slot.height,
+      ),
+      isEmpty,
+    );
+    expect(
+      controller.document.elements.where(
+        (element) =>
+            element.kind == ElementKind.rectangle && element.id == slot.id,
+      ),
+      isEmpty,
+    );
     final reopened = DesignDocument.decode(controller.document.encode());
-    expect(reopened.elements.firstWhere((element) => element.id == image.id).imageBytes,
-      orderedEquals(image.imageBytes!));
+    expect(
+      reopened.elements
+          .firstWhere((element) => element.id == image.id)
+          .imageBytes,
+      orderedEquals(image.imageBytes!),
+    );
 
     controller.undo();
-    expect(controller.document.elements.any((element) => element.id == slot.id), isTrue);
-    expect(controller.document.elements.where((element) =>
-      element.kind == ElementKind.text && element.text.contains('35 × 45 mm') &&
-      element.x >= slot.x && element.x < slot.x + slot.width &&
-      element.y >= slot.y && element.y < slot.y + slot.height), hasLength(1));
+    expect(
+      controller.document.elements.any((element) => element.id == slot.id),
+      isTrue,
+    );
+    expect(
+      controller.document.elements.where(
+        (element) =>
+            element.kind == ElementKind.text &&
+            element.text.contains('35 × 45 mm') &&
+            element.x >= slot.x &&
+            element.x < slot.x + slot.width &&
+            element.y >= slot.y &&
+            element.y < slot.y + slot.height,
+      ),
+      hasLength(1),
+    );
     controller.dispose();
   });
 
   test('rejects a regular rectangle instead of deleting unrelated artwork', () {
-    final document = DesignDocument.blank(name: 'Test', widthMm: 100, heightMm: 100);
+    final document = DesignDocument.blank(
+      name: 'Test',
+      widthMm: 100,
+      heightMm: 100,
+    );
     final controller = DesignController(document);
     final rectangle = DesignElement(
-      id: 'ordinary-rectangle', kind: ElementKind.rectangle,
-      x: 10, y: 10, width: 35, height: 45,
+      id: 'ordinary-rectangle',
+      kind: ElementKind.rectangle,
+      x: 10,
+      y: 10,
+      width: 35,
+      height: 45,
     );
     controller.add(rectangle);
     expect(
-      () => controller.replaceSelectedPhotoPlaceholder(DesignElement(
-        id: 'photo-image', kind: ElementKind.image,
-        x: 10, y: 10, width: 35, height: 45, imageBytes: samplePng(),
-      )),
+      () => controller.replaceSelectedPhotoPlaceholder(
+        DesignElement(
+          id: 'photo-image',
+          kind: ElementKind.image,
+          x: 10,
+          y: 10,
+          width: 35,
+          height: 45,
+          imageBytes: samplePng(),
+        ),
+      ),
       throwsStateError,
     );
     expect(controller.document.elements.single.id, rectangle.id);

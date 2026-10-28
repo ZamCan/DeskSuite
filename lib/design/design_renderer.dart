@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
+import '../app/brand.dart';
+
 import 'design_document.dart';
 
 /// Imported image decodes are shared by preview and export, and never fetched online.
@@ -161,7 +163,7 @@ class DesignPainter extends CustomPainter {
             );
             canvas.restore();
           } else {
-            canvas.drawRect(bounds, Paint()..color = const Color(0xffe7e2da));
+            canvas.drawRect(bounds, Paint()..color = ZamCanBrand.placeholder);
           }
       }
       if (item.id == selectedId) {
@@ -172,7 +174,7 @@ class DesignPainter extends CustomPainter {
           Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = stroke
-            ..color = const Color(0xffbe6348),
+            ..color = ZamCanBrand.accent,
         );
         canvas.drawRect(
           Rect.fromCenter(
@@ -180,7 +182,7 @@ class DesignPainter extends CustomPainter {
             width: handle,
             height: handle,
           ),
-          Paint()..color = const Color(0xffbe6348),
+          Paint()..color = ZamCanBrand.accent,
         );
       }
       canvas.restore();

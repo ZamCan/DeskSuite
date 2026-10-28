@@ -117,7 +117,7 @@ void main() {
       });
       final repo = ProjectRepository(dir);
       await tester.pumpWidget(
-        DeskSuiteApp(repository: repo, fileGateway: NoFiles()),
+        DeskSuiteApp(repository: repo, fileGateway: NoFiles(), showBoot: false),
       );
       await settleIo(tester);
 

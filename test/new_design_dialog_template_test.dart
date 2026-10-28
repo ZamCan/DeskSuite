@@ -4,7 +4,9 @@ import 'package:desksuite/design/design_document.dart';
 import 'package:desksuite/workspace/new_design_dialog.dart';
 
 void main() {
-  testWidgets('selecting a template creates an editable design', (tester) async {
+  testWidgets('selecting a template creates an editable design', (
+    tester,
+  ) async {
     DesignDocument? created;
     await tester.pumpWidget(
       MaterialApp(
@@ -31,11 +33,17 @@ void main() {
     await tester.tap(find.text('Business card').last);
     await tester.pumpAndSettle();
     expect(
-      tester.widget<TextFormField>(find.byKey(const Key('canvas-width'))).controller!.text,
+      tester
+          .widget<TextFormField>(find.byKey(const Key('canvas-width')))
+          .controller!
+          .text,
       '85.0',
     );
     expect(
-      tester.widget<TextFormField>(find.byKey(const Key('canvas-height'))).controller!.text,
+      tester
+          .widget<TextFormField>(find.byKey(const Key('canvas-height')))
+          .controller!
+          .text,
       '55.0',
     );
 

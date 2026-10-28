@@ -74,10 +74,18 @@ void main() {
   );
 
   test('poster exports offer only resolutions within the pixel budget', () {
-    final a0 = DesignDocument.blank(name: 'A0 poster', widthMm: 841, heightMm: 1189);
+    final a0 = DesignDocument.blank(
+      name: 'A0 poster',
+      widthMm: 841,
+      heightMm: 1189,
+    );
     expect(exportDimensions(a0, 100).width, 3311);
     expect(() => exportDimensions(a0, 150), throwsFormatException);
-    final banner = DesignDocument.blank(name: '48 by 72 banner', widthMm: 1219.2, heightMm: 1828.8);
+    final banner = DesignDocument.blank(
+      name: '48 by 72 banner',
+      widthMm: 1219.2,
+      heightMm: 1828.8,
+    );
     expect(exportDimensions(banner, 36).width, 1728);
     expect(() => exportDimensions(banner, 72), throwsFormatException);
   });
@@ -181,9 +189,12 @@ void main() {
     ).copyWith(elements: elements);
     final controller = DesignController(document);
     addTearDown(controller.dispose);
-    final slot = elements.firstWhere((element) =>
-      element.kind == ElementKind.rectangle &&
-      element.width == 35 && element.height == 45);
+    final slot = elements.firstWhere(
+      (element) =>
+          element.kind == ElementKind.rectangle &&
+          element.width == 35 &&
+          element.height == 45,
+    );
     controller.select(slot.id);
     final photo = DesignElement(
       id: 'photo_filled_test',
@@ -196,15 +207,35 @@ void main() {
     );
     controller.replaceSelectedPhotoPlaceholder(photo);
     expect(controller.selectedId, photo.id);
-    expect(controller.document.elements.where((e) => e.kind == ElementKind.image), hasLength(1));
-    expect(controller.document.elements.where((e) =>
-      e.kind == ElementKind.rectangle && e.width == 35 && e.height == 45), hasLength(19));
-    expect(controller.document.elements.where((e) =>
-      e.kind == ElementKind.text && e.text.contains('35 × 45 mm')), hasLength(19));
+    expect(
+      controller.document.elements.where((e) => e.kind == ElementKind.image),
+      hasLength(1),
+    );
+    expect(
+      controller.document.elements.where(
+        (e) =>
+            e.kind == ElementKind.rectangle && e.width == 35 && e.height == 45,
+      ),
+      hasLength(19),
+    );
+    expect(
+      controller.document.elements.where(
+        (e) => e.kind == ElementKind.text && e.text.contains('35 × 45 mm'),
+      ),
+      hasLength(19),
+    );
     final reopened = DesignDocument.decode(controller.document.encode());
-    expect(reopened.elements.firstWhere((e) => e.id == photo.id).imageBytes, orderedEquals([1, 2, 3]));
+    expect(
+      reopened.elements.firstWhere((e) => e.id == photo.id).imageBytes,
+      orderedEquals([1, 2, 3]),
+    );
     controller.undo();
-    expect(controller.document.elements.where((e) =>
-      e.kind == ElementKind.rectangle && e.width == 35 && e.height == 45), hasLength(20));
+    expect(
+      controller.document.elements.where(
+        (e) =>
+            e.kind == ElementKind.rectangle && e.width == 35 && e.height == 45,
+      ),
+      hasLength(20),
+    );
   });
 }

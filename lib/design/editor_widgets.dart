@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../app/brand.dart';
+
 import '../app/theme.dart';
 import 'design_controller.dart';
 import 'design_document.dart';
@@ -234,7 +236,7 @@ class ObjectInspector extends StatelessWidget {
                               border: Border.all(
                                 color: item.color == color
                                     ? accent
-                                    : const Color(0xffd8d1c8),
+                                    : ZamCanBrand.swatchRing,
                                 width: item.color == color ? 3 : 1,
                               ),
                             ),

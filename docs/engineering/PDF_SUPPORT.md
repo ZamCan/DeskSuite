@@ -42,6 +42,21 @@ native one would need a separate ABI matrix.
 - Bytes returned by the editor are re-validated as a PDF before they are written;
   an editor that returns something else produces an error and writes nothing.
 
+`lib/pdf/pdf_combine.dart`
+
+- Combine PDFs: pick two or more documents one at a time, see each file's page
+  count, remove a mistaken choice, then join them in the order shown. The join
+  runs through `PdfMerger.merge` from the same engine (the later documents are
+  imported into the first), the result is inspected again, and the sum of the
+  input page counts must equal the output page count or nothing is written.
+- Each input is validated with the same rules as the editor, and a failure names
+  the file ("File 2 cannot be combined: …") instead of blaming the merge.
+- The output is a new file, `<first-name>-combined.pdf`; the sources are not
+  modified, and a test reads them before and after the merge to prove it.
+- Tests: `test/pdf_combine_test.dart` (8 cases over real generated PDFs, 1–3
+  pages, including order, page totals and non-PDF/empty refusals) and four
+  widget cases in `test/pdf_studio_page_test.dart` that drive the actual dialog.
+
 ## Before this change
 
 The conversion catalogue declared "Existing PDF → images, edited pages or
@@ -51,9 +66,8 @@ remaining unavailable route is password-protected PDFs, which is still true.
 
 ## Not implemented, and not claimed
 
-- **Merging two existing PDFs** into one file from the app's own UI. The engine
-  can insert pages from another document, but DeskSuite does not expose a merge
-  workflow yet, so the catalogue lists it as unavailable.
+- **Reordering the source files inside one combine pass with drag and drop.**
+  Order is the order you add them and a wrong pick is removed and re-added.
 - **Compression to a target size.** The engine has a compressor; DeskSuite does
   not expose it yet.
 - **PDF → Office / PDF → images as a batch conversion** outside the viewer.

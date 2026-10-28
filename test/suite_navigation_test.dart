@@ -117,7 +117,9 @@ void main() {
         heightMm: 297,
       );
       await tester.runAsync(() => repo.save(existing));
-      await tester.pumpWidget(DeskSuiteApp(fileGateway: NoFiles()));
+      await tester.pumpWidget(
+        DeskSuiteApp(fileGateway: NoFiles(), showBoot: false),
+      );
       await settleIo(tester);
       await navigate(tester, 'Creative Studio');
       final legacy = find.byKey(const ValueKey('legacy-123'));

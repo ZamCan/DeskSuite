@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../app/brand.dart';
+import '../app/zamcan_mark.dart';
+
 /// Short, revisitable guides link to the real processing tools. The bundled
 /// material is fictional and never replaces a user's existing files.
 class GettingStartedPage extends StatelessWidget {
@@ -21,6 +24,10 @@ class GettingStartedPage extends StatelessWidget {
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
     children: [
+      // The tutorial opens with the same lockup as the boot screen, so the app
+      // is introduced once and then stays that way.
+      const ZamCanLockup(markSize: 44),
+      const SizedBox(height: 18),
       Text(
         'Getting started',
         style: Theme.of(context).textTheme.headlineSmall
@@ -29,6 +36,14 @@ class GettingStartedPage extends StatelessWidget {
       const SizedBox(height: 8),
       const Text(
         'Practise with fictional examples. The same local engines work on images you choose. No account is required.',
+      ),
+      const SizedBox(height: 6),
+      Text(
+        ZamCanBrand.tagline,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: ZamCanColors.of(context).accentDeep,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       const SizedBox(height: 20),
       _GuideCard(

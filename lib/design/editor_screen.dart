@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 
+import '../app/brand.dart';
+
 import '../core/ids.dart';
 import '../printing/design_export.dart';
 import '../printing/print_gateway.dart';
@@ -844,7 +846,7 @@ class _EditorScreenState extends State<EditorScreen>
                 if (_busy)
                   const Positioned.fill(
                     child: ColoredBox(
-                      color: Color(0x66000000),
+                      color: ZamCanBrand.scrim,
                       child: Center(
                         child: Card(
                           child: Padding(
@@ -883,8 +885,8 @@ class _EditorScreenState extends State<EditorScreen>
         Offset toDocument(Offset p) => Offset(p.dx / scale, p.dy / scale);
         return ColoredBox(
           color: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xff302e2a)
-              : const Color(0xffeae6df),
+              ? ZamCanBrand.canvasDark
+              : ZamCanBrand.canvasLight,
           child: Stack(
             children: [
               Positioned.fill(
