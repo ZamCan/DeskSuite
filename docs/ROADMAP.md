@@ -49,3 +49,14 @@
 ## Release gate: **not passed**
 
 Require a signed, reproducible Android release with stable package ID and key custody; real-device cold/offline/upgrade/process-death/storage-full tests; native file-picker and printer checks; verified backup/restore; dependency/licence and permissions review; accessibility/performance testing; and a reviewed CI run/artifact. A host test pass or a debug APK is not equivalent to these gates.
+
+
+## Creative imaging, ID photography and template expansion
+
+- [ ] Audit the existing Photo Studio, photo-sheet, project serialization, template/sample assets and export/print services before adding another engine.
+- [ ] Build a shared editable template registry/schema with licence/provenance metadata, preview thumbnails, stable IDs and versioning.
+- [ ] Add configurable ID/passport-style presets (authority-specific where verified), assisted and manual crop/pose guidance, background presets, output review, exact physical sizing and multi-photo print sheets. Do not claim official acceptance.
+- [ ] Evaluate local background segmentation models versus classical methods; benchmark hair edges, transparent objects, memory, latency, licences and offline operation before selecting one shared implementation.
+- [ ] Add editable school/staff IDs, visitor/event badges, business cards, posters/flyers and presentation themes/layouts through the shared catalogue rather than flattened images.
+- [ ] Benchmark one optional SLM runtime behind a capability interface for reviewed OCR-correction/layout suggestions only; keep Tesseract OCR and deterministic processing as real engines and ensure core workflows work without model downloads or network access.
+- [ ] Add fixture-based tests for dimensions, aspect ratios, masks/transparency, template save/reopen, print-sheet layout, missing model, cancellation and low-memory failure; verify on modest Android hardware.
