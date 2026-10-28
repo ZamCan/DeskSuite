@@ -30,6 +30,28 @@ void main() {
     expect(first, orderedEquals(firstCopy));
   });
 
+  test('uses custom miniature and poster physical page dimensions', () async {
+    final small = await createScanPdf(ScanPdfRequest(
+      [page(30, 50, 80)],
+      pageWidthMm: 28,
+      pageHeightMm: 40,
+    ));
+    final smallText = latin1.decode(small);
+    final smallBox = RegExp(r'/MediaBox\\s*\\[\\s*0(?:\\.0+)?\\s+0(?:\\.0+)?\\s+([0-9.]+)\\s+([0-9.]+)\\s*\\]').firstMatch(smallText)!;
+    expect(double.parse(smallBox.group(1)!), closeTo(28 * 72 / 25.4, .02));
+    expect(double.parse(smallBox.group(2)!), closeTo(40 * 72 / 25.4, .02));
+
+    final poster = await createScanPdf(ScanPdfRequest(
+      [page(30, 50, 90)],
+      pageWidthMm: 1219.2,
+      pageHeightMm: 1828.8,
+    ));
+    final posterText = latin1.decode(poster);
+    final posterBox = RegExp(r'/MediaBox\\s*\\[\\s*0(?:\\.0+)?\\s+0(?:\\.0+)?\\s+([0-9.]+)\\s+([0-9.]+)\\s*\\]').firstMatch(posterText)!;
+    expect(double.parse(posterBox.group(1)!), closeTo(1219.2 * 72 / 25.4, .02));
+    expect(double.parse(posterBox.group(2)!), closeTo(1828.8 * 72 / 25.4, .02));
+  });
+
   test(
     'rejects missing, excessive, malformed and non-PNG document pages',
     () async {
