@@ -136,7 +136,7 @@ List<DesignElement> buildDesignTemplateElements(
     width: width,
     height: height,
     text: value,
-    fontSizePt: size.clamp(4, 500),
+    fontSizePt: size.clamp(4, 500).toDouble(),
     color: color,
     bold: bold,
     textAlignment: alignment,
