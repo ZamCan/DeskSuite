@@ -109,7 +109,7 @@ void main() {
   testWidgets('rejects oversized PDFs before allocating an editor copy', (
     tester,
   ) async {
-    final oversized = Uint8List(64 * 1024 * 1024 + 1);
+    final oversized = Uint8List(48 * 1024 * 1024 + 1);
     oversized.setRange(0, 5, '%PDF-'.codeUnits);
     final files = PdfFiles();
     await tester.pumpWidget(
@@ -126,7 +126,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(
-      find.textContaining('larger than the 64 MB local editing limit'),
+      find.textContaining('larger than the 48 MB local editing limit'),
       findsOneWidget,
     );
     expect(find.byType(PdfEditorView), findsNothing);
