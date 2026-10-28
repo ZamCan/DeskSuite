@@ -92,7 +92,7 @@ class GettingStartedPage extends StatelessWidget {
       _GuideCard(
         icon: Icons.photo_size_select_large_outlined,
         title: 'Resize an image',
-        description: 'In Photo Studio, choose Try a sample image → Resize. Enter 512 pixels for width, keep the aspect ratio, then export and review the actual dimensions and encoded file size.',
+        description: 'In Photo Studio, choose Try a sample image → Resize. Enter 512 pixels for width, or select Percentage and enter 50 for 688 × 384 pixels. Choose a resampling method, then export and review the actual dimensions and file size.',
         button: 'Open Photo Studio',
         onPressed: onPhoto,
       ),

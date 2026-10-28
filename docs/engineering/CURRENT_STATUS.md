@@ -12,14 +12,15 @@ declaration that the whole directive or a release is finished. The full
 | Check | Result | Where |
 | --- | --- | --- |
 | Earlier baseline `4c15523` CI | Flutter analyze/test and matrix builds succeeded in the repository's independently running CI | [run 40634495478](https://github.com/ZamCan/DeskSuite/actions/runs/40634495478) |
+| Merged main `b226257` CI | Independently run Flutter analyze/tests and Android/Linux/Windows/unsigned-iOS build jobs succeeded **for main only**, before feature-branch changes. | [run 40642887765](https://github.com/ZamCan/DeskSuite/actions/runs/40642887765) |
 | Later main `1cef153` CI | Analysis failed on all four jobs; logs require authentication. The feature branch fixes a separately reproduced constant-expression error in that main snapshot, but other project errors cannot be excluded until Flutter runs. | [run 40635793861](https://github.com/ZamCan/DeskSuite/actions/runs/40635793861) |
 | New enhancement and corner pixel cores | DartPad 3.13.7 DDC/Node smoke checks passed, including 40 randomized images and synthetic corner/fallback cases | [validation](VALIDATION.md) |
 | Media/raster integration | Actual Dart budget and sheet-geometry checks passed for 56 listed presets under DartPad DDC/Node; UI and optimizer control-flow analyses used stubs | [validation](VALIDATION.md) |
 | New Flutter codec, widget, OCR-handoff and full-suite tests | **Written, not run in this workspace** | Flutter/Dart tools are absent from this snapshot |
-| Android/device and signed release for the new source | **Not built or tested here** | Existing CI was for the earlier baseline only; signing and device checks remain separate |
+| Android/device and signed release for the new source | **Not built or tested here** | Independent CI passed for main only; signing and device checks remain separate |
 
-The baseline CI's successful build steps do not prove a signed release, actual
-camera/OCR behavior or the later changes in this feature branch. The owner asked
+The independently triggered CI builds do not prove a signed release, actual
+camera/OCR behavior or the changes in this feature branch. The owner asked
 that no Android toolchain be downloaded or packaging performed in this workspace.
 
 ## Earlier implementation slice — Photo print size

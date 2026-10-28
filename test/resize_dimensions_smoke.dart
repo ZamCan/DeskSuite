@@ -26,6 +26,15 @@ void main() {
     'small-image rounding',
   );
   check(
+    percentagePhotoDimensions(
+          sourceWidth: 1376,
+          sourceHeight: 768,
+          percent: 50,
+        ) ==
+        (width: 688, height: 384),
+    'sample tutorial',
+  );
+  check(
     percentagePhotoDimensions(sourceWidth: 1, sourceHeight: 5, percent: 1) ==
         (width: 1, height: 1),
     'minimum one pixel',

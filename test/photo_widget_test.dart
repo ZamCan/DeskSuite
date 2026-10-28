@@ -308,6 +308,50 @@ void main() {
     },
   );
 
+  testWidgets('sample tutorial performs a 50 percent resize and exports', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final files = PhotoFiles();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PhotoPage(
+            files: files,
+            processor: (request) async => processPhoto(request),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('photo-example')));
+    await settleIo(tester);
+    await expectWorkingSize(tester, '1376 × 768 px · working copy');
+    await reveal(tester, find.byKey(const Key('photo-resize')));
+    await tester.tap(find.byKey(const Key('photo-resize')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('photo-resize-mode')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Percentage').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('photo-scale-percent')), '50');
+    await tester.pump();
+    expect(find.text('Output: 688 × 384 pixels'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Resize'));
+    await settleIo(tester);
+    await expectWorkingSize(tester, '688 × 384 px · working copy');
+    await reveal(tester, find.byKey(const Key('photo-png')));
+    await tester.tap(find.byKey(const Key('photo-png')));
+    await settleIo(tester);
+    await tester.tap(find.byKey(const Key('photo-save-copy')));
+    await settleIo(tester);
+    final decoded = img.decodePng(files.exported!)!;
+    expect([decoded.width, decoded.height], [688, 384]);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'percentage resize uses rounded dimensions and selected resampling',
     (tester) async {

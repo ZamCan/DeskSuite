@@ -121,6 +121,12 @@ Require a signed, reproducible Android release with stable package ID and key cu
 - [ ] Verify physical dimensions, colour/quality and media compatibility on actual supported devices before claiming production readiness.
 
 
+## 2026-10-28 — percentage photo resize
+
+- [x] Add bounded percentage resizing relative to the current photo working copy, with a rounded-dimensions preview and nearest/linear/cubic selection in the existing processor.
+- [x] Add dependency-free geometry smoke coverage and source-level codec/widget regression tests.
+- [ ] Run the real image-codec and Flutter widget tests, then validate large images, transparency, memory and responsiveness on target Android devices.
+
 ## 2026-10-28 — complete media and engine integration gate
 
 - [x] Expand the photo-sheet sheet-media selector from small photo paper to ISO A/B formats, US letter/legal/tabloid/ledger, photo prints, and poster/large-format presets; allow custom media up to 2500 mm per side.

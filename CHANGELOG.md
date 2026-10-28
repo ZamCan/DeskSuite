@@ -18,7 +18,7 @@
 - Added optional, reviewable bright-page corner suggestions with manual fallback, and a direct selected-scan-page handoff to the offline OCR screen. Scan multipage PDFs remain image-only; OCR searchable PDF handles one image and uses the original recognized words, with a warning after text edits. Corrected TXT/DOCX remain available.
 - Bounded internal scan PNGs up to 16 MiB can be prepared for OCR; external image picks remain at 8 MiB. Failed preparation no longer leaves the old image available under a new label. Added tests, but this branch has not run through Flutter or Android.
 - Integrated the later main snapshot's source-referenced photo-sheet profiles, corrected a Dart constant-expression error and clarified profile/upload and unaltered-photo limits. Updated template slot-label assertions for the new heading; these Flutter tests remain unrun.
-- Pixel smoke/sample tests passed under DartPad DDC/Node; the repository's separately run CI passed for the earlier `4c15523` baseline only. Later main `1cef153` failed analysis independently; full logs were unavailable, so this branch still needs a complete Flutter run. No device or signed-release result is claimed for the new code. See [validation](docs/engineering/VALIDATION.md).
+- Pixel smoke/sample tests passed under DartPad DDC/Node. Separately run CI passed for main `b226257`, not this feature branch; an earlier `1cef153` run failed analysis and full logs were unavailable. This branch still needs the complete Flutter run. No device or signed-release result is claimed for the new code. See [validation](docs/engineering/VALIDATION.md).
 
 ## Unreleased — document and photo cleanup (not a release)
 

@@ -109,7 +109,7 @@ yet. Selling more than the stock on hand is refused and changes nothing.
 - **Reduce photo specks**: open Photo Studio, choose **Try a noisy garden photo**, reduce specks, zoom and compare with the original. Some specks and fine-detail changes may remain. [Earlier evidence](engineering/cleanup-evidence.png) shows the pixel engine, not an Android screenshot.
 - **Getting started → Make a multipage image PDF** opens the scan workspace. Select **Try an example → Two-page report**, reorder it and export.
 - **Correct a perspective page** uses the fictional angled practice report. Select A4 portrait and try the corner-suggestion wand or adjust the handles manually. Check all four before applying and compare with **Reset page**.
-- **Resize an image** uses the synthetic photo and real photo processor. Try width 512 with aspect preserved; review the resulting file.
+- **Resize an image** uses the synthetic photo and real photo processor. Try width 512 with aspect preserved, or select Percentage and enter 50 to produce 688 × 384 pixels; review the resulting file.
 - **Edit an example design** imports a new editable `.dsdesign` copy. Its text is editable inside DeskSuite; it is not a DOCX document or a word processor.
 
 Other bundled forms, names and invoices are fictional and are not official documents.
