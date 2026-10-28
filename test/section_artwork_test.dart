@@ -42,6 +42,47 @@ void main() {
     }
   });
 
+  testWidgets('each drawer illustration belongs to its actual destination', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    WorkspaceSection? selected;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 246,
+            child: WorkspaceSidebar(
+              section: WorkspaceSection.workspace,
+              onNavigate: (value) => selected = value,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final expected = <WorkspaceSection, String>{
+      WorkspaceSection.scans: SectionArt.scan,
+      WorkspaceSection.photos: SectionArt.photo,
+      WorkspaceSection.text: SectionArt.text,
+      WorkspaceSection.office: SectionArt.office,
+      WorkspaceSection.design: SectionArt.design,
+      WorkspaceSection.projects: SectionArt.projects,
+    };
+    for (final item in expected.entries) {
+      final art = find.byKey(ValueKey('nav-section-art-${item.key.name}'));
+      expect(art, findsOneWidget, reason: item.key.name);
+      expect(tester.widget<SectionArtwork>(art).asset, item.value);
+      await tester.tap(art);
+      await tester.pumpAndSettle();
+      expect(selected, item.key);
+    }
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'tool card remains tappable and fits large text on a narrow screen',
     (tester) async {
@@ -60,10 +101,11 @@ void main() {
                 child: SizedBox(
                   width: 280,
                   child: WorkspaceToolCard(
-                    artwork: SectionArt.scan,
+                    section: WorkspaceSection.scans,
                     title: 'Scan documents',
                     description: 'Capture, clean and assemble pages.',
-                    onTap: () => tapped = true,
+                    onNavigate: (section) =>
+                        tapped = section == WorkspaceSection.scans,
                   ),
                 ),
               ),

@@ -8,7 +8,7 @@ DeskSuite is an Android-first, local-first multipurpose creative, office, docume
 
 ## Product areas
 
-The owner-selected dimensional DS scan-frame identity is applied to the in-app brand, Android launcher source and Windows/Linux desktop icon assets; the launch screen and Android themed icon use simplified adaptations. Earlier candidates are used only as illustrations for section cards and identities, never as replacement app logos. Native launcher and device rendering are not yet verified. See [brand asset sources](docs/engineering/BRAND_ASSETS.md).
+The owner-selected dimensional DS scan-frame identity is applied to the in-app brand, Android launcher source and Windows/Linux desktop icon assets; the launch screen and Android themed icon use simplified adaptations. Earlier candidates are used only as illustrations for section cards and identities, never as replacement app logos. Native launcher and device rendering are not yet verified. See [brand asset sources](docs/engineering/BRAND_ASSETS.md) and the [artwork-to-page map](docs/engineering/APP_ARTWORK_MAP.md).
 
 DeskSuite is organized around one shared workspace: **Home & Files, Studio, Image Lab, Capture, Office, PDF & Print, and Business**. These are coordinated product areas, not separate mini-apps. They should share projects, asset references, import/export, print services, navigation, design tokens and recovery behavior. The implemented features below are a truthful inventory of the current source, not a claim that all benchmark-product capabilities are complete.
 
@@ -47,6 +47,7 @@ dart test/pixel_algorithms_smoke.dart # standalone pixel checks, no Flutter depe
 dart test/page_corner_pixels_smoke.dart # standalone corner-suggestion checks
 dart test/compression_dimensions_smoke.dart # bounded byte-target geometry
 python3 tools/test_brand_assets.py   # requires Pillow
+python3 tools/test_workspace_routing.py # uses the existing Dart SDK and UI stubs
 python3 tools/test_linux_launcher.py # user-local launcher and optional GIO launch test
 python3 tools/test_desktop_packaging.py # inspect packaging definitions, not a build
 node tools/test_office_renderer.mjs  # WASM + four fictional fixtures; optional upstream fixture directory

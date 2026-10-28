@@ -272,6 +272,83 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       ? _lightStudio(create())
       : const SizedBox.shrink();
 
+  /// Each enum value resolves to its own real page, independent of enum order.
+  /// The exhaustive switch makes an unmapped new section a compile-time error.
+  Widget _sectionPage(WorkspaceSection section) => switch (section) {
+    WorkspaceSection.workspace => _workspace(),
+    WorkspaceSection.projects => _projectPage(),
+    WorkspaceSection.settings => _settings(),
+    WorkspaceSection.design =>
+      _visited.contains(section)
+          ? CreativeStudioPage(
+              repository: widget.repository,
+              files: widget.files,
+              onEarlierEditor: _openEarlierStudio,
+            )
+          : const SizedBox.shrink(),
+    WorkspaceSection.photos => _visitedStudio(
+      section,
+      () => legacy.PhotoPage(files: widget.files),
+    ),
+    WorkspaceSection.notes => _visitedStudio(
+      section,
+      () => const legacy.NotesPage(),
+    ),
+    WorkspaceSection.printing => _visitedStudio(
+      section,
+      () => const legacy.PrintPage(),
+    ),
+    WorkspaceSection.business => _visitedStudio(
+      section,
+      () => legacy.BusinessPage(files: widget.files),
+    ),
+    WorkspaceSection.scans =>
+      _visited.contains(section)
+          ? ScanStudioPage(
+              files: widget.files,
+              camera: widget.camera,
+              recoveredCapture: _recoveredCapture,
+            )
+          : const SizedBox.shrink(),
+    WorkspaceSection.guide =>
+      _visited.contains(section)
+          ? GettingStartedPage(
+              onScan: () => _navigate(WorkspaceSection.scans),
+              onPhoto: () => _navigate(WorkspaceSection.photos),
+              onText: () => _navigate(WorkspaceSection.text),
+              onOffice: () => _navigate(WorkspaceSection.office),
+              onEditableExample: _openEditableExample,
+            )
+          : const SizedBox.shrink(),
+    WorkspaceSection.conversions =>
+      _visited.contains(section)
+          ? ConversionCatalogPage(
+              onOpen: (target) => _navigate(switch (target) {
+                ConversionTarget.photos => WorkspaceSection.photos,
+                ConversionTarget.scans => WorkspaceSection.scans,
+                ConversionTarget.projects => WorkspaceSection.projects,
+                ConversionTarget.design => WorkspaceSection.design,
+                ConversionTarget.notes => WorkspaceSection.notes,
+                ConversionTarget.text => WorkspaceSection.text,
+                ConversionTarget.office => WorkspaceSection.office,
+              }),
+            )
+          : const SizedBox.shrink(),
+    WorkspaceSection.text =>
+      _visited.contains(section)
+          ? TextExtractionPage(files: widget.files)
+          : const SizedBox.shrink(),
+    WorkspaceSection.office =>
+      _visited.contains(section)
+          ? OfficeConvertPage(
+              picker: widget.files is DocumentPicker
+                  ? widget.files as DocumentPicker
+                  : const _NoDocumentPicker(),
+              files: widget.files,
+            )
+          : const SizedBox.shrink(),
+  };
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
@@ -296,84 +373,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       child: IndexedStack(
                         index: _section.index,
                         children: [
-                          _workspace(),
-                          _projectPage(),
-                          _settings(),
-                          _visited.contains(WorkspaceSection.design)
-                              ? CreativeStudioPage(
-                                  repository: widget.repository,
-                                  files: widget.files,
-                                  onEarlierEditor: _openEarlierStudio,
-                                )
-                              : const SizedBox.shrink(),
-                          _visitedStudio(
-                            WorkspaceSection.photos,
-                            () => legacy.PhotoPage(files: widget.files),
-                          ),
-                          _visitedStudio(
-                            WorkspaceSection.notes,
-                            () => const legacy.NotesPage(),
-                          ),
-                          _visitedStudio(
-                            WorkspaceSection.printing,
-                            () => const legacy.PrintPage(),
-                          ),
-                          _visitedStudio(
-                            WorkspaceSection.business,
-                            () => legacy.BusinessPage(files: widget.files),
-                          ),
-                          _visited.contains(WorkspaceSection.scans)
-                              ? ScanStudioPage(
-                                  files: widget.files,
-                                  camera: widget.camera,
-                                  recoveredCapture: _recoveredCapture,
-                                )
-                              : const SizedBox.shrink(),
-                          _visited.contains(WorkspaceSection.guide)
-                              ? GettingStartedPage(
-                                  onScan: () =>
-                                      _navigate(WorkspaceSection.scans),
-                                  onPhoto: () =>
-                                      _navigate(WorkspaceSection.photos),
-                                  onText: () =>
-                                      _navigate(WorkspaceSection.text),
-                                  onOffice: () =>
-                                      _navigate(WorkspaceSection.office),
-                                  onEditableExample: _openEditableExample,
-                                )
-                              : const SizedBox.shrink(),
-                          _visited.contains(WorkspaceSection.conversions)
-                              ? ConversionCatalogPage(
-                                  onOpen: (target) =>
-                                      _navigate(switch (target) {
-                                        ConversionTarget.photos =>
-                                          WorkspaceSection.photos,
-                                        ConversionTarget.scans =>
-                                          WorkspaceSection.scans,
-                                        ConversionTarget.projects =>
-                                          WorkspaceSection.projects,
-                                        ConversionTarget.design =>
-                                          WorkspaceSection.design,
-                                        ConversionTarget.notes =>
-                                          WorkspaceSection.notes,
-                                        ConversionTarget.text =>
-                                          WorkspaceSection.text,
-                                        ConversionTarget.office =>
-                                          WorkspaceSection.office,
-                                      }),
-                                )
-                              : const SizedBox.shrink(),
-                          _visited.contains(WorkspaceSection.text)
-                              ? TextExtractionPage(files: widget.files)
-                              : const SizedBox.shrink(),
-                          _visited.contains(WorkspaceSection.office)
-                              ? OfficeConvertPage(
-                                  picker: widget.files is DocumentPicker
-                                      ? widget.files as DocumentPicker
-                                      : const _NoDocumentPicker(),
-                                  files: widget.files,
-                                )
-                              : const SizedBox.shrink(),
+                          for (final section in WorkspaceSection.values)
+                            KeyedSubtree(
+                              key: ValueKey('workspace-page-${section.name}'),
+                              child: _sectionPage(section),
+                            ),
                         ],
                       ),
                     ),
@@ -406,7 +410,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             const BrandMark(size: 32),
             const SizedBox(width: 10),
           ] else if (artworkForSection(_section) case final artwork?) ...[
-            SectionArtwork(asset: artwork, size: 32),
+            SectionArtwork(
+              key: ValueKey('section-header-art-${_section.name}'),
+              asset: artwork,
+              size: 32,
+            ),
             const SizedBox(width: 10),
           ],
           Expanded(
@@ -522,60 +530,60 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   width: width,
                   child: WorkspaceToolCard(
                     key: const Key('home-open-scan'),
-                    artwork: SectionArt.scan,
+                    section: WorkspaceSection.scans,
                     title: 'Scan documents',
                     description: 'Capture, clean and assemble pages.',
-                    onTap: () => _navigate(WorkspaceSection.scans),
+                    onNavigate: _navigate,
                   ),
                 ),
                 SizedBox(
                   width: width,
                   child: WorkspaceToolCard(
                     key: const Key('home-open-photo'),
-                    artwork: SectionArt.photo,
+                    section: WorkspaceSection.photos,
                     title: 'Edit a photo',
                     description: 'Adjust and resize an image.',
-                    onTap: () => _navigate(WorkspaceSection.photos),
+                    onNavigate: _navigate,
                   ),
                 ),
                 SizedBox(
                   width: width,
                   child: WorkspaceToolCard(
                     key: const Key('home-open-text'),
-                    artwork: SectionArt.text,
+                    section: WorkspaceSection.text,
                     title: 'Extract text',
                     description: 'Recognize and review words in an image.',
-                    onTap: () => _navigate(WorkspaceSection.text),
+                    onNavigate: _navigate,
                   ),
                 ),
                 SizedBox(
                   width: width,
                   child: WorkspaceToolCard(
                     key: const Key('home-open-converter'),
-                    artwork: SectionArt.office,
+                    section: WorkspaceSection.office,
                     title: 'Convert file',
                     description: 'Read and convert supported document content.',
-                    onTap: () => _navigate(WorkspaceSection.office),
+                    onNavigate: _navigate,
                   ),
                 ),
                 SizedBox(
                   width: width,
                   child: WorkspaceToolCard(
                     key: const Key('home-open-design'),
-                    artwork: SectionArt.design,
+                    section: WorkspaceSection.design,
                     title: 'Creative Studio',
                     description: 'Design an editable layout for print.',
-                    onTap: () => _navigate(WorkspaceSection.design),
+                    onNavigate: _navigate,
                   ),
                 ),
                 SizedBox(
                   width: width,
                   child: WorkspaceToolCard(
                     key: const Key('home-open-projects'),
-                    artwork: SectionArt.projects,
+                    section: WorkspaceSection.projects,
                     title: 'Files & Projects',
                     description: 'Open locally saved design projects.',
-                    onTap: () => _navigate(WorkspaceSection.projects),
+                    onNavigate: _navigate,
                   ),
                 ),
               ],

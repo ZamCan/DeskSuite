@@ -86,6 +86,7 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        key: const Key('guide-clean-page'),
         artwork: SectionArt.scan,
         icon: Icons.auto_fix_high,
         title: 'Clean a shadowed page',
@@ -95,6 +96,7 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        key: const Key('guide-scan-pages'),
         artwork: SectionArt.scan,
         icon: Icons.document_scanner_outlined,
         title: 'Make a multipage image PDF',
@@ -104,6 +106,7 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        key: const Key('guide-correct-page'),
         artwork: SectionArt.scan,
         icon: Icons.crop_free,
         title: 'Correct a perspective page',
@@ -113,6 +116,7 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        key: const Key('guide-clean-photo'),
         artwork: SectionArt.photo,
         icon: Icons.filter_center_focus,
         title: 'Reduce photo specks',
@@ -122,6 +126,7 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        key: const Key('guide-resize-image'),
         artwork: SectionArt.photo,
         icon: Icons.photo_size_select_large_outlined,
         title: 'Resize an image',
@@ -131,6 +136,7 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        key: const Key('guide-edit-design'),
         artwork: SectionArt.design,
         icon: Icons.edit_document,
         title: 'Edit an example design',

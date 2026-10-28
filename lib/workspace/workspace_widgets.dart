@@ -16,7 +16,6 @@ enum WorkspaceSection {
   scans,
   guide,
   conversions,
-  // Appended last: IndexedStack children are indexed by this order.
   text,
   office,
 }
@@ -36,54 +35,66 @@ String? artworkForSection(WorkspaceSection section) => switch (section) {
 class WorkspaceToolCard extends StatelessWidget {
   const WorkspaceToolCard({
     super.key,
-    required this.artwork,
+    required this.section,
     required this.title,
     required this.description,
-    required this.onTap,
+    required this.onNavigate,
   });
 
-  final String artwork;
+  /// The same section determines both the illustration and the destination.
+  final WorkspaceSection section;
   final String title;
   final String description;
-  final VoidCallback onTap;
+  final ValueChanged<WorkspaceSection> onNavigate;
 
   @override
-  Widget build(BuildContext context) => Card(
-    child: InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            SectionArtwork(asset: artwork),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+  Widget build(BuildContext context) {
+    final artwork = artworkForSection(section);
+    assert(artwork != null, 'A tool card must have assigned section artwork.');
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () => onNavigate(section),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              if (artwork != null)
+                SectionArtwork(asset: artwork)
+              else
+                const SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: Icon(Icons.grid_view_rounded),
+                ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.north_east, size: 16),
-          ],
+              const SizedBox(width: 8),
+              const Icon(Icons.north_east, size: 16),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class WorkspaceSidebar extends StatelessWidget {
@@ -97,19 +108,35 @@ class WorkspaceSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    Widget item(IconData icon, String label, WorkspaceSection value) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      child: ListTile(
-        dense: true,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        selected: section == value,
-        selectedTileColor: scheme.primary.withValues(alpha: .09),
-        selectedColor: scheme.primary,
-        leading: Icon(icon, size: 21),
-        title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-        onTap: () => onNavigate(value),
-      ),
-    );
+    Widget item(IconData icon, String label, WorkspaceSection value) {
+      final artwork = artworkForSection(value);
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        child: ListTile(
+          dense: true,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          selected: section == value,
+          selectedTileColor: scheme.primary.withValues(alpha: .09),
+          selectedColor: scheme.primary,
+          leading: artwork == null
+              ? Icon(icon, size: 21)
+              : SectionArtwork(
+                  key: ValueKey('nav-section-art-${value.name}'),
+                  asset: artwork,
+                  size: 28,
+                  fallback: icon,
+                ),
+          title: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          onTap: () => onNavigate(value),
+        ),
+      );
+    }
+
     Widget planned(IconData icon, String label) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: ListTile(

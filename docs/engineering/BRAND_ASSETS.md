@@ -6,18 +6,18 @@ The generated `assets/brand/desksuite-mark.png` is a 512 × 512 RGBA version use
 
 ## Earlier candidates as section identities
 
-The six *other* available designs have been preserved unchanged in `assets/brand/section-sources/` and resized to 256 × 256 assets in `assets/brand/sections/`. These are **internal illustrations**, not alternative app logos. They are used in the Home tool cards and matching section title bars; Scan, Photo, Text, Office and Design images are also used on relevant guide cards. The local original filenames and their current assignments are:
+The six *other* available designs have been preserved unchanged in `assets/brand/section-sources/` and resized to 256 × 256 assets in `assets/brand/sections/`. These are **internal illustrations**, not alternative app logos. They are used in the Home tool cards, corresponding navigation entries and matching section title bars; Scan, Photo, Text, Office and Design images are also used on relevant guide cards. Each Home card derives its artwork and action from the same `WorkspaceSection`, and the actual pages are selected by an exhaustive section-to-page switch rather than a manually ordered list. The local original filenames and their current assignments are:
 
 | Earlier candidate | Internal illustration | Home destination |
 | --- | --- | --- |
 | `01-sapphire-scan.png` | `scan.png` | Scan documents |
 | `03-indigo-orbit.png` | `photo.png` | Photo Studio |
-| `DeskSuite-creative-suite-icon.png` | `text.png` | Text extraction |
+| `DeskSuite-symbolic-logo.png` | `text.png` | Text extraction |
 | `DeskSuite-scan-frame-alternative.png` | `office.png` | Document converter |
-| `DeskSuite-symbolic-logo.png` | `design.png` | Creative Studio |
+| `DeskSuite-creative-suite-icon.png` | `design.png` | Creative Studio |
 | `02-emerald-stack.png` | `projects.png` | Files & Projects |
 
-The existing sapphire, indigo and emerald accents are part of those earlier illustrations, not separate app themes; shared cards, text and chrome still use the coordinated DeskSuite palette. The black matte on the RGB Office alternative is removed using the same blue-surface rule as the selected icon; the other artwork already has alpha. Full-size candidate sources are not declared Flutter assets. Adjacent text names the destinations; images are decorative for accessibility and have a fallback icon. The corresponding Flutter widget/navigation tests are written but have not run here.
+For exact Home keys, drawer entries, actual page classes and guide actions, see [the application artwork map](APP_ARTWORK_MAP.md). The existing sapphire, indigo and emerald accents are part of those earlier illustrations, not separate app themes; shared cards, text and chrome still use the coordinated DeskSuite palette. The black matte on the RGB Office alternative is removed using the same blue-surface rule as the selected icon; the other artwork already has alpha. Full-size candidate sources are not declared Flutter assets. Adjacent text names the destinations; images are decorative for accessibility and have a fallback icon. The corresponding Flutter widget/navigation tests are written but have not run here.
 
 ## Desktop launchers
 

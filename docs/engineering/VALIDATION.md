@@ -1,5 +1,13 @@
 # Validation record
 
+## Artwork mapped to real routes — 2026-10-28
+
+`python3 tools/test_brand_assets.py` passed **ten** host checks. New source checks compare the six Home card section assignments with the shared artwork map, verify every `WorkspaceSection` maps to the intended page class in the exhaustive switch, and compare eight guide illustrations with their callbacks. The Android manifest's launcher/round icon and main launcher intent, selected primary-brand path and startup `BrandMark` reference are checked as source. These are structural checks, not Flutter interaction tests.
+
+The actual `artworkForSection`, `_sectionPage` and `_visitedStudio` methods were compiled with DartPad DDC and executed under Node with fake page/widget classes. The artwork map, thirteen section cases, unvisited lazy placeholders, five guide actions, seven conversion targets and Office picker forwarding passed. The analyzer reported only unused imports and an unused optional stub parameter; the test does **not** exercise Flutter rendering, plugins, persisted state, accessibility, or native devices. The checked-in `tools/test_workspace_routing.py` regenerates the same harness and can run it with the owner's existing local Dart SDK; that local Dart execution was not available here.
+
+DartPad analyzed the changed actual Home, section artwork/sidebar and guide UI composed with type/signature stubs without issues, and formatted the changed Dart files. Added/updated Flutter tests check six Home destinations, card and header artwork, six drawer images and their callbacks, and eight guide image/action pairs, including a narrow large-text card. These tests have **not been run in Flutter here**. A newer GitHub main PDF implementation remains separately unmerged because a trial merge exposed conflicts in other product workflows.
+
 ## Desktop identity and section illustrations — 2026-10-28
 
 The owner's uploaded `DeskSuite-scan-frame-choice.png` and the canonical selected source both hash to `92e47c28fb5cadb71bd779153c831c5f65923d0e029b4c37a38cb08b68feece2`. `python3 tools/test_brand_assets.py` passed **eight** checks, including source fingerprints for six earlier candidates, static Home-card wiring, thumbnail and Android-resource regeneration, and exact pixel comparisons of all ten Windows ICO frames with the selected mark resized to those dimensions. The runner resource ICO matches the canonical desktop ICO. This does not compile a Windows executable or Android resources.

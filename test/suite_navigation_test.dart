@@ -101,25 +101,71 @@ void main() {
     await settleIo(tester);
     expect(find.byType(BrandMark), findsWidgets);
     expect(find.byType(WorkspaceToolCard), findsNWidgets(6));
-    final routes = <String, String>{
-      'home-open-scan': 'scan-import',
-      'home-open-photo': 'photo-choose',
-      'home-open-text': 'ocr-choose',
-      'home-open-converter': 'office-choose',
-      'home-open-design': 'new-design',
-      'home-open-projects': 'projects-page',
+    final routes = <String, (String, WorkspaceSection, String)>{
+      'home-open-scan': (
+        'scan-import',
+        WorkspaceSection.scans,
+        SectionArt.scan,
+      ),
+      'home-open-photo': (
+        'photo-choose',
+        WorkspaceSection.photos,
+        SectionArt.photo,
+      ),
+      'home-open-text': ('ocr-choose', WorkspaceSection.text, SectionArt.text),
+      'home-open-converter': (
+        'office-choose',
+        WorkspaceSection.office,
+        SectionArt.office,
+      ),
+      'home-open-design': (
+        'new-design',
+        WorkspaceSection.design,
+        SectionArt.design,
+      ),
+      'home-open-projects': (
+        'projects-page',
+        WorkspaceSection.projects,
+        SectionArt.projects,
+      ),
     };
     var first = true;
     for (final route in routes.entries) {
       if (!first) await navigate(tester, 'Home');
       first = false;
+      final (targetKey, section, expectedArt) = route.value;
       final shortcut = find.byKey(Key(route.key));
       await reveal(tester, shortcut);
+      expect(tester.widget<WorkspaceToolCard>(shortcut).section, section);
+      final cardArt = find.descendant(
+        of: shortcut,
+        matching: find.byType(SectionArtwork),
+      );
+      expect(tester.widget<SectionArtwork>(cardArt).asset, expectedArt);
       await tester.tap(shortcut);
-      await settleUntil(tester, find.byKey(Key(route.value)));
-      expect(find.byType(SectionArtwork), findsWidgets, reason: route.key);
+      await settleUntil(tester, find.byKey(Key(targetKey)));
+      expect(
+        find.byKey(ValueKey('workspace-page-${section.name}')),
+        findsOneWidget,
+      );
+      final headerArt = find.byKey(
+        ValueKey('section-header-art-${section.name}'),
+      );
+      expect(headerArt, findsOneWidget);
+      expect(tester.widget<SectionArtwork>(headerArt).asset, expectedArt);
+      if (section == WorkspaceSection.photos) {
+        final sample = find.byKey(const Key('photo-example'));
+        await reveal(tester, sample);
+        await tester.tap(sample);
+        await settleUntil(tester, find.byKey(const Key('photo-zoom')));
+      }
       expect(tester.takeException(), isNull, reason: route.key);
     }
+    // Switching sections should not recreate a visited page and lose its work.
+    await navigate(tester, 'Photo Studio');
+    expect(find.byKey(const Key('photo-zoom')), findsOneWidget);
+    expect(find.byKey(const Key('photo-example')), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets(

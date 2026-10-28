@@ -25,12 +25,12 @@ RES = ROOT / 'android/app/src/main/res'
 ANDROID = '{http://schemas.android.com/apk/res/android}'
 SOURCE_HASH = '92e47c28fb5cadb71bd779153c831c5f65923d0e029b4c37a38cb08b68feece2'
 SECTION_HASHES = {
-    'design': '50e02d46759f25ef133dac5b0a1e4ea1cf2bd409e275223acf4d7def548529ed',
+    'design': 'd170a154d2236fe3886713a232103ec49072a4ee0f7791c0e328dcd34ed16e3c',
     'office': 'e12a968b6a4db15e29360f3aa57eec905c8301d61a0dfec132a1ced5bc1854ed',
     'photo': '2b418a90972e69f811be29c2f9ba084dd29b35f621cc80958a4955fbcb1b22c3',
     'projects': '75263bc475b06b9344b2178269985988a46b52e41231d360fb74dffddc89f757',
     'scan': 'a80eaecb51c0dc3d7dfa645b36766f47bae052e9b29cc6673d01c1915d84ccf8',
-    'text': 'd170a154d2236fe3886713a232103ec49072a4ee0f7791c0e328dcd34ed16e3c',
+    'text': '50e02d46759f25ef133dac5b0a1e4ea1cf2bd409e275223acf4d7def548529ed',
 }
 
 
@@ -68,6 +68,17 @@ class BrandAssetsTest(unittest.TestCase):
     def test_resource_xml_points_to_current_layers_and_vector_splash(self):
         for xml in RES.rglob('*.xml'):
             ET.parse(xml)
+        manifest = ET.parse(ROOT / 'android/app/src/main/AndroidManifest.xml').getroot()
+        application = manifest.find('application')
+        self.assertEqual(application.get(ANDROID + 'label'), 'DeskSuite')
+        self.assertEqual(application.get(ANDROID + 'icon'), '@mipmap/ic_launcher')
+        self.assertEqual(application.get(ANDROID + 'roundIcon'), '@mipmap/ic_launcher')
+        launcher = application.find('activity/intent-filter')
+        self.assertEqual(launcher.find('action').get(ANDROID + 'name'), 'android.intent.action.MAIN')
+        self.assertEqual(launcher.find('category').get(ANDROID + 'name'), 'android.intent.category.LAUNCHER')
+        self.assertIn("deskSuiteBrandAsset = 'assets/brand/desksuite-mark.png'",
+                      (ROOT / 'lib/app/theme.dart').read_text())
+        self.assertIn('child: BrandMark(size: size)', (ROOT / 'lib/app/brand_launch.dart').read_text())
         for folder in ['mipmap-anydpi-v26', 'mipmap-anydpi-v33']:
             root = ET.parse(RES / folder / 'ic_launcher.xml').getroot()
             self.assertEqual(root.tag, 'adaptive-icon')
@@ -148,15 +159,69 @@ class BrandAssetsTest(unittest.TestCase):
             ('text', 'text', 'text'), ('converter', 'office', 'office'),
             ('design', 'design', 'design'), ('projects', 'projects', 'projects'),
         ]
+        self.assertIn('final artwork = artworkForSection(section)', widgets)
+        self.assertIn('onTap: () => onNavigate(section)', widgets)
+        self.assertIn('final artwork = artworkForSection(value)', widgets)
+        self.assertIn('onTap: () => onNavigate(value)', widgets)
+        self.assertIn('artworkForSection(_section)', screen)
         for key, art, section in assignments:
             self.assertIn(f'WorkspaceSection.{section} => SectionArt.{art}', widgets)
             pattern = (r'WorkspaceToolCard\((?:(?!WorkspaceToolCard\().)*?'
                        + re.escape(f"key: const Key('home-open-{key}')")
                        + r'(?:(?!WorkspaceToolCard\().)*?'
-                       + re.escape(f'artwork: SectionArt.{art}')
+                       + re.escape(f'section: WorkspaceSection.{section}')
                        + r'(?:(?!WorkspaceToolCard\().)*?'
-                       + re.escape(f'_navigate(WorkspaceSection.{section})'))
+                       + re.escape('onNavigate: _navigate'))
             self.assertRegex(screen, re.compile(pattern, re.S), key)
+
+    def test_section_pages_map_every_enum_to_the_real_page(self):
+        screen = (ROOT / 'lib/workspace/workspace_screen.dart').read_text()
+        widgets = (ROOT / 'lib/workspace/workspace_widgets.dart').read_text()
+        enum = re.search(r'enum WorkspaceSection\s*\{([^}]+)\}', widgets, re.S).group(1)
+        enum = re.sub(r'//[^\n]*', '', enum)
+        sections = re.findall(r'\b[a-z][a-zA-Z0-9]*\b', enum)
+        method = screen.split('Widget _sectionPage(WorkspaceSection section)', 1)[1]
+        method = method.split('\n  @override', 1)[0]
+        cases = list(re.finditer(r'^\s*WorkspaceSection\.([a-z]+)\s*=>', method, re.M))
+        self.assertEqual(len(cases), len(sections))
+        self.assertEqual({match.group(1) for match in cases}, set(sections))
+        expected = {
+            'workspace': '_workspace()', 'projects': '_projectPage()',
+            'settings': '_settings()', 'design': 'CreativeStudioPage(',
+            'photos': 'legacy.PhotoPage(', 'notes': 'legacy.NotesPage(',
+            'printing': 'legacy.PrintPage(', 'business': 'legacy.BusinessPage(',
+            'scans': 'ScanStudioPage(', 'guide': 'GettingStartedPage(',
+            'conversions': 'ConversionCatalogPage(', 'text': 'TextExtractionPage(',
+            'office': 'OfficeConvertPage(',
+        }
+        self.assertEqual(set(expected), set(sections))
+        for index, match in enumerate(cases):
+            end = cases[index + 1].start() if index + 1 < len(cases) else len(method)
+            self.assertIn(expected[match.group(1)], method[match.start():end])
+        self.assertIn('for (final section in WorkspaceSection.values)', screen)
+        self.assertIn('child: _sectionPage(section)', screen)
+        self.assertIn('index: _section.index', screen)
+
+    def test_guide_artwork_is_assigned_to_matching_actions(self):
+        guide = (ROOT / 'lib/workspace/getting_started_page.dart').read_text()
+        assignments = [
+            ('extract-text', 'text', 'onText'),
+            ('convert-office', 'office', 'onOffice'),
+            ('clean-page', 'scan', 'onScan'),
+            ('scan-pages', 'scan', 'onScan'),
+            ('correct-page', 'scan', 'onScan'),
+            ('clean-photo', 'photo', 'onPhoto'),
+            ('resize-image', 'photo', 'onPhoto'),
+            ('edit-design', 'design', 'onEditableExample'),
+        ]
+        for key, art, action in assignments:
+            pattern = (r'_GuideCard\((?:(?!_GuideCard\().)*?'
+                       + re.escape(f"key: const Key('guide-{key}')")
+                       + r'(?:(?!_GuideCard\().)*?'
+                       + re.escape(f'artwork: SectionArt.{art}')
+                       + r'(?:(?!_GuideCard\().)*?'
+                       + re.escape(f'onPressed: {action}'))
+            self.assertRegex(guide, re.compile(pattern, re.S), key)
 
     def test_regeneration_is_byte_identical(self):
         outputs = [ROOT / 'assets/brand/desksuite-mark.png',

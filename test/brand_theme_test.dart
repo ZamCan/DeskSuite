@@ -60,8 +60,12 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byType(BrandMark), findsOneWidget);
-    expect(find.byType(Image), findsOneWidget);
+    final mark = find.byType(BrandMark);
+    expect(mark, findsOneWidget);
+    expect(
+      find.descendant(of: mark, matching: find.byType(Image)),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 }

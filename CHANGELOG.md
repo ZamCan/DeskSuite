@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — artwork mapped to real sections (not a release)
+
+- Connected each of the six Home cards, navigation rows and section headers to a single section-to-art mapping; guide artwork remains matched to its actual action. The design with the ruler and pencil now identifies Creative Studio, while the simpler document/DS candidate identifies Text extraction.
+- Replaced the manually ordered `IndexedStack` child list with a keyed, exhaustive section-to-page switch. This preserves lazy page construction while making new unmapped sections a compile-time error. It does not integrate the independently advanced main-branch PDF work.
+- Ten host brand/mapping tests passed, and the actual artwork map and section switch passed DartPad DDC/Node tests for 13 pages, lazy states, guide/conversion routing and picker forwarding using UI stubs. New Flutter interaction tests remain unrun; no real device or desktop build was tested.
+
 ## Unreleased — selected desktop icon and section artwork (not a release)
 
 - Kept the owner's chosen blue dimensional DS scan-frame PNG as the single app logo. Generated a multi-resolution Windows ICO from it, placed it in the default runner resource path, and configured the Linux AppImage icon to use the same selected mark. A user-local Linux desktop launcher installer is available; platform builds and visual appearance remain unverified.
