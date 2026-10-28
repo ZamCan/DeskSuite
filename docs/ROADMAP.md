@@ -71,3 +71,13 @@ Require a signed, reproducible Android release with stable package ID and key cu
 - [ ] Shared editable template catalogue for school/staff IDs, badges, business cards, posters/flyers and presentation themes.
 - [ ] Optional SLM capability adapter and measured local-runtime selection.
 - [ ] Run format, analyzer, all Flutter tests and Android build/device checks after this slice; do not mark as passed until actual results are recorded.
+
+## 2026-10-28 — shared editable starter templates
+
+- [x] Add one stable-ID template registry and wire it into the existing new-design dialog and shared editable project model.
+- [x] Add starter layouts for blank, editorial poster, business card, identity badge, certificate, flyer and presentation cover.
+- [x] Add source-level tests for catalog identity, element bounds, serialization round-trip and the template-selection UI.
+- [ ] Expand the registry with reviewed, licensed template packs, image/logo placeholders and editable photo frames; do not imply that a starter badge is an official ID specification.
+- [ ] Add multi-slide presentation documents and real PPTX import/export through the Office capability registry; the current presentation-cover template is a single editable design page, not a PowerPoint deck.
+- [ ] Run the new tests, formatter, analyzer, complete Flutter suite and Android/device checks before marking verification complete.
+
