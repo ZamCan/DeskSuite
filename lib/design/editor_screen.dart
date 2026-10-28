@@ -642,7 +642,7 @@ class _EditorScreenState extends State<EditorScreen>
                 FilledButton(
                   onPressed: () => Navigator.pop(context, true),
                   child: Text(
-                    choice == _ExportChoice.print150
+                    choice.name.startsWith('print')
                         ? 'Print anyway'
                         : 'Export anyway',
                   ),
