@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/ids.dart';
 import '../design/design_document.dart';
-
-enum DesignTemplate { blank, editorial }
+import '../design/template_catalog.dart';
 
 class _Preset {
   const _Preset(this.label, this.width, this.height);
@@ -34,6 +33,20 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
   final _width = TextEditingController(text: '210');
   final _height = TextEditingController(text: '297');
   int _preset = 0;
+  late DesignTemplate _template;
+
+  @override
+  void initState() {
+    super.initState();
+    _template = widget.template;
+    final definition = designTemplateDefinition(_template);
+    if (_template != DesignTemplate.blank) {
+      _width.text = definition.widthMm.toString();
+      _height.text = definition.heightMm.toString();
+      _preset = _presets.length - 1;
+      _name.text = definition.label;
+    }
+  }
 
   @override
   void dispose() {
@@ -45,49 +58,19 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
 
   void _create() {
     if (!_form.currentState!.validate()) return;
-    var doc = DesignDocument.blank(
+    final width = double.parse(_width.text);
+    final height = double.parse(_height.text);
+    final doc = DesignDocument.blank(
       name: _name.text,
-      widthMm: double.parse(_width.text),
-      heightMm: double.parse(_height.text),
+      widthMm: width,
+      heightMm: height,
+    ).copyWith(
+      elements: buildDesignTemplateElements(
+        _template,
+        widthMm: width,
+        heightMm: height,
+      ),
     );
-    if (widget.template == DesignTemplate.editorial) {
-      final w = doc.widthMm;
-      final h = doc.heightMm;
-      doc = doc.copyWith(
-        elements: [
-          DesignElement(
-            id: newId(),
-            kind: ElementKind.rectangle,
-            x: 0,
-            y: 0,
-            width: w,
-            height: h * .34,
-            color: 0xffbd694f,
-          ),
-          DesignElement(
-            id: newId(),
-            kind: ElementKind.text,
-            x: w * .08,
-            y: h * .42,
-            width: w * .84,
-            height: h * .18,
-            text: 'YOUR\nHEADLINE',
-            fontSizePt: (w * .19).clamp(12, 90),
-            bold: true,
-          ),
-          DesignElement(
-            id: newId(),
-            kind: ElementKind.text,
-            x: w * .08,
-            y: h * .72,
-            width: w * .78,
-            height: h * .12,
-            text: 'Add your details here.',
-            fontSizePt: (w * .065).clamp(8, 30),
-          ),
-        ],
-      );
-    }
     Navigator.of(context).pop(doc);
   }
 
@@ -100,11 +83,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: Text(
-      widget.template == DesignTemplate.blank
-          ? 'New design'
-          : 'Editorial poster',
-    ),
+    title: Text(designTemplateDefinition(_template).label),
     content: SizedBox(
       width: 430,
       child: Form(
@@ -127,6 +106,46 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                 validator: (value) => value == null || value.trim().isEmpty
                     ? 'Enter a project name'
                     : null,
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<DesignTemplate>(
+                key: const Key('design-template-picker'),
+                initialValue: _template,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Starting template'),
+                items: [
+                  for (final item in designTemplateCatalog)
+                    DropdownMenuItem(
+                      value: item.template,
+                      child: Text(
+                        item.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+                onChanged: (value) {
+                  if (value == null) return;
+                  final definition = designTemplateDefinition(value);
+                  setState(() {
+                    _template = value;
+                    _width.text = definition.widthMm.toString();
+                    _height.text = definition.heightMm.toString();
+                    _preset = _presets.length - 1;
+                    if (_name.text.trim().isEmpty ||
+                        _name.text == 'Untitled design' ||
+                        designTemplateCatalog.any(
+                          (item) => item.label == _name.text,
+                        )) {
+                      _name.text = definition.label;
+                    }
+                  });
+                },
+              ),
+              const SizedBox(height: 8),
+              Text(
+                designTemplateDefinition(_template).description,
+                style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
