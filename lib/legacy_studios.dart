@@ -2536,7 +2536,7 @@ class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
     content: SizedBox(width: 440, child: SingleChildScrollView(child: Column(
       mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Work offline on a new copy. The original image is not overwritten. JPEG is used for predictable lossy file-size optimisation.'),
+        const Text('Work on a new copy. The original image is not overwritten. JPEG is used for predictable lossy file-size optimisation.'),
         const SizedBox(height: 12),
         DropdownButtonFormField<ImageSizePreset>(
           key: const Key('optimizer-dimensions'), initialValue: preset, isExpanded: true,
@@ -2614,7 +2614,7 @@ class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
           onChanged: (value) => setState(() { if (value != null) format = value; }),
         ),
         if (format == _ImageExportFormat.pdf) const Padding(padding: EdgeInsets.only(top: 8), child: Text('PIN/password-protected PDF is not offered yet because the current PDF pipeline has no verified encryption path. Do not treat an ordinary PDF as secure.', style: TextStyle(fontSize: 12))),
-        if (format == _ImageExportFormat.html) const Padding(padding: EdgeInsets.only(top: 8), child: Text('HTML embeds the image for offline viewing. A PIN screen without cryptographic protection would not secure the image, so PIN protection is not simulated.', style: TextStyle(fontSize: 12))),
+        if (format == _ImageExportFormat.html) const Padding(padding: EdgeInsets.only(top: 8), child: Text('HTML keeps the image embedded for viewing. A PIN screen without cryptographic protection would not secure the image, so PIN protection is not simulated.', style: TextStyle(fontSize: 12))),
       ],
     ))),
     actions: [
