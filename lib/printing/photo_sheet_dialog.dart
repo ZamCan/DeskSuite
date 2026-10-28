@@ -21,14 +21,15 @@ class PhotoSheetDialog extends StatefulWidget {
 }
 
 class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
-  final pageWidth = TextEditingController(text: '210');
-  final pageHeight = TextEditingController(text: '297');
+  final pageWidth = TextEditingController(text: '101.6');
+  final pageHeight = TextEditingController(text: '152.4');
   final photoWidth = TextEditingController(text: '35');
   final photoHeight = TextEditingController(text: '45');
   final margin = TextEditingController(text: '10');
   final spacing = TextEditingController(text: '3');
   final copies = TextEditingController(text: '8');
-  int preset = 0;
+  // Small-format photo paper is a useful starting point; A4/A5/custom stay explicit choices.
+  int preset = 3;
   int photoPreset = customPhotoSpecificationIndex;
 
   @override
@@ -134,7 +135,7 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Place repeated copies on one physical page. This is a layout aid, not an ID-photo compliance check.',
+                'Arrange finished photos on a selected print medium. Photo dimensions and sheet size are separate choices; this layout does not certify passport/ID compliance. Check printer margins, supported media and scale before production.',
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
@@ -192,9 +193,9 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  const DropdownMenuItem(
+                  DropdownMenuItem(
                     value: customPhotoSpecificationIndex,
-                    child: Text('Custom / generic layout size'),
+                    child: const Text('Custom / generic layout size'),
                   ),
                 ],
                 onChanged: _selectPhotoPreset,
