@@ -158,3 +158,8 @@ The Creative Studio editor now has a dedicated **Fill photo slot with image** ac
 ## Photo-slot editing regression coverage (2026-10-28)
 
 The photo-sheet template test now expects 23 text objects: header, subtitle, twenty slot labels and footer. Added a controller-level regression test for replacing one 35 × 45 mm slot with an embedded image, removing the matching label, serializing/reopening the image bytes and undoing the replacement. Pending CI confirmation.
+
+
+## Print-production engineering correction (2026-10-28)
+
+Corrected the product model after review: A4 is a paper format, not a passport-photo standard; 35 × 45 mm is not universal. The general Photo Sheet now starts with 4 × 6 inch (101.6 × 152.4 mm) as a convenient small-format media option while retaining explicit A4/A5/custom choices. The A4 template is labelled as a multi-photo layout example. The authority-scoped Tanzania passport profile remains dimension-unspecified because its cited guideline page does not publish physical width × height; the separate e-Visa upload limits are not treated as passport print dimensions. See [`PRINT_PRODUCTION_STANDARDS.md`](PRINT_PRODUCTION_STANDARDS.md). These source edits require fresh CI and real printer/device verification.
