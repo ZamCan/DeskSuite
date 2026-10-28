@@ -24,7 +24,7 @@ class PdfStudioPage extends StatefulWidget {
 class _PdfStudioPageState extends State<PdfStudioPage> {
   // PDF parsers and renderers can expand compressed streams substantially.
   // Bound source and edited-copy bytes before passing them into the editor.
-  static const int _maxPdfBytes = 64 * 1024 * 1024;
+  static const int _maxPdfBytes = 48 * 1024 * 1024;
 
   Uint8List? _source;
   String? _sourceName;
@@ -45,7 +45,7 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
       if (picked == null) return;
       if (picked.bytes.length > _maxPdfBytes) {
         throw const FormatException(
-          'This PDF is larger than the 64 MB local editing limit. Use a smaller copy.',
+          'This PDF is larger than the 48 MB local editing limit. Use a smaller copy.',
         );
       }
       if (!_hasPdfSignature(picked.bytes)) {
@@ -76,7 +76,7 @@ class _PdfStudioPageState extends State<PdfStudioPage> {
     try {
       if (bytes.length > _maxPdfBytes) {
         throw const FormatException(
-          'The edited PDF exceeds the 64 MB export limit. Reduce its size and try again.',
+          'The edited PDF exceeds the 48 MB export limit. Reduce its size and try again.',
         );
       }
       if (!_hasPdfSignature(bytes)) {
