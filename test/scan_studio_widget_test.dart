@@ -276,9 +276,15 @@ void main() {
       // we scroll back; wait for a real page tile by revealing it, not by
       // waiting for off-screen text to appear spontaneously.
       expect(find.byType(ScanStudioPage), findsOneWidget);
-      await reveal(tester, find.byKey(const Key('scan-page-0')));
-      expect(find.textContaining('1 of 8 pages'), findsOneWidget);
-      expect(find.byKey(const Key('scan-page-0')), findsOneWidget);
+      // The count and page tile are separated by a long control section in
+      // this lazy list; revealing one can unmount the other. Assert each only
+      // after explicitly revealing that specific child.
+      final pageCount = find.textContaining('1 of 8 pages');
+      await reveal(tester, pageCount);
+      expect(pageCount, findsOneWidget);
+      final firstPage = find.byKey(const Key('scan-page-0'));
+      await reveal(tester, firstPage);
+      expect(firstPage, findsOneWidget);
       await tapVisible(tester, find.byKey(const Key('scan-undo')));
       await waitIo(tester);
       expect(
