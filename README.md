@@ -58,3 +58,8 @@ Repository code: [Apache-2.0](LICENSE). Dependency and sample attribution: [thir
 ## Photo Studio: current implementation boundary
 
 The Photo Studio supports local transformations, pixel/physical print sizing, photo-sheet layout presets and **solid-colour placement behind pixels that are already transparent**. The latter is not background removal. Automatic segmentation, mask editing, hair refinement, face/pose detection, authority-verified ID-photo compliance and broad editable template packs are planned and not yet shipped. See [current engineering status](docs/engineering/CURRENT_STATUS.md) and [roadmap](docs/ROADMAP.md).
+
+## Creative Studio starter templates
+
+The shared editable template catalogue currently includes a blank canvas, editorial poster, business card, identity badge, certificate, flyer and presentation-cover page. These are editable starting layouts using the same design model and export path, not flattened sample images. They are not official identity-card specifications, and a presentation cover is not a multi-slide PPTX deck. See [current status](docs/engineering/CURRENT_STATUS.md) and [roadmap](docs/ROADMAP.md). The added tests have not yet been run in this execution.
+
