@@ -29,6 +29,8 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
   final margin = TextEditingController(text: '10');
   final spacing = TextEditingController(text: '3');
   final copies = TextEditingController(text: '4');
+  final paperWeight = TextEditingController();
+  String mediaStockId = 'photo-glossy';
   // Small-format photo paper is a useful starting point; A4/A5/custom stay explicit choices.
   int preset = 3;
   int photoPreset = customPhotoSpecificationIndex;
@@ -43,6 +45,7 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
       margin,
       spacing,
       copies,
+      paperWeight,
     ]) {
       controller.dispose();
     }
@@ -55,7 +58,14 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
         'Enter the required finished photo width and height in mm.',
       );
     }
+    final weightText = paperWeight.text.trim();
+    final weight = weightText.isEmpty ? null : int.tryParse(weightText);
+    if (weightText.isNotEmpty && weight == null) {
+      throw const FormatException('Paper weight must be a whole number of gsm.');
+    }
     return PhotoSheetSpec(
+    mediaStockId: mediaStockId,
+    paperWeightGsm: weight,
     pageWidthMm: double.parse(pageWidth.text),
     pageHeightMm: double.parse(pageHeight.text),
     photoWidthMm: double.parse(photoWidth.text),
@@ -187,6 +197,33 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
                   ),
                 ],
               ),
+              DropdownButtonFormField<String>(
+                key: const Key('sheet-media-stock'),
+                initialValue: mediaStockId,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Paper surface / stock'),
+                items: [
+                  for (final profile in printStockProfiles)
+                    DropdownMenuItem(
+                      value: profile.id,
+                      child: Text(profile.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ),
+                ],
+                onChanged: (value) => setState(() {
+                  if (value != null) mediaStockId = value;
+                }),
+              ),
+              _field(
+                'Paper weight (gsm, optional)',
+                'sheet-paper-weight',
+                paperWeight,
+                integer: true,
+              ),
+              const Text(
+                'Stock and weight are production notes included in the PDF metadata; they do not force printer-driver settings. Confirm the actual feed path, coating and media support in the system print dialog.',
+                style: TextStyle(fontSize: 12),
+              ),
+              const SizedBox(height: 8),
               DropdownButtonFormField<int>(
                 key: ValueKey('photo-size-$photoPreset'),
                 initialValue: photoPreset,
@@ -294,7 +331,7 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
                 )
               else if (valid != null) ...[
                 Text(
-                  '${valid.capacity} fit on this page · estimated image detail ${effectiveImageDpi(widget.photo.width, widget.photo.height, valid.photoWidthMm, valid.photoHeightMm).round()} dpi',
+                  '${valid.capacity} fit on this page · estimated image detail ${effectiveImageDpi(widget.photo.width, widget.photo.height, valid.photoWidthMm, valid.photoHeightMm).round()} dpi · ${printStockProfiles.firstWhere((profile) => profile.id == valid.mediaStockId).label}${valid.paperWeightGsm == null ? '' : ' · ${valid.paperWeightGsm} gsm'}',
                 ),
                 const SizedBox(height: 8),
                 const Text(
