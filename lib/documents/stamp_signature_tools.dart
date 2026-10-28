@@ -12,7 +12,7 @@ class StampPreset {
     StampPreset('DRAFT', Color(0xffb65c35)),
     StampPreset('APPROVED', Color(0xff28784f)),
     StampPreset('PAID', Color(0xff28784f)),
-    StampPreset('RECEIVED', Color(0xff315e91)),
+    StampPreset('RECEIVED', Color(0xff77744e)),
     StampPreset('CONFIDENTIAL', Color(0xff8b3434)),
     StampPreset('COPY', Color(0xff69645d)),
     StampPreset('VOID', Color(0xff8b3434)),
