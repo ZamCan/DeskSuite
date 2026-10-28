@@ -55,7 +55,13 @@ void main() {
     });
     final repo = ProjectRepository(dir);
     final files = FakeFiles();
-    await tester.pumpWidget(DeskSuiteApp(repository: repo, fileGateway: files));
+    await tester.pumpWidget(
+      DeskSuiteApp(
+        showStartupAnimation: false,
+        repository: repo,
+        fileGateway: files,
+      ),
+    );
     await settleIo(tester);
     expect(find.text('Make room\nfor good work.'), findsOneWidget);
     await tester.tap(find.byKey(const Key('new-design')));

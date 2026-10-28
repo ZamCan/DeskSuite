@@ -2,8 +2,9 @@ import 'dart:typed_data';
 
 import 'office_package.dart';
 
-/// Office/package formats DeskSuite can identify from real file content, never
-/// from the filename extension alone.
+/// Office/package formats DeskSuite can identify from their containers.
+/// Legacy OLE2 formats share a signature, so their subtype is only a filename
+/// hint until a renderer examines their contents.
 enum OfficeFormat {
   docx('DOCX', 'Word document'),
   xlsx('XLSX', 'Excel workbook'),
@@ -14,6 +15,7 @@ enum OfficeFormat {
   doc('DOC'),
   xls('XLS'),
   ppt('PPT'),
+  ole('OLE2', 'Compound document; exact type unconfirmed'),
   rtf('RTF'),
   pdf('PDF'),
   txt('TXT'),
@@ -35,6 +37,7 @@ enum OfficeFormat {
       this == OfficeFormat.doc ||
       this == OfficeFormat.xls ||
       this == OfficeFormat.ppt;
+  bool get isOfficeCompound => isLegacyBinary || this == OfficeFormat.ole;
 
   /// Formats this build can read content from.
   bool get isReadable =>
@@ -81,13 +84,16 @@ DetectedFile detectOfficeFile(Uint8List bytes, {String? fileName}) {
     // OLE2 compound file: legacy .doc/.xls/.ppt share this container.
     final hint = _extensionOf(fileName);
     final format = switch (hint) {
+      'doc' => OfficeFormat.doc,
       'xls' => OfficeFormat.xls,
       'ppt' => OfficeFormat.ppt,
-      _ => OfficeFormat.doc,
+      _ => OfficeFormat.ole,
     };
     return DetectedFile(
       format,
-      'Legacy OLE2 compound document — content cannot be read by this build',
+      format == OfficeFormat.ole
+          ? 'OLE2 signature; exact type unconfirmed'
+          : 'OLE2 signature; type suggested by the filename extension',
     );
   }
   if (_startsWith(bytes, [0x7b, 0x5c, 0x72, 0x74, 0x66])) {

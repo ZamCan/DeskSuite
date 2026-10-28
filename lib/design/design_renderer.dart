@@ -161,7 +161,7 @@ class DesignPainter extends CustomPainter {
             );
             canvas.restore();
           } else {
-            canvas.drawRect(bounds, Paint()..color = const Color(0xffe7e2da));
+            canvas.drawRect(bounds, Paint()..color = const Color(0xffe7edf4));
           }
       }
       if (item.id == selectedId) {

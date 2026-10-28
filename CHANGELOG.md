@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — branded launch and experimental Office preview (not a release)
+
+- Added a reduced-motion-aware startup drawing/pulsing the scan frame into the selected DS logo, plus the mark on welcome and guide screens. DartPad analyzed the launch code and the motion geometry smoke passed; Flutter widget/device tests are unrun.
+- Added an Android-only, **disabled-by-default experimental** read-only Office preview backed by real OpenDocument.core 7.6.1 C++/WASM, not content extraction. One genuine DOC/DOCX/XLS/XLSX/PPT/PPTX fixture each produced HTML containing expected text under Node; this does not validate Android, visual fidelity or offline isolation. It is not conversion/editing. Collected notices and corresponding source are included; release licence audit remains outstanding.
+- Added ZIP preflight before the archive decoder and explicit CRC checks, and corrected false LibreOffice/Termux integration claims. DartPad/Node exercised the preflight including 3,000 mutations and three real OOXML fixture structures. New real-archive/Flutter tests are written but unrun. See [Office support](docs/engineering/OFFICE_SUPPORT.md).
+
 ## Unreleased — selected identity and engine hardening (not a release)
 
 - Applied the owner's selected dimensional DS icon to the in-app brand and Android launcher resources; added simplified vector splash/themed-icon adaptations, coordinated sapphire light/dark colors and home shortcuts to the existing scan, photo, OCR and converter workflows. Actual Android rendering and the new Flutter widget tests remain unverified.

@@ -295,7 +295,7 @@ class _EditorPageState extends State<EditorPage> {
       'y': 30.0 + (p.items.length * 17) % 180,
       'w': kind == 'text' ? 250.0 : 110.0,
       'h': kind == 'text' ? 65.0 : 100.0,
-      'color': kind == 'circle' ? 0xFFB56B45 : 0xFF292B29,
+      'color': kind == 'circle' ? 0xFF1C58AC : 0xFF15243A,
       'size': 24.0,
     };
     setState(() {
@@ -319,7 +319,7 @@ class _EditorPageState extends State<EditorPage> {
         'y': 80.0,
         'w': 230.0,
         'h': 160.0,
-        'color': 0xFF292B29,
+        'color': 0xFF15243A,
         'size': 24.0,
         'imageData': base64Encode(bytes),
       };

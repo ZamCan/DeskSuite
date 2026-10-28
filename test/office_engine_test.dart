@@ -47,7 +47,13 @@ void main() {
         fileName: 'old.xls',
       );
       expect(detected.format, OfficeFormat.xls);
-      expect(detected.detail, contains('cannot be read'));
+      expect(detected.detail, contains('suggested by the filename'));
+      final ambiguous = detectOfficeFile(
+        legacyOleFixture(),
+        fileName: 'protected.docx',
+      );
+      expect(ambiguous.format, OfficeFormat.ole);
+      expect(ambiguous.detail, contains('unconfirmed'));
     });
 
     test('writable flags match real built-in output formats', () {

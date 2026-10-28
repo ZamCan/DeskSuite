@@ -233,8 +233,10 @@ class ObjectInspector extends StatelessWidget {
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: item.color == color
-                                    ? accent
-                                    : const Color(0xffd8d1c8),
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context)
+                                          .colorScheme
+                                          .outlineVariant,
                                 width: item.color == color ? 3 : 1,
                               ),
                             ),

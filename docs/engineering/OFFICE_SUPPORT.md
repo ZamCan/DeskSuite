@@ -1,110 +1,173 @@
-# Office documents: what DeskSuite really supports
+# Office documents: implementation and validation
 
-Recorded 2026-10-27 against the code in `lib/office/`. Statuses describe
-**implementation and host tests**, not device behaviour. No Android build was
-produced or installed while this document was written; the Android build is left
-to CI or an offline Termux build.
+Updated 2026-10-28. This is a source/host-test record, **not** a claim that
+all Office documents render faithfully or that the Android preview has passed
+a device, security or release test.
 
-## Decision
+## Stable and experimental paths
 
-LibreOffice **cannot** be embedded in an Android APK. It is a desktop-oriented
-C++/Qt/GTK application; the Android ports that exist are large, dated and
-unmaintained. Apache POI cannot be shipped inside the APK either: `poi-ooxml`
-depends on StAX (`javax.xml.stream`), which Android does not provide, and the
-historical workarounds fork the library in unsupported ways.
-
-DeskSuite therefore reads and writes office packages **directly** in Dart over
-the ZIP + XML containers, which is bounded, offline, testable and free of
-copyleft or ATS issues. Anything beyond that (pixel-accurate rendering of
-arbitrary documents) is delegated to an **optional external engine** that the
-user installs:
-
-| Path | Availability | Fidelity |
+| Path | Availability | What it actually does |
 | --- | --- | --- |
-| Built-in reader (`lib/office/office_reader.dart`) | Always, no network | Text, headings, emphasis, tables, sheet values. Layout is **not** reproduced. |
-| Built-in writers (`lib/office/office_pdf.dart`, `office_writer.dart`) | Always | Genuine minimal OOXML DOCX/XLSX and ODT/ODS packages; real PDF with selectable text; UTF-8 TXT; CSV. These are content-level writers, not full-layout round-trip writers. |
-| Content editor (`lib/office/office_content_editor_page.dart`) | Always for readable formats | Edits readable paragraphs and table cells, then exports a new content-level DOCX/XLSX/ODT/ODS/PDF/TXT/CSV copy. Does not retain full layout or unsupported objects. |
-| External engine (`ExternalOfficeEngine`) | Only when detected | Renders the original layout. |
+| Dart office reader | Normal build | Extracts readable DOCX/XLSX/PPTX/ODT/ODS/ODP/RTF content, not the original page layout. |
+| Dart content editor and writers | Normal build | Edits extracted paragraphs/cells and makes real but simplified DOCX/XLSX/ODT/ODS/PDF/TXT/CSV copies. Unsupported styling, images, charts, macros and layout may be lost. |
+| OpenDocument.core 7.6.1 preview | **Experimental, Android-only, disabled by default** | A C++ Office rendering engine compiled to WebAssembly generates HTML inside a background worker. The Android platform view displays it read-only in an isolated WebView frame. It is not a conversion/export engine or a web-app shell. The Android implementation has **not** been run on a device in this workspace. |
+| `ExternalOfficeEngine` | Interface only; default `NoExternalOfficeEngine` | No executable detection, LibreOffice/soffice adapter, Termux configuration or full-layout conversion is implemented. |
 
-LibreOffice **is** packaged for Termux (`pkg install libreoffice`, currently
-26.8.2.2), so an Android user who wants high-fidelity conversion can install it
-and point DeskSuite at `soffice`. DeskSuite does not bundle, download or
-silently invoke it; when it is absent, those routes are not offered at all.
+An experimental build can be tested locally with an existing Android toolchain:
+
+```sh
+flutter run --dart-define=DESKSUITE_EXPERIMENTAL_OFFICE_PREVIEW=true
+```
+
+Choose a document in **Document converter**, then select **Preview original
+layout (experimental)**. This does not enable legacy editing, saving the view,
+printing it, or rendered conversion. Files over 8 MiB are refused by this
+preview. A default build keeps the feature disabled until the device/security
+gates below are satisfied; the renderer assets still increase the Android
+source/package size even when disabled. The user packages the app locally; no
+Android toolchain was downloaded or app packaged for this change.
+
+LibreOffice **can** be embedded on Android: the official LibreOffice Android
+viewer uses native LibreOffice code/JNI. This repository does not integrate it.
+The earlier claims that embedding it is impossible, that a Termux package is
+configured, or that DeskSuite detects `soffice` were incorrect and have been
+removed. Other real Android/native engines exist; a library's documented format
+support is not evidence that DeskSuite's integration works.
 
 ## Format matrix
 
-| Input | Read | → PDF | → TXT | → CSV | → ODT | → ODS |
-| --- | --- | --- | --- | --- | --- | --- |
-| DOCX | Yes | Yes | Yes | — | Yes | — |
-| XLSX | Yes | Yes | — | Yes | — | Yes |
-| PPTX | Yes | Yes | Yes | — | Yes | — |
-| ODT | Yes | Yes | Yes | — | Yes | — |
-| ODS | Yes | Yes | — | Yes | — | Yes |
-| ODP | Yes | Yes | Yes | — | Yes | — |
-| RTF | Yes | Yes | Yes | — | Yes | — |
-| TXT | Yes | Yes | — | — | — | — |
-| HTML | Yes (text) | Yes | Yes | — | — | — |
-| DOC / XLS / PPT | No (OLE2) | External engine only | — | — | — | — |
-| PDF | No | — | — | — | — | — |
+| Input | Normal build: readable content / conversion | Experimental renderer, host evidence |
+| --- | --- | --- |
+| DOCX | Content; PDF/TXT/ODT | One real upstream fixture generated HTML with its expected text. |
+| XLSX | Content; PDF/CSV/ODS | One real fixture generated a sheet view with expected cell text. |
+| PPTX | Slide text; PDF/TXT/ODT | One real fixture yielded eight slide views; first view contained expected text. |
+| DOC | No built-in content conversion | One real fixture generated HTML with expected text. |
+| XLS | No built-in content conversion | One real fixture generated a sheet view with expected cell text. |
+| PPT | No built-in content conversion | One real fixture yielded eight slide views; first view contained expected text. |
+| ODT/ODS/ODP | Content; PDF and appropriate text/CSV/ODF copies | One fixture of each generated HTML with expected text under Node; Android remains untested. |
+| RTF, TXT, HTML | Content-level routes where offered | Not offered by this preview. |
+| PDF | No existing-PDF import or manipulation in this path | Not offered by this preview. |
 
-A dash means the route is not offered. It is never replaced by renaming a file.
+The six Office results are **one fixture per format**, checked for engine
+output and recognizable text under Node. They do not establish visual
+fidelity, editability, Android WebView behavior, support for arbitrary
+files, chart/formula accuracy, RTL shaping or Microsoft Office parity. Legacy
+binary support upstream is limited; complex layout may differ or be omitted.
+Password-protected documents are not supported by the preview. The OLE2
+signature is shared: a `.doc`/`.xls`/`.ppt` filename is only a subtype hint,
+not proof. An unknown OLE2 subtype remains unconfirmed until the renderer
+examines it.
 
-## What is preserved and what is lost
+## Experimental design and safeguards
 
-Preserved: paragraph text and order, heading levels 1–6, bold/italic runs, table
-rows and cell text, sheet names, cell values (including formula results and
-booleans), slide text in slide order, ODF headings and paragraphs, explicit page
-breaks.
+- Engine: pinned npm `@opendocument/odr-core` **7.6.1**, upstream release
+  commit `4a1ce6e505a325147f6d3360d29625aa432a669a`. `index.js` and
+  `odr-core.mjs` are upstream artifacts. The 5,995,126-byte upstream WASM
+  (`ec17dc0b81bb8bb8f3224bfe364fbc0879f15818f938119bc06121b15c206c9d`)
+  has its one memory-section maximum changed from 4 GiB to 256 MiB by
+  `tools/patch_odr_wasm_memory.py`. Result: 5,995,125 bytes, SHA-256
+  `4801d59d42ddf95e7d7ccfae104f5943e2242e9630c458bddd416c31ad48aaca`.
+  Node validated the module and demonstrated that growth beyond the maximum
+  throws. **256 MiB is only the WASM linear-memory cap**: JS, HTML, document
+  bytes, DOM, WebView and app memory are additional, so total RAM is not capped.
+- Each preview is a native Android platform view, separate from the Flutter app
+  shell. The host reads only an exact local virtual-origin allowlist from APK
+  assets and in-memory document bytes. It attempts to block all network loads,
+  file/content access, navigation, permissions and storage; no JavaScript
+  interface is added. Trusted host/worker JavaScript is enabled; rendered
+  document HTML is put into a `sandbox` iframe without scripts, same-origin,
+  forms, popups or top navigation. A restrictive CSP and disabled external
+  document resources provide additional layers. These are **design controls,
+  not yet a proven Android security boundary**. Test WebView versions,
+  `blockNetworkLoads` versus interception, CSP/iframe inheritance, service
+  workers, external URLs, file access, malicious documents and network traffic
+  before enabling by default.
+- Source limit 8 MiB; at most 100 views; 5,000 spreadsheet rows, 200 columns
+  and 50,000 cells per sheet; a rendered view is refused above 8,388,608 HTML
+  characters. The UI warns when the engine reports a cut or missing media.
+  A worker is terminated after 20 seconds per open/render operation when the
+  hosting page can run its timer. This is not a hard OS CPU or total-memory
+  limit; malicious or complex documents still need device stress testing.
+- Rendered HTML is read-only; script-dependent layout/interaction, linked
+  media, fonts and unsupported elements can be missing or differ. The original
+  buffer is never written by the preview.
 
-Lost, and stated in the UI for every conversion:
+## ZIP package safeguards
 
-- Exact fonts, sizes, colours, spacing and page layout of the original.
-- Floating images, shapes, charts, embedded objects, macros, comments,
-  tracked changes and footnotes.
-- Text boxes and multi-column flow.
-- Slide images, animations and speaker notes.
-- Cell number formats, conditional formatting and pivot tables.
-- Page size and margins of the original document (A4 is used).
+`office_zip_guard.dart` checks a single-disk ZIP's end record, central directory,
+local headers, entry count/sizes, overlaps and names **before** `ZipDecoder`
+can inflate Unix symlinks. It rejects symlinks, encryption, duplicate entries,
+ZIP64, non-store/non-deflate entries, inconsistent headers and overlaps. This
+is intentionally narrower than general ZIP and can reject otherwise valid
+unusual Office files. `OfficePackage` verifies each expanded size and CRC
+explicitly: the pinned archive 4.5.2 `verify` parameter does not perform CRC
+verification. The archive decoder's per-entry output is bounded by the stated
+uncompressed size after the preflight.
 
-## Resource bounds
-
-`lib/office/office_package.dart` rejects a package before allocating unbounded
-memory:
-
-| Limit | Value |
+| Bound | Value |
 | --- | --- |
-| Compressed archive | 48 MB |
-| Single part | 24 MB |
-| Total uncompressed | 64 MB |
-| Parts | 4000 |
+| Compressed Office package | 48 MiB |
+| One uncompressed part | 24 MiB |
+| Total declared expanded parts | 64 MiB |
+| Entries | 4,000 |
 
-These are covered by tests, including a 4100-part archive.
+A valid synthetic ZIP, truncations and 3,000 byte mutations passed the pure
+Dart guard smoke under DartPad DDC/Node. Three real upstream DOCX/XLSX/PPTX
+fixtures passed the guard there. New Flutter package/CRC tests were written,
+but have not been run with the real Dart archive package in this workspace;
+these checks are not a complete security audit.
 
-## Tests
+## Host test reproduction
 
-`test/office_engine_test.dart` (31 tests) builds **genuine** DOCX, XLSX, PPTX,
-ODT and ODS packages in memory, then asserts:
+`node tools/test_office_renderer.mjs` validates the pinned WASM hash, checks
+its memory maximum and invalid input, and renders the four fictional, locally
+bundled DOCX/XLSX/PPTX/XLS fixtures (including second sheets/slides). For the
+additional upstream fixtures, supply a directory containing these files from
+[OpenDocument.test at its pinned test-data revision](https://github.com/opendocument-app/OpenDocument.test/tree/2a69662064eee0b4fb368bf99a875d77ee4e74b1):
+`doc/11KB.doc`, `docx/11KB.docx`, `xls/file_example_XLS_10.xls`,
+`xlsx/file_example_XLSX_10.xlsx`, `ppt/style-various-1.ppt`,
+`pptx/style-various-1.pptx`, `odt/mixed-layout.odt`,
+`ods/file_example_ODS_10.ods`, `odp/style-various-1.odp`; also add
+`wasm/testfixtures/encrypted.docx` from
+[OpenDocument.core v7.6.1](https://github.com/opendocument-app/OpenDocument.core/tree/v7.6.1).
+The fixture directory is for local testing; the upstream test repository does
+not state a redistribution licence, so these fixtures are not bundled here.
 
-- container detection ignores misleading extensions;
-- headings, emphasis, tables, page breaks, shared strings, formulas, booleans,
-  inline strings, sheet order and slide order are read correctly;
-- written ODT/ODS packages round-trip back through the reader;
-- generated PDFs start with `%PDF-` and contain page objects;
-- legacy OLE2 files are recognised and refused rather than mis-parsed;
-- every route declares an engine, a fidelity and its limitations;
-- an external engine that fails or returns a non-PDF is surfaced, never
-  silently accepted;
-- the source buffer is never mutated and output names are sanitised.
+```sh
+node tools/test_office_renderer.mjs /path/to/fixtures
+node tools/test_office_viewer_ui.mjs
+mkdir -p /tmp/desksuite-office-policy
+javac -d /tmp/desksuite-office-policy \
+  android/app/src/main/java/com/zamcan/desksuite/OfficePreviewPolicy.java \
+  tools/OfficePreviewPolicyTest.java
+java -cp /tmp/desksuite-office-policy com.zamcan.desksuite.OfficePreviewPolicyTest
+flutter test --no-pub test/office_engine_test.dart test/office_package_guard_test.dart test/office_preview_page_test.dart
+```
 
-`test/office_convert_page_test.dart` covers detection, route filtering,
-conversion, saving and unavailable routes. `test/office_content_editor_page_test.dart`
-verifies that editing a genuine DOCX fixture and exporting ODT changes the
-exported content while leaving the source bytes unchanged.
+The worker and nine-format smoke, invalid/encrypted-input checks, WASM memory
+growth check, Java request-allowlist test and a fake-DOM control test passed
+in the host environment. A Java syntax/type check used hand-written Android/
+Flutter stubs; it was **not** an Android build. The pure-Dart preflight and
+Flutter launch/preview source were analyzed with DartPad. Flutter widget and
+real archive-codec tests remain unrun.
 
-## Not verified
+## Required before enabling or distributing a release
 
-- Reading of large real-world documents produced by Microsoft Office or
-  LibreOffice, including unusual namespaces and strict OOXML variants.
-- Rendering fidelity, including right-to-left text and complex scripts.
-- Behaviour of the external-engine seam against a real `soffice` binary.
-- Any on-device measurement of memory or time.
+1. Build with existing Flutter/JDK/Android tools; run analyzer, complete Flutter
+   suite and Android instrumentation. Test current and minimum supported Android
+   System WebView versions in airplane mode, with a network monitor and hostile
+   document URLs; prove requests do not leave the device and that the virtual
+   origin/worker/iframe load while `blockNetworkLoads` is on.
+2. Compare visual output against known-good viewers on representative DOC,
+   DOCX, XLS, XLSX, PPT, PPTX and ODF files: multipage, many sheets/slides,
+   images, charts, fonts, formulas, RTL, large and corrupted inputs. Test
+   cut/error messages, lifecycle, cancellation, accessibility, crashes and RAM
+   on low-memory devices. Measure APK/AAB size and ABI/API coverage.
+3. Complete the actual bundled native/binary and transitive-licence audit,
+   include all notices and required corresponding sources in distribution, and
+   verify the released archive's contents. See [third-party notices](../../THIRD_PARTY_NOTICES.md)
+   and `third_party/odr-source/`. Do not claim licence review complete merely
+   because upstream licences have been collected.
+4. Keep full-layout conversion and editing unavailable until separately
+   implemented and independently verified. A rendered HTML preview is not PDF
+   conversion and does not establish round-trip editing fidelity.

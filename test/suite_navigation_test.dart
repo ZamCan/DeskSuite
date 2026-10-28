@@ -89,7 +89,11 @@ void main() {
     });
     final repo = ProjectRepository(root);
     await tester.pumpWidget(
-      DeskSuiteApp(repository: repo, fileGateway: NoFiles()),
+      DeskSuiteApp(
+        showStartupAnimation: false,
+        repository: repo,
+        fileGateway: NoFiles(),
+      ),
     );
     await settleIo(tester);
     final routes = <String, String>{
@@ -170,7 +174,9 @@ void main() {
         heightMm: 297,
       );
       await tester.runAsync(() => repo.save(existing));
-      await tester.pumpWidget(DeskSuiteApp(fileGateway: NoFiles()));
+      await tester.pumpWidget(
+        DeskSuiteApp(showStartupAnimation: false, fileGateway: NoFiles()),
+      );
       await settleIo(tester);
       await navigate(tester, 'Creative Studio');
       final legacy = find.byKey(const ValueKey('legacy-123'));

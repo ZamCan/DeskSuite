@@ -6,6 +6,7 @@ import '../workspace/file_gateway.dart';
 import 'office_content_editor_page.dart';
 import 'office_engine.dart';
 import 'office_format.dart';
+import 'office_preview_page.dart';
 
 /// Convert a supported document with a real engine, showing the detected
 /// format, only the routes that can actually run, the fidelity of each route
@@ -204,9 +205,9 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Reads DOCX, XLSX, PPTX, ODT, ODS, ODP, RTF and text files on this '
-          'device. Only conversion routes that can really run are offered, and '
-          'the original file is never modified.',
+          'Extracts readable content from DOCX, XLSX, PPTX, ODT, ODS, ODP '
+          'and RTF on this device. Conversion routes are offered only when '
+          'available; the original file is never modified.',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -259,6 +260,49 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
                     label: 'Source preserved',
                     value: 'Yes — output is written to a new file you choose.',
                   ),
+                  if (canPreviewOfficeFormat(_detected!.format)) ...[
+                    const SizedBox(height: 12),
+                    if (officePreviewEnabled &&
+                        officePreviewPlatformSupported) ...[
+                      OutlinedButton.icon(
+                        key: const Key('office-preview-original'),
+                        onPressed:
+                            _busy ||
+                                _source == null ||
+                                _sourceName == null ||
+                                _source!.length > officePreviewMaxBytes
+                            ? null
+                            : () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => OfficePreviewPage(
+                                    source: _source!,
+                                    sourceName: _sourceName!,
+                                  ),
+                                ),
+                              ),
+                        icon: const Icon(Icons.visibility_outlined),
+                        label: const Text(
+                          'Preview original layout (experimental)',
+                        ),
+                      ),
+                      if (_source != null &&
+                          _source!.length > officePreviewMaxBytes)
+                        const Text(
+                          'Experimental preview supports files up to 8 MB.',
+                        ),
+                    ] else if (_detected!.format.isLegacyBinary)
+                      const Text(
+                        'Legacy DOC, XLS and PPT conversion is unavailable. '
+                        'The original-layout preview is still being validated '
+                        'and is disabled in this build.',
+                      )
+                    else if (_detected!.format == OfficeFormat.ole)
+                      const Text(
+                        'This compound file could be a legacy or encrypted '
+                        'Office document; its exact type is unconfirmed. '
+                        'Preview and conversion are unavailable in this build.',
+                      ),
+                  ],
                   if (_detected!.format.isReadable) ...[
                     const SizedBox(height: 12),
                     OutlinedButton.icon(

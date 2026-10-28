@@ -3,6 +3,8 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 
+import 'office_zip_guard.dart';
+
 /// Bounded reader for ZIP-based office packages (OOXML and ODF).
 ///
 /// Office files are attacker-controlled input: the reader caps the archive size,
@@ -41,42 +43,46 @@ class OfficePackage {
         'The document exceeds the 48 MB import limit.',
       );
     }
-    final Archive archive;
+    // ZipDecoder 4.5.2 can inflate a symlink before exposing it to callers,
+    // and its `verify` parameter does not verify CRCs. Check the directory,
+    // limits, names and local headers before decoding; then check every CRC
+    // explicitly after the library's bounded per-entry decompression.
+    final metadata = guardOfficeZip(
+      bytes,
+      maxEntries: maxEntries,
+      maxEntryBytes: maxEntryBytes,
+      maxTotalBytes: maxTotalBytes,
+    );
     try {
-      archive = ZipDecoder().decodeBytes(bytes, verify: true);
+      final archive = ZipDecoder().decodeBytes(bytes);
+      final files = <String, Uint8List>{};
+      var total = 0;
+      for (final entry in archive.files) {
+        if (!entry.isFile) continue;
+        final expected = metadata[entry.name];
+        if (expected == null || entry.size != expected.size) {
+          throw const FormatException('Inconsistent document package parts.');
+        }
+        final content = entry.readBytes();
+        if (content == null ||
+            content.length != expected.size ||
+            getCrc32(content) != expected.crc32) {
+          throw const FormatException('A document part is damaged.');
+        }
+        total += content.length;
+        files[entry.name] = content;
+      }
+      if (files.isEmpty) {
+        throw const FormatException('The document package contains no parts.');
+      }
+      return OfficePackage._(files, total);
+    } on FormatException {
+      rethrow;
     } catch (error) {
       throw const FormatException(
         'The document package is damaged or not a valid ZIP container.',
       );
     }
-    final files = <String, Uint8List>{};
-    var total = 0;
-    var count = 0;
-    for (final entry in archive.files) {
-      if (!entry.isFile) continue;
-      count++;
-      if (count > maxEntries) {
-        throw const FormatException('The document contains too many parts.');
-      }
-      final content = entry.readBytes();
-      if (content == null) continue;
-      if (entry.size > maxEntryBytes) {
-        throw FormatException(
-          'The document part "${entry.name}" is too large.',
-        );
-      }
-      total += content.length;
-      if (total > maxTotalBytes) {
-        throw const FormatException(
-          'The document expands beyond the 64 MB processing limit.',
-        );
-      }
-      files[entry.name] = content;
-    }
-    if (files.isEmpty) {
-      throw const FormatException('The document package contains no parts.');
-    }
-    return OfficePackage._(files, total);
   }
 
   Uint8List bytesOf(String name) {

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:desksuite/app/theme.dart';
 import 'package:desksuite/main.dart';
 import 'package:desksuite/workspace/file_gateway.dart';
 import 'package:desksuite/workspace/project_repository.dart';
@@ -47,10 +48,19 @@ void main() {
       });
       final repo = ProjectRepository(Directory('${temp.path}/documents'));
       await tester.pumpWidget(
-        DeskSuiteApp(repository: repo, fileGateway: WelcomeFiles()),
+        DeskSuiteApp(
+          showStartupAnimation: false,
+          repository: repo,
+          fileGateway: WelcomeFiles(),
+        ),
       );
       await waitIo(tester);
-      expect(find.byKey(const Key('welcome-introduction')), findsOneWidget);
+      final welcome = find.byKey(const Key('welcome-introduction'));
+      expect(welcome, findsOneWidget);
+      expect(
+        find.descendant(of: welcome, matching: find.byType(BrandMark)),
+        findsOneWidget,
+      );
       await tester.ensureVisible(find.byKey(const Key('welcome-skip')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('welcome-skip')));
@@ -58,7 +68,11 @@ void main() {
       expect(await tester.runAsync(repo.readWelcomeSeen), isTrue);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpWidget(
-        DeskSuiteApp(repository: repo, fileGateway: WelcomeFiles()),
+        DeskSuiteApp(
+          showStartupAnimation: false,
+          repository: repo,
+          fileGateway: WelcomeFiles(),
+        ),
       );
       await waitIo(tester);
       expect(find.byKey(const Key('welcome-introduction')), findsNothing);
@@ -72,6 +86,8 @@ void main() {
       );
       await waitIo(tester);
       expect(find.text('Getting started'), findsWidgets);
+      expect(find.text('DESKSUITE GUIDE'), findsOneWidget);
+      expect(find.byType(BrandMark), findsWidgets);
       // The guide is a lazy list; the new text-extraction and converter cards
       // sit above the cleanup card.
       await reveal(tester, find.text('Clean a shadowed page'));

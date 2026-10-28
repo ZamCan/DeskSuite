@@ -2,7 +2,9 @@
 
 The owner selected the dimensional blue DS, scan-frame, document/image and pen artwork on 2026-10-28. The **canonical source** is the original AI-generated raster `assets/brand/desksuite-icon-source.png` (1254 × 1254 RGB; SHA-256 `92e47c28fb5cadb71bd779153c831c5f65923d0e029b4c37a38cb08b68feece2`). It is preserved unchanged for regeneration and is not itself bundled into Flutter. Do not claim trademark clearance or exclusive ownership without a separate review.
 
-The generated `assets/brand/desksuite-mark.png` is a 512 × 512 RGBA version used by the in-app sidebar and licence page through `BrandMark`. Only the matte outside the source's rounded blue square is removed. `pubspec.yaml` includes this derived asset. The previous hand-drawn mark remains in Git history; it is no longer the current app identity.
+The generated `assets/brand/desksuite-mark.png` is a 512 × 512 RGBA version used by the in-app sidebar, startup, welcome, guide and licence page through `BrandMark`. Only the matte outside the source's rounded blue square is removed. `pubspec.yaml` includes this derived asset. The previous hand-drawn mark remains in Git history; it is no longer the current app identity.
+
+After Flutter starts, `BrandLaunch` traces a simplified stylized DS construction while its scanning brackets pulse in and out, then fades into the actual selected PNG. The 1.9-second overlay blocks input while the workspace initializes underneath; reduced-motion users skip it. It is distinct from Android's earlier system splash vector. The launch/theme source passed DartPad analysis and the motion bounds passed a DDC/Node smoke; widget tests for reveal, input, short screens and reduced motion are written but unrun. Real timing, accessibility, input blocking and device appearance remain unverified.
 
 Android's manifest still uses `@mipmap/ic_launcher` and retains application ID `com.zamcan.desksuite`:
 

@@ -47,7 +47,11 @@ void main() {
       });
       final repo = ProjectRepository(dir);
       await tester.pumpWidget(
-        DeskSuiteApp(repository: repo, fileGateway: NoFiles()),
+        DeskSuiteApp(
+          showStartupAnimation: false,
+          repository: repo,
+          fileGateway: NoFiles(),
+        ),
       );
       await settleIo(tester);
       await tester.tap(find.byTooltip('Open navigation'));

@@ -68,11 +68,13 @@ photographs is not guaranteed.
 
 1. Open the menu → **Document converter**. Choose a file, or **Use sample
    document** if a sample is bundled in this build.
-2. Check the **Detected** row. Detection reads the real container, so a `.docx`
-   that is really an ODT is reported as ODT and a renamed file is never trusted.
+2. Check the **Detected** row. ZIP packages are identified by their contents;
+   a `.docx` that is really an ODT is reported as ODT. Legacy OLE2 files share
+   one signature, so a `.doc`/`.xls`/`.ppt` subtype is only a filename hint.
 3. Only routes this build can really run are listed, each with its fidelity. For
-   example a DOCX offers PDF, TXT and ODT output; a legacy `.doc` offers nothing
-   unless an office engine is installed, and the screen says so.
+   example a DOCX offers PDF, TXT and ODT output. Legacy DOC/XLS/PPT conversion
+   is unavailable in the normal build; installing another app does not enable
+   an in-app conversion route.
 4. Choose a route and select **Convert**. Review the output name, format, size,
    the engine used and the "What changed" notes.
 5. Select **Save output**. The source file is never modified.
@@ -80,8 +82,9 @@ photographs is not guaranteed.
 What is preserved: paragraph text and order, headings, bold/italic, table rows
 and cells, sheet names and values, slide text. What is not: exact fonts, layout,
 images, charts, macros, comments, text boxes, number formats and page size (A4 is
-used). Layout-faithful rendering needs an installed LibreOffice, which DeskSuite
-does not bundle; see the office support notes in the engineering documentation.
+used). An original-layout C++-engine preview is experimental, read-only and
+disabled by default until Android security and fidelity are verified; it is not
+a conversion route. See [Office support](engineering/OFFICE_SUPPORT.md).
 
 ## Sell something and print a receipt
 

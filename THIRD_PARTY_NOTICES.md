@@ -13,6 +13,7 @@ DeskSuite repository code is licensed under [Apache-2.0](LICENSE). Direct runtim
 | printing | 5.15.1 | [Apache-2.0](third_party/printing.LICENSE) |
 | archive | 4.5.2 | MIT |
 | xml | 7.0.1 | MIT |
+| OpenDocument.core WebAssembly (`@opendocument/odr-core`) | 7.6.1, preview disabled by default | [MPL-2.0](third_party/opendocument-core/OpenDocument.core-MPL-2.0.txt), with statically linked dependencies including uchardet (MPL-1.1). The WASM memory maximum is modified; [corresponding source, patch and hashes](third_party/odr-source/README.md), [collected notices](third_party/opendocument-core/) and [integration status](docs/engineering/OFFICE_SUPPORT.md). The actual binary/transitive closure still needs release audit. |
 | Tesseract4Android (JitPack `cz.adaptech.tesseract4android:tesseract4android:4.9.0`) | 4.9.0 | Apache-2.0 wrapper; bundles Tesseract OCR 5.5.1 (Apache-2.0), Leptonica 1.85.0 (BSD-2-Clause), libjpeg v9f (IJG), libpng 1.6.48 (libpng licence). These native notices must be reproduced in a distributed APK/AAB. |
 | tessdata_fast language models (`eng`, `swa`) | fetched from `tesseract-ocr/tessdata_fast` | Apache-2.0 (repository licence); LSTM data, Tesseract 4/5 engine only |
 | Noto Sans Regular/Bold (embedded PDF font) | 2022 release | [SIL Open Font License 1.1](third_party/noto-fonts.OFL.txt) |
@@ -34,5 +35,11 @@ The [Pub notice collection](third_party/pub-packages.LICENSES.txt) contains root
 - **Embedded font:** `assets/fonts/NotoSans-*.ttf` (OFL-1.1) is embedded in
   generated PDFs. The OFL requires the licence text to accompany the font; it is
   reproduced at [third_party/noto-fonts.OFL.txt](third_party/noto-fonts.OFL.txt).
-- **No LibreOffice engine is bundled.** It is an optional external engine; see
-  [office support](docs/engineering/OFFICE_SUPPORT.md).
+- **No LibreOffice engine or executable discovery is integrated.** A different
+  OpenDocument.core C++/WASM renderer is bundled as a disabled-by-default,
+  experimental Android read-only preview; it does not perform Office
+  conversions. See [office support](docs/engineering/OFFICE_SUPPORT.md).
+- OpenDocument.core's collected notices are included in the app's licence page
+  through `assets/licenses/office-engine-notices.txt`; regenerate with
+  `python3 tools/generate_office_notices.py`. Confirm all notices and source
+  obligations against the actual release binary before distribution.

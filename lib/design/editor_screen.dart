@@ -909,9 +909,7 @@ class _EditorScreenState extends State<EditorScreen>
         final pageSize = Size(d.widthMm * scale, d.heightMm * scale);
         Offset toDocument(Offset p) => Offset(p.dx / scale, p.dy / scale);
         return ColoredBox(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xff302e2a)
-              : const Color(0xffeae6df),
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           child: Stack(
             children: [
               Positioned.fill(

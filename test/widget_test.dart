@@ -29,7 +29,11 @@ void main() {
     expect(dir, isNotNull);
     final repo = ProjectRepository(dir!);
     await tester.pumpWidget(
-      DeskSuiteApp(repository: repo, fileGateway: _NoFiles()),
+      DeskSuiteApp(
+        showStartupAnimation: false,
+        repository: repo,
+        fileGateway: _NoFiles(),
+      ),
     );
     for (var i = 0; i < 100 && find.text('Workspace').evaluate().isEmpty; i++) {
       await tester.pump(const Duration(milliseconds: 20));
