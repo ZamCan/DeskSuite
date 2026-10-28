@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:desksuite/design/design_controller.dart';
 import 'package:desksuite/design/design_document.dart';
 import 'package:desksuite/design/geometry.dart';
+import 'package:desksuite/design/template_catalog.dart';
 import 'package:desksuite/printing/design_export.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -157,4 +158,44 @@ void main() {
       controller.dispose();
     },
   );
+  test('photo sheet slot replacement embeds image and removes its label', () {
+    final definition = designTemplateDefinition(DesignTemplate.photoPrintSheet);
+    final elements = buildDesignTemplateElements(
+      definition.template,
+      widthMm: definition.widthMm,
+      heightMm: definition.heightMm,
+    );
+    final document = DesignDocument.blank(
+      name: definition.label,
+      widthMm: definition.widthMm,
+      heightMm: definition.heightMm,
+    ).copyWith(elements: elements);
+    final controller = DesignController(document);
+    addTearDown(controller.dispose);
+    final slot = elements.firstWhere((element) =>
+      element.kind == ElementKind.rectangle &&
+      element.width == 35 && element.height == 45);
+    controller.select(slot.id);
+    final photo = DesignElement(
+      id: 'photo_filled_test',
+      kind: ElementKind.image,
+      x: slot.x,
+      y: slot.y,
+      width: slot.width,
+      height: slot.height,
+      imageBytes: Uint8List.fromList([1, 2, 3]),
+    );
+    controller.replaceSelectedPhotoPlaceholder(photo);
+    expect(controller.selectedId, photo.id);
+    expect(controller.document.elements.where((e) => e.kind == ElementKind.image), hasLength(1));
+    expect(controller.document.elements.where((e) =>
+      e.kind == ElementKind.rectangle && e.width == 35 && e.height == 45), hasLength(19));
+    expect(controller.document.elements.where((e) =>
+      e.kind == ElementKind.text && e.text.contains('35 × 45 mm')), hasLength(19));
+    final reopened = DesignDocument.decode(controller.document.encode());
+    expect(reopened.elements.firstWhere((e) => e.id == photo.id).imageBytes, orderedEquals([1, 2, 3]));
+    controller.undo();
+    expect(controller.document.elements.where((e) =>
+      e.kind == ElementKind.rectangle && e.width == 35 && e.height == 45), hasLength(20));
+  });
 }

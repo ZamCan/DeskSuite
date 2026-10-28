@@ -153,3 +153,8 @@ The Android job reported 176 passing tests and three failures around asynchronou
 ## Photo print-sheet image placement (2026-10-28)
 
 The Creative Studio editor now has a dedicated **Fill photo slot with image** action for a selected catalogue 35 × 45 mm slot. It imports through the existing local file gateway, decodes/validates the image before mutation, replaces the placeholder rectangle and its dimension label with an actual embedded image layer, and records the replacement as one undoable edit. The shared renderer uses cover fitting for image layers so the selected image fills the physical slot; this crops to the frame and does not claim face alignment or biometric compliance. Targeted source tests cover replacement, project serialization, undo and rejection of an ordinary rectangle. Full Flutter/Android validation is still pending.
+
+
+## Photo-slot editing regression coverage (2026-10-28)
+
+The photo-sheet template test now expects 23 text objects: header, subtitle, twenty slot labels and footer. Added a controller-level regression test for replacing one 35 × 45 mm slot with an embedded image, removing the matching label, serializing/reopening the image bytes and undoing the replacement. Pending CI confirmation.

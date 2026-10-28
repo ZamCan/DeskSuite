@@ -86,7 +86,7 @@ void main() {
       expect(elements.where((element) => element.kind == ElementKind.rectangle),
           hasLength(20));
       expect(elements.where((element) => element.kind == ElementKind.text),
-          hasLength(22));
+          hasLength(23));
       expect(elements.length, lessThanOrEqualTo(maxDesignElements));
       expect(elements.where((element) => element.text.contains('35 × 45 mm')),
           hasLength(20));

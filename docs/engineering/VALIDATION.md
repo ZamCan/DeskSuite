@@ -115,3 +115,8 @@ A later Android matrix test run completed formatting and analysis, then reported
 ## Photo print-sheet image placement — pending validation (2026-10-28)
 
 Added a controller test for filling a template photo slot with a locally selected PNG, preserving the image through project encode/decode, undoing the replacement and refusing to replace an ordinary rectangle. The shared renderer now uses cover fitting for image layers. These tests have not yet been confirmed by the current GitHub Actions run; do not report them as passing until the new run completes. Android/device image picker, memory, crop and printer output remain separate validation gates.
+
+
+## CI follow-up — photo-slot regression (2026-10-28)
+
+The current Android run found the photo-sheet catalogue test's text count was one low: the generated sheet has 23 text elements (header, subtitle, twenty labels and footer). Corrected the assertion and added a controller-level test for image replacement, label removal, project encode/decode, and undo. These changes await CI confirmation.
