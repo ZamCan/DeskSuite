@@ -106,6 +106,14 @@ List<DesignElement> buildDesignTemplateElements(
   required double widthMm,
   required double heightMm,
 }) {
+  if (!widthMm.isFinite ||
+      !heightMm.isFinite ||
+      widthMm < 10 ||
+      heightMm < 10 ||
+      widthMm > 1200 ||
+      heightMm > 1200) {
+    throw const FormatException('Template dimensions must be between 10 and 1200 mm.');
+  }
   if (template == DesignTemplate.blank) return const [];
   final w = widthMm;
   final h = heightMm;
