@@ -18,6 +18,7 @@ import 'core/atomic_file_store.dart' show recoverAtomicBackup;
 import 'core/ids.dart';
 import 'core/suite_paths.dart';
 import 'images/photo_processor.dart';
+import 'images/print_dimensions.dart';
 import 'printing/print_gateway.dart';
 import 'printing/design_export.dart' show effectiveImageDpi;
 import 'printing/photo_sheet.dart';
@@ -1352,8 +1353,6 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
     setState(() {});
   }
 
-  int _pixelsFromMm(double millimetres, int dotsPerInch) =>
-      (millimetres * dotsPerInch / 25.4).round();
 
   @override
   Widget build(BuildContext context) => AlertDialog(
@@ -1465,8 +1464,13 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
           var h = int.parse(height.text);
           if (physicalMode) {
             final targetDpi = int.parse(dpi.text);
-            w = _pixelsFromMm(double.parse(physicalWidth.text), targetDpi);
-            h = _pixelsFromMm(double.parse(physicalHeight.text), targetDpi);
+            final dimensions = printDimensionsToPixels(
+              widthMm: double.parse(physicalWidth.text),
+              heightMm: double.parse(physicalHeight.text),
+              dpi: targetDpi,
+            );
+            w = dimensions.width;
+            h = dimensions.height;
             if (w < 1 || h < 1 || w > maxPhotoSide || h > maxPhotoSide) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Print size exceeds the 8192-pixel side limit.')),
