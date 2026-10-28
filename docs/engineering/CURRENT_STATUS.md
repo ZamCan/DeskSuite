@@ -95,3 +95,10 @@ before deciding.
 | `engineering/document-workflows-phase-1` (#2) | Earlier image tools, stamps, signatures and brand foundation. | **Historical.** Its content is largely present in `main` by another route; close it after a manual comparison rather than merging. |
 
 Nothing in this table is a claim that an unmerged branch works.
+
+
+## Latest implementation slice — editable photo-sheet size presets
+
+The existing Photo Sheet dialog now offers editable example sizes (35 × 45 mm, 50.8 × 50.8 mm, 30 × 40 mm and 40 × 50 mm) in addition to custom dimensions. Editing either dimension switches the selector to Custom. The dialog explicitly warns that these are layout examples, not universal or official passport/ID requirements. This extends the existing shared physical print-sheet engine rather than creating a second photo-layout implementation.
+
+**Not yet implemented by this slice:** automatic person/pose/head-and-shoulder crop, background removal or replacement, editable segmentation masks, country/authority-specific verified presets, broad ID/card/poster/PPTX template packs, or SLM integration. These are now explicit in the master directive and roadmap and require engine/licence/performance evaluation and real workflow tests. This source change has not yet been run through Flutter format/analyze/tests or an Android build.
