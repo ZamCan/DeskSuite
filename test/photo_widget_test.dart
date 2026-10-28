@@ -308,6 +308,48 @@ void main() {
     },
   );
 
+  testWidgets('optimizer previews and saves an A4 PDF copy', (tester) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final files = PhotoFiles();
+    final source = Uint8List.fromList(files.original);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PhotoPage(
+            files: files,
+            processor: (request) async => processPhoto(request),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('photo-choose')));
+    await settleIo(tester);
+    await reveal(tester, find.byKey(const Key('photo-optimizer')));
+    await tester.tap(find.byKey(const Key('photo-optimizer')));
+    await tester.pumpAndSettle();
+    final picker = find.byKey(const Key('optimizer-export-format'));
+    await reveal(tester, picker);
+    await tester.tap(picker);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('A4 image PDF (not encrypted)').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Optimise & preview'));
+    await settleUntil(tester, find.text('Review optimised export'));
+    expect(
+      find.textContaining('One image is fitted inside an A4 page'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('photo-optimizer-save')));
+    await settleIo(tester);
+    expect(files.exportedName, 'desksuite-optimized.pdf');
+    expect(String.fromCharCodes(files.exported!.take(5)), '%PDF-');
+    expect(files.original, orderedEquals(source));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'photo sheet validates capacity, exports a PDF and sends a print job',
     (tester) async {

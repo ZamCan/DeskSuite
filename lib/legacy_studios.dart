@@ -2688,6 +2688,7 @@ class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
             DropdownButtonFormField<ImageCompressionMode>(
               key: const Key('optimizer-mode'),
               initialValue: mode,
+              isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Compression target',
               ),
@@ -2698,7 +2699,11 @@ class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
                 ),
                 DropdownMenuItem(
                   value: ImageCompressionMode.reduceByPercent,
-                  child: Text('Reduce file size by percentage'),
+                  child: Text(
+                    'Reduce file size by percentage',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 DropdownMenuItem(
                   value: ImageCompressionMode.targetBytes,
@@ -2750,6 +2755,7 @@ class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
             DropdownButtonFormField<_ImageExportFormat>(
               key: const Key('optimizer-export-format'),
               initialValue: format,
+              isExpanded: true,
               decoration: const InputDecoration(labelText: 'Export format'),
               items: const [
                 DropdownMenuItem(
@@ -2758,7 +2764,11 @@ class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
                 ),
                 DropdownMenuItem(
                   value: _ImageExportFormat.pdf,
-                  child: Text('A4 image PDF (not encrypted)'),
+                  child: Text(
+                    'A4 image PDF (not encrypted)',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 DropdownMenuItem(
                   value: _ImageExportFormat.html,
@@ -2766,7 +2776,9 @@ class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
                 ),
               ],
               onChanged: (value) => setState(() {
-                if (value != null) format = value;
+                if (value != null) {
+                  format = value;
+                }
               }),
             ),
             if (format == _ImageExportFormat.pdf)
