@@ -1124,7 +1124,9 @@ class _PhotoPageState extends State<PhotoPage> {
         return;
       }
       final saved = await files.save(name: name, bytes: output, mimeType: mime);
-      if (saved) note('Optimised copy exported. Original image remains unchanged.');
+      if (saved) {
+        note('Optimised copy exported. Original image remains unchanged.');
+      }
     } catch (error) {
       note(error is FormatException ? error.message : 'Optimisation/export failed. The source image is unchanged.');
     } finally {
