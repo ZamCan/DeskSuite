@@ -25,7 +25,7 @@ This is an implementation report, not a claim of production readiness. The full 
 | Office | Bounded package reading and content-level editing/conversion for supported DOCX/XLSX/PPTX/ODF/RTF/text/HTML routes. | Not a full Word/Excel/PowerPoint layout editor. Formula, macro, image, font and complex-layout fidelity is limited; full layout rendering needs a separately evaluated engine. |
 | Printing | Paper/physical-size catalogues, photo sheets, print-check PDF and OS print handoff boundary. | Printer discovery, margins/scaling, colour, stock compatibility and actual device output need testing. |
 | Stationery Business | Local starter catalogue/stock and recorded sale log with reprintable A5 PDF receipt. | Not a complete transactional POS: baskets, supplier purchasing, refunds, expenses, customer balances, audit ledger and reliable profit reports remain missing. |
-| App shell and brand | One shared workspace, warm paper/ink/terracotta identity, bundled SVG/raster mark, Android adaptive/monochrome/legacy icons and splash resources. | Test launcher appearance, accessibility, small screens and OS-specific behavior on physical devices. |
+| App shell and brand | One shared workspace, warm paper/ink/terracotta identity, bundled SVG/raster mark, native Flutter mark, Android adaptive/monochrome/legacy icons and splash resources; this polish branch adds a branded local-startup view and warm selected/unselected navigation icon tiles. | Test launcher appearance, accessibility, small screens and OS-specific behavior on physical devices. |
 
 ## Build and signing
 
