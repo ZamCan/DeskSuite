@@ -132,3 +132,7 @@ The existing Photo Sheet dialog now offers editable example sizes (35 × 45 mm, 
 
 The starter registry now records a catalogue schema version, source/provenance label and repository licence for each built-in layout. Template generation rejects non-finite or out-of-range canvas dimensions and bounds generated element geometry for narrow/custom aspect ratios. Added tests cover the metadata and custom-size bounds. These are still source-level changes pending the workflow result; no passing test/build claim is made yet.
 
+## CI follow-up — photo background picker overflow (2026-10-28)
+
+The first matrix run containing the template tests completed formatting and static analysis, and the new template catalogue tests passed. The full suite found one widget failure: a narrow-screen RenderFlex overflow in the photo background picker. The option labels now use a bounded, ellipsized flexible region. A fresh CI run triggered by this fix is required before calling the suite green.
+
