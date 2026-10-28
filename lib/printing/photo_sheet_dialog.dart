@@ -28,7 +28,7 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
   final photoHeight = TextEditingController(text: '45');
   final margin = TextEditingController(text: '10');
   final spacing = TextEditingController(text: '3');
-  final copies = TextEditingController(text: '8');
+  final copies = TextEditingController(text: '4');
   // Small-format photo paper is a useful starting point; A4/A5/custom stay explicit choices.
   int preset = 3;
   int photoPreset = customPhotoSpecificationIndex;
