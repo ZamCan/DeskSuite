@@ -84,6 +84,6 @@ Test at least camera cancellation and interrupted-activity recovery, content pro
 
 ## 2026-10-28 source changes — not yet run through Flutter
 
-Added a photo background-compositing path to the existing bounded photo processor and a Photo Studio action for placing already-transparent content on a selected solid colour. Added tests for compositing and invalid translucent colour values. The Photo Sheet preset UI was also added in the previous slice.
+Added a photo background-compositing path to the existing bounded photo processor and a Photo Studio action for placing already-transparent content on a selected solid colour. Added unit and widget tests for compositing, invalid translucent colour values, and the Photo Studio import → choose background → export workflow. The Photo Sheet preset UI was also added in the previous slice.
 
 These source changes have **not** been run through Dart formatting, Flutter analysis, the full Flutter test suite or an Android build in this execution. Do not interpret the added tests as passing tests. Run the command sequence above on the maintained toolchain and record the actual result before claiming verification.
