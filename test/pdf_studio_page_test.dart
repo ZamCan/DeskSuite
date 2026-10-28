@@ -105,4 +105,32 @@ void main() {
     expect(source, orderedEquals(untouched));
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('rejects oversized PDFs before allocating an editor copy', (
+    tester,
+  ) async {
+    final oversized = Uint8List(64 * 1024 * 1024 + 1);
+    oversized.setRange(0, 5, '%PDF-'.codeUnits);
+    final files = PdfFiles();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PdfStudioPage(
+          picker: PdfPicker((bytes: oversized, name: 'large.pdf')),
+          files: files,
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('pdf-studio-open')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(
+      find.textContaining('larger than the 64 MB local editing limit'),
+      findsOneWidget,
+    );
+    expect(find.byType(PdfEditorView), findsNothing);
+    expect(files.savedBytes, isNull);
+    expect(tester.takeException(), isNull);
+  });
 }
