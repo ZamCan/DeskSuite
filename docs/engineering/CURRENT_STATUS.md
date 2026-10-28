@@ -1,6 +1,6 @@
 # Master directive — current implementation status
 
-Status of the **source in this repository**, recorded 2026-10-27. It is not a
+Status of the **source in this repository**, updated 2026-10-28 after the main-branch consolidation build. This is not a declaration that every product requirement or device workflow is complete. It is not a
 declaration that the whole directive or a release is finished. The full
 [master engineering directive](MASTER_ENGINEERING_DIRECTIVE.md) and
 [owner instructions](OWNER_INSTRUCTIONS.md) are preserved alongside it; the
@@ -11,11 +11,14 @@ declaration that the whole directive or a release is finished. The full
 
 | Check | Result | Where |
 | --- | --- | --- |
-| `flutter test` (host, Linux, `--concurrency=1`) | **152 passed** | [validation](VALIDATION.md) |
-| `flutter analyze` | no issues | same |
-| `dart format --set-exit-if-changed` | clean | same |
-| `dart test/pixel_algorithms_smoke.dart` | PASS | same |
-| Android release build | **not built here** | Deferred to GitHub Actions or an offline Termux build, by owner instruction. |
+| Full `flutter test` suite | **PASS** on main commit `7f1920ef` | [GitHub Actions run](https://github.com/ZamCan/DeskSuite/actions/runs/40689024580) |
+| `flutter analyze` | **No issues found** | Same run |
+| `dart format lib test` | Completed before analysis/tests | Same run |
+| Android release APK | **Built, 119.5 MB**; CI artifact is not signed with the owner's private key | Artifact `desksuite-android` in the run above |
+| Android release AAB | **Built, 102.1 MB**; CI artifact is not signed with the owner's private key | Same artifact |
+| Linux / Windows builds | **PASS** | Same run |
+| iOS validation | **PASS, unsigned**; not an installable/store-ready iOS release | Same run |
+| Physical Android install/upgrade | **Not yet verified** | Must be signed with the existing private key and tested on-device |
 
 Two failures reported by GitHub Actions on an earlier commit were diagnosed and
 fixed in this tree: `TessBaseAPI.end()` does not exist (the engine is released
