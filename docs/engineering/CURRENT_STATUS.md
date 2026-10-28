@@ -115,3 +115,16 @@ The existing Photo Sheet dialog now offers editable example sizes (35 × 45 mm, 
 - Automatic background removal / segmentation, editable foreground masks, hair-edge refinement, portrait or face detection, head/shoulder auto-crop, pose/landmark SLM guidance, verified country/authority presets, a broad editable template catalogue, or SLM runtime integration.
 - The solid-background action does **not** remove a background; it only places existing transparency onto a solid colour. It must not be presented as an automatic passport-photo maker.
 - New tests have been written but not run in this execution. Formatter, analyzer, full Flutter suite, CI and Android build/device behavior remain unverified for these latest commits.
+
+## Latest implementation slice — shared editable template catalogue (2026-10-28)
+
+**Implemented in source**
+- Added `lib/design/template_catalog.dart` as the single registry for stable template IDs, labels, descriptions and recommended physical dimensions.
+- Added seven starter choices: blank canvas, editorial poster, business card, identity badge, certificate, flyer and presentation cover.
+- The creation dialog now selects a catalogue entry and builds ordinary `DesignDocument` / `DesignElement` objects. These remain editable in the existing shared editor and use the existing save, render, PDF export and print path; templates are not flattened preview images.
+- Added catalogue tests for unique IDs, element bounds and project encode/decode, plus a widget test for choosing and creating a business-card design.
+
+**Scope boundary**
+- These are generic starter layouts, not finished template packs, official identity-card specifications, or verified government/school requirements. Logo/photo placeholders, image-frame editing, template thumbnails, user-authored templates, multi-page presentation editing and PPTX export are not implemented by this slice.
+- The new tests have been added but have **not** been run in this execution. Formatter, analyzer, full suite, CI and Android build/device checks remain unverified.
+
