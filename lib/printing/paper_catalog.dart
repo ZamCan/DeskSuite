@@ -58,3 +58,59 @@ const paperSheetPresets = <({String label, double widthMm, double heightMm})>[
   (label: 'Large format 36 × 48 in', widthMm: 914.4, heightMm: 1219.2),
   (label: 'Large format 48 × 72 in', widthMm: 1219.2, heightMm: 1828.8),
 ];
+
+/// Intended stock/surface guidance for a print job. This does not prove the
+/// physical printer supports a stock or force the OS driver to select it.
+class PrintStockProfile {
+  const PrintStockProfile({
+    required this.id,
+    required this.label,
+    required this.description,
+  });
+  final String id;
+  final String label;
+  final String description;
+}
+
+const printStockProfiles = <PrintStockProfile>[
+  PrintStockProfile(
+    id: 'photo-glossy',
+    label: 'Glossy photo paper',
+    description: 'Smooth reflective photo surface; select matching stock in printer settings.',
+  ),
+  PrintStockProfile(
+    id: 'photo-satin',
+    label: 'Satin / lustre photo paper',
+    description: 'Lower-glare photo surface; confirm the manufacturer’s media profile.',
+  ),
+  PrintStockProfile(
+    id: 'photo-matte',
+    label: 'Matte photo paper',
+    description: 'Non-gloss photo surface; printer coating and ink compatibility vary.',
+  ),
+  PrintStockProfile(
+    id: 'plain-smooth',
+    label: 'Plain smooth paper',
+    description: 'General office paper; this does not imply archival or photo quality.',
+  ),
+  PrintStockProfile(
+    id: 'cardstock',
+    label: 'Heavy card / cardstock',
+    description: 'Use only if the printer feed path and driver support the chosen thickness.',
+  ),
+  PrintStockProfile(
+    id: 'label-sheet',
+    label: 'Adhesive label sheet',
+    description: 'Match label stock and sheet layout to the exact manufacturer template.',
+  ),
+  PrintStockProfile(
+    id: 'poster-banner',
+    label: 'Poster / banner stock',
+    description: 'Large-format or roll stock; verify printer width, feed path and viewing distance.',
+  ),
+  PrintStockProfile(
+    id: 'specialty',
+    label: 'Specialty / custom stock',
+    description: 'Specify the exact stock separately and verify compatibility before printing.',
+  ),
+];
