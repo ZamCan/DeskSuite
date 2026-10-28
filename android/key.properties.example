@@ -1,0 +1,5 @@
+# Copy to android/key.properties locally; never commit the populated file.
+storeFile=/absolute/path/to/your-existing-release-key.jks
+keyAlias=REPLACE_WITH_EXISTING_ALIAS
+storePassword=REPLACE_WITH_EXISTING_STORE_PASSWORD
+keyPassword=REPLACE_WITH_EXISTING_KEY_PASSWORD
