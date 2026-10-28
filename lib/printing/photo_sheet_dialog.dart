@@ -28,6 +28,7 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
   final spacing = TextEditingController(text: '3');
   final copies = TextEditingController(text: '8');
   int preset = 0;
+  int photoPreset = 0;
 
   @override
   void dispose() {
@@ -61,6 +62,7 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
     TextEditingController controller, {
     bool integer = false,
     bool pageDimension = false,
+    bool photoDimension = false,
   }) => TextField(
     key: Key(key),
     controller: controller,
@@ -68,6 +70,7 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
     decoration: InputDecoration(labelText: label),
     onChanged: (_) => setState(() {
       if (pageDimension) preset = 4;
+      if (photoDimension) photoPreset = 4;
     }),
   );
 
@@ -85,6 +88,24 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
       if (value != 4) {
         pageWidth.text = '${size.$1}';
         pageHeight.text = '${size.$2}';
+      }
+    });
+  }
+
+  void _selectPhotoPreset(int? value) {
+    if (value == null) return;
+    setState(() {
+      photoPreset = value;
+      final size = switch (value) {
+        0 => (35.0, 45.0),
+        1 => (50.8, 50.8),
+        2 => (30.0, 40.0),
+        3 => (40.0, 50.0),
+        _ => (0.0, 0.0),
+      };
+      if (value != 4) {
+        photoWidth.text = '${size.$1}';
+        photoHeight.text = '${size.$2}';
       }
     });
   }
@@ -152,6 +173,39 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
                   ),
                 ],
               ),
+              DropdownButtonFormField<int>(
+                key: ValueKey('photo-size-$photoPreset'),
+                initialValue: photoPreset,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Photo size preset (editable)',
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: 0,
+                    child: Text('35 × 45 mm · example, not universal'),
+                  ),
+                  DropdownMenuItem(
+                    value: 1,
+                    child: Text('2 × 2 in / 50.8 × 50.8 mm · example'),
+                  ),
+                  DropdownMenuItem(
+                    value: 2,
+                    child: Text('30 × 40 mm · example'),
+                  ),
+                  DropdownMenuItem(
+                    value: 3,
+                    child: Text('40 × 50 mm · example'),
+                  ),
+                  DropdownMenuItem(value: 4, child: Text('Custom size')),
+                ],
+                onChanged: _selectPhotoPreset,
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'These are layout examples, not official passport or ID rules. Confirm the receiving authority’s current dimensions, crop and background requirements.',
+                style: TextStyle(fontSize: 12),
+              ),
               Row(
                 children: [
                   Expanded(
@@ -159,6 +213,7 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
                       'Photo width (mm)',
                       'sheet-photo-width',
                       photoWidth,
+                      photoDimension: true,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -167,6 +222,7 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
                       'Photo height (mm)',
                       'sheet-photo-height',
                       photoHeight,
+                      photoDimension: true,
                     ),
                   ),
                 ],
