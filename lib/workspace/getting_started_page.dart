@@ -28,7 +28,7 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 8),
       const Text(
-        'Practise with fictional examples. The same local engines work on images you choose. No account is required.',
+        'Practise with fictional examples before working on your own files. No account is required.',
       ),
       const SizedBox(height: 20),
       _GuideCard(
@@ -37,7 +37,7 @@ class GettingStartedPage extends StatelessWidget {
         title: 'Extract text from a scan',
         description:
             'In Text extraction, choose an image or the sample letter, run the '
-            'offline recognizer, correct the words, then save TXT, DOCX or a '
+            'built-in text recognizer, correct the words, then save TXT, DOCX or a '
             'searchable PDF. Tables and handwriting are not reconstructed.',
         button: 'Open text extraction',
         onPressed: onText,
@@ -106,7 +106,7 @@ class GettingStartedPage extends StatelessWidget {
       Text('Important limits', style: Theme.of(context).textTheme.titleMedium),
       const SizedBox(height: 8),
       const Text(
-        'Scan PDFs contain images, not OCR or searchable text. A PDF reader, office-format editor, cloud sync and automatic page detection are not yet available. Export copies for backup; app-private data can be removed when the app is uninstalled.',
+        'Scan PDFs contain page images, not selectable or searchable OCR text. PDF Studio opens supported existing PDFs and saves edits as a separate copy. Office conversion preserves supported content rather than every original layout detail. Page-corner suggestions must be reviewed and corrected before export. Export important work before uninstalling because app-private files may be removed.',
       ),
       const SizedBox(height: 8),
       const Text(
