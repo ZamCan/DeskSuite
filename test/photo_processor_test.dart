@@ -67,6 +67,43 @@ void main() {
     expect(img.decodePng(png.bytes), isNotNull);
   });
 
+  test('places a transparent image on the selected solid background', () {
+    final transparent = img.Image(width: 2, height: 1, numChannels: 4);
+    transparent.setPixelRgba(0, 0, 255, 0, 0, 0);
+    transparent.setPixelRgba(1, 0, 255, 0, 0, 255);
+    final bytes = Uint8List.fromList(img.encodePng(transparent));
+
+    final result = processPhoto(
+      PhotoRequest(
+        bytes,
+        PhotoAction.flattenBackground,
+        backgroundColor: 0xFFDCEBFA,
+      ),
+    );
+    final decoded = img.decodePng(result.bytes)!;
+    expect([result.width, result.height], [2, 1]);
+    expect(decoded.numChannels, 3);
+    expect(decoded.getPixel(0, 0).r, closeTo(220, 1));
+    expect(decoded.getPixel(0, 0).g, closeTo(235, 1));
+    expect(decoded.getPixel(0, 0).b, closeTo(250, 1));
+    expect(decoded.getPixel(1, 0).r, 255);
+    expect(decoded.getPixel(1, 0).g, 0);
+    expect(decoded.getPixel(1, 0).b, 0);
+  });
+
+  test('rejects translucent background colours', () {
+    expect(
+      () => processPhoto(
+        PhotoRequest(
+          source(),
+          PhotoAction.flattenBackground,
+          backgroundColor: 0x80FFFFFF,
+        ),
+      ),
+      throwsFormatException,
+    );
+  });
+
   test('rejects damaged data, invalid output and excessive input before processing', () {
     expect(
       () => processPhoto(
