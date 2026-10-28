@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'app/startup_view.dart';
 import 'app/theme.dart';
 import 'document_scan/camera_gateway.dart';
 import 'core/suite_paths.dart';
@@ -98,9 +99,7 @@ class _DeskSuiteAppState extends State<DeskSuiteApp> {
           );
         }
         if (!snapshot.hasData) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return const WorkspaceLoadingView();
         }
         final repo = snapshot.requireData;
         return WorkspaceScreen(
