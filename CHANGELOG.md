@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — placed-image print warning (not a release)
+
+- Corrected Creative Studio's effective image-resolution estimate to match its cropped **cover** rendering, avoiding overstatement for mismatched aspect ratios. Photo-sheet estimates retain their **contain** behavior. The pure geometry passed 5,000 deterministic DartPad/Node cases and the actual warning calculation passed with stub images; Flutter rendering and warning tests remain unrun.
+
 ## Unreleased — photo resize controls (not a release)
 
 - Added percentage resizing relative to the current working image, with rounded-dimension preview and bounded 1–1000% input. Added nearest, linear and cubic resampling to the existing photo engine; palette images are expanded when required so linear/cubic are not silently replaced with nearest-neighbour.

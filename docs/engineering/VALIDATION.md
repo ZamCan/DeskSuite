@@ -1,5 +1,9 @@
 # Validation record
 
+## Placed-image print detail — 2026-10-28
+
+The new pure image-detail helper passed 5,000 deterministic randomly sized source/frame cases for both contain and cover fits under DartPad DDC/Node, plus invalid-boundary checks. For a 4000 × 1000 image in a 100 × 100 mm frame, contain gives 1016 dpi and the design renderer's cover fit gives 254 dpi. A second harness exercised the actual `lowestPlacedImageDpi` calculation with stub image/document objects, confirming it selects cover while the photo-sheet default remains contain. These harnesses had an unused `dart:typed_data` import warning. DartPad's formatter subsequently reported no pending changes across all 127 Dart files under `lib/` and `test/`. New Flutter helper and rendered-image integration tests are written but unrun; they do not replace device/printer validation.
+
 ## Percentage resizing and resampling — 2026-10-28
 
 The actual dependency-free `percentagePhotoDimensions` helper and `test/resize_dimensions_smoke.dart` passed on DartPad Dart 3.13.7 DDC/Node: fractional scaling, small-image rounding, 1-pixel minimum, invalid/non-finite percentages, input bounds and 8192-side/12-MP output bounds. A separate DDC/Node smoke check passed the existing millimetres/DPI conversion after its limits were moved to the shared constants. The composed harnesses had unused Dart imports. The actual resize dialog analyzed without issues when composed with the real dimension helpers and a minimal photo-resampling enum. DartPad's formatter reported no pending changes across all 124 Dart files under `lib/` and `test/` at this point; this is not a local Dart SDK run.
@@ -109,6 +113,7 @@ dart test/pixel_algorithms_smoke.dart
 dart test/page_corner_pixels_smoke.dart
 dart test/raster_budget_smoke.dart
 dart test/resize_dimensions_smoke.dart
+dart test/image_detail_smoke.dart
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze --no-pub
 flutter test --no-pub --concurrency=1 --reporter expanded --timeout 120s

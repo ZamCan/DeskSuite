@@ -8,34 +8,18 @@ import 'package:pdf/widgets.dart' as pw;
 import '../design/design_document.dart';
 import '../design/design_renderer.dart';
 import '../design/geometry.dart';
+import 'image_detail.dart';
 import 'raster_budget.dart';
 
+export 'image_detail.dart' show ImagePlacementFit, effectiveImageDpi;
 export 'raster_budget.dart'
     show ExportDimensions, fittingRasterDpi, maxExportPixels, maxExportSide;
 
 ExportDimensions exportDimensions(DesignDocument doc, int dpi) =>
     boundedRasterDimensions(doc.widthMm, doc.heightMm, dpi);
 
-/// Effective source detail when an image is fitted inside its physical box.
-double effectiveImageDpi(
-  int imageWidth,
-  int imageHeight,
-  double boxWidthMm,
-  double boxHeightMm,
-) {
-  if (imageWidth <= 0 ||
-      imageHeight <= 0 ||
-      boxWidthMm <= 0 ||
-      boxHeightMm <= 0) {
-    throw const FormatException('Invalid image or placement dimensions.');
-  }
-  final fittedWidthMm = math.min(
-    boxWidthMm,
-    boxHeightMm * imageWidth / imageHeight,
-  );
-  return imageWidth * millimetresPerInch / fittedWidthMm;
-}
-
+/// The renderer fills each design image frame with BoxFit.cover, so estimate
+/// the resolution after that crop rather than using a contain-fit estimate.
 double? lowestPlacedImageDpi(DesignDocument doc, Map<String, ui.Image> images) {
   double? lowest;
   for (final element in doc.elements) {
@@ -46,6 +30,7 @@ double? lowestPlacedImageDpi(DesignDocument doc, Map<String, ui.Image> images) {
       image.height,
       element.width,
       element.height,
+      fit: ImagePlacementFit.cover,
     );
     lowest = lowest == null ? dpi : math.min(lowest, dpi);
   }

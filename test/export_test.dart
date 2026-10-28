@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:desksuite/design/design_document.dart';
@@ -6,6 +7,46 @@ import 'package:desksuite/printing/design_export.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('design image detail measures the cover crop', (tester) async {
+    await tester.runAsync(() async {
+      final recorder = ui.PictureRecorder();
+      final canvas = ui.Canvas(recorder);
+      canvas.drawRect(
+        const ui.Rect.fromLTWH(0, 0, 400, 100),
+        ui.Paint()..color = const ui.Color(0xff000000),
+      );
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(400, 100);
+      try {
+        final doc =
+            DesignDocument.blank(
+              name: 'Cover crop',
+              widthMm: 100,
+              heightMm: 100,
+            ).copyWith(
+              elements: [
+                DesignElement(
+                  id: 'wide',
+                  kind: ElementKind.image,
+                  x: 0,
+                  y: 0,
+                  width: 100,
+                  height: 100,
+                  imageBytes: Uint8List.fromList([1]),
+                ),
+              ],
+            );
+        expect(
+          lowestPlacedImageDpi(doc, {'wide': image}),
+          closeTo(25.4, 0.0001),
+        );
+      } finally {
+        image.dispose();
+        picture.dispose();
+      }
+    });
+  });
+
   testWidgets('renders a real PNG and a correctly-sized single-page PDF', (
     tester,
   ) async {
