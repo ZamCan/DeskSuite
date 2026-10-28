@@ -120,3 +120,8 @@ Added a controller test for filling a template photo slot with a locally selecte
 ## CI follow-up — photo-slot regression (2026-10-28)
 
 The current Android run found the photo-sheet catalogue test's text count was one low: the generated sheet has 23 text elements (header, subtitle, twenty labels and footer). Corrected the assertion and added a controller-level test for image replacement, label removal, project encode/decode, and undo. These changes await CI confirmation.
+
+
+## 2026-10-28 — print-production correction and analyzer fix
+
+The latest matrix run failed static analysis because `photoSpecifications.length` was used in a constant expression for the custom dropdown index. The index is now a constant guarded by a regression test against the profile-list length. The Photo Sheet dialog starts with 4 × 6 inch media as a convenient small-format option and explains that sheet size and finished photo size are independent; A4/A5/custom remain selectable. Added print-production standards documentation covering ISO 216, ISO/IEC 23385, ICAO Doc 9303, ISO/IEC 7810, substrate/finish/caliper/device compatibility, physical-unit imposition, margins/bleed/trim and authority-scoped presets. This is a source correction; await the new CI run and actual printer/device tests before claiming validation.
