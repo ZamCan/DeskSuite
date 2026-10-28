@@ -70,7 +70,7 @@ bool looksLikePdf(Uint8List bytes) {
 }
 
 /// Largest PDF DeskSuite will parse in memory on a phone.
-const int maxPdfBytes = 96 * 1024 * 1024;
+const int maxPdfBytes = 48 * 1024 * 1024;
 
 /// Reads page count, size and encryption state, or throws [PdfOpenFailure] with
 /// a specific reason. The bytes are not modified.
