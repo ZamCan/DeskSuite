@@ -13,6 +13,10 @@ dependencies:
   file_picker: 13.1.0
   image_picker: 1.2.4
   path_provider: 2.1.6
+  dart_pdf_editor: 10.0.0
+  # The headless document layer: page tree, boxes and save, no widgets. Used by
+  # the PDF inspector so it can be unit-tested without a rendered surface.
+  pdf_document: 10.0.0
   pdf: 3.13.1
   image: ^4.5.4
   printing: ^5.14.2

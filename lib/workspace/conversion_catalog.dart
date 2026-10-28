@@ -1,6 +1,15 @@
 /// Explicit, bounded conversion routes. A null target is intentionally not
 /// actionable; the catalogue must never imply an unavailable engine exists.
-enum ConversionTarget { photos, scans, projects, design, notes, text, office }
+enum ConversionTarget {
+  photos,
+  scans,
+  projects,
+  design,
+  notes,
+  text,
+  office,
+  pdf,
+}
 
 class ConversionRoute {
   const ConversionRoute({
@@ -50,8 +59,20 @@ const conversionRoutes = <ConversionRoute>[
     target: ConversionTarget.text,
   ),
   ConversionRoute(
-    title: 'Existing PDF → images, edited pages or compressed PDF',
-    detail: 'Unavailable: DeskSuite does not import or modify existing PDFs.',
+    title: 'Existing PDF → edited copy, page export or split files',
+    detail:
+        'PDF & Documents opens a PDF you already have, then reorders, rotates '
+        'or deletes pages, adds text and ink, fills forms, exports selected '
+        'pages and splits into separate files. Every result is a new file and '
+        'the original is never modified. Text inside the page is not reflowed '
+        'and encrypted PDFs are refused.',
+    target: ConversionTarget.pdf,
+  ),
+  ConversionRoute(
+    title: 'Password-protected PDF → unlocked copy',
+    detail:
+        'Unavailable: DeskSuite has no password unlocking, so it refuses an '
+        'encrypted PDF instead of pretending to open it.',
   ),
   ConversionRoute(
     title: 'DOCX, XLSX, PPTX, ODT, ODS, ODP, RTF → PDF, TXT, CSV, ODT, ODS',

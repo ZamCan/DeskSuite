@@ -10,6 +10,7 @@ DeskSuite repository code is licensed under [Apache-2.0](LICENSE). Direct runtim
 | path_provider | 2.1.6 | [BSD-3-Clause](third_party/path_provider.LICENSE) |
 | image | 4.12.0 | [MIT](third_party/image.LICENSE); [additional codec notices](third_party/image-additional-notices.md) |
 | pdf | 3.13.1 | [Apache-2.0](third_party/pdf.LICENSE) |
+| dart_pdf_editor | 10.0.0 | Apache-2.0. Pure-Dart viewer/editor for existing PDFs (PDF & Documents). Pulls in `pdf_document`, `pdf_cos`, `pdf_graphics` (same licence) plus `flutter_secure_storage`, `http`, `intl`, `shared_preferences`, `url_launcher`, `web` — each keeps its own published licence and is listed by Flutter's generated licence registry. |
 | printing | 5.15.1 | [Apache-2.0](third_party/printing.LICENSE) |
 | archive | 4.5.2 | MIT |
 | xml | 7.0.1 | MIT |

@@ -12,15 +12,17 @@ The in-app **Conversion routes** catalogue (`lib/workspace/conversion_catalog.da
 
 | Image / photo → reviewed text, TXT, DOCX or searchable PDF | Tesseract 5.5.1 via Tesseract4Android (offline, Apache-2.0) + `lib/ocr/`; Text extraction | On-device recognition with English and Kiswahili models. Words carry confidence; low-confidence words are flagged. The searchable PDF keeps the page image and adds an invisible per-word text layer. Tables, multi-column layouts and handwriting are **not** reconstructed. Recognition of 24 MP / 4000 px inputs is refused. | `ocr_engine_test`, `ocr_exports_test`, `searchable_pdf_test` (inflates the PDF content stream and asserts each recognized word is present), `ocr_image_prep_test` (EXIF orientation, downsampling), `ocr_page_test`. Native recognition quality on hardware is unverified. |
 | Office document → edited DOCX/XLSX/ODT/ODS/PDF/TXT/CSV | `lib/office/office_content_editor_page.dart` + `office_reader.dart` and writers | The content editor can change readable paragraphs and table cells, then write a new genuine DOCX/XLSX/ODT/ODS/PDF/TXT/CSV content-level copy. It does not modify the source and does not preserve full Office layout, images, formulas, charts or macros. The converter also supports read-only content extraction and conversion. Legacy `.doc/.xls/.ppt` need an installed LibreOffice. See [office support](engineering/OFFICE_SUPPORT.md). | `office_engine_test`, `office_convert_page_test`, `office_content_editor_page_test`. Real-world Office fidelity and native device behavior remain unverified. |
+| Existing PDF → edited copy, page export, split files | `dart_pdf_editor` 10.0.0 (Apache-2.0, pure Dart, `pdf_document`/`pdf_cos`/`pdf_graphics`) via `lib/pdf/`; PDF & Documents | Opens an existing PDF on the device and edits pages and annotations: reorder, rotate, delete, insert, text and ink markup, form field filling, selected-page export and split into separate files. Page count, size and page box are read from the document itself (`lib/pdf/pdf_inspection.dart`). Text inside a page is not reflowed, encrypted PDFs are refused, files over 96 MB are refused, and nothing is uploaded. | `pdf_inspection_test` (real exported PDFs: page count, A4 box, truncation, size limits, bytes unchanged), `pdf_studio_page_test` (open, write, refuse non-PDF, refuse editor garbage, cancelled save, split naming). Interactive rendering on a device is unverified. |
 
 ## Explicitly unavailable
 
-- Existing PDF → image, merge, split, reorder, edit, read or compressed PDF.
-- Existing PDF → image, merge, split, reorder, edit, read or compressed PDF. The scanner reorders **its own image pages**, not imported PDF pages.
+- Existing PDF → a single merged PDF built from two different PDFs.
+- Existing PDF → compressed PDF, or any conversion to a target file size.
+- Password-protected PDF → unlocked copy; DeskSuite refuses encrypted files.
 - DOCX/XLSX/PPTX **layout-faithful** conversion. The built-in engine preserves
   content, not layout; pixel-accurate rendering requires an installed LibreOffice.
 - Layout-faithful DOCX/XLSX/PPTX conversion. The converter writes content-level outputs; the separate content editor can create DOCX/XLSX/ODT/ODS/PDF/TXT/CSV copies but does not preserve full layout.
-- PDF-to-Office conversion, macros, form fields and digital signatures.
+- PDF-to-Office conversion, macros and cryptographic digital signatures. Form filling of existing fields *is* supported in PDF & Documents.
 - Structural PDF optimization, target-file-size guarantees, batch conversion and cloud conversions.
 - Image percentage, DPI/physical-size resampling, advanced compression presets or metadata controls.
 

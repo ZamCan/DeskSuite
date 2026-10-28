@@ -70,6 +70,30 @@ images, charts, macros, comments, text boxes, number formats and page size (A4 i
 used). Layout-faithful rendering needs an installed LibreOffice, which DeskSuite
 does not bundle; see the office support notes in the engineering documentation.
 
+## Work with a PDF you already have
+
+1. Open the menu → **PDF & Documents**, then **Open PDF** and choose a file. The
+   header shows the page count, the file size and the first page size, read from
+   the document itself.
+2. Read it on screen. Pages are drawn by a bundled on-device engine; nothing is
+   uploaded and no account is needed.
+3. Edit: reorder, rotate or delete pages from the thumbnail panel, add text or
+   ink on a page, or fill in a form field that the file already defines.
+4. Save with **Save**. DeskSuite writes a new file named after the original, for
+   example `report-edited.pdf`, and tells you the page count and size it wrote.
+   The file you opened is never modified.
+5. Exporting selected pages writes `report-pages.pdf`; splitting writes
+   `report-part-1.pdf`, `report-part-2.pdf` and so on. If you cancel a save, the
+   screen says the export was cancelled — it never reports a file it did not
+   write.
+
+What this does not do: it does not re-typeset the text already inside a page
+(annotations and form fields sit on top of the page), it does not merge two
+different PDFs into one, it cannot compress to a target size, and it refuses a
+password-protected PDF instead of guessing at the password. Files over 96 MB are
+refused on a phone. Very large or damaged PDFs may open with fewer pages than a
+desktop reader shows.
+
 ## Sell something and print a receipt
 
 1. Open the menu → **Business & POS**. The screen lists your products with their

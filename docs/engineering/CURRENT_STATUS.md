@@ -73,8 +73,10 @@ environment.
    install it, then run the scanner, OCR and converter against real documents.
 2. Add automatic document edge detection with a manual fallback, and page preview
    for imported photo pages.
-3. PDF import: render pages, extract existing text, reorder/split/compress —
-   the largest remaining gap for "Acrobat-style" workflows.
+3. **Done in part:** `lib/pdf/` now opens, edits, splits and exports existing
+   PDFs through `dart_pdf_editor` (see [PDF_SUPPORT.md](PDF_SUPPORT.md)). Next in
+   this area: merging two PDFs, compression to a target size, and PDF -> images as
+   a batch conversion.
 4. **Done for sales:** `lib/business/sale_receipt.dart` turns a recorded sale into
    a real A5 PDF receipt, and `InventoryRepository.recordSale` keeps a numbered
    `sales.json` log so it can be reprinted. Next in this area: multi-item
