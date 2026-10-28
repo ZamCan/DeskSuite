@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../app/section_artwork.dart';
 import '../app/theme.dart';
 
 /// Short, revisitable guides link to the real processing tools. The bundled
@@ -58,6 +59,7 @@ class GettingStartedPage extends StatelessWidget {
       const SizedBox(height: 20),
       _GuideCard(
         key: const Key('guide-extract-text'),
+        artwork: SectionArt.text,
         icon: Icons.text_snippet_outlined,
         title: 'Extract text from a scan',
         description:
@@ -72,6 +74,7 @@ class GettingStartedPage extends StatelessWidget {
       const SizedBox(height: 12),
       _GuideCard(
         key: const Key('guide-convert-office'),
+        artwork: SectionArt.office,
         icon: Icons.sync_alt_rounded,
         title: 'Convert an office document',
         description:
@@ -83,6 +86,7 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        artwork: SectionArt.scan,
         icon: Icons.auto_fix_high,
         title: 'Clean a shadowed page',
         description: 'In Scan & assemble, choose Try an example → Shadowed practice report → Clean up & compare. Try Original, Lighten, shadow reduction, Magic Pro and adaptive black & white. Compare Before and After, inspect text and colored bars, then export a new PNG or image PDF.',
@@ -91,6 +95,7 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        artwork: SectionArt.scan,
         icon: Icons.document_scanner_outlined,
         title: 'Make a multipage image PDF',
         description: 'Open Scan & assemble, choose Try an example → Two-page report, reorder the pages and select Prepare PDF. Choose a new destination and open the PDF to check it.',
@@ -99,6 +104,7 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        artwork: SectionArt.scan,
         icon: Icons.crop_free,
         title: 'Correct a perspective page',
         description: 'Choose the angled practice report in Scan & assemble and select A4 portrait proportions. In Corners & correct, try the wand suggestion or move the handles yourself. Check all four corners before correcting; Reset page returns to the imported copy.',
@@ -107,6 +113,7 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        artwork: SectionArt.photo,
         icon: Icons.filter_center_focus,
         title: 'Reduce photo specks',
         description: 'In Photo Studio, choose Try a noisy garden photo, then Reduce isolated specks. Pinch to inspect the detail, choose Compare original, and use Undo if needed. The filter targets isolated black or white dots; it cannot remove blur or scratches and may soften fine details. Export a separate copy.',
@@ -115,6 +122,7 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        artwork: SectionArt.photo,
         icon: Icons.photo_size_select_large_outlined,
         title: 'Resize an image',
         description: 'In Photo Studio, choose Try a sample image → Resize. Enter 512 pixels for width, or select Percentage and enter 50 for 688 × 384 pixels. Choose a resampling method, then export and review the actual dimensions and file size.',
@@ -123,6 +131,7 @@ class GettingStartedPage extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       _GuideCard(
+        artwork: SectionArt.design,
         icon: Icons.edit_document,
         title: 'Edit an example design',
         description: 'Open an editable fictional letter as a new DeskSuite design copy. Its text objects can be edited in Creative Studio; it is not a DOCX or a word-processing document.',
@@ -147,12 +156,14 @@ class _GuideCard extends StatelessWidget {
   const _GuideCard({
     super.key,
     required this.icon,
+    required this.artwork,
     required this.title,
     required this.description,
     required this.button,
     required this.onPressed,
   });
   final IconData icon;
+  final String artwork;
   final String title, description, button;
   final VoidCallback onPressed;
   @override
@@ -165,7 +176,7 @@ class _GuideCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: Theme.of(context).colorScheme.primary),
+              SectionArtwork(asset: artwork, size: 40, fallback: icon),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(

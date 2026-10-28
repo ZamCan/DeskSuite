@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../app/section_artwork.dart';
 import '../app/theme.dart';
 import 'project_repository.dart';
 
@@ -18,6 +19,71 @@ enum WorkspaceSection {
   // Appended last: IndexedStack children are indexed by this order.
   text,
   office,
+}
+
+/// Section identities are decorative. The selected DS mark remains the app logo.
+String? artworkForSection(WorkspaceSection section) => switch (section) {
+  WorkspaceSection.scans => SectionArt.scan,
+  WorkspaceSection.photos => SectionArt.photo,
+  WorkspaceSection.text => SectionArt.text,
+  WorkspaceSection.office => SectionArt.office,
+  WorkspaceSection.design => SectionArt.design,
+  WorkspaceSection.projects => SectionArt.projects,
+  _ => null,
+};
+
+/// A labelled, keyboard- and screen-reader-accessible route to a real tool.
+class WorkspaceToolCard extends StatelessWidget {
+  const WorkspaceToolCard({
+    super.key,
+    required this.artwork,
+    required this.title,
+    required this.description,
+    required this.onTap,
+  });
+
+  final String artwork;
+  final String title;
+  final String description;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            SectionArtwork(asset: artwork),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.north_east, size: 16),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class WorkspaceSidebar extends StatelessWidget {

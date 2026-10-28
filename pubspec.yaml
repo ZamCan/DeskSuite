@@ -31,6 +31,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/brand/desksuite-mark.png
+    - assets/brand/sections/
     - assets/licenses/office-engine-notices.txt
     - assets/samples/
     - assets/tessdata/

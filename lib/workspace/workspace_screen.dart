@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../app/section_artwork.dart';
 import '../app/theme.dart';
 import '../design/design_document.dart';
 import '../design/template_catalog.dart';
@@ -401,6 +402,13 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               ),
             ),
           if (!wide) const SizedBox(width: 6),
+          if (_section == WorkspaceSection.workspace) ...[
+            const BrandMark(size: 32),
+            const SizedBox(width: 10),
+          ] else if (artworkForSection(_section) case final artwork?) ...[
+            SectionArtwork(asset: artwork, size: 32),
+            const SizedBox(width: 10),
+          ],
           Expanded(
             child: Text(
               switch (_section) {
@@ -498,35 +506,81 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         const SizedBox(height: 28),
         _heading('Your tools', 'Continue with a local workflow.'),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            OutlinedButton.icon(
-              key: const Key('home-open-scan'),
-              onPressed: () => _navigate(WorkspaceSection.scans),
-              icon: const Icon(Icons.document_scanner_outlined),
-              label: const Text('Scan documents'),
-            ),
-            OutlinedButton.icon(
-              key: const Key('home-open-photo'),
-              onPressed: () => _navigate(WorkspaceSection.photos),
-              icon: const Icon(Icons.photo_outlined),
-              label: const Text('Edit a photo'),
-            ),
-            OutlinedButton.icon(
-              key: const Key('home-open-text'),
-              onPressed: () => _navigate(WorkspaceSection.text),
-              icon: const Icon(Icons.text_snippet_outlined),
-              label: const Text('Extract text'),
-            ),
-            OutlinedButton.icon(
-              key: const Key('home-open-converter'),
-              onPressed: () => _navigate(WorkspaceSection.office),
-              icon: const Icon(Icons.sync_alt_rounded),
-              label: const Text('Convert file'),
-            ),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 820
+                ? 3
+                : constraints.maxWidth >= 520
+                ? 2
+                : 1;
+            final width = (constraints.maxWidth - (columns - 1) * 12) / columns;
+            return Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                SizedBox(
+                  width: width,
+                  child: WorkspaceToolCard(
+                    key: const Key('home-open-scan'),
+                    artwork: SectionArt.scan,
+                    title: 'Scan documents',
+                    description: 'Capture, clean and assemble pages.',
+                    onTap: () => _navigate(WorkspaceSection.scans),
+                  ),
+                ),
+                SizedBox(
+                  width: width,
+                  child: WorkspaceToolCard(
+                    key: const Key('home-open-photo'),
+                    artwork: SectionArt.photo,
+                    title: 'Edit a photo',
+                    description: 'Adjust and resize an image.',
+                    onTap: () => _navigate(WorkspaceSection.photos),
+                  ),
+                ),
+                SizedBox(
+                  width: width,
+                  child: WorkspaceToolCard(
+                    key: const Key('home-open-text'),
+                    artwork: SectionArt.text,
+                    title: 'Extract text',
+                    description: 'Recognize and review words in an image.',
+                    onTap: () => _navigate(WorkspaceSection.text),
+                  ),
+                ),
+                SizedBox(
+                  width: width,
+                  child: WorkspaceToolCard(
+                    key: const Key('home-open-converter'),
+                    artwork: SectionArt.office,
+                    title: 'Convert file',
+                    description: 'Read and convert supported document content.',
+                    onTap: () => _navigate(WorkspaceSection.office),
+                  ),
+                ),
+                SizedBox(
+                  width: width,
+                  child: WorkspaceToolCard(
+                    key: const Key('home-open-design'),
+                    artwork: SectionArt.design,
+                    title: 'Creative Studio',
+                    description: 'Design an editable layout for print.',
+                    onTap: () => _navigate(WorkspaceSection.design),
+                  ),
+                ),
+                SizedBox(
+                  width: width,
+                  child: WorkspaceToolCard(
+                    key: const Key('home-open-projects'),
+                    artwork: SectionArt.projects,
+                    title: 'Files & Projects',
+                    description: 'Open locally saved design projects.',
+                    onTap: () => _navigate(WorkspaceSection.projects),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
         const SizedBox(height: 34),
         Row(
@@ -614,6 +668,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   Widget _projectPage() => _scrolling(
     child: Column(
+      key: const Key('projects-page'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(

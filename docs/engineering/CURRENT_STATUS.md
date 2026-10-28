@@ -16,7 +16,7 @@ declaration that the whole directive or a release is finished. The full
 | Later main `1cef153` CI | Analysis failed on all four jobs; logs require authentication. The feature branch fixes a separately reproduced constant-expression error in that main snapshot, but other project errors cannot be excluded until Flutter runs. | [run 40635793861](https://github.com/ZamCan/DeskSuite/actions/runs/40635793861) |
 | New enhancement and corner pixel cores | DartPad 3.13.7 DDC/Node smoke checks passed, including 40 randomized images and synthetic corner/fallback cases | [validation](VALIDATION.md) |
 | Media/raster integration | Actual Dart budget and sheet-geometry checks passed for 56 listed presets under DartPad DDC/Node; UI and optimizer control-flow analyses used stubs | [validation](VALIDATION.md) |
-| Owner-selected branding | Five Python asset/resource checks passed; source/derived images inspected on host, DartPad analyzed the theme and home with stubs | [brand assets](BRAND_ASSETS.md), [validation](VALIDATION.md) |
+| Owner-selected branding | Eight Python asset/resource checks passed, including all Windows ICO frames and six section illustrations; source/UI analysis used stubs. Three Linux launcher checks passed, including a fictional GIO launch. | [brand assets](BRAND_ASSETS.md), [validation](VALIDATION.md) |
 | Cleanup and optimizer follow-up | DDC/Node verified zero-strength pixel equivalence for 100 randomized RGBA pages per color mode and 2,000 compression-geometry sequences; optimizer flow used a simulated codec | [validation](VALIDATION.md) |
 | Branded launch and guide | DartPad analyzed actual launch/theme code; the motion geometry smoke passed. Widget, accessibility, Android splash and device tests remain unrun. | [brand assets](BRAND_ASSETS.md) |
 | Experimental Office preview | Actual OpenDocument.core WASM + worker generated HTML with expected text from one DOC/DOCX/XLS/XLSX/PPT/PPTX fixture each under Node. Disabled by default; visual fidelity, Android integration and offline isolation not verified. | [office support](OFFICE_SUPPORT.md) |
@@ -27,10 +27,13 @@ declaration that the whole directive or a release is finished. The full
 The independently triggered CI builds do not prove a signed release, actual
 camera/OCR behavior or the changes in this feature branch. The owner asked
 that no Android toolchain be downloaded or packaging performed in this workspace.
+On 2026-10-28, remote `main` had advanced separately to `cb1e264` with PDF
+work. It is **not integrated in this feature branch**; a dry-run merge identified
+conflicts that require careful reconciliation and full validation.
 
 ## Owner-selected brand and focused engine improvements — 2026-10-28
 
-The selected dimensional DS scan-frame PNG is the canonical brand source. Derived in-app and Android launcher assets, simplified monochrome/splash vectors, a coordinated light/dark sapphire palette and four home shortcuts are in source; legacy studios retain light surfaces. A 1.9-second startup traces a stylized DS mark, pulses the scan brackets and fades to the selected logo while the workspace initializes; it skips reduced motion. Welcome and the revisitable guide show the mark. Android adaptive/splash rendering, Flutter asset loading, timing, accessibility and small-screen layout still require real builds and devices. See [brand assets](BRAND_ASSETS.md).
+The selected dimensional DS scan-frame PNG is the canonical brand source. Derived in-app and Android launcher assets, a multi-resolution Windows ICO, a Linux user-local desktop icon, simplified monochrome/splash vectors and a coordinated light/dark sapphire palette are in source; legacy studios retain light surfaces. Six other icon candidates now illustrate the Home tool cards and section identities without replacing the chosen app logo. A 1.9-second startup traces a stylized DS mark, pulses the scan brackets and fades to the selected logo while the workspace initializes; it skips reduced motion. Welcome and the revisitable guide show the mark. Android adaptive/splash rendering, Flutter asset loading, timing, accessibility and small-screen layout still require real builds and devices. See [brand assets](BRAND_ASSETS.md).
 
 A read-only OpenDocument.core C++/WASM Office preview is implemented behind the disabled-by-default `DESKSUITE_EXPERIMENTAL_OFFICE_PREVIEW` build flag. It is not a web shell, not a conversion route and not yet validated on Android; six formats were exercised only on the host. The normal build retains content-only conversions and does not read or convert legacy DOC/XLS/PPT. See [office support](OFFICE_SUPPORT.md).
 

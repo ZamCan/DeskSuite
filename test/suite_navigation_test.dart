@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:desksuite/app/section_artwork.dart';
+import 'package:desksuite/app/theme.dart';
 import 'package:desksuite/main.dart';
 import 'package:desksuite/design/design_document.dart';
 import 'package:desksuite/workspace/creative_studio_page.dart';
 import 'package:desksuite/workspace/file_gateway.dart';
 import 'package:desksuite/workspace/project_repository.dart';
+import 'package:desksuite/workspace/workspace_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -57,7 +60,7 @@ Future<void> navigate(WidgetTester tester, String label) async {
 }
 
 void main() {
-  testWidgets('home shortcuts open the four real local workflows', (
+  testWidgets('home tool cards open the six real local workflows', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360, 720);
@@ -96,11 +99,15 @@ void main() {
       ),
     );
     await settleIo(tester);
+    expect(find.byType(BrandMark), findsWidgets);
+    expect(find.byType(WorkspaceToolCard), findsNWidgets(6));
     final routes = <String, String>{
       'home-open-scan': 'scan-import',
       'home-open-photo': 'photo-choose',
       'home-open-text': 'ocr-choose',
       'home-open-converter': 'office-choose',
+      'home-open-design': 'new-design',
+      'home-open-projects': 'projects-page',
     };
     var first = true;
     for (final route in routes.entries) {
@@ -110,6 +117,7 @@ void main() {
       await reveal(tester, shortcut);
       await tester.tap(shortcut);
       await settleUntil(tester, find.byKey(Key(route.value)));
+      expect(find.byType(SectionArtwork), findsWidgets, reason: route.key);
       expect(tester.takeException(), isNull, reason: route.key);
     }
   });

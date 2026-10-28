@@ -42,7 +42,7 @@ Current main and the earlier creative APK use `com.zamcan.desksuite`; the pre-me
 
 ## Desktop / iOS exploration
 
-Windows and Linux do not yet have checked-in platform runners here. Before generating them, commit or back up your work and lockfile; Flutter's generator in this environment rewrote `pubspec.lock` even with `--no-pub`. Restore the intended lockfile, inspect `git diff`, then resolve dependencies. Example **on an appropriate host**:
+Windows and Linux do not yet have complete checked-in platform runners here. Only the selected Windows icon is pre-placed at `windows/runner/resources/app_icon.ico`; it is not a complete runner. Before generating runners, commit or back up your work and lockfile; Flutter's generator in this environment rewrote `pubspec.lock` even with `--no-pub`. Restore the intended lockfile, inspect `git diff`, then resolve dependencies. Example **on an appropriate host**:
 
 ```sh
 cp pubspec.lock pubspec.lock.before-platform-create
@@ -50,8 +50,22 @@ flutter create --no-pub --project-name desksuite --org com.zamcan.desksuite --pl
 cp pubspec.lock.before-platform-create pubspec.lock && rm pubspec.lock.before-platform-create
 flutter pub get
 flutter build linux --release      # Linux desktop dependencies required
-# On Windows with Visual Studio C++ tooling instead:
+```
+
+For a Linux application-menu launcher, keep **the whole bundle** together in a stable location, then point the local installer at its executable:
+
+```sh
+python3 tools/install_linux_launcher.py /stable/path/to/bundle/desksuite
+# Reads APPLICATION_ID from linux/CMakeLists.txt; --app-id can override it.
+```
+
+This writes only the user's XDG application entry and selected PNG icon. It does not install the bundle, and a later move will break the launcher until it is run again. Paths containing `=`, `%` or control characters are rejected. Refresh the desktop session if the icon is cached.
+
+On Windows, use PowerShell and Visual Studio C++ tooling. After generating the Windows runner, re-apply the canonical ICO before building:
+
+```powershell
+Copy-Item -Force assets/brand/desksuite-windows.ico windows/runner/resources/app_icon.ico
 flutter build windows --release
 ```
 
-These are instructions, not reported build results. Windows bundles need their runtime files; an AppImage requires additional packaging and testing. iOS requires macOS/Xcode and Apple provisioning; no iOS build was performed. Plugins and app-private storage must be validated per platform.
+These are instructions and source-level asset configuration, not reported build results. Windows bundles need their runtime files; an AppImage requires additional packaging and testing. iOS requires macOS/Xcode and Apple provisioning; no iOS build was performed. Plugins and app-private storage must be validated per platform.

@@ -16,11 +16,22 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))
-from generate_brand_assets import generate  # noqa: E402
+from generate_brand_assets import (  # noqa: E402
+    SECTION_NAMES, WINDOWS_SIZES, generate, generate_section_artwork,
+    generate_windows_icon,
+)
 
 RES = ROOT / 'android/app/src/main/res'
 ANDROID = '{http://schemas.android.com/apk/res/android}'
 SOURCE_HASH = '92e47c28fb5cadb71bd779153c831c5f65923d0e029b4c37a38cb08b68feece2'
+SECTION_HASHES = {
+    'design': '50e02d46759f25ef133dac5b0a1e4ea1cf2bd409e275223acf4d7def548529ed',
+    'office': 'e12a968b6a4db15e29360f3aa57eec905c8301d61a0dfec132a1ced5bc1854ed',
+    'photo': '2b418a90972e69f811be29c2f9ba084dd29b35f621cc80958a4955fbcb1b22c3',
+    'projects': '75263bc475b06b9344b2178269985988a46b52e41231d360fb74dffddc89f757',
+    'scan': 'a80eaecb51c0dc3d7dfa645b36766f47bae052e9b29cc6673d01c1915d84ccf8',
+    'text': 'd170a154d2236fe3886713a232103ec49072a4ee0f7791c0e328dcd34ed16e3c',
+}
 
 
 def sha(path):
@@ -102,6 +113,51 @@ class BrandAssetsTest(unittest.TestCase):
             # Splash specification: 160/240 or 192/288 diameter.
             self.assertLessEqual(extent, 1024 / 3)
 
+    def test_windows_icon_contains_only_the_selected_mark_in_all_sizes(self):
+        with Image.open(ROOT / 'assets/brand/desksuite-mark.png') as source:
+            mark = source.convert('RGBA')
+        icon_path = ROOT / 'assets/brand/desksuite-windows.ico'
+        self.assertEqual(sha(icon_path), sha(ROOT / 'windows/runner/resources/app_icon.ico'))
+        with Image.open(icon_path) as ico:
+            self.assertEqual(ico.ico.sizes(), {(side, side) for side in WINDOWS_SIZES})
+            for side in WINDOWS_SIZES:
+                expected = mark.resize((side, side), Image.Resampling.LANCZOS)
+                actual = ico.ico.getimage((side, side)).convert('RGBA')
+                self.assertEqual(actual.tobytes(), expected.tobytes(), side)
+
+    def test_section_originals_and_bundled_images(self):
+        self.assertEqual(set(SECTION_NAMES), set(SECTION_HASHES))
+        self.assertIn('assets/brand/sections/', (ROOT / 'pubspec.yaml').read_text())
+        registry = (ROOT / 'lib/app/section_artwork.dart').read_text()
+        for name in SECTION_NAMES:
+            original = ROOT / f'assets/brand/section-sources/{name}-original.png'
+            self.assertEqual(sha(original), SECTION_HASHES[name], name)
+            image_path = ROOT / f'assets/brand/sections/{name}.png'
+            with Image.open(image_path) as image:
+                self.assertEqual(image.size, (256, 256), name)
+                self.assertEqual(image.mode, 'RGBA', name)
+                self.assertEqual(image.getpixel((0, 0))[3], 0, name)
+                self.assertEqual(image.getpixel((128, 128))[3], 255, name)
+            self.assertIn(f'assets/brand/sections/{name}.png', registry)
+
+    def test_each_home_card_and_section_uses_its_assigned_art(self):
+        screen = (ROOT / 'lib/workspace/workspace_screen.dart').read_text()
+        widgets = (ROOT / 'lib/workspace/workspace_widgets.dart').read_text()
+        assignments = [
+            ('scan', 'scan', 'scans'), ('photo', 'photo', 'photos'),
+            ('text', 'text', 'text'), ('converter', 'office', 'office'),
+            ('design', 'design', 'design'), ('projects', 'projects', 'projects'),
+        ]
+        for key, art, section in assignments:
+            self.assertIn(f'WorkspaceSection.{section} => SectionArt.{art}', widgets)
+            pattern = (r'WorkspaceToolCard\((?:(?!WorkspaceToolCard\().)*?'
+                       + re.escape(f"key: const Key('home-open-{key}')")
+                       + r'(?:(?!WorkspaceToolCard\().)*?'
+                       + re.escape(f'artwork: SectionArt.{art}')
+                       + r'(?:(?!WorkspaceToolCard\().)*?'
+                       + re.escape(f'_navigate(WorkspaceSection.{section})'))
+            self.assertRegex(screen, re.compile(pattern, re.S), key)
+
     def test_regeneration_is_byte_identical(self):
         outputs = [ROOT / 'assets/brand/desksuite-mark.png',
                    RES / 'drawable-nodpi/ic_launcher_foreground.png',
@@ -118,6 +174,15 @@ class BrandAssetsTest(unittest.TestCase):
             generated += [res / f'mipmap-{d}/ic_launcher.png' for d in
                           ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']]
             self.assertEqual([sha(p) for p in outputs], [sha(p) for p in generated])
+            windows_icon = temp / 'app_icon.ico'
+            generate_windows_icon(brand, windows_icon)
+            self.assertEqual(sha(ROOT / 'assets/brand/desksuite-windows.ico'), sha(windows_icon))
+            self.assertEqual(sha(ROOT / 'windows/runner/resources/app_icon.ico'), sha(windows_icon))
+            sections = temp / 'sections'
+            generate_section_artwork(ROOT / 'assets/brand/section-sources', sections)
+            for name in SECTION_NAMES:
+                self.assertEqual(sha(ROOT / f'assets/brand/sections/{name}.png'),
+                                 sha(sections / f'{name}.png'), name)
 
 
 if __name__ == '__main__':

@@ -1,5 +1,13 @@
 # Validation record
 
+## Desktop identity and section illustrations — 2026-10-28
+
+The owner's uploaded `DeskSuite-scan-frame-choice.png` and the canonical selected source both hash to `92e47c28fb5cadb71bd779153c831c5f65923d0e029b4c37a38cb08b68feece2`. `python3 tools/test_brand_assets.py` passed **eight** checks, including source fingerprints for six earlier candidates, static Home-card wiring, thumbnail and Android-resource regeneration, and exact pixel comparisons of all ten Windows ICO frames with the selected mark resized to those dimensions. The runner resource ICO matches the canonical desktop ICO. This does not compile a Windows executable or Android resources.
+
+`python3 tools/test_linux_launcher.py` passed **three** host checks. The GIO test actually launched a fictional executable through its generated user-local `.desktop` file from a path containing spaces, dollar signs, quotation marks, a backslash and backticks. It compared the installed icon bytes with the selected mark and rejected unsupported path characters/invalid IDs. It did **not** launch DeskSuite, verify a desktop shell's cached icon, or build an AppImage.
+
+DartPad analysis of the actual section artwork widget, workspace widgets, top bar and home method, and guide page reported no issues when the rest of the project was replaced by signature stubs. The changed Dart files were formatted by DartPad's formatter. New Flutter tests cover bundled PNGs, six mappings, a narrow large-text card and six Home routes; **they have not been run here**. No current Android, Linux, Windows or Flutter build/device test was performed.
+
 ## Selected branding, home and engine hardening — 2026-10-28
 
 - **Brand assets:** `python3 tools/test_brand_assets.py` passed five checks: the checked-in 1254 × 1254 source matches the owner's selected PNG SHA-256, derived/legacy/adaptive dimensions and alpha are as expected, Android resource XML parses and points to the new layers/vector splash, splash vector control-point and stroke bounds fit the documented inner circle, and temporary regeneration matches the checked-in raster bytes under the installed Pillow. Host previews of the legacy icon, a simulated circular adaptive mask and approximate rasterizations of the vector paths were inspected. **This is not Android resource compilation, a real launcher, a real splash or a Flutter asset test.** See [brand assets](BRAND_ASSETS.md).
