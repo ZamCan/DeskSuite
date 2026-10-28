@@ -32,8 +32,8 @@ class PhotoSheetSpec {
       spacingMm,
     ];
     if (!values.every((value) => value.isFinite) ||
-        pageWidthMm < 50 ||
-        pageHeightMm < 50 ||
+        pageWidthMm < 20 ||
+        pageHeightMm < 20 ||
         pageWidthMm > 2500 ||
         pageHeightMm > 2500 ||
         photoWidthMm < 5 ||
