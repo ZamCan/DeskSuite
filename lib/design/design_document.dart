@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../core/ids.dart';
+import '../core/physical_page_limits.dart';
 
 const int currentDesignVersion = 1;
 const int maxProjectBytes = 32 * 1024 * 1024;
@@ -176,10 +177,10 @@ class DesignDocument {
         name.length > 100 ||
         !widthMm.isFinite ||
         !heightMm.isFinite ||
-        widthMm < 10 ||
-        heightMm < 10 ||
-        widthMm > 2500 ||
-        heightMm > 2500 ||
+        widthMm < minPhysicalPageMm ||
+        heightMm < minPhysicalPageMm ||
+        widthMm > maxPhysicalPageMm ||
+        heightMm > maxPhysicalPageMm ||
         backgroundColor < 0 ||
         backgroundColor > 0xffffffff ||
         elements.length > maxDesignElements ||

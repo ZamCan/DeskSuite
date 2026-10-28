@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show compute;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../core/physical_page_limits.dart';
 import '../design/geometry.dart';
 import '../images/photo_processor.dart';
 
@@ -32,10 +33,10 @@ class PhotoSheetSpec {
       spacingMm,
     ];
     if (!values.every((value) => value.isFinite) ||
-        pageWidthMm < 50 ||
-        pageHeightMm < 50 ||
-        pageWidthMm > 2500 ||
-        pageHeightMm > 2500 ||
+        pageWidthMm < minPhysicalPageMm ||
+        pageHeightMm < minPhysicalPageMm ||
+        pageWidthMm > maxPhysicalPageMm ||
+        pageHeightMm > maxPhysicalPageMm ||
         photoWidthMm < 5 ||
         photoHeightMm < 5 ||
         photoWidthMm > 250 ||

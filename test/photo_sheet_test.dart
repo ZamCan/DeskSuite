@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:desksuite/printing/paper_catalog.dart';
 import 'package:desksuite/printing/photo_sheet.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
@@ -51,30 +52,62 @@ void main() {
     );
   });
 
-  test('poster-size custom media is supported within the production bounds', () {
-    final poster = PhotoSheetSpec(
-      pageWidthMm: 1219.2,
-      pageHeightMm: 1828.8,
-      photoWidthMm: 50,
-      photoHeightMm: 50,
-      marginMm: 20,
-      spacingMm: 5,
-      copies: 1,
-    );
-    expect(poster.capacity, greaterThan(0));
-    expect(
-      () => PhotoSheetSpec(
-        pageWidthMm: 2501,
-        pageHeightMm: 100,
-        photoWidthMm: 50,
-        photoHeightMm: 50,
+  test('every listed medium accepts a small fitting photo layout', () {
+    for (final paper in paperSheetPresets) {
+      final sheet = PhotoSheetSpec(
+        pageWidthMm: paper.widthMm,
+        pageHeightMm: paper.heightMm,
+        photoWidthMm: 5,
+        photoHeightMm: 5,
         marginMm: 0,
         spacingMm: 0,
         copies: 1,
-      ),
-      throwsFormatException,
-    );
+      );
+      expect(sheet.positions(), hasLength(1), reason: paper.label);
+    }
   });
+
+  test('the default 4 × 6 media can fit the default four photos', () {
+    final sheet = PhotoSheetSpec(
+      pageWidthMm: 101.6,
+      pageHeightMm: 152.4,
+      photoWidthMm: 35,
+      photoHeightMm: 45,
+      marginMm: 10,
+      spacingMm: 3,
+      copies: 4,
+    );
+    expect(sheet.capacity, 4);
+    expect(sheet.positions(), hasLength(4));
+  });
+
+  test(
+    'poster-size custom media is supported within the production bounds',
+    () {
+      final poster = PhotoSheetSpec(
+        pageWidthMm: 1219.2,
+        pageHeightMm: 1828.8,
+        photoWidthMm: 50,
+        photoHeightMm: 50,
+        marginMm: 20,
+        spacingMm: 5,
+        copies: 1,
+      );
+      expect(poster.capacity, greaterThan(0));
+      expect(
+        () => PhotoSheetSpec(
+          pageWidthMm: 2501,
+          pageHeightMm: 100,
+          photoWidthMm: 50,
+          photoHeightMm: 50,
+          marginMm: 0,
+          spacingMm: 0,
+          copies: 1,
+        ),
+        throwsFormatException,
+      );
+    },
+  );
 
   test('repeated photo sheet produces a real physically sized A4 PDF', () async {
     final bytes = Uint8List.fromList(

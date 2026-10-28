@@ -108,7 +108,7 @@ void main() {
     await tester.pump();
     await tester.tap(find.byTooltip('Export design'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Print-ready PDF · 150 dpi'));
+    await tester.tap(find.text('PDF page · 150 dpi'));
     await settleIo(tester);
     expect(find.text('Low-resolution image'), findsOneWidget);
     await tester.tap(find.text('Export anyway'));

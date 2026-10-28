@@ -464,6 +464,15 @@ class _EditorScreenState extends State<EditorScreen>
   }
 
   Future<void> _export() async {
+    final page = _controller.document;
+    final fitting150 = fittingRasterDpi(page.widthMm, page.heightMm);
+    final fitting300 = fittingRasterDpi(
+      page.widthMm,
+      page.heightMm,
+      preferredDpi: 300,
+    );
+    final fits150 = fitting150 == 150;
+    final fits300 = fitting300 == 300;
     final choice = await showModalBottomSheet<_ExportChoice>(
       context: context,
       showDragHandle: true,
@@ -483,33 +492,99 @@ class _EditorScreenState extends State<EditorScreen>
               ListTile(
                 leading: const Icon(Icons.print_outlined),
                 title: const Text('Print using system dialog · 150 dpi'),
-                subtitle: const Text(
-                  'Printer services and margins vary by device',
+                subtitle: Text(
+                  fits150 ? 'Printer services and margins vary by device' : 'Too large at 150 dpi; choose the lower-DPI option below.',
                 ),
-                onTap: () => Navigator.pop(context, _ExportChoice.print150),
+                enabled: fits150,
+                onTap: fits150
+                    ? () => Navigator.pop(context, _ExportChoice.print150)
+                    : null,
               ),
               ListTile(
                 leading: const Icon(Icons.picture_as_pdf_outlined),
-                title: const Text('Print-ready PDF · 150 dpi'),
-                subtitle: const Text('Single page, raster artwork'),
-                onTap: () => Navigator.pop(context, _ExportChoice.pdf150),
+                title: const Text('PDF page · 150 dpi'),
+                subtitle: Text(
+                  fits150
+                      ? 'Single-page raster artwork; check printer scale and margins.'
+                      : 'Too large at 150 dpi; choose the lower-DPI option below.',
+                ),
+                enabled: fits150,
+                onTap: fits150
+                    ? () => Navigator.pop(context, _ExportChoice.pdf150)
+                    : null,
               ),
               ListTile(
                 leading: const Icon(Icons.picture_as_pdf_outlined),
-                title: const Text('Print-ready PDF · 300 dpi'),
-                subtitle: const Text('Higher resolution; larger file'),
-                onTap: () => Navigator.pop(context, _ExportChoice.pdf300),
+                title: const Text('PDF page · 300 dpi'),
+                subtitle: Text(
+                  fits300
+                      ? 'Higher resolution; larger file'
+                      : 'Too large at 300 dpi; choose a lower resolution.',
+                ),
+                enabled: fits300,
+                onTap: fits300
+                    ? () => Navigator.pop(context, _ExportChoice.pdf300)
+                    : null,
               ),
               ListTile(
                 leading: const Icon(Icons.image_outlined),
                 title: const Text('PNG image · 150 dpi'),
-                onTap: () => Navigator.pop(context, _ExportChoice.png150),
+                subtitle: const Text(
+                  'Pixel count only; print size is not embedded.',
+                ),
+                enabled: fits150,
+                onTap: fits150
+                    ? () => Navigator.pop(context, _ExportChoice.png150)
+                    : null,
               ),
               ListTile(
                 leading: const Icon(Icons.image_outlined),
                 title: const Text('PNG image · 300 dpi'),
-                onTap: () => Navigator.pop(context, _ExportChoice.png300),
+                subtitle: const Text(
+                  'Pixel count only; print size is not embedded.',
+                ),
+                enabled: fits300,
+                onTap: fits300
+                    ? () => Navigator.pop(context, _ExportChoice.png300)
+                    : null,
               ),
+              if (fitting150 != null && fitting150 < 150) ...[
+                ListTile(
+                  key: const Key('export-reduced-print'),
+                  leading: const Icon(Icons.print_outlined),
+                  title: Text('Print · $fitting150 dpi'),
+                  subtitle: const Text(
+                    'Fits the pixel budget; lower detail. Check printer scale.',
+                  ),
+                  onTap: () =>
+                      Navigator.pop(context, _ExportChoice.printReduced),
+                ),
+                ListTile(
+                  key: const Key('export-reduced-pdf'),
+                  leading: const Icon(Icons.picture_as_pdf_outlined),
+                  title: Text('PDF · $fitting150 dpi'),
+                  subtitle: const Text(
+                    'Fits the pixel budget; large raster text may look soft.',
+                  ),
+                  onTap: () => Navigator.pop(context, _ExportChoice.pdfReduced),
+                ),
+                ListTile(
+                  key: const Key('export-reduced-png'),
+                  leading: const Icon(Icons.image_outlined),
+                  title: Text('PNG image · $fitting150 dpi'),
+                  subtitle: const Text(
+                    'Lower detail; PNG print size is not embedded.',
+                  ),
+                  onTap: () => Navigator.pop(context, _ExportChoice.pngReduced),
+                ),
+              ],
+              if (fitting150 == null)
+                const ListTile(
+                  title: Text('Raster export unavailable for this page size.'),
+                  subtitle: Text(
+                    'Use a smaller page or save an editable project copy.',
+                  ),
+                ),
               ListTile(
                 leading: const Icon(Icons.save_outlined),
                 title: const Text('Editable project copy'),
@@ -523,6 +598,20 @@ class _EditorScreenState extends State<EditorScreen>
       ),
     );
     if (choice == null || !mounted) return;
+    final isPrint =
+        choice == _ExportChoice.print150 ||
+        choice == _ExportChoice.printReduced;
+    final exportDpi = switch (choice) {
+      _ExportChoice.print150 ||
+      _ExportChoice.pdf150 ||
+      _ExportChoice.png150 => 150,
+      _ExportChoice.pdf300 || _ExportChoice.png300 => 300,
+      _ExportChoice.printReduced ||
+      _ExportChoice.pdfReduced ||
+      _ExportChoice.pngReduced => fitting150,
+      _ExportChoice.project => null,
+    };
+    if (choice != _ExportChoice.project && exportDpi == null) return;
     if (choice != _ExportChoice.project && !await _flush()) {
       _message(
         'Local save failed. Export an editable project copy to protect your work.',
@@ -538,12 +627,7 @@ class _EditorScreenState extends State<EditorScreen>
       }
       final doc = _controller.document;
       if (choice != _ExportChoice.project) {
-        final dpi =
-            choice == _ExportChoice.pdf150 ||
-                choice == _ExportChoice.png150 ||
-                choice == _ExportChoice.print150
-            ? 150
-            : 300;
+        final dpi = exportDpi!;
         final lowest = lowestPlacedImageDpi(doc, _images.images);
         if (lowest != null && lowest < dpi) {
           if (!mounted) return;
@@ -562,11 +646,7 @@ class _EditorScreenState extends State<EditorScreen>
                 ),
                 FilledButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: Text(
-                    choice == _ExportChoice.print150
-                        ? 'Print anyway'
-                        : 'Export anyway',
-                  ),
+                  child: Text(isPrint ? 'Print anyway' : 'Export anyway'),
                 ),
               ],
             ),
@@ -584,26 +664,21 @@ class _EditorScreenState extends State<EditorScreen>
           mime = 'application/octet-stream';
         case _ExportChoice.png150:
         case _ExportChoice.png300:
-          bytes = await renderPng(
-            doc,
-            _images.images,
-            dpi: choice == _ExportChoice.png150 ? 150 : 300,
-          );
+        case _ExportChoice.pngReduced:
+          bytes = await renderPng(doc, _images.images, dpi: exportDpi!);
           extension = 'png';
           mime = 'image/png';
         case _ExportChoice.print150:
+        case _ExportChoice.printReduced:
         case _ExportChoice.pdf150:
         case _ExportChoice.pdf300:
-          bytes = await renderPdf(
-            doc,
-            _images.images,
-            dpi: choice == _ExportChoice.pdf300 ? 300 : 150,
-          );
+        case _ExportChoice.pdfReduced:
+          bytes = await renderPdf(doc, _images.images, dpi: exportDpi!);
           extension = 'pdf';
           mime = 'application/pdf';
       }
       final name = doc.name.trim().replaceAll(RegExp(r'[^a-zA-Z0-9 _-]'), '_');
-      if (choice == _ExportChoice.print150) {
+      if (isPrint) {
         final printed = await (widget.printer ?? const SystemPrintGateway())
             .printPdf(
               name: name.isEmpty ? 'design' : name,
@@ -621,9 +696,7 @@ class _EditorScreenState extends State<EditorScreen>
         if (saved) _message('Export saved.');
       }
     } catch (error) {
-      _message(
-        '${choice == _ExportChoice.print150 ? 'Print' : 'Export'} failed: $error',
-      );
+      _message('${isPrint ? 'Print' : 'Export'} failed: $error');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -981,4 +1054,14 @@ class _EditorScreenState extends State<EditorScreen>
   );
 }
 
-enum _ExportChoice { print150, pdf150, pdf300, png150, png300, project }
+enum _ExportChoice {
+  print150,
+  printReduced,
+  pdf150,
+  pdf300,
+  pdfReduced,
+  png150,
+  png300,
+  pngReduced,
+  project,
+}

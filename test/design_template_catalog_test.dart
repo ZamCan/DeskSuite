@@ -58,7 +58,14 @@ void main() {
 
     test('all layouts remain valid at narrow and wide custom canvas sizes', () {
       for (final definition in designTemplateCatalog) {
-        for (final size in [(10.0, 10.0), (1200.0, 10.0), (10.0, 1200.0)]) {
+        for (final size in [
+          (10.0, 10.0),
+          (1200.0, 10.0),
+          (10.0, 1200.0),
+          (2500.0, 10.0),
+          (10.0, 2500.0),
+          (2500.0, 2500.0),
+        ]) {
           final elements = buildDesignTemplateElements(
             definition.template,
             widthMm: size.$1,
@@ -117,6 +124,14 @@ void main() {
         () => buildDesignTemplateElements(
           DesignTemplate.flyer,
           widthMm: 9,
+          heightMm: 297,
+        ),
+        throwsFormatException,
+      );
+      expect(
+        () => buildDesignTemplateElements(
+          DesignTemplate.flyer,
+          widthMm: 2501,
           heightMm: 297,
         ),
         throwsFormatException,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/physical_page_limits.dart';
 import '../design/design_document.dart';
 import '../design/template_catalog.dart';
 import '../printing/paper_catalog.dart';
@@ -27,7 +28,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
     if (_template != DesignTemplate.blank) {
       _width.text = definition.widthMm.toString();
       _height.text = definition.heightMm.toString();
-      _preset = paperSheetPresets.length - 1;
+      _preset = paperSheetPresets.length;
       _name.text = definition.label;
     }
   }
@@ -44,23 +45,27 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
     if (!_form.currentState!.validate()) return;
     final width = double.parse(_width.text);
     final height = double.parse(_height.text);
-    final doc = DesignDocument.blank(
-      name: _name.text,
-      widthMm: width,
-      heightMm: height,
-    ).copyWith(
-      elements: buildDesignTemplateElements(
-        _template,
-        widthMm: width,
-        heightMm: height,
-      ),
-    );
+    final doc =
+        DesignDocument.blank(
+          name: _name.text,
+          widthMm: width,
+          heightMm: height,
+        ).copyWith(
+          elements: buildDesignTemplateElements(
+            _template,
+            widthMm: width,
+            heightMm: height,
+          ),
+        );
     Navigator.of(context).pop(doc);
   }
 
   String? _dimension(String? value) {
     final number = double.tryParse(value ?? '');
-    return number == null || !number.isFinite || number < 10 || number > 2500
+    return number == null ||
+            !number.isFinite ||
+            number < minPhysicalPageMm ||
+            number > maxPhysicalPageMm
         ? 'Use 10–2500 mm'
         : null;
   }
@@ -96,7 +101,9 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                 key: const Key('design-template-picker'),
                 initialValue: _template,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Starting template'),
+                decoration: const InputDecoration(
+                  labelText: 'Starting template',
+                ),
                 items: [
                   for (final item in designTemplateCatalog)
                     DropdownMenuItem(
@@ -115,7 +122,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                     _template = value;
                     _width.text = definition.widthMm.toString();
                     _height.text = definition.heightMm.toString();
-                    _preset = paperSheetPresets.length - 1;
+                    _preset = paperSheetPresets.length;
                     if (_name.text.trim().isEmpty ||
                         _name.text == 'Untitled design' ||
                         designTemplateCatalog.any(
@@ -158,7 +165,8 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                     _preset = value;
                     if (value < paperSheetPresets.length) {
                       _width.text = paperSheetPresets[value].widthMm.toString();
-                      _height.text = paperSheetPresets[value].heightMm.toString();
+                      _height.text = paperSheetPresets[value].heightMm
+                          .toString();
                     }
                   });
                 },
@@ -178,7 +186,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                       ),
                       validator: _dimension,
                       onChanged: (_) =>
-                          setState(() => _preset = paperSheetPresets.length - 1),
+                          setState(() => _preset = paperSheetPresets.length),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -194,7 +202,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                       ),
                       validator: _dimension,
                       onChanged: (_) =>
-                          setState(() => _preset = paperSheetPresets.length - 1),
+                          setState(() => _preset = paperSheetPresets.length),
                     ),
                   ),
                   IconButton(
@@ -203,7 +211,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                       final before = _width.text;
                       _width.text = _height.text;
                       _height.text = before;
-                      _preset = paperSheetPresets.length - 1;
+                      _preset = paperSheetPresets.length;
                     }),
                     icon: const Icon(Icons.swap_horiz),
                   ),
