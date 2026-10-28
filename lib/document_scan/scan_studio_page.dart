@@ -683,6 +683,12 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
           mimeType: 'application/pdf',
         );
         if (saved) {
+          // Exporting is non-destructive. Keep the one-step undo attached to
+          // the page that was exported so the user can still undo its last edit
+          // after the save dialog closes. Selection cannot change while busy.
+          if (undoImage != null && pages.isNotEmpty && mounted) {
+            setState(() => undoId = pages[selected].id);
+          }
           message(
             'PDF exported. Open it in a PDF reader to verify the result.',
           );
