@@ -109,7 +109,7 @@ The existing Photo Sheet dialog now offers editable example sizes (35 × 45 mm, 
 **Implemented in source**
 - Photo Sheet offers editable example dimensions (35 × 45 mm, 50.8 × 50.8 mm, 30 × 40 mm and 40 × 50 mm), plus Custom. These are layout examples only, not authority-verified requirements.
 - Photo Studio offers **Place on background** for images that already contain transparency. It composites the transparent image onto selectable solid colours (white, warm off-white, light grey, pale blue, pale pink, pale green or charcoal), preserves the source image, uses the existing bounded image processor, creates an undoable working-copy edit, and exports an opaque PNG.
-- Unit tests were added for alpha compositing, selected background colour, retained foreground pixels and rejection of non-opaque background values.
+- Unit and widget tests were added for alpha compositing, selected background colour, retained foreground pixels, rejection of non-opaque background values, and the Photo Studio import → choose background → export workflow.
 
 **Not implemented by this slice**
 - Automatic background removal / segmentation, editable foreground masks, hair-edge refinement, portrait or face detection, head/shoulder auto-crop, pose/landmark SLM guidance, verified country/authority presets, a broad editable template catalogue, or SLM runtime integration.
