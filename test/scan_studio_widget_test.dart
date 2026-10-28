@@ -498,10 +498,11 @@ void main() {
       expect(find.textContaining('1 of 8 pages'), findsOneWidget);
       expect(find.byKey(const Key('scan-add-recovered')), findsNothing);
       await tapReady(tester, const Key('scan-camera'));
+      // Verify durable state before scrolling: the page-count label is inside
+      // the lazy ListView and may be unmounted when the PDF action is revealed.
+      expect((await tester.runAsync(store.load))!, hasLength(2));
       await revealWithoutSettling(tester, find.byKey(const Key('scan-pdf')));
       await waitForEnabledButton(tester, find.byKey(const Key('scan-pdf')));
-      expect(find.textContaining('2 of 8 pages'), findsOneWidget);
-      expect((await tester.runAsync(store.load))!, hasLength(2));
       expect(tester.takeException(), isNull);
     },
   );
