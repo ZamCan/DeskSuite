@@ -1276,7 +1276,8 @@ class _PhotoSize {
 
 class _ResizePhotoDialog extends StatefulWidget {
   const _ResizePhotoDialog({required this.width, required this.height});
-  final int width, height;
+  final int width;
+  final int height;
   @override
   State<_ResizePhotoDialog> createState() => _ResizePhotoDialogState();
 }
@@ -1285,7 +1286,11 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
   final form = GlobalKey<FormState>();
   late final TextEditingController width;
   late final TextEditingController height;
+  late final TextEditingController physicalWidth;
+  late final TextEditingController physicalHeight;
+  late final TextEditingController dpi;
   bool keepAspect = true;
+  bool physicalMode = false;
 
   @override
   void initState() {
@@ -1293,21 +1298,40 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
     final initialWidth = math.min(widget.width, 1600);
     width = TextEditingController(text: '$initialWidth');
     height = TextEditingController(
-      text:
-          '${math.max(1, (widget.height * initialWidth / widget.width).round())}',
+      text: '${math.max(1, (widget.height * initialWidth / widget.width).round())}',
     );
+    physicalWidth = TextEditingController(text: '100');
+    physicalHeight = TextEditingController(
+      text: (100 * widget.height / widget.width).toStringAsFixed(2),
+    );
+    dpi = TextEditingController(text: '300');
   }
 
   @override
   void dispose() {
     width.dispose();
     height.dispose();
+    physicalWidth.dispose();
+    physicalHeight.dispose();
+    dpi.dispose();
     super.dispose();
   }
 
   String? validateSide(String? value) {
     final n = int.tryParse(value ?? '');
     return n == null || n < 1 || n > maxPhotoSide ? 'Use 1–8192 pixels' : null;
+  }
+
+  String? validatePhysical(String? value) {
+    final n = double.tryParse(value ?? '');
+    return n == null || !n.isFinite || n <= 0 || n > 2000
+        ? 'Enter a size from 0 to 2000 mm'
+        : null;
+  }
+
+  String? validateDpi(String? value) {
+    final n = int.tryParse(value ?? '');
+    return n == null || n < 1 || n > 2400 ? 'Use 1–2400 DPI' : null;
   }
 
   void updateHeight(String value) {
@@ -1319,6 +1343,18 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
     setState(() {});
   }
 
+  void updatePhysicalHeight(String value) {
+    final n = double.tryParse(value);
+    if (keepAspect && n != null && n > 0) {
+      physicalHeight.text =
+          (n * widget.height / widget.width).toStringAsFixed(2);
+    }
+    setState(() {});
+  }
+
+  int _pixelsFromMm(double millimetres, int dotsPerInch) =>
+      (millimetres * dotsPerInch / 25.4).round();
+
   @override
   Widget build(BuildContext context) => AlertDialog(
     title: const Text('Resize image'),
@@ -1328,42 +1364,90 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextFormField(
-              key: const Key('photo-width'),
-              controller: width,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Width (pixels)'),
-              validator: validateSide,
-              onChanged: updateHeight,
+            SegmentedButton<bool>(
+              key: const Key('photo-resize-mode'),
+              segments: const [
+                ButtonSegment(value: false, label: Text('Pixels')),
+                ButtonSegment(value: true, label: Text('Print size')),
+              ],
+              selected: {physicalMode},
+              onSelectionChanged: (value) {
+                setState(() => physicalMode = value.first);
+              },
             ),
-            TextFormField(
-              key: const Key('photo-height'),
-              controller: height,
-              enabled: !keepAspect,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Height (pixels)'),
-              validator: validateSide,
-              onChanged: (_) => setState(() {}),
-            ),
+            const SizedBox(height: 12),
+            if (!physicalMode) ...[
+              TextFormField(
+                key: const Key('photo-width'),
+                controller: width,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Width (pixels)'),
+                validator: validateSide,
+                onChanged: updateHeight,
+              ),
+              TextFormField(
+                key: const Key('photo-height'),
+                controller: height,
+                enabled: !keepAspect,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Height (pixels)'),
+                validator: validateSide,
+                onChanged: (_) => setState(() {}),
+              ),
+            ] else ...[
+              TextFormField(
+                key: const Key('photo-print-width-mm'),
+                controller: physicalWidth,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(labelText: 'Print width (mm)'),
+                validator: validatePhysical,
+                onChanged: updatePhysicalHeight,
+              ),
+              TextFormField(
+                key: const Key('photo-print-height-mm'),
+                controller: physicalHeight,
+                enabled: !keepAspect,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(labelText: 'Print height (mm)'),
+                validator: validatePhysical,
+                onChanged: (_) => setState(() {}),
+              ),
+              TextFormField(
+                key: const Key('photo-print-dpi'),
+                controller: dpi,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Target resolution (DPI)'),
+                validator: validateDpi,
+              ),
+              const Text(
+                'Print size determines the pixel dimensions from millimetres and DPI. The image is resampled; DPI metadata and printer calibration are not guaranteed by this export.',
+                textAlign: TextAlign.start,
+              ),
+            ],
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('Keep aspect ratio'),
               value: keepAspect,
               onChanged: (value) {
                 setState(() => keepAspect = value ?? true);
-                if (keepAspect) updateHeight(width.text);
+                if (keepAspect) {
+                  if (physicalMode) {
+                    updatePhysicalHeight(physicalWidth.text);
+                  } else {
+                    updateHeight(width.text);
+                  }
+                }
               },
             ),
             const Text(
-              'Keep aspect ratio preserves proportions. Turn it off to force exact width and height, which may distort the image. Output is limited to 12 megapixels.',
+              'Keep aspect ratio preserves proportions. Turn it off to force exact dimensions, which may distort the image. Output is limited to 12 megapixels.',
             ),
-            if ((int.tryParse(width.text) ?? 0) > widget.width ||
-                (int.tryParse(height.text) ?? 0) > widget.height)
+            if (!physicalMode &&
+                ((int.tryParse(width.text) ?? 0) > widget.width ||
+                    (int.tryParse(height.text) ?? 0) > widget.height))
               const Padding(
                 padding: EdgeInsets.only(top: 8),
-                child: Text(
-                  'Enlargement adds interpolated pixels, not new detail.',
-                ),
+                child: Text('Enlargement adds interpolated pixels, not new detail.'),
               ),
           ],
         ),
@@ -1377,7 +1461,22 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
       FilledButton(
         onPressed: () {
           if (!form.currentState!.validate()) return;
-          final w = int.parse(width.text), h = int.parse(height.text);
+          var w = int.parse(width.text);
+          var h = int.parse(height.text);
+          if (physicalMode) {
+            final targetDpi = int.parse(dpi.text);
+            w = _pixelsFromMm(double.parse(physicalWidth.text), targetDpi);
+            h = _pixelsFromMm(double.parse(physicalHeight.text), targetDpi);
+            if (w < 1 || h < 1 || w > maxPhotoSide || h > maxPhotoSide) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Print size exceeds the 8192-pixel side limit.')),
+              );
+              return;
+            }
+            if (keepAspect) {
+              h = math.max(1, (w * widget.height / widget.width).round());
+            }
+          }
           if (w * h > maxPhotoPixels) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Output exceeds 12 megapixels.')),
