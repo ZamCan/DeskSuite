@@ -1120,7 +1120,9 @@ class _PhotoPageState extends State<PhotoPage> {
           ],
         ),
       );
-      if (confirmed != true || !mounted) return;
+      if (confirmed != true || !mounted) {
+        return;
+      }
       final saved = await files.save(name: name, bytes: output, mimeType: mime);
       if (saved) note('Optimised copy exported. Original image remains unchanged.');
     } catch (error) {
@@ -2563,7 +2565,11 @@ class _ImageOptimizationDialogState extends State<_ImageOptimizationDialog> {
               }
             })),
             const SizedBox(width: 12),
-            Expanded(child: TextField(key: const Key('optimizer-height'), controller: height, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Height (px)'), onChanged: (_) { if (preset != ImageSizePreset.custom) setState(() => preset = ImageSizePreset.custom); })),
+            Expanded(child: TextField(key: const Key('optimizer-height'), controller: height, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Height (px)'), onChanged: (_) {
+              if (preset != ImageSizePreset.custom) {
+                setState(() => preset = ImageSizePreset.custom);
+              }
+            })),
           ]),
           CheckboxListTile(contentPadding: EdgeInsets.zero, value: keepAspect, title: const Text('Preserve aspect ratio'), onChanged: (value) => setState(() => keepAspect = value ?? true)),
           const Text('With aspect ratio on, the result fits inside the selected box and may be smaller than its listed dimensions. Turn it off to force exact dimensions.', style: TextStyle(fontSize: 12)),
