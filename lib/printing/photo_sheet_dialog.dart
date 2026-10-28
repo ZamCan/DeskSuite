@@ -48,7 +48,13 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
     super.dispose();
   }
 
-  PhotoSheetSpec _spec() => PhotoSheetSpec(
+  PhotoSheetSpec _spec() {
+    if (photoWidth.text.trim().isEmpty || photoHeight.text.trim().isEmpty) {
+      throw const FormatException(
+        'Enter the required finished photo width and height in mm.',
+      );
+    }
+    return PhotoSheetSpec(
     pageWidthMm: double.parse(pageWidth.text),
     pageHeightMm: double.parse(pageHeight.text),
     photoWidthMm: double.parse(photoWidth.text),
@@ -57,6 +63,7 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
     spacingMm: double.parse(spacing.text),
     copies: int.parse(copies.text),
   )..positions();
+  }
 
   Widget _field(
     String label,
@@ -103,6 +110,10 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
         if (profile.hasPublishedDimensions) {
           photoWidth.text = '${profile.widthMm}';
           photoHeight.text = '${profile.heightMm}';
+        } else {
+          // Do not leave a previous/generic size looking like an authority rule.
+          photoWidth.clear();
+          photoHeight.clear();
         }
       }
     });
