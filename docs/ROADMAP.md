@@ -100,3 +100,14 @@ Require a signed, reproducible Android release with stable package ID and key cu
 - [x] Route the image through the existing embedded-image project format and shared renderer/export path, with cover fitting to the physical slot.
 - [x] Add controller tests for replacement, encode/decode, undo and rejection of a normal rectangle.
 - [ ] Confirm tests/analyzer/formatting in CI, then test actual Android picking and real print scaling. This is manual slot placement, not automatic multi-photo batching, face alignment or certified ID-photo processing.
+
+
+## 2026-10-28 — print-production specification gate
+
+- [x] Document a production model separating finished product, source sheet/roll, substrate, device profile and authority requirements.
+- [x] Start Photo Sheet with 4 × 6 inch media as a convenient small-format option; retain A4/A5/custom as independent choices.
+- [x] Rename the A4 photo layout example so it is not presented as a passport preset; leave Tanzania passport dimensions unspecified when the cited source does not publish them.
+- [x] Record the scope of ISO 216, ISO/IEC 23385, ICAO Doc 9303 and ISO/IEC 7810 in `docs/engineering/PRINT_PRODUCTION_STANDARDS.md`.
+- [ ] Add A3, B-series, US Letter/Tabloid and roll-media profiles only where the output path/device supports them.
+- [ ] Implement printer/media capability profiles, trim/bleed/safe areas, actual-size controls and export validation.
+- [ ] Verify physical dimensions, colour/quality and media compatibility on actual supported devices before claiming production readiness.
