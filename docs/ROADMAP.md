@@ -81,3 +81,6 @@ Require a signed, reproducible Android release with stable package ID and key cu
 - [ ] Add multi-slide presentation documents and real PPTX import/export through the Office capability registry; the current presentation-cover template is a single editable design page, not a PowerPoint deck.
 - [ ] Run the new tests, formatter, analyzer, complete Flutter suite and Android/device checks before marking verification complete.
 
+- [x] Record starter-template schema version, source/provenance and repository licence metadata; validate canvas dimensions and keep generated objects within custom canvas bounds.
+- [ ] Add human-reviewed previews, true image/photo placeholders and a user-editable template library; metadata alone is not a substitute for licence review of future third-party packs.
+
