@@ -1464,13 +1464,20 @@ class _ResizePhotoDialogState extends State<_ResizePhotoDialog> {
           var h = int.parse(height.text);
           if (physicalMode) {
             final targetDpi = int.parse(dpi.text);
-            final dimensions = printDimensionsToPixels(
-              widthMm: double.parse(physicalWidth.text),
-              heightMm: double.parse(physicalHeight.text),
-              dpi: targetDpi,
-            );
-            w = dimensions.width;
-            h = dimensions.height;
+            try {
+              final dimensions = printDimensionsToPixels(
+                widthMm: double.parse(physicalWidth.text),
+                heightMm: double.parse(physicalHeight.text),
+                dpi: targetDpi,
+              );
+              w = dimensions.width;
+              h = dimensions.height;
+            } on FormatException catch (error) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(error.message)),
+              );
+              return;
+            }
             if (w < 1 || h < 1 || w > maxPhotoSide || h > maxPhotoSide) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Print size exceeds the 8192-pixel side limit.')),
