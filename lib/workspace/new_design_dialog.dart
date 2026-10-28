@@ -27,7 +27,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
     if (_template != DesignTemplate.blank) {
       _width.text = definition.widthMm.toString();
       _height.text = definition.heightMm.toString();
-      _preset = paperSheetPresets.length - 1;
+      _preset = paperSheetPresets.length;
       _name.text = definition.label;
     }
   }
@@ -115,7 +115,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                     _template = value;
                     _width.text = definition.widthMm.toString();
                     _height.text = definition.heightMm.toString();
-                    _preset = paperSheetPresets.length - 1;
+                    _preset = paperSheetPresets.length;
                     if (_name.text.trim().isEmpty ||
                         _name.text == 'Untitled design' ||
                         designTemplateCatalog.any(
@@ -178,7 +178,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                       ),
                       validator: _dimension,
                       onChanged: (_) =>
-                          setState(() => _preset = paperSheetPresets.length - 1),
+                          setState(() => _preset = paperSheetPresets.length),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -203,7 +203,7 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                       final before = _width.text;
                       _width.text = _height.text;
                       _height.text = before;
-                      _preset = paperSheetPresets.length - 1;
+                      _preset = paperSheetPresets.length;
                     }),
                     icon: const Icon(Icons.swap_horiz),
                   ),
