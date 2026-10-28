@@ -126,3 +126,8 @@ The APK carries native OCR libraries per ABI and two language models
 (≈6.3 MB of tessdata) plus a subsettable font. App Bundles let Play deliver only
 the matching ABI; a universal direct APK is larger. Measure the actual artifacts
 rather than estimating.
+
+
+## Matrix efficiency
+
+The Android job runs the full sequential Flutter test suite once. Windows, Linux and iOS jobs run static analysis and their native target build/package checks; they do not repeat the identical host widget suite. This avoids making every target wait on the same long-running tests while still requiring each platform build to compile and package successfully.
