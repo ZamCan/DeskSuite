@@ -1,10 +1,14 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show compute;
 import 'package:pdf_document/pdf_document.dart';
 
 import 'pdf_inspection.dart';
 
 /// Raised with a message a user can act on, never with a raw parser trace.
+const int maxPdfCombineDocuments = 10;
+const int maxPdfCombineBytes = 48 * 1024 * 1024;
+
 class PdfCombineFailure implements Exception {
   const PdfCombineFailure(this.message);
   final String message;
@@ -42,6 +46,15 @@ PdfCombineResult combinePdfs(List<Uint8List> sources) {
     throw const PdfCombineFailure(
       'Choose at least two PDFs to combine. A single document is already one '
       'file.',
+    );
+  }
+  if (sources.length > maxPdfCombineDocuments) {
+    throw const PdfCombineFailure('Combine no more than 10 PDF files at once.');
+  }
+  final totalBytes = sources.fold<int>(0, (sum, bytes) => sum + bytes.length);
+  if (totalBytes > maxPdfCombineBytes) {
+    throw const PdfCombineFailure(
+      'The selected PDFs exceed the 48 MB combined working limit. Remove a file or choose smaller copies.',
     );
   }
   final counts = <int>[];
@@ -99,3 +112,39 @@ PdfCombineResult combinePdfs(List<Uint8List> sources) {
 /// `-combined`, sanitised the same way as every other PDF export.
 String combinedPdfName(String firstSourceName) =>
     '${pdfBaseName(firstSourceName)}-combined.pdf';
+
+
+/// Isolate-safe adapter for UI use. Only sendable byte lists and primitive
+/// result values cross the isolate boundary; parser work stays off the UI.
+Future<PdfCombineResult> combinePdfsInBackground(
+  List<Uint8List> sources,
+) async {
+  final raw = await compute(_combinePdfsWorker, sources);
+  final error = raw['error'];
+  if (error is String) throw PdfCombineFailure(error);
+  final bytes = raw['bytes'];
+  final counts = raw['counts'];
+  if (bytes is! Uint8List || counts is! List) {
+    throw const PdfCombineFailure('The PDF engine returned an invalid result.');
+  }
+  return PdfCombineResult(
+    bytes: bytes,
+    sourcePageCounts: List<int>.unmodifiable(counts.cast<int>()),
+  );
+}
+
+Map<String, Object> _combinePdfsWorker(List<Uint8List> sources) {
+  try {
+    final result = combinePdfs(sources);
+    return <String, Object>{
+      'bytes': result.bytes,
+      'counts': result.sourcePageCounts,
+    };
+  } on PdfCombineFailure catch (failure) {
+    return <String, Object>{'error': failure.message};
+  } catch (_) {
+    return <String, Object>{
+      'error': 'The PDF engine could not safely combine these files.',
+    };
+  }
+}
