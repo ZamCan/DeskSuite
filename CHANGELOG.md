@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0+3 — consolidated Android integration candidate
+
+- Include the offline page-corner suggestion engine with explicit user confirmation and manual correction; update branch audit and product status/roadmap.
+- Bump Android build number so this candidate can update an earlier 0.2.0+2 install when signed with the same existing private key.
+- This remains a validation candidate, not a production release. Full latest-head CI and physical-device checks are required.
+
 ## 0.2.0+2 — consolidated Android-first integration (validation build)
 
 - Consolidated the scan, offline OCR/searchable-PDF, photo editing/optimization, Office content workflows, existing-PDF Studio, Creative Studio, print production, starter stationery inventory/POS, and shared brand assets into the main product.
