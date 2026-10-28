@@ -125,3 +125,8 @@ The current Android run found the photo-sheet catalogue test's text count was on
 ## 2026-10-28 — print-production correction and analyzer fix
 
 The latest matrix run failed static analysis because `photoSpecifications.length` was used in a constant expression for the custom dropdown index. The index is now a constant guarded by a regression test against the profile-list length. The Photo Sheet dialog starts with 4 × 6 inch media as a convenient small-format option and explains that sheet size and finished photo size are independent; A4/A5/custom remain selectable. Added print-production standards documentation covering ISO 216, ISO/IEC 23385, ICAO Doc 9303, ISO/IEC 7810, substrate/finish/caliper/device compatibility, physical-unit imposition, margins/bleed/trim and authority-scoped presets. This is a source correction; await the new CI run and actual printer/device tests before claiming validation.
+
+
+### Authority-data precision correction
+
+The ICAO portrait profile no longer treats 35 × 45 mm as a universal ICAO print size. The current ICAO Doc 9303 printed-portrait guidance cited for this work describes a minimum width of 35 mm in that context and discusses larger 7 × 10 cm photos for redesigned submission processes; it does not establish one universal national passport-photo width × height. The profile now leaves dimensions unspecified, retains the 70–80% head-height guidance as contextual guidance, and prompts the user to enter a verified issuing-authority size. A regression test guards against turning this guidance into an exact print preset. Await CI confirmation.
