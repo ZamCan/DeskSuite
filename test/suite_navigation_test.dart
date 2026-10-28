@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/reveal.dart';
+
 class NoFiles implements FileGateway {
   @override
   Future<Uint8List?> pickImage() async => null;
@@ -119,15 +121,15 @@ void main() {
       await settleIo(tester);
       await navigate(tester, 'Creative Studio');
       final legacy = find.byKey(const ValueKey('legacy-123'));
+      final creativeScroll = find.descendant(
+        of: find.byType(CreativeStudioPage),
+        matching: find.byType(Scrollable),
+      );
+      await settleUntil(tester, creativeScroll);
       await tester.scrollUntilVisible(
         legacy,
         250,
-        scrollable: find
-            .descendant(
-              of: find.byType(CreativeStudioPage),
-              matching: find.byType(Scrollable),
-            )
-            .first,
+        scrollable: creativeScroll.first,
       );
       await tester.ensureVisible(legacy);
       await tester.pumpAndSettle();

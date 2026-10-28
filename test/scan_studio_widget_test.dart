@@ -384,7 +384,10 @@ void main() {
     expect(files.exported, orderedEquals(original));
     failManifest = false;
     await tapVisible(tester, find.text('Retry saving draft'));
-    await waitIo(tester);
+    await settleUntilGone(
+      tester,
+      find.textContaining('Draft could not be saved'),
+    );
     expect(find.textContaining('Draft could not be saved'), findsNothing);
     expect(
       find.textContaining('camera image is in the unsaved draft'),

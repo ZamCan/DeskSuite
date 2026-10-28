@@ -8,6 +8,8 @@ import 'package:desksuite/workspace/project_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/reveal.dart';
+
 class FailingRepository extends ProjectRepository {
   FailingRepository(super.root);
   bool failWrites = false;
@@ -73,6 +75,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('create-design')));
       await settleIo(tester);
+      await settleUntil(tester, find.byKey(const Key('add-text')));
       repo.failWrites = true;
       await tester.tap(find.byKey(const Key('add-text')));
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);

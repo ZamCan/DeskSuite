@@ -105,3 +105,8 @@ The workflow run [40631293017](https://github.com/ZamCan/DeskSuite/actions/runs/
 ## 2026-10-28 — photo print-sheet template source tests
 
 Added a shared A4 photo print-sheet starter with twenty editable example slots and a test for the rectangle/text counts. The slots are not image frames and no official size or printer scaling is certified. The test is **not yet confirmed passing**; wait for the latest GitHub Actions run. No Android build/device result is implied.
+
+
+## CI follow-up — asynchronous widget-test waits (2026-10-28)
+
+A later Android matrix test run completed formatting and analysis, then reported 176 passing tests and three widget-test failures: the workspace-navigation test attempted to scroll before the Creative Studio list existed; the scan retry assertion checked the recovery error before the async save transition had cleared; and the unsaved-changes test tapped the editor action before it was present. The tests now wait on the actual widget/state transition instead of fixed pump counts. This is a test-harness stabilization change, not proof that the next run passes; re-run the full matrix and inspect any persistent failures as possible application defects.
