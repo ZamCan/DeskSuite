@@ -110,3 +110,8 @@ Added a shared A4 photo print-sheet starter with twenty editable example slots a
 ## CI follow-up — asynchronous widget-test waits (2026-10-28)
 
 A later Android matrix test run completed formatting and analysis, then reported 176 passing tests and three widget-test failures: the workspace-navigation test attempted to scroll before the Creative Studio list existed; the scan retry assertion checked the recovery error before the async save transition had cleared; and the unsaved-changes test tapped the editor action before it was present. The tests now wait on the actual widget/state transition instead of fixed pump counts. This is a test-harness stabilization change, not proof that the next run passes; re-run the full matrix and inspect any persistent failures as possible application defects.
+
+
+## Photo print-sheet image placement — pending validation (2026-10-28)
+
+Added a controller test for filling a template photo slot with a locally selected PNG, preserving the image through project encode/decode, undoing the replacement and refusing to replace an ordinary rectangle. The shared renderer now uses cover fitting for image layers. These tests have not yet been confirmed by the current GitHub Actions run; do not report them as passing until the new run completes. Android/device image picker, memory, crop and printer output remain separate validation gates.

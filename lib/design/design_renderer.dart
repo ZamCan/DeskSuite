@@ -156,7 +156,7 @@ class DesignPainter extends CustomPainter {
               canvas: canvas,
               rect: bounds,
               image: image,
-              fit: BoxFit.contain,
+              fit: BoxFit.cover,
               filterQuality: FilterQuality.medium,
             );
             canvas.restore();

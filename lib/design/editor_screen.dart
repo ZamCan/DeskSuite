@@ -301,6 +301,41 @@ class _EditorScreenState extends State<EditorScreen>
     }
   }
 
+  Future<void> _fillPhotoSlot() async {
+    final slot = _controller.selected;
+    if (slot == null || slot.kind != ElementKind.rectangle) return;
+    try {
+      final bytes = await widget.files.pickImage();
+      if (bytes == null || !mounted) return;
+      if (bytes.length > maxImportedImageBytes) {
+        throw const FormatException('Choose an image no larger than 8 MB.');
+      }
+      setState(() => _busy = true);
+      final imageElement = DesignElement(
+        id: newId(),
+        kind: ElementKind.image,
+        x: slot.x,
+        y: slot.y,
+        width: slot.width,
+        height: slot.height,
+        imageBytes: bytes,
+      );
+      await _imageSync;
+      // Decode and validate before replacing anything, so a bad image leaves
+      // the original editable placeholder intact.
+      await _images.sync(
+        _controller.document.copyWith(
+          elements: [..._controller.document.elements, imageElement],
+        ),
+      );
+      _controller.replaceSelectedPhotoPlaceholder(imageElement);
+    } catch (error) {
+      _message('Could not fill photo slot: $error');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _editText() async {
     final selected = _controller.selected;
     if (selected == null || selected.kind != ElementKind.text) return;
@@ -353,6 +388,7 @@ class _EditorScreenState extends State<EditorScreen>
       builder: (context) => ObjectInspector(
         controller: _controller,
         onEditText: _editText,
+        onFillPhotoSlot: _fillPhotoSlot,
         onDelete: () async {
           Navigator.pop(context);
           await _deleteSelected();

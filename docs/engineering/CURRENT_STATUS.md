@@ -148,3 +148,8 @@ Added a **Photo print sheet** entry to the shared editable template catalogue. I
 ## CI follow-up — widget-test timing fixes (2026-10-28)
 
 The Android job reported 176 passing tests and three failures around asynchronous UI timing in navigation, scan-draft retry and unsaved-change recovery. The tests were updated to wait for the Creative Studio scrollable, disappearance of the saved-error state, and presence of the editor action respectively. These are pending revalidation; the suite is not marked green until a fresh CI run confirms the results.
+
+
+## Photo print-sheet image placement (2026-10-28)
+
+The Creative Studio editor now has a dedicated **Fill photo slot with image** action for a selected catalogue 35 × 45 mm slot. It imports through the existing local file gateway, decodes/validates the image before mutation, replaces the placeholder rectangle and its dimension label with an actual embedded image layer, and records the replacement as one undoable edit. The shared renderer uses cover fitting for image layers so the selected image fills the physical slot; this crops to the frame and does not claim face alignment or biometric compliance. Targeted source tests cover replacement, project serialization, undo and rejection of an ordinary rectangle. Full Flutter/Android validation is still pending.

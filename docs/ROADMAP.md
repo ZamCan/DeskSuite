@@ -92,3 +92,11 @@ Require a signed, reproducible Android release with stable package ID and key cu
 - [x] Test the slot count, editable object types and shared canvas geometry at source level.
 - [ ] Replace generic shape placeholders with actual image-frame/drop-in asset support before calling this a photo imposition workflow; validate output on real printers and verify any authority-specific dimensions separately.
 - [ ] Run formatter, analyzer, complete Flutter suite and Android/device checks; no passing result is claimed until CI reports it.
+
+
+## Photo print-sheet interaction (2026-10-28)
+
+- [x] Add an editor action to fill a selected 35 × 45 mm catalogue slot with a locally picked image; replace the placeholder and label in one undoable edit.
+- [x] Route the image through the existing embedded-image project format and shared renderer/export path, with cover fitting to the physical slot.
+- [x] Add controller tests for replacement, encode/decode, undo and rejection of a normal rectangle.
+- [ ] Confirm tests/analyzer/formatting in CI, then test actual Android picking and real print scaling. This is manual slot placement, not automatic multi-photo batching, face alignment or certified ID-photo processing.

@@ -37,10 +37,12 @@ class ObjectInspector extends StatelessWidget {
     super.key,
     required this.controller,
     required this.onEditText,
+    required this.onFillPhotoSlot,
     required this.onDelete,
   });
   final DesignController controller;
   final VoidCallback onEditText;
+  final VoidCallback onFillPhotoSlot;
   final VoidCallback onDelete;
   static const colors = <int>[
     0xff292824,
@@ -116,6 +118,22 @@ class ObjectInspector extends StatelessWidget {
                   action(Icons.delete_outline, 'Delete object', onDelete),
                 ],
               ),
+              if (item.kind == ElementKind.rectangle &&
+                  item.width == 35 && item.height == 45 &&
+                  controller.document.elements.any((element) =>
+                    element.kind == ElementKind.text &&
+                    element.text.contains('35 × 45 mm') &&
+                    element.x >= item.x && element.x < item.x + item.width &&
+                    element.y >= item.y && element.y < item.y + item.height
+                  )) ...[
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  key: const Key('fill-photo-slot'),
+                  onPressed: onFillPhotoSlot,
+                  icon: const Icon(Icons.add_photo_alternate_outlined),
+                  label: const Text('Fill photo slot with image'),
+                ),
+              ],
               if (item.kind == ElementKind.text) ...[
                 const SizedBox(height: 18),
                 OutlinedButton.icon(

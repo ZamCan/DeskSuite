@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -71,6 +72,45 @@ class DesignController extends ChangeNotifier {
       throw StateError('The project would exceed the 32 MB limit.');
     }
     selectedId = element.id;
+    _commit(next);
+  }
+
+  /// Replaces one 35 × 45 mm template slot and its printed label with an
+  /// actual image layer. The operation is a single undoable edit.
+  void replaceSelectedPhotoPlaceholder(DesignElement imageElement) {
+    final slot = selected;
+    if (slot == null || slot.kind != ElementKind.rectangle) {
+      throw StateError('Select a photo placeholder rectangle first.');
+    }
+    if (imageElement.kind != ElementKind.image || imageElement.imageBytes == null) {
+      throw const FormatException('Choose a valid image for the photo slot.');
+    }
+    final labels = document.elements.where((element) =>
+      element.kind == ElementKind.text &&
+      element.text.contains('35 × 45 mm') &&
+      element.x >= slot.x && element.x < slot.x + slot.width &&
+      element.y >= slot.y && element.y < slot.y + slot.height
+    ).toList();
+    if (slot.width != 35 || slot.height != 45 || labels.isEmpty) {
+      throw StateError('The selected rectangle is not a supported photo slot.');
+    }
+    if (imageElement.x != slot.x || imageElement.y != slot.y ||
+        imageElement.width != slot.width || imageElement.height != slot.height) {
+      throw const FormatException('The photo must match the placeholder dimensions.');
+    }
+    final elements = <DesignElement>[];
+    for (final element in document.elements) {
+      if (element.id == slot.id) {
+        elements.add(imageElement);
+      } else if (!labels.any((label) => label.id == element.id)) {
+        elements.add(element);
+      }
+    }
+    final next = document.copyWith(elements: elements);
+    if (next.encode().length > maxProjectBytes) {
+      throw StateError('The project would exceed the 32 MB limit.');
+    }
+    selectedId = imageElement.id;
     _commit(next);
   }
 
