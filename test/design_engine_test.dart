@@ -73,6 +73,15 @@ void main() {
     },
   );
 
+  test('poster exports offer only resolutions within the pixel budget', () {
+    final a0 = DesignDocument.blank(name: 'A0 poster', widthMm: 841, heightMm: 1189);
+    expect(exportDimensions(a0, 100).width, 3311);
+    expect(() => exportDimensions(a0, 150), throwsFormatException);
+    final banner = DesignDocument.blank(name: '48 by 72 banner', widthMm: 1219.2, heightMm: 1828.8);
+    expect(exportDimensions(banner, 36).width, 1728);
+    expect(() => exportDimensions(banner, 72), throwsFormatException);
+  });
+
   test('rotated object hit testing uses document coordinates', () {
     final e = DesignElement(
       id: 'r',
