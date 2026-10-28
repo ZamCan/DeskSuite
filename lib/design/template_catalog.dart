@@ -268,7 +268,7 @@ List<DesignElement> buildDesignTemplateElements(
           final y = startY + row * (photoHeight + gapY);
           elements
             ..add(rect(x, y, photoWidth, photoHeight, 0xffe8e1d5))
-            ..add(text('PHOTO\\n35 × 45 mm', x + 1, y + 17,
+            ..add(text('PHOTO\n35 × 45 mm', x + 1, y + 17,
                 photoWidth - 2, 12, size: 4.5,
                 alignment: TextAlignment.center));
         }
