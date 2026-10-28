@@ -3,6 +3,8 @@ import 'design_document.dart';
 
 /// Reusable, editable starting layouts. Templates produce ordinary
 /// DesignElements so every layout uses the same editor, renderer and exporter.
+const int designTemplateCatalogVersion = 1;
+
 enum DesignTemplate {
   blank,
   editorial,
@@ -21,6 +23,9 @@ class DesignTemplateDefinition {
     required this.widthMm,
     required this.heightMm,
     required this.template,
+    this.schemaVersion = designTemplateCatalogVersion,
+    this.source = 'DeskSuite original starter layout',
+    this.license = 'Apache-2.0 (repository licence)',
   });
 
   final String id;
@@ -29,6 +34,9 @@ class DesignTemplateDefinition {
   final double widthMm;
   final double heightMm;
   final DesignTemplate template;
+  final int schemaVersion;
+  final String source;
+  final String license;
 }
 
 const designTemplateCatalog = <DesignTemplateDefinition>[
@@ -108,15 +116,19 @@ List<DesignElement> buildDesignTemplateElements(
     double width,
     double height,
     int color,
-  ) => DesignElement(
-    id: newId(),
-    kind: ElementKind.rectangle,
-    x: x,
-    y: y,
-    width: width,
-    height: height,
-    color: color,
-  );
+  ) {
+    final safeX = x.clamp(0.0, w - 1).toDouble();
+    final safeY = y.clamp(0.0, h - 1).toDouble();
+    return DesignElement(
+      id: newId(),
+      kind: ElementKind.rectangle,
+      x: safeX,
+      y: safeY,
+      width: width.clamp(1.0, w - safeX).toDouble(),
+      height: height.clamp(1.0, h - safeY).toDouble(),
+      color: color,
+    );
+  }
 
   DesignElement text(
     String value,
@@ -128,19 +140,23 @@ List<DesignElement> buildDesignTemplateElements(
     int color = 0xff292722,
     bool bold = false,
     TextAlignment alignment = TextAlignment.left,
-  }) => DesignElement(
-    id: newId(),
-    kind: ElementKind.text,
-    x: x,
-    y: y,
-    width: width,
-    height: height,
-    text: value,
-    fontSizePt: size.clamp(4, 500).toDouble(),
-    color: color,
-    bold: bold,
-    textAlignment: alignment,
-  );
+  }) {
+    final safeX = x.clamp(0.0, w - 1).toDouble();
+    final safeY = y.clamp(0.0, h - 1).toDouble();
+    return DesignElement(
+      id: newId(),
+      kind: ElementKind.text,
+      x: safeX,
+      y: safeY,
+      width: width.clamp(1.0, w - safeX).toDouble(),
+      height: height.clamp(1.0, h - safeY).toDouble(),
+      text: value,
+      fontSizePt: size.clamp(4, 500).toDouble(),
+      color: color,
+      bold: bold,
+      textAlignment: alignment,
+    );
+  }
 
   switch (template) {
     case DesignTemplate.blank:
