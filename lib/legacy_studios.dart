@@ -1084,7 +1084,7 @@ class _PhotoPageState extends State<PhotoPage> {
         mime = 'application/pdf';
       } else if (options.format == _ImageExportFormat.html) {
         final encoded = base64Encode(result.bytes);
-        final html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DeskSuite image export</title><style>body{margin:0;padding:2rem;background:#f7f5ef;color:#292b29;font:16px system-ui,sans-serif}main{max-width:960px;margin:auto}img{display:block;max-width:100%;height:auto;margin:1.5rem auto}p{overflow-wrap:anywhere}</style></head><body><main><h1>DeskSuite image export</h1><p>§{result.width} × §{result.height} px · JPEG quality §{result.quality}</p><img alt="Optimised image" src="data:image/jpeg;base64,$encoded"></main></body></html>';
+        final html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DeskSuite image export</title><style>body{margin:0;padding:2rem;background:#f7f5ef;color:#292b29;font:16px system-ui,sans-serif}main{max-width:960px;margin:auto}img{display:block;max-width:100%;height:auto;margin:1.5rem auto}p{overflow-wrap:anywhere}</style></head><body><main><h1>DeskSuite image export</h1><p>${result.width} × ${result.height} px · JPEG quality ${result.quality}</p><img alt="Optimised image" src="data:image/jpeg;base64,$encoded"></main></body></html>';
         output = Uint8List.fromList(utf8.encode(html));
         name = 'desksuite-optimized.html';
         mime = 'text/html';
@@ -1101,11 +1101,11 @@ class _PhotoPageState extends State<PhotoPage> {
             children: [
               Image.memory(result.bytes, height: 160, fit: BoxFit.contain),
               const SizedBox(height: 12),
-              Text('Image: §{result.width} × §{result.height} px'),
-              Text('JPEG quality: §{result.quality}/100'),
-              Text('Image bytes: §{result.bytes.length} · source bytes: §{result.originalBytes}'),
+              Text('Image: ${result.width} × ${result.height} px'),
+              Text('JPEG quality: ${result.quality}/100'),
+              Text('Image bytes: ${result.bytes.length} · source bytes: ${result.originalBytes}'),
               Text('Measured image-size reduction: $reduction%'),
-              Text('Export file: §{output.length} bytes'),
+              Text('Export file: ${output.length} bytes'),
               const SizedBox(height: 8),
               const Text('The source is unchanged. Compression results depend on image content; a target may be impossible without excessive quality loss.'),
               if (options.format == _ImageExportFormat.pdf) const Text('This PDF is not password/PIN encrypted. Do not use it for confidential material.'),
