@@ -22,6 +22,12 @@ fixed in this tree: `TessBaseAPI.end()` does not exist (the engine is released
 with `recycle()`), and a Windows-only widget test waited a fixed number of pump
 rounds for an image to decode.
 
+## Latest implementation slice
+
+Photo Studio now offers a **Print size** resize mode in addition to pixel dimensions. Users can specify print width/height in millimetres and a target DPI; the shared `lib/images/print_dimensions.dart` engine converts these to pixel dimensions and enforces the 8192-pixel side and 12-megapixel output bounds. Tests were added in `test/print_dimensions_test.dart` for conversion, invalid inputs and pixel-budget enforcement.
+
+This is a source change only until the repository's formatter, analyzer, full host suite and Android build/device checks pass. It does not embed DPI metadata in exported images or guarantee printer calibration.
+
 ## Acceptance workflows
 
 | Target | Current result | Missing or unverified |
