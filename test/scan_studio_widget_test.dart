@@ -125,10 +125,11 @@ Future<void> tapVisible(WidgetTester tester, Finder finder) async {
     );
   }
   await tester.ensureVisible(finder);
-  await tester.pumpAndSettle();
+  // Never wait for global animation quiescence in a widget test: the workspace
+  // may contain an indeterminate indicator or platform transition unrelated to
+  // this control. Advance a bounded frame instead, then let callers wait for I/O.
+  await tester.pump(const Duration(milliseconds: 250));
   await tester.tap(finder);
-  // A running indeterminate progress indicator cannot settle until real I/O
-  // completes; give routes time to animate and let callers wait for I/O.
   await tester.pump(const Duration(milliseconds: 300));
 }
 
