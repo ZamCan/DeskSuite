@@ -6,6 +6,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../design/geometry.dart';
 import '../images/photo_processor.dart';
+import 'paper_catalog.dart';
 
 class SheetPosition {
   const SheetPosition(this.leftMm, this.topMm);
@@ -22,6 +23,8 @@ class PhotoSheetSpec {
     required this.marginMm,
     required this.spacingMm,
     required this.copies,
+    this.mediaStockId = 'photo-glossy',
+    this.paperWeightGsm,
   }) {
     final values = [
       pageWidthMm,
@@ -45,7 +48,10 @@ class PhotoSheetSpec {
         spacingMm < 0 ||
         spacingMm > 50 ||
         copies < 1 ||
-        copies > 100) {
+        copies > 100 ||
+        !printStockProfiles.any((profile) => profile.id == mediaStockId) ||
+        (paperWeightGsm != null &&
+            (paperWeightGsm! < 20 || paperWeightGsm! > 2000))) {
       throw const FormatException(
         'Invalid sheet dimensions, margins, spacing or copy count.',
       );
@@ -58,6 +64,8 @@ class PhotoSheetSpec {
       marginMm,
       spacingMm;
   final int copies;
+  final String mediaStockId;
+  final int? paperWeightGsm;
 
   int get columns {
     final usable = pageWidthMm - 2 * marginMm;
@@ -108,7 +116,19 @@ Future<Uint8List> generatePhotoSheet(PhotoSheetRequest request) async {
   final image = pw.MemoryImage(request.imageBytes);
   final widthPt = mmToPoints(spec.pageWidthMm);
   final heightPt = mmToPoints(spec.pageHeightMm);
-  final pdf = pw.Document(compress: true);
+  final stock = printStockProfiles.firstWhere(
+    (profile) => profile.id == spec.mediaStockId,
+  );
+  final stockNote = spec.paperWeightGsm == null
+      ? stock.label
+      : '${stock.label} · ${spec.paperWeightGsm} gsm';
+  final pdf = pw.Document(
+    title: 'DeskSuite photo sheet',
+    author: 'DeskSuite (ZamCan)',
+    subject: 'Intended media: $stockNote. Printer support must be checked separately.',
+    creator: 'DeskSuite photo-sheet engine',
+    compress: true,
+  );
   pdf.addPage(
     pw.Page(
       pageFormat: PdfPageFormat(widthPt, heightPt, marginAll: 0),
