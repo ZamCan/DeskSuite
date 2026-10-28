@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../core/ids.dart';
 import '../design/design_document.dart';
 import '../design/template_catalog.dart';
 
