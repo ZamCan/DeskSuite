@@ -39,6 +39,7 @@ class PhotoRequest {
   final int? height;
   final bool keepAspect;
   final int quality;
+
   /// Opaque ARGB colour used by [PhotoAction.flattenBackground].
   final int backgroundColor;
 }
@@ -108,6 +109,20 @@ img.Image decodeBoundedPhoto(Uint8List bytes, {required int byteLimit}) {
   final frame = decoder.decodeFrame(0);
   if (frame == null) throw const FormatException('Image could not be decoded.');
   return img.bakeOrientation(frame);
+}
+
+/// Composites transparency onto white before a JPEG encode. When [source] has
+/// no alpha channel it may be returned directly; callers must not mutate it.
+img.Image photoOnWhite(img.Image source) {
+  if (!source.hasAlpha) return source;
+  final white = img.Image(
+    width: source.width,
+    height: source.height,
+    numChannels: 3,
+  );
+  img.fill(white, color: img.ColorRgb8(255, 255, 255));
+  img.compositeImage(white, source);
+  return white;
 }
 
 /// Checks the encoded format and dimensions before any output is handed to
@@ -238,13 +253,7 @@ PhotoResult processPhoto(PhotoRequest request) {
         throw const FormatException('JPEG quality must be 1–100.');
       }
       // JPEG cannot store transparency; flatten against white deliberately.
-      final white = img.Image(
-        width: image.width,
-        height: image.height,
-        numChannels: 3,
-      );
-      img.fill(white, color: img.ColorRgb8(255, 255, 255));
-      img.compositeImage(white, image);
+      final white = photoOnWhite(image);
       return validateEncodedPhoto(
         Uint8List.fromList(img.encodeJpg(white, quality: request.quality)),
         image.width,
