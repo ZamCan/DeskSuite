@@ -285,13 +285,19 @@ void main() {
       final firstPage = find.byKey(const Key('scan-page-0'));
       await reveal(tester, firstPage);
       expect(firstPage, findsOneWidget);
-      await tapVisible(tester, find.byKey(const Key('scan-undo')));
+      final undo = find.byKey(const Key('scan-undo'));
+      await reveal(tester, undo);
+      await settleUntilEnabled(tester, undo);
+      await tester.tap(undo);
       await waitIo(tester);
       expect(
         (await readDraft(tester, store)).single.image.bytes,
         orderedEquals(before.image.bytes),
       );
-      await tapVisible(tester, find.byKey(const Key('scan-reset')));
+      final reset = find.byKey(const Key('scan-reset'));
+      await reveal(tester, reset);
+      await settleUntilEnabled(tester, reset);
+      await tester.tap(reset);
       await waitIo(tester);
       expect(
         (await readDraft(tester, store)).single.image.bytes,
