@@ -10,7 +10,7 @@ This is an implementation report, not a claim of production readiness. The full 
 
 - The previous main snapshot `7f1920ef` passed `flutter analyze`, the full Flutter test suite, Android APK/AAB compilation, Windows/Linux builds and unsigned iOS validation in [CI run 40689024580](https://github.com/ZamCan/DeskSuite/actions/runs/40689024580).
 - The offline page-corner suggestion feature passed the four-platform matrix on its exact feature branch in [CI run 40690205064](https://github.com/ZamCan/DeskSuite/actions/runs/40690205064).
-- The combined main commit that contains both sets of work is being revalidated in [CI run 40692442337](https://github.com/ZamCan/DeskSuite/actions/runs/40692442337). At the time this file was updated, dependency resolution, formatting and analysis had passed; the full test/build matrix was still running. Check that run for the final result.
+- The merged main tree contains both sets of work. Follow the [main-branch CI runs](https://github.com/ZamCan/DeskSuite/actions/workflows/build.yml?query=branch%3Amain) and verify the run whose head SHA matches the current `main` before treating the source as validated. Documentation and audit updates followed the earlier build run, so its result is not a substitute for the latest-head run.
 - No physical-device installation, camera lifecycle, real printer, independent-reader PDF fidelity or signed upgrade has been verified here.
 
 ## Implemented source capabilities
