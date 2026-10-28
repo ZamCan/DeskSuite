@@ -745,7 +745,7 @@ packages:
     dependency: transitive
     description:
       name: shared_preferences_platform_interface
-      sha256: "649dc798a33931919ea356c4301e1eaad2c4e0dff5dbefb2b6e6e1a29a7f3b2f"
+      sha256: "649dc798a33931919ea356c4305c2d1f81619ea6e92244070b520187b5140ef9"
       url: "https://pub.dev"
     source: hosted
     version: "2.4.2"
