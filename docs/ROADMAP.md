@@ -117,8 +117,8 @@ Require a signed, reproducible Android release with stable package ID and key cu
 ## 2026-10-28 — complete media and engine integration gate
 
 - [x] Expand the photo-sheet sheet-media selector from small photo paper to ISO A/B formats, US letter/legal/tabloid/ledger, photo prints, and poster/large-format presets; allow custom media up to 2500 mm per side.
-- [ ] Use one shared paper/media catalogue across photo sheets, new-design canvas, documents, badges and poster exports; distinguish stock/sheet size from finished photo/card size and from printer-supported media.
-- [ ] Add envelope/C-series, card/badge, label, roll-media and device/printer capability profiles; show unsupported media or clipping risks before printing.
+- [x] Use one shared paper/media catalogue across photo sheets, new-design canvas, scan PDFs and content-level Office PDF exports; distinguish stock/sheet size from finished photo/card size and from printer-supported media.
+- [x] Add ISO C/envelope, card/badge, label and large-format poster presets plus custom dimensions. [ ] Add roll-media and device/printer capability profiles; show unsupported media or clipping risks before printing.
 - [ ] Make large-format export resolution aware of page dimensions and the output pixel budget; offer validated lower DPI when needed rather than pretending every poster can render at 300 DPI on every device.
 - [ ] Maintain the engine/package register in [ENGINE_INTEGRATION_REGISTER.md](engineering/ENGINE_INTEGRATION_REGISTER.md); integrate only reviewed dependencies with pinned versions, notices, real fixtures, and measured device behavior.
 - [ ] Verify the existing offline Tesseract integration end-to-end on Android with English and Kiswahili. Do not confuse OCR with an SLM; evaluate an optional SLM runtime only after ABI, licence, model size, RAM/latency, privacy and offline tests.
