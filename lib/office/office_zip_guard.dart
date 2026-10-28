@@ -164,3 +164,22 @@ Map<String, OfficeZipEntry> guardOfficeZip(
   }
   return result;
 }
+
+/// Computes the ZIP CRC-32 for the inflated entry bytes. Archive decoders may
+/// parse with a verification flag without reliably rejecting a content/CRC
+/// mismatch, so OfficePackage checks this explicitly after bounded inflation.
+final List<int> _officeCrcTable = List<int>.generate(256, (value) {
+  var crc = value;
+  for (var bit = 0; bit < 8; bit++) {
+    crc = (crc & 1) == 0 ? crc >> 1 : (crc >> 1) ^ 0xedb88320;
+  }
+  return crc & 0xffffffff;
+}, growable: false);
+
+int officeZipCrc32(Uint8List bytes) {
+  var crc = 0xffffffff;
+  for (final byte in bytes) {
+    crc = _officeCrcTable[(crc ^ byte) & 0xff] ^ (crc >> 8);
+  }
+  return (crc ^ 0xffffffff) & 0xffffffff;
+}
