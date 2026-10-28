@@ -55,7 +55,7 @@ jobs:
       - run: flutter pub get
       - run: dart format lib test
       - run: flutter analyze
-      - run: flutter test --concurrency=1 --reporter expanded --timeout 120s
+      # The Android job owns the full test suite; this job validates this OS build.
       - run: flutter build windows --release
       - shell: pwsh
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath desksuite-windows-x64.zip
@@ -80,7 +80,7 @@ jobs:
       - run: git checkout -- test/widget_test.dart
       - run: flutter pub get
       - run: flutter analyze
-      - run: flutter test --concurrency=1 --reporter expanded --timeout 120s
+      # The Android job owns the full test suite; this job validates this OS build.
       - run: flutter build linux --release
       - run: tar -czf desksuite-linux-x64.tar.gz -C build/linux/x64/release/bundle .
       - name: Assemble AppImage directory
@@ -127,7 +127,7 @@ jobs:
       - run: git checkout -- test/widget_test.dart
       - run: flutter pub get
       - run: flutter analyze
-      - run: flutter test --concurrency=1 --reporter expanded --timeout 120s
+      # The Android job owns the full test suite; this job validates this OS build.
       - run: flutter build ios --release --no-codesign
       - run: ditto -c -k --sequesterRsrc --keepParent build/ios/iphoneos/Runner.app desksuite-ios-unsigned-app.zip
       - uses: actions/upload-artifact@v4
