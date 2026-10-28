@@ -1,0 +1,7 @@
+# Copy this file to android/key.properties and replace every placeholder locally.
+# Use the EXISTING release keystore for updates to an installed DeskSuite app.
+# Never commit android/key.properties or the keystore itself.
+storeFile=/absolute/path/to/your-existing-release-key.jks
+keyAlias=REPLACE_WITH_EXISTING_ALIAS
+storePassword=REPLACE_WITH_EXISTING_STORE_PASSWORD
+keyPassword=REPLACE_WITH_EXISTING_KEY_PASSWORD
