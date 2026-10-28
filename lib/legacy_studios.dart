@@ -920,7 +920,13 @@ class _PhotoPageState extends State<PhotoPage> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Text(option.$2),
+                  Expanded(
+                    child: Text(
+                      option.$2,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
             ),
