@@ -51,6 +51,31 @@ void main() {
     );
   });
 
+  test('poster-size custom media is supported within the production bounds', () {
+    final poster = PhotoSheetSpec(
+      pageWidthMm: 1219.2,
+      pageHeightMm: 1828.8,
+      photoWidthMm: 50,
+      photoHeightMm: 50,
+      marginMm: 20,
+      spacingMm: 5,
+      copies: 1,
+    );
+    expect(poster.capacity, greaterThan(0));
+    expect(
+      () => PhotoSheetSpec(
+        pageWidthMm: 2501,
+        pageHeightMm: 100,
+        photoWidthMm: 50,
+        photoHeightMm: 50,
+        marginMm: 0,
+        spacingMm: 0,
+        copies: 1,
+      ),
+      throwsFormatException,
+    );
+  });
+
   test('repeated photo sheet produces a real physically sized A4 PDF', () async {
     final bytes = Uint8List.fromList(
       img.encodePng(img.Image(width: 8, height: 10)),

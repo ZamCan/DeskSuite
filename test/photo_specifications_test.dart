@@ -31,9 +31,16 @@ void main() {
       (p) => p.id == 'tz-passport',
     );
     final visa = photoSpecifications.firstWhere((p) => p.id == 'tz-evisa');
+    final icao = photoSpecifications.firstWhere(
+      (p) => p.id == 'icao-mrtd-portrait',
+    );
     expect(passport.hasPublishedDimensions, isFalse);
     expect(passport.dimensionRule, PhotoDimensionRule.unspecified);
     expect(visa.dimensionRule, PhotoDimensionRule.maximum);
+    expect(icao.hasPublishedDimensions, isFalse);
+    expect(icao.dimensionRule, PhotoDimensionRule.unspecified);
+    expect(icao.headHeightMinFraction, isNull);
+    expect(icao.headHeightMaxFraction, isNull);
     expect(visa.maxFileBytes, 500 * 1024);
     expect(visa.fileFormats, contains('JPEG'));
   });

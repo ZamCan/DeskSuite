@@ -108,3 +108,25 @@ Require a signed, reproducible Android release with stable package ID and key cu
 - [x] Pass one selected working scan page to the existing OCR workflow, with a warning that reviewed text edits are not in the original-word searchable PDF layer.
 - [ ] Run new Flutter tests and verify genuine camera photos, native OCR accuracy, Android memory/performance, manual fallback, provider behavior and accessibility.
 - [ ] Add reviewed corrections to a correctly positioned PDF text layer and multipage searchable-PDF export; do not claim they already work.
+
+
+## 2026-10-28 — print-production specification gate
+
+- [x] Document a production model separating finished product, source sheet/roll, substrate, device profile and authority requirements.
+- [x] Start Photo Sheet with 4 × 6 inch media as a convenient small-format option; retain A4/A5/custom as independent choices.
+- [x] Rename the A4 photo layout example so it is not presented as a passport preset; leave Tanzania passport dimensions unspecified when the cited source does not publish them.
+- [x] Record the scope of ISO 216, ISO/IEC 23385, ICAO Doc 9303 and ISO/IEC 7810 in `docs/engineering/PRINT_PRODUCTION_STANDARDS.md`.
+- [ ] Add A3, B-series, US Letter/Tabloid and roll-media profiles only where the output path/device supports them.
+- [ ] Implement printer/media capability profiles, trim/bleed/safe areas, actual-size controls and export validation.
+- [ ] Verify physical dimensions, colour/quality and media compatibility on actual supported devices before claiming production readiness.
+
+
+## 2026-10-28 — complete media and engine integration gate
+
+- [x] Expand the photo-sheet sheet-media selector from small photo paper to ISO A/B formats, US letter/legal/tabloid/ledger, photo prints, and poster/large-format presets; allow custom media up to 2500 mm per side.
+- [ ] Use one shared paper/media catalogue across photo sheets, new-design canvas, documents, badges and poster exports; distinguish stock/sheet size from finished photo/card size and from printer-supported media.
+- [ ] Add envelope/C-series, card/badge, label, roll-media and device/printer capability profiles; show unsupported media or clipping risks before printing.
+- [ ] Make large-format export resolution aware of page dimensions and the output pixel budget; offer validated lower DPI when needed rather than pretending every poster can render at 300 DPI on every device.
+- [ ] Maintain the engine/package register in [ENGINE_INTEGRATION_REGISTER.md](engineering/ENGINE_INTEGRATION_REGISTER.md); integrate only reviewed dependencies with pinned versions, notices, real fixtures, and measured device behavior.
+- [ ] Verify the existing offline Tesseract integration end-to-end on Android with English and Kiswahili. Do not confuse OCR with an SLM; evaluate an optional SLM runtime only after ABI, licence, model size, RAM/latency, privacy and offline tests.
+- [ ] Finish the complete CI matrix, repair every analyzer/test/build regression, and run APK install/upgrade/offline/storage/printing/OCR/photo/design/office tests on the actual target phone before calling the product build-ready.

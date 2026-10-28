@@ -139,3 +139,13 @@ Added a controller test for filling a template photo slot with a locally selecte
 ## CI follow-up — photo-slot regression (2026-10-28)
 
 The current Android run found the photo-sheet catalogue test's text count was one low: the generated sheet has 23 text elements (header, subtitle, twenty labels and footer). Corrected the assertion and added a controller-level test for image replacement, label removal, project encode/decode, and undo. These changes await CI confirmation.
+
+
+## 2026-10-28 — print-production correction and analyzer fix
+
+An earlier matrix run failed static analysis. DartPad separately reproduced a constant-expression error in `photoSpecifications.length` used for the custom dropdown index. Main later changed the index to a literal constant; this merged feature branch derives it as a runtime final value, guarded by a regression test against the profile-list length. The Photo Sheet dialog starts with 4 × 6 inch media as a convenient small-format option and explains that sheet size and finished photo size are independent; A4/A5/custom remain selectable. Added print-production standards documentation covering ISO 216, ISO/IEC 23385, ICAO Doc 9303, ISO/IEC 7810, substrate/finish/caliper/device compatibility, physical-unit imposition, margins/bleed/trim and authority-scoped presets. This is a source correction; await the new CI run and actual printer/device tests before claiming validation.
+
+
+### Authority-data precision correction
+
+The ICAO portrait profile does not treat 35 × 45 mm as a universal national passport print size. Doc 9303 discusses submitted portraits of that size and a minimum width, and larger photos for redesigned processes. Its 70–80% crown-to-chin guidance refers to the portrait zone in the travel document, not a universal fraction of the submitted image. The profile leaves dimensions and submitted-image head-height fractions unspecified and prompts the user to enter the issuing authority's requirements. Regression tests are written but unrun here.

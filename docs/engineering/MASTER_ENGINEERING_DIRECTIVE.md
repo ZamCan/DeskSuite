@@ -109,6 +109,10 @@ For every capability, record the implementation location, dependencies, tests an
 
 Preserve useful existing functionality and working architectural decisions. Avoid unnecessary rewrites.
 
+### Image optimisation and export acceptance gate
+
+Image optimisation must distinguish pixel dimensions, encoded byte size, visual quality, print dimensions/DPI and authority-specific passport/ID rules. Provide preset and custom dimensions plus original-size retention; preserve aspect ratio by default and require an explicit choice before stretching. For target-byte output, reduce JPEG quality first and resample only as needed; report actual dimensions, quality and bytes, preserve the source, and reject impossible targets rather than claim success. Export PDF, HTML and image formats through real encoders. Never call a PDF or HTML PIN-protected unless a reviewed cryptographic/access-control implementation is present and tested. Current image optimiser supports JPEG, PDF and standalone HTML exports; PDF is currently unencrypted and PIN protection is intentionally unavailable pending verified encryption support.
+
 ## 4. PRODUCT ARCHITECTURE
 
 Design DeskSuite as one integrated application with clear internal modules and service boundaries.
@@ -1125,3 +1129,15 @@ A feature is not complete until:
 - limitations are stated honestly, with no claim that an edited ID/passport photo is officially compliant.
 
 These requirements extend the existing product scope; they do not displace document scanning, OCR/Tesseract, Office, PDF, image, print-production, stationery POS, file management, backups, accessibility or release-quality work.
+
+
+## Print-production engineering gate — mandatory
+
+Follow [`PRINT_PRODUCTION_STANDARDS.md`](PRINT_PRODUCTION_STANDARDS.md) for all photo, passport/visa portrait, card, badge, stationery, poster, paper, card-stock, photo-stock and large-format workflows. Never conflate finished-item size, source sheet/roll size, substrate properties, printer-supported media and issuing-authority requirements. A4/A3 are paper formats, not passport-photo specifications. Use sourced authority-scoped photo profiles; preserve unknown dimensions as unspecified; separate digital-upload constraints from paper-submission rules. Print geometry must use physical units, account for printable margins/bleed/trim, reject impossible layouts, preserve requested scale, and test actual PDF page dimensions. Do not claim device/media compliance without printer-specific validation.
+
+
+## Shared print-media and engine-integration directive
+
+Paper/media is a shared product capability, not a Photo Studio special case. Provide standards-backed presets for small photo paper, ISO A/B/C series, US Letter/Legal/Tabloid/Ledger and ANSI sizes, card/badge/label stock, common poster sizes and custom large-format media. Keep four values distinct: (1) physical sheet/substrate size, (2) finished photo/design dimensions, (3) pixel dimensions/DPI and output byte size, and (4) actual printer/media capability. No preset proves passport/ID compliance or that a printer supports borderless, roll or poster media. Custom sizes, margins, bleed, crop marks, imposition, orientation, actual-size scaling and pixel-budget warnings must be handled explicitly. The same catalog must serve photo sheets, design canvases and document/print workflows.
+
+Every external package, native library, OCR engine, language model, SLM runtime and conversion executable must appear in [ENGINE_INTEGRATION_REGISTER.md](ENGINE_INTEGRATION_REGISTER.md), with exact version/source/licence, platform support, bundled assets, offline/network behavior, resource limits, output verification and actual test evidence. Tesseract4Android plus bundled English/Kiswahili LSTM data is already integrated in the source; its real Android quality/performance still requires device verification. An SLM is not currently integrated: keep it optional behind a stable adapter and do not replace deterministic OCR. No release-readiness claim until CI, device, media/printer, dependency and security gates pass.

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../images/photo_processor.dart';
+import 'paper_catalog.dart';
 import 'design_export.dart' show effectiveImageDpi;
 import 'photo_sheet.dart';
 import 'photo_specifications.dart';
@@ -21,14 +22,15 @@ class PhotoSheetDialog extends StatefulWidget {
 }
 
 class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
-  final pageWidth = TextEditingController(text: '210');
-  final pageHeight = TextEditingController(text: '297');
+  final pageWidth = TextEditingController(text: '101.6');
+  final pageHeight = TextEditingController(text: '152.4');
   final photoWidth = TextEditingController(text: '35');
   final photoHeight = TextEditingController(text: '45');
   final margin = TextEditingController(text: '10');
   final spacing = TextEditingController(text: '3');
   final copies = TextEditingController(text: '8');
-  int preset = 0;
+  // Small-format photo paper is a useful starting point; A4/A5/custom stay explicit choices.
+  int preset = 3;
   int photoPreset = customPhotoSpecificationIndex;
 
   @override
@@ -47,15 +49,22 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
     super.dispose();
   }
 
-  PhotoSheetSpec _spec() => PhotoSheetSpec(
-    pageWidthMm: double.parse(pageWidth.text),
-    pageHeightMm: double.parse(pageHeight.text),
-    photoWidthMm: double.parse(photoWidth.text),
-    photoHeightMm: double.parse(photoHeight.text),
-    marginMm: double.parse(margin.text),
-    spacingMm: double.parse(spacing.text),
-    copies: int.parse(copies.text),
-  )..positions();
+  PhotoSheetSpec _spec() {
+    if (photoWidth.text.trim().isEmpty || photoHeight.text.trim().isEmpty) {
+      throw const FormatException(
+        'Enter the required finished photo width and height in mm.',
+      );
+    }
+    return PhotoSheetSpec(
+      pageWidthMm: double.parse(pageWidth.text),
+      pageHeightMm: double.parse(pageHeight.text),
+      photoWidthMm: double.parse(photoWidth.text),
+      photoHeightMm: double.parse(photoHeight.text),
+      marginMm: double.parse(margin.text),
+      spacingMm: double.parse(spacing.text),
+      copies: int.parse(copies.text),
+    )..positions();
+  }
 
   Widget _field(
     String label,
@@ -70,7 +79,7 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
     keyboardType: TextInputType.numberWithOptions(decimal: !integer),
     decoration: InputDecoration(labelText: label),
     onChanged: (_) => setState(() {
-      if (pageDimension) preset = 4;
+      if (pageDimension) preset = paperSheetPresets.length;
       if (photoDimension) photoPreset = customPhotoSpecificationIndex;
     }),
   );
@@ -79,16 +88,10 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
     if (value == null) return;
     setState(() {
       preset = value;
-      final size = switch (value) {
-        0 => (210.0, 297.0),
-        1 => (297.0, 210.0),
-        2 => (148.0, 210.0),
-        3 => (101.6, 152.4),
-        _ => (0.0, 0.0),
-      };
-      if (value != 4) {
-        pageWidth.text = '${size.$1}';
-        pageHeight.text = '${size.$2}';
+      if (value < paperSheetPresets.length) {
+        final size = paperSheetPresets[value];
+        pageWidth.text = '${size.widthMm}';
+        pageHeight.text = '${size.heightMm}';
       }
     });
   }
@@ -102,6 +105,10 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
         if (profile.hasPublishedDimensions) {
           photoWidth.text = '${profile.widthMm}';
           photoHeight.text = '${profile.heightMm}';
+        } else {
+          // Do not leave a previous/generic size looking like an authority rule.
+          photoWidth.clear();
+          photoHeight.clear();
         }
       }
     });
@@ -134,7 +141,7 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Place repeated copies on one physical page. This is a layout aid, not an ID-photo compliance check.',
+                'Arrange finished photos on a selected print medium. Photo dimensions and sheet size are separate choices; this layout does not certify passport/ID compliance. Check printer margins, supported media and scale before production.',
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
@@ -142,15 +149,20 @@ class _PhotoSheetDialogState extends State<PhotoSheetDialog> {
                 initialValue: preset,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Paper preset'),
-                items: const [
-                  DropdownMenuItem(value: 0, child: Text('A4 portrait')),
-                  DropdownMenuItem(value: 1, child: Text('A4 landscape')),
-                  DropdownMenuItem(value: 2, child: Text('A5 portrait')),
+                items: [
+                  for (var i = 0; i < paperSheetPresets.length; i++)
+                    DropdownMenuItem(
+                      value: i,
+                      child: Text(
+                        paperSheetPresets[i].label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   DropdownMenuItem(
-                    value: 3,
-                    child: Text('4 × 6 inch portrait'),
+                    value: paperSheetPresets.length,
+                    child: const Text('Custom dimensions'),
                   ),
-                  DropdownMenuItem(value: 4, child: Text('Custom')),
                 ],
                 onChanged: _selectPreset,
               ),

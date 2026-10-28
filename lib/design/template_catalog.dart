@@ -91,8 +91,8 @@ const designTemplateCatalog = <DesignTemplateDefinition>[
   ),
   DesignTemplateDefinition(
     id: 'photo-print-sheet',
-    label: 'Photo print sheet',
-    description: 'A4 sheet with twenty editable 35 × 45 mm example slots. Not a universal passport size; choose the correct authority specification separately.',
+    label: 'A4 multi-photo layout example',
+    description: 'An editable A4 layout with twenty 35 × 45 mm example slots. One paper/layout option only—not a passport standard or universal photo size.',
     widthMm: 210,
     heightMm: 297,
     template: DesignTemplate.photoPrintSheet,
@@ -248,9 +248,9 @@ List<DesignElement> buildDesignTemplateElements(
       // Twenty editable placeholders for a practical A4 layout. These are
       // ordinary shapes/text, not image frames and not authority-certified IDs.
       final elements = <DesignElement>[
-        text('35 × 45 mm EXAMPLE SHEET', 10, 5, w - 20, 10,
+        text('A4 MULTI-PHOTO LAYOUT EXAMPLE', 10, 5, w - 20, 10,
             size: 5, bold: true),
-        text('Not universal · verify authority and print scale',
+        text('Example only · verify photo spec, media and scale',
             10, 16, w - 20, 7, size: 3.5, color: 0xff777970),
       ];
       const columns = 4;

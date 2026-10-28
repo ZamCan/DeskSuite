@@ -339,7 +339,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.enterText(copies, '26');
       await tester.pump();
-      expect(find.textContaining('Only 25 photo(s) fit'), findsOneWidget);
+      expect(find.textContaining('Only 4 photo(s) fit'), findsOneWidget);
       final export = find.widgetWithText(OutlinedButton, 'Export PDF');
       expect(tester.widget<OutlinedButton>(export).onPressed, isNull);
       await tester.enterText(copies, '8');

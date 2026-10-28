@@ -67,3 +67,7 @@ The shared editable template catalogue currently includes a blank canvas, editor
 
 
 The photo print-sheet template is a layout aid: its twenty slots start as editable shapes and text and can be filled one at a time with selected images. Cover fitting crops the image; there is no automatic face alignment or certified passport/ID sizing. Confirm the requirements and printer scaling before use.
+
+### Print production: media and finished sizes are separate
+
+DeskSuite separates the finished photo/product dimensions from the sheet or roll format and the substrate/printer profile. A4/A3 are paper formats, not passport-photo standards. Photo Sheet starts with 4 × 6 inch media as a convenient small-format option and retains A4/A5/custom choices. Authority-specific photo sizes must be sourced and scoped; unknown official dimensions remain unspecified. See [Print Production Standards](docs/engineering/PRINT_PRODUCTION_STANDARDS.md).
