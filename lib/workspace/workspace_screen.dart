@@ -12,6 +12,7 @@ import '../document_scan/scan_studio_page.dart';
 import '../legacy_studios.dart' as legacy;
 import '../ocr/text_extraction_page.dart';
 import '../office/office_convert_page.dart';
+import '../pdf/pdf_studio_page.dart';
 import 'conversion_catalog.dart';
 import 'conversion_catalog_page.dart';
 import 'creative_studio_page.dart';
@@ -359,6 +360,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                                           WorkspaceSection.text,
                                         ConversionTarget.office =>
                                           WorkspaceSection.office,
+                                        ConversionTarget.pdfStudio =>
+                                          WorkspaceSection.pdfStudio,
                                       }),
                                 )
                               : const SizedBox.shrink(),
@@ -367,6 +370,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                               : const SizedBox.shrink(),
                           _visited.contains(WorkspaceSection.office)
                               ? OfficeConvertPage(
+                                  picker: widget.files is DocumentPicker
+                                      ? widget.files as DocumentPicker
+                                      : const _NoDocumentPicker(),
+                                  files: widget.files,
+                                )
+                              : const SizedBox.shrink(),
+                          _visited.contains(WorkspaceSection.pdfStudio)
+                              ? PdfStudioPage(
                                   picker: widget.files is DocumentPicker
                                       ? widget.files as DocumentPicker
                                       : const _NoDocumentPicker(),
@@ -417,6 +428,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 WorkspaceSection.conversions => 'Conversion routes',
                 WorkspaceSection.text => 'Text extraction',
                 WorkspaceSection.office => 'Document converter',
+                WorkspaceSection.pdfStudio => 'PDF Studio',
               },
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
