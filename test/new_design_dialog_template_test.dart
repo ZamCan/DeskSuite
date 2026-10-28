@@ -1,0 +1,47 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:desksuite/design/design_document.dart';
+import 'package:desksuite/design/template_catalog.dart';
+import 'package:desksuite/workspace/new_design_dialog.dart';
+
+void main() {
+  testWidgets('selecting a template creates an editable design', (tester) async {
+    DesignDocument? created;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () async {
+                created = await showDialog<DesignDocument>(
+                  context: context,
+                  builder: (_) => const NewDesignDialog(),
+                );
+              },
+              child: const Text('Open dialog'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open dialog'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('design-template-picker')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Business card').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Business card'), findsOneWidget);
+    expect(find.text('85.0'), findsOneWidget);
+    expect(find.text('55.0'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('create-design')));
+    await tester.pumpAndSettle();
+
+    expect(created, isNotNull);
+    expect(created!.widthMm, 85);
+    expect(created!.heightMm, 55);
+    expect(created!.elements, isNotEmpty);
+    expect(created!.elements.any((element) => element.text == 'YOUR BRAND'), isTrue);
+  });
+}
