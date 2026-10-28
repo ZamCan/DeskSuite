@@ -9,7 +9,7 @@
 - [x] Manual projective page correction, ordered multipage image PDF, bounded private scan draft and failure/retry coverage on the host.
 - [x] Skippable, revisitable sample guides and explicit conversion catalogue linking to real tools.
 - [x] Notes save/error/retry and TXT export; starter catalogue/stock counters, exact minor units and JSON export.
-- [x] PDF physical-size and fake print-gateway behavior; baseline sequential host suite and targeted later tests. The complete final suite remains to be run.
+- [x] PDF physical-size and fake print-gateway behavior; baseline sequential host suite and targeted later tests. The source status recorded on 2026-10-27 reports 152 passing sequential host tests, clean analysis and formatting. Re-run the complete suite after subsequent changes; Android and release gates remain separate.
 
 ## Implemented, not fully validated
 
@@ -36,11 +36,14 @@
 
 - [ ] Full suite backup, restore, migrations and cross-ID import for notes/catalogue, with crash and storage-full tests.
 - [ ] Transactional multi-instance database; complete POS, payment/refunds, sale lines, receipts, expense/profit reports and audit history.
-- [ ] Offline OCR with tested language data, editable extracted text and a verified searchable PDF text layer; automatic page detection.
+- [ ] Validate OCR accuracy/language behavior on representative real documents and Android devices; automatic page-edge detection with manual fallback.
 - [ ] Existing-PDF reader, search and page tools, PDF compression and accessible preview.
-- [ ] Rich document editor, spreadsheet/formulas and DOCX/XLSX interoperability, based on a tested and licensed real engine.
-- [ ] Advanced image editing, arbitrary crop/adjustments and optional local segmentation; no model downloads without consent.
+- [ ] Rich document editor, spreadsheet/formulas, presentation editing and stronger DOCX/XLSX/PPTX interoperability, based on tested format engines and explicit fidelity boundaries.
+- [ ] Advanced image editing: arbitrary crop/selection, non-destructive layers/masks, richer adjustments and optional local segmentation; no model downloads without consent.
 - [ ] Guides/snapping, professional vector/SVG tools, colour management, bleed/crop marks, imposition and printer calibration.
+- [ ] Consolidated asset registry with provenance/licences, reference tracking, thumbnails, deduplication and safe migration.
+- [ ] Complete transactional stationery POS: sale lines, stock ledger, refunds/voids, suppliers, expenses, customer balances, audit trail and ledger-backed profit reports.
+- [ ] Existing-PDF reader/rendering, text search/extraction, page reorder/rotate/extract/merge, annotations and verified save/reopen.
 - [ ] Full accessibility, localization, dark theme across the restored studios, performance and low-memory profiling.
 
 ## Release gate: **not passed**
