@@ -37,13 +37,14 @@
 - [ ] Full suite backup, restore, migrations and cross-ID import for notes/catalogue, with crash and storage-full tests.
 - [ ] Transactional multi-instance database; complete POS, payment/refunds, sale lines, receipts, expense/profit reports and audit history.
 - [ ] Validate OCR accuracy/language behavior on representative real documents and Android devices; automatic page-edge detection with manual fallback.
-- [ ] Existing-PDF reader, search and page tools, PDF compression and accessible preview.
+- [x] PDF Studio entry point and supported existing-PDF edit/save-as-copy flow are integrated on the consolidation branch; full CI, lockfile and device validation are pending.
+- [ ] Robust PDF text search/extraction, page reorder/rotate/extract/merge, guaranteed structural compression, encrypted export and accessible preview.
 - [ ] Rich document editor, spreadsheet/formulas, presentation editing and stronger DOCX/XLSX/PPTX interoperability, based on tested format engines and explicit fidelity boundaries.
 - [ ] Advanced image editing: arbitrary crop/selection, non-destructive layers/masks, richer adjustments and optional local segmentation; no model downloads without consent.
 - [ ] Guides/snapping, professional vector/SVG tools, colour management, bleed/crop marks, imposition and printer calibration.
 - [ ] Consolidated asset registry with provenance/licences, reference tracking, thumbnails, deduplication and safe migration.
 - [ ] Complete transactional stationery POS: sale lines, stock ledger, refunds/voids, suppliers, expenses, customer balances, audit trail and ledger-backed profit reports.
-- [ ] Existing-PDF reader/rendering, text search/extraction, page reorder/rotate/extract/merge, annotations and verified save/reopen.
+- [ ] Validate PDF Studio against independent readers and protected/malformed fixtures; verify memory/performance and save/reopen on actual Android and desktop devices. Extend page tools and encryption only through tested, compatible engines.
 - [ ] Full accessibility, localization, dark theme across the restored studios, performance and low-memory profiling.
 
 ## Release gate: **not passed**
