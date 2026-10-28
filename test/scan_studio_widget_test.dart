@@ -271,8 +271,13 @@ void main() {
       final persistedAfterExport = await readDraft(tester, store);
       expect(persistedAfterExport, hasLength(1));
       expect(tester.state(find.byType(ScanStudioPage)), same(scanStateBeforeExport));
-      await settleUntil(tester, find.textContaining('1 of 8 pages'));
+      // The PDF action is near the bottom of a lazy ListView. After saving,
+      // the page-count label and page tile at the top may be unmounted until
+      // we scroll back; wait for a real page tile by revealing it, not by
+      // waiting for off-screen text to appear spontaneously.
       expect(find.byType(ScanStudioPage), findsOneWidget);
+      await reveal(tester, find.byKey(const Key('scan-page-0')));
+      expect(find.textContaining('1 of 8 pages'), findsOneWidget);
       expect(find.byKey(const Key('scan-page-0')), findsOneWidget);
       await tapVisible(tester, find.byKey(const Key('scan-undo')));
       await waitIo(tester);
