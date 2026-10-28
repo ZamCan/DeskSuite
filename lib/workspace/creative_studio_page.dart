@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/suite_paths.dart';
 import '../design/design_document.dart';
+import '../design/template_catalog.dart';
 import '../design/editor_screen.dart';
 import '../printing/print_gateway.dart';
 import 'file_gateway.dart';
