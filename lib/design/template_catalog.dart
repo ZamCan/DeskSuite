@@ -92,7 +92,7 @@ const designTemplateCatalog = <DesignTemplateDefinition>[
   DesignTemplateDefinition(
     id: 'photo-print-sheet',
     label: 'A4 multi-photo layout example',
-    description: 'An editable A4 layout with twenty 35 × 45 mm example slots. One paper/layout option only—not a passport standard or universal photo size.'
+    description: 'An editable A4 layout with twenty 35 × 45 mm example slots. One paper/layout option only—not a passport standard or universal photo size.',
     widthMm: 210,
     heightMm: 297,
     template: DesignTemplate.photoPrintSheet,
