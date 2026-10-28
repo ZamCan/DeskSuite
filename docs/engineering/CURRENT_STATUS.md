@@ -128,3 +128,7 @@ The existing Photo Sheet dialog now offers editable example sizes (35 × 45 mm, 
 - These are generic starter layouts, not finished template packs, official identity-card specifications, or verified government/school requirements. Logo/photo placeholders, image-frame editing, template thumbnails, user-authored templates, multi-page presentation editing and PPTX export are not implemented by this slice.
 - The new tests have been added but have **not** been run in this execution. Formatter, analyzer, full suite, CI and Android build/device checks remain unverified.
 
+### Registry hardening addendum
+
+The starter registry now records a catalogue schema version, source/provenance label and repository licence for each built-in layout. Template generation rejects non-finite or out-of-range canvas dimensions and bounds generated element geometry for narrow/custom aspect ratios. Added tests cover the metadata and custom-size bounds. These are still source-level changes pending the workflow result; no passing test/build claim is made yet.
+
