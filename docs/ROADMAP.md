@@ -60,3 +60,14 @@ Require a signed, reproducible Android release with stable package ID and key cu
 - [ ] Add editable school/staff IDs, visitor/event badges, business cards, posters/flyers and presentation themes/layouts through the shared catalogue rather than flattened images.
 - [ ] Benchmark one optional SLM runtime behind a capability interface for reviewed OCR-correction/layout suggestions only; keep Tesseract OCR and deterministic processing as real engines and ensure core workflows work without model downloads or network access.
 - [ ] Add fixture-based tests for dimensions, aspect ratios, masks/transparency, template save/reopen, print-sheet layout, missing model, cancellation and low-memory failure; verify on modest Android hardware.
+
+
+## Latest source change — Photo Studio background placement (2026-10-28)
+
+- [x] Solid-colour compositing for images that already contain transparency, with a manual colour picker, bounded shared processing, PNG output and unit-test coverage added.
+- [x] Editable photo-sheet size examples and custom physical dimensions.
+- [ ] Actual background removal / segmentation, editable masks and edge refinement.
+- [ ] Guided ID-photo crop, head/shoulder framing and verified authority-specific presets.
+- [ ] Shared editable template catalogue for school/staff IDs, badges, business cards, posters/flyers and presentation themes.
+- [ ] Optional SLM capability adapter and measured local-runtime selection.
+- [ ] Run format, analyzer, all Flutter tests and Android build/device checks after this slice; do not mark as passed until actual results are recorded.
