@@ -51,6 +51,18 @@ void main() {
     expect(input, orderedEquals(before));
   });
 
+  test('does not copy the source EXIF description into the optimized JPEG', () {
+    final image = img.Image(width: 16, height: 16, numChannels: 3);
+    image.exif.imageIfd.imageDescription = 'private test description';
+    final input = Uint8List.fromList(img.encodeJpg(image));
+    expect(
+      img.decodeJpg(input)!.exif.imageIfd.imageDescription,
+      'private test description',
+    );
+    final output = optimizeImage(ImageOptimizationRequest(bytes: input));
+    expect(img.decodeJpg(output.bytes)!.exif.imageIfd.imageDescription, isNull);
+  });
+
   test('accepts a bounded working PNG larger than an external pick', () {
     final image = img.Image(width: 1450, height: 1450, numChannels: 4);
     final input = Uint8List.fromList(img.encodePng(image, level: 0));

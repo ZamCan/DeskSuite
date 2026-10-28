@@ -111,10 +111,9 @@ img.Image decodeBoundedPhoto(Uint8List bytes, {required int byteLimit}) {
   return img.bakeOrientation(frame);
 }
 
-/// Composites transparency onto white before a JPEG encode. When [source] has
-/// no alpha channel it may be returned directly; callers must not mutate it.
+/// Returns a new RGB raster on white before JPEG encoding. This also preserves
+/// the previous JPEG path's behavior for opaque or indexed input images.
 img.Image photoOnWhite(img.Image source) {
-  if (!source.hasAlpha) return source;
   final white = img.Image(
     width: source.width,
     height: source.height,

@@ -141,12 +141,14 @@ ImageOptimizationResult optimizeImage(ImageOptimizationRequest request) {
   // Flatten before resizing to avoid exposing hidden transparent RGB values or
   // introducing dark fringes. JPEG and its PDF/HTML wrappers cannot store alpha.
   final opaque = photoOnWhite(decoded);
-  var working = img.copyResize(
-    opaque,
-    width: target.width,
-    height: target.height,
-    interpolation: img.Interpolation.cubic,
-  );
+  var working = target.width == opaque.width && target.height == opaque.height
+      ? opaque
+      : img.copyResize(
+          opaque,
+          width: target.width,
+          height: target.height,
+          interpolation: img.Interpolation.cubic,
+        );
   final targetBytes = switch (request.mode) {
     ImageCompressionMode.quality => null,
     ImageCompressionMode.reduceByPercent => math.max(
