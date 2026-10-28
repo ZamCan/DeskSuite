@@ -30,7 +30,8 @@ For a complete local inventory, run `git fetch origin` followed by the lexical a
 - Office editing is content-level. Full layout fidelity, formula/macros, rich text, and presentations remain limited.
 - The starter stationery catalogue/sale log/receipt is not a full transactional POS.
 - Photo and paper size presets are layout helpers, not official passport/ID acceptance guarantees.
-- The canonical warm ink/paper/terracotta brand assets are kept. The experimental candidate's different section artwork and generated icon sources are not allowed to replace the approved mark without a separate review.
+- **Logo/UI audit:** current `main` already contains the approved D+S SVG and transparent PNG, the native Flutter `BrandMark`, Android legacy/adaptive/monochrome launcher resources, and the warm shared theme. The logo is not missing. However, the experimental candidate's six raster section illustrations and blue theme are not merged; its palette conflicts with the approved warm identity. This branch keeps the existing logo and ports a warm, compact selected/unselected navigation icon treatment plus a branded startup/loading view, without introducing a fixed launch delay or new image dependency.
+- The older `integration/pdf-studio` branch has a custom PPTX/XLSX layout renderer and a drawn boot sequence. The renderer is not copied wholesale because it is a partial OOXML implementation, has significant surface area and must be reviewed against current Office ZIP guards and real-file fidelity. The branded boot sequence is not copied verbatim because its theme API conflicts with main; the same UX goal is met with the canonical existing `BrandMark` and current theme.
 - Release signing remains owner-controlled. The repository's `android/key.properties` is ignored; the private keystore must not be committed or put into CI artifacts.
 
 ## Validation gate
