@@ -96,3 +96,7 @@ These tests are **written but not executed in this session**. No formatter, anal
 
 The catalogue now includes source/licence/schema metadata and guards template generation against unsupported canvas dimensions. Tests were expanded for 10 mm and 1200 mm edge cases and invalid dimensions. They remain unexecuted until the current GitHub Actions run completes.
 
+### Narrow-screen photo background picker
+
+The workflow run [40631293017](https://github.com/ZamCan/DeskSuite/actions/runs/40631293017) reported 178 passing tests and one failure: a 3.5 px horizontal RenderFlex overflow while exercising the solid-background photo picker on a 360 px test viewport. The template catalogue and template-dialog tests passed in that run. The background-option labels were constrained to a flexible, ellipsized line in commit 76e0cc6742b4ca28c196fb139bf9c57138864f56. Await the next full CI run to verify the correction.
+
