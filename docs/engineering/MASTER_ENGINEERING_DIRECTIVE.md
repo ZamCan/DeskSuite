@@ -1125,3 +1125,8 @@ A feature is not complete until:
 - limitations are stated honestly, with no claim that an edited ID/passport photo is officially compliant.
 
 These requirements extend the existing product scope; they do not displace document scanning, OCR/Tesseract, Office, PDF, image, print-production, stationery POS, file management, backups, accessibility or release-quality work.
+
+
+## Print-production engineering gate — mandatory
+
+Follow [`PRINT_PRODUCTION_STANDARDS.md`](PRINT_PRODUCTION_STANDARDS.md) for all photo, passport/visa portrait, card, badge, stationery, poster, paper, card-stock, photo-stock and large-format workflows. Never conflate finished-item size, source sheet/roll size, substrate properties, printer-supported media and issuing-authority requirements. A4/A3 are paper formats, not passport-photo specifications. Use sourced authority-scoped photo profiles; preserve unknown dimensions as unspecified; separate digital-upload constraints from paper-submission rules. Print geometry must use physical units, account for printable margins/bleed/trim, reject impossible layouts, preserve requested scale, and test actual PDF page dimensions. Do not claim device/media compliance without printer-specific validation.
