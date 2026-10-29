@@ -74,7 +74,7 @@ void main() {
     await tester.tap(find.byKey(const Key('home-open-design')));
     // The primary action opens Creative Studio. Wait for its local project
     // list to initialize, then invoke the explicit New design action.
-    await settleIo(tester);
+    await settleUntil(tester, find.byKey(const Key('new-design')));
     expect(find.byKey(const Key('new-design')), findsOneWidget);
     await tester.tap(find.byKey(const Key('new-design')));
     // The workspace contains an ongoing animation; pump the dialog directly
@@ -87,7 +87,9 @@ void main() {
       'Studio poster',
     );
     await tester.tap(find.byKey(const Key('create-design')));
-    await settleIo(tester);
+    // Creating a project includes real disk I/O; wait for the editor route
+    // instead of assuming a fixed number of pumps is enough on every host.
+    await settleUntil(tester, find.byKey(const Key('design-canvas')));
     expect(find.byKey(const Key('design-canvas')), findsOneWidget);
     await tester.tap(find.byKey(const Key('add-text')));
     await tester.pump();
@@ -182,7 +184,7 @@ void main() {
     await tester.ensureVisible(find.text('Studio poster'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Studio poster'));
-    await settleIo(tester);
+    await settleUntil(tester, find.byKey(const Key('design-canvas')));
     expect(find.byKey(const Key('design-canvas')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
