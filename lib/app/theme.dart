@@ -1,52 +1,72 @@
 import 'package:flutter/material.dart';
 
-/// Shared brand palette. Studio-specific document content keeps its own colors.
-const ink = Color(0xff15243a);
-const accent = Color(0xff1c58ac);
-const paper = Color(0xfff3f7fc);
-const line = Color(0xffdce5f1);
+/// DeskSuite's shared visual system: warm paper, near-black ink and restrained clay.
+/// Individual documents retain their own colors; application chrome stays coherent.
+const ink = Color(0xff292721);
+const accent = Color(0xffa84f36);
+const paper = Color(0xfff6f3ed);
+const line = Color(0xffe5ded3);
 const deskSuiteBrandAsset = 'assets/brand/desksuite-mark.png';
 
 ThemeData deskTheme(Brightness brightness) {
   final dark = brightness == Brightness.dark;
-  final surface = dark ? const Color(0xff19283d) : const Color(0xfffffeff);
-  final background = dark ? const Color(0xff0b1423) : paper;
-  final primary = dark ? const Color(0xff90d4ff) : accent;
-  final onPrimary = dark ? const Color(0xff102840) : Colors.white;
-  final scheme = ColorScheme.fromSeed(seedColor: accent, brightness: brightness)
-      .copyWith(
-        primary: primary,
-        onPrimary: onPrimary,
-        surface: surface,
-        onSurface: dark ? const Color(0xfff2f6fd) : ink,
-        outline: dark ? const Color(0xff63758e) : const Color(0xffaabbd1),
-      );
+  const clay = Color(0xffa84f36);
+  final surface = dark ? const Color(0xff24231f) : const Color(0xfffffdf9);
+  final background = dark ? const Color(0xff171714) : paper;
+  final primary = dark ? const Color(0xffe6a18a) : clay;
+  final onPrimary = dark ? const Color(0xff2b1711) : Colors.white;
+  final scheme = ColorScheme.fromSeed(seedColor: clay, brightness: brightness).copyWith(
+    primary: primary,
+    onPrimary: onPrimary,
+    secondary: dark ? const Color(0xffd8bba8) : const Color(0xff735d4e),
+    surface: surface,
+    onSurface: dark ? const Color(0xfff3eee6) : ink,
+    outline: dark ? const Color(0xff62594f) : const Color(0xffcfc5b8),
+    surfaceContainerHighest: dark ? const Color(0xff302e29) : const Color(0xffeee8de),
+  );
+  final textTheme = ThemeData(useMaterial3: true, brightness: brightness).textTheme.apply(
+    bodyColor: scheme.onSurface,
+    displayColor: scheme.onSurface,
+    fontFamily: 'DeskSuiteSans',
+  );
   return ThemeData(
     useMaterial3: true,
     brightness: brightness,
     colorScheme: scheme,
+    textTheme: textTheme,
     scaffoldBackgroundColor: background,
-    dividerColor: dark ? const Color(0xff33445d) : line,
+    dividerColor: dark ? const Color(0xff3c3932) : line,
     appBarTheme: AppBarTheme(
       backgroundColor: background,
+      foregroundColor: scheme.onSurface,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
+      centerTitle: false,
     ),
     cardTheme: CardThemeData(
       color: surface,
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: dark ? const Color(0xff33445d) : line),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: dark ? const Color(0xff3c3932) : line),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: dark ? const Color(0xff223249) : const Color(0xfff1f5fa),
+      fillColor: dark ? const Color(0xff292823) : const Color(0xfff0ebe2),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: dark ? const Color(0xff49443b) : line),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: scheme.primary, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     ),
@@ -61,10 +81,22 @@ ThemeData deskTheme(Brightness brightness) {
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
+        foregroundColor: scheme.onSurface,
         minimumSize: const Size(48, 48),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        side: BorderSide(color: dark ? const Color(0xff63758e) : line),
+        side: BorderSide(color: dark ? const Color(0xff62594f) : line),
       ),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: dark ? const Color(0xff302e29) : const Color(0xff292721),
+      contentTextStyle: const TextStyle(color: Colors.white),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: surface,
+      indicatorColor: dark ? const Color(0xff493027) : const Color(0xfff0dfd5),
+      elevation: 0,
     ),
   );
 }
@@ -88,12 +120,8 @@ class BrandMark extends StatelessWidget {
       errorBuilder: (context, error, stackTrace) => Container(
         width: size,
         height: size,
-        color: const Color(0xff0b2d70),
-        child: Icon(
-          Icons.document_scanner_outlined,
-          size: size * .6,
-          color: Colors.white,
-        ),
+        color: accent,
+        child: Icon(Icons.document_scanner_outlined, size: size * .6, color: Colors.white),
       ),
     ),
   );
