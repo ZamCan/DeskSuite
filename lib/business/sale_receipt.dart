@@ -97,6 +97,9 @@ class SaleRecord {
     required this.quantity,
     required this.unitPriceMinor,
     required this.soldAt,
+    this.currency = 'TSh',
+    this.unitLabel = 'piece',
+    this.priceTier = 'retail',
   }) {
     if (number < 1 ||
         productId.isEmpty ||
@@ -105,7 +108,12 @@ class SaleRecord {
         quantity < 1 ||
         quantity > maxSaleQuantity ||
         unitPriceMinor < 0 ||
-        unitPriceMinor > maxUnitPriceMinor) {
+        unitPriceMinor > maxUnitPriceMinor ||
+        currency.trim().isEmpty ||
+        currency.length > 8 ||
+        unitLabel.trim().isEmpty ||
+        unitLabel.length > 24 ||
+        !const {'retail', 'wholesale'}.contains(priceTier)) {
       throw const FormatException('Invalid sale record.');
     }
   }
@@ -116,11 +124,14 @@ class SaleRecord {
   final int quantity;
   final int unitPriceMinor;
   final DateTime soldAt;
+  final String currency;
+  final String unitLabel;
+  final String priceTier;
 
   int get totalMinor => quantity * unitPriceMinor;
 
   SaleLine toLine() => SaleLine(
-    name: productName,
+    name: '$productName ($unitLabel)',
     quantity: quantity,
     unitPriceMinor: unitPriceMinor,
   );
@@ -134,6 +145,9 @@ class SaleRecord {
         quantity: json['quantity'] as int,
         unitPriceMinor: json['unitPriceMinor'] as int,
         soldAt: DateTime.parse(json['soldAt'] as String),
+        currency: json['currency'] as String? ?? 'TSh',
+        unitLabel: json['unitLabel'] as String? ?? 'piece',
+        priceTier: json['priceTier'] as String? ?? 'retail',
       );
     } on FormatException {
       rethrow;
@@ -149,6 +163,9 @@ class SaleRecord {
     'quantity': quantity,
     'unitPriceMinor': unitPriceMinor,
     'soldAt': soldAt.toIso8601String(),
+    'currency': currency,
+    'unitLabel': unitLabel,
+    'priceTier': priceTier,
   };
 }
 

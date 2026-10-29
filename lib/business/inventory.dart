@@ -182,12 +182,18 @@ class InventoryRepository {
     required String name,
     required int priceMinor,
     required int stock,
+    int? wholesalePriceMinor,
+    int wholesaleMinQuantity = 10,
+    String unitLabel = 'piece',
   }) => _transaction(() async {
     final current = await load();
     final product = InventoryProduct(
       id: newId(),
       name: name.trim(),
       priceMinor: priceMinor,
+      wholesalePriceMinor: wholesalePriceMinor,
+      wholesaleMinQuantity: wholesaleMinQuantity,
+      unitLabel: unitLabel.trim(),
       stock: stock,
       sold: 0,
     );
@@ -222,50 +228,69 @@ class InventoryRepository {
   /// The two files cannot be written in one atomic step. The stock file is
   /// written first and restored if the sales log fails, so a failure never
   /// leaves stock sold without a record.
-  Future<SaleOutcome> recordSale({required String id, int quantity = 1}) =>
-      _transaction(() async {
-        if (!isSafeId(id)) {
-          throw const FormatException('Invalid product identifier.');
-        }
-        final current = await load();
-        final index = current.products.indexWhere((p) => p.id == id);
-        if (index < 0) throw StateError('Product not found.');
-        final product = current.products[index];
-        final pending = List.of(await loadSales());
-        final next = [...current.products];
-        next[index] = product.recordUnits(quantity);
-
-        final previousText = current.encodeJson();
-        final snapshot = await _save(next);
-        final record = SaleRecord(
-          number:
-              (pending.isEmpty
-                  ? 0
-                  : pending
-                        .map((sale) => sale.number)
-                        .reduce((a, b) => a > b ? a : b)) +
-              1,
-          productId: product.id,
-          productName: product.name,
-          quantity: quantity,
-          unitPriceMinor: product.priceMinor,
-          soldAt: DateTime.now(),
-        );
-        final log = [...pending, record];
-        final retained = log.length > maxSalesRetained
-            ? log.sublist(log.length - maxSalesRetained)
-            : log;
-        try {
-          await files.writeText(
-            'sales.json',
-            jsonEncode(retained.map((sale) => sale.toJson()).toList()),
-          );
-        } catch (error) {
-          await files.writeText('products.json', previousText);
-          throw StateError('The sale was not recorded: $error');
-        }
-        return SaleOutcome(snapshot: snapshot, sale: record);
-      });
+  Future<SaleOutcome> recordSale({
+    required String id,
+    int quantity = 1,
+    String currency = 'TSh',
+    bool wholesale = false,
+  }) => _transaction(() async {
+    if (!isSafeId(id)) {
+      throw const FormatException('Invalid product identifier.');
+    }
+    if (!isSupportedBusinessCurrency(currency)) {
+      throw const FormatException('Choose a supported shop currency.');
+    }
+    final current = await load();
+    final index = current.products.indexWhere((p) => p.id == id);
+    if (index < 0) throw StateError('Product not found.');
+    final product = current.products[index];
+    if (wholesale &&
+        (product.wholesalePriceMinor == null ||
+            quantity < product.wholesaleMinQuantity)) {
+      throw FormatException(
+        'Wholesale pricing requires at least ${product.wholesaleMinQuantity} ${product.unitLabel}(s).',
+      );
+    }
+    final unitPrice = wholesale
+        ? product.wholesalePriceMinor!
+        : product.priceMinor;
+    final pending = List.of(await loadSales());
+    final next = [...current.products];
+    next[index] = product.recordUnits(quantity);
+    final previousText = current.encodeJson();
+    final snapshot = await _save(next);
+    final record = SaleRecord(
+      number:
+          (pending.isEmpty
+              ? 0
+              : pending
+                    .map((sale) => sale.number)
+                    .reduce((a, b) => a > b ? a : b)) +
+          1,
+      productId: product.id,
+      productName: product.name,
+      quantity: quantity,
+      unitPriceMinor: unitPrice,
+      soldAt: DateTime.now(),
+      currency: currency,
+      unitLabel: product.unitLabel,
+      priceTier: wholesale ? 'wholesale' : 'retail',
+    );
+    final log = [...pending, record];
+    final retained = log.length > maxSalesRetained
+        ? log.sublist(log.length - maxSalesRetained)
+        : log;
+    try {
+      await files.writeText(
+        'sales.json',
+        jsonEncode(retained.map((sale) => sale.toJson()).toList()),
+      );
+    } catch (error) {
+      await files.writeText('products.json', previousText);
+      throw StateError('The sale was not recorded: $error');
+    }
+    return SaleOutcome(snapshot: snapshot, sale: record);
+  });
 
   Future<InventorySnapshot> recordOneUnit(String id) async =>
       (await recordSale(id: id)).snapshot;
@@ -283,6 +308,7 @@ class SaleOutcome {
         number: sale.number,
         issuedAt: sale.soldAt,
         shopName: shopName,
+        currency: sale.currency,
         lines: [sale.toLine()],
       );
 }

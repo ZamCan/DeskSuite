@@ -99,4 +99,41 @@ void main() {
       }
     },
   );
+  test('wholesale tier requires its minimum and snapshots currency in the sale log', () async {
+    final dir = await Directory.systemTemp.createTemp('desksuite_wholesale_');
+    addTearDown(() => dir.delete(recursive: true));
+    final repo = InventoryRepository(LocalFileStore(() async => dir));
+    final added = await repo.addProduct(
+      name: 'A4 sheet',
+      priceMinor: 100,
+      wholesalePriceMinor: 80,
+      wholesaleMinQuantity: 5,
+      unitLabel: 'sheet',
+      stock: 20,
+    );
+    final id = added.products.single.id;
+    await expectLater(
+      repo.recordSale(id: id, quantity: 4, currency: 'USD', wholesale: true),
+      throwsFormatException,
+    );
+    final sold = await repo.recordSale(
+      id: id,
+      quantity: 5,
+      currency: 'USD',
+      wholesale: true,
+    );
+    expect(sold.snapshot.products.single.stock, 15);
+    expect(sold.snapshot.products.single.sold, 5);
+    expect(sold.sale.priceTier, 'wholesale');
+    expect(sold.sale.unitLabel, 'sheet');
+    expect(sold.sale.currency, 'USD');
+    expect(sold.sale.unitPriceMinor, 80);
+    expect(sold.receipt().formattedTotal, 'USD 4.00');
+    final loaded = await InventoryRepository(LocalFileStore(() async => dir)).loadSales();
+    expect(loaded.single.currency, 'USD');
+    expect(loaded.single.priceTier, 'wholesale');
+    expect(loaded.single.unitLabel, 'sheet');
+    expect(loaded.single.totalMinor, 400);
+  });
+
 }
