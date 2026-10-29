@@ -37,6 +37,19 @@ Future<void> settleIo(WidgetTester tester) async {
   }
 }
 
+Future<void> removeTemporaryDirectory(Directory directory) async {
+  for (var attempt = 0; attempt < 5; attempt++) {
+    try {
+      if (await directory.exists()) await directory.delete(recursive: true);
+      return;
+    } on FileSystemException {
+      if (attempt == 4) rethrow;
+      // Windows can briefly hold a handle after an asynchronous project read.
+      await Future<void>.delayed(Duration(milliseconds: 100 * (attempt + 1)));
+    }
+  }
+}
+
 Future<void> navigate(WidgetTester tester, String label) async {
   await tester.tap(find.byTooltip('Open navigation'));
   await tester.pumpAndSettle();
@@ -217,9 +230,7 @@ void main() {
       final temp = (await tester.runAsync(
         () => Directory.systemTemp.createTemp('desksuite_unified_'),
       ))!;
-      addTearDown(() async {
-        if (await temp.exists()) await temp.delete(recursive: true);
-      });
+      addTearDown(() => removeTemporaryDirectory(temp));
       final documents = Directory('${temp.path}/documents/DeskSuite');
       final legacyRoot = Directory('${temp.path}/support/desksuite');
       final oldFolder = Directory('${legacyRoot.path}/projects');
@@ -286,10 +297,16 @@ void main() {
       await tester.ensureVisible(legacy);
       await tester.pumpAndSettle();
       await tester.tap(legacy);
-      await settleUntil(tester, find.byKey(const Key('design-canvas')));
-      expect(find.byKey(const Key('design-canvas')), findsOneWidget);
-      await tester.tap(find.byTooltip('Back to workspace'));
-      await settleIo(tester);
+      // Importing an earlier project writes a new local copy before opening
+      // the editor; wait for that real transition rather than a fixed delay.
+      final canvas = find.byKey(const Key('design-canvas'));
+      await settleUntil(tester, canvas);
+      expect(canvas, findsOneWidget);
+      final back = find.byTooltip('Back to workspace');
+      await settleUntilEnabled(tester, back);
+      await settleUntil(tester, back.hitTestable());
+      await tester.tap(back.hitTestable());
+      await settleUntilGone(tester, canvas);
       expect(await tester.runAsync(() => oldFile.readAsString()), original);
       final converted = await tester.runAsync(() => repo.list());
       expect(converted!.projects, hasLength(2));
@@ -322,20 +339,11 @@ void main() {
       expect(find.text('Photo Studio'), findsWidgets);
       expect(find.byKey(const Key('photo-choose')), findsOneWidget);
       await navigate(tester, 'Files & Projects');
-      for (
-        var i = 0;
-        i < 100 && find.text('Existing poster').evaluate().isEmpty;
-        i++
-      ) {
-        await tester.pump(const Duration(milliseconds: 20));
-        await tester.runAsync(
-          () => Future<void>.delayed(const Duration(milliseconds: 10)),
-        );
-      }
+      await settleUntil(tester, find.text('Existing poster'));
       expect(find.text('Existing poster'), findsOneWidget);
       await tester.tap(find.text('Existing poster'));
-      await settleIo(tester);
-      expect(find.byKey(const Key('design-canvas')), findsOneWidget);
+      await settleUntil(tester, canvas);
+      expect(canvas, findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

@@ -20,7 +20,7 @@ At `67c0b09` on 2026-10-29, eight remote branch references were retired after a 
 
 - `agent/creative-studio-android`, `agent/document-workflows`, `engineering/office-content-editor`, `fix/windows-creative-studio-test-wait`, `integration/creative-studio-reconciled`, `integration/engine-completion-phase-1`, `integration/office-editor`, `release/0.2.0-integration`.
 
-The following eleven refs still contain unique commits. Some useful changes were selectively integrated, but a full, safe disposition of every unique change is not established. Keep these refs until their work is accounted for, backups are copied to independent storage, and relevant native/device checks pass; do not replace newer main files wholesale.
+At `b520220`, the eleven refs below still contained unique commits. A twelfth concurrent ref, `fix/inventory-receipt-action-test` at `a28f94618b6f`, had four commits not in main; its PR #13 was closed without merging and its workflow change was separately applied to main. It was separately backed up and restored. Some useful changes were selectively integrated, but a full, safe disposition of every unique change is not established. Keep these refs until their work is accounted for, backups are copied to independent storage, and relevant native/device checks pass; do not replace newer main files wholesale.
 
 | Remaining branch | Tip at audit | Unique commits ahead of `main` |
 |---|---|---:|
