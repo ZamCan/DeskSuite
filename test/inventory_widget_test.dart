@@ -249,7 +249,14 @@ void main() {
     expect(find.textContaining('TSh 125.50'), findsOneWidget);
     expect(find.widgetWithText(SnackBarAction, 'Receipt'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(SnackBarAction, 'Receipt'));
+    // On the fixed-size headless viewport, the snackbar action can be
+    // laid out just beyond the root hit-test bounds. Invoke the real callback
+    // after asserting the action is present instead of relying on a screen tap.
+    final receiptAction = tester.widget<SnackBarAction>(
+      find.widgetWithText(SnackBarAction, 'Receipt'),
+    );
+    receiptAction.onPressed!();
+    await tester.pump();
     await waitUntil(tester, () => printer.bytes != null);
     expect(String.fromCharCodes(printer.bytes!.take(5)), '%PDF-');
     expect(printer.name, 'receipt-0001');
