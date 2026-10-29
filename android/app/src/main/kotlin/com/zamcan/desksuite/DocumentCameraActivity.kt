@@ -309,8 +309,12 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
                 .maxByOrNull { it.width.toLong() * it.height }
                 ?: return finishWithError("camera_unavailable")
             val ratio = stillSize!!.width.toDouble() / stillSize!!.height
+            // Preview surfaces may use several in-flight GPU buffers. Reject
+            // oversized options before choosing a camera stream; a device with
+            // no bounded preview reports camera_unavailable instead of risking
+            // an unbounded allocation. Imports remain available in the app.
             val previews = map.getOutputSizes(SurfaceTexture::class.java)?.toList().orEmpty()
-                .filter { it.width > 0 && it.height > 0 }
+                .filter { CameraCaptureMath.supportsPreviewSize(it.width, it.height) }
             previewSize = previews.minByOrNull {
                 abs(it.width.toDouble() / it.height - ratio) * 10000.0 +
                     abs(it.width.toLong() * it.height - 1280L * 720L).toDouble() / 1000.0

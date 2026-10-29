@@ -11,6 +11,15 @@ public final class CameraCaptureMathTest {
         check(!CameraCaptureMath.supportsStillSize(0, 1), "zero side rejected");
         check(!CameraCaptureMath.supportsStillSize(8193, 1), "side limit enforced");
         check(!CameraCaptureMath.supportsStillSize(Integer.MAX_VALUE, Integer.MAX_VALUE), "no overflow");
+        check(CameraCaptureMath.supportsPreviewSize(1920, 1080), "standard HD preview accepted");
+        check(CameraCaptureMath.supportsPreviewSize(2048, 1536), "preview pixel budget accepted");
+        check(CameraCaptureMath.supportsPreviewSize(1080, 1920), "portrait preview accepted");
+        check(!CameraCaptureMath.supportsPreviewSize(2048, 1537), "over-budget preview rejected");
+        check(!CameraCaptureMath.supportsPreviewSize(3840, 2160), "4K preview rejected");
+        check(!CameraCaptureMath.supportsPreviewSize(2049, 1), "preview side limit enforced");
+        check(!CameraCaptureMath.supportsPreviewSize(0, 1), "zero preview side rejected");
+        check(!CameraCaptureMath.supportsPreviewSize(-1, 10), "negative preview side rejected");
+        check(!CameraCaptureMath.supportsPreviewSize(Integer.MAX_VALUE, Integer.MAX_VALUE), "preview multiplication cannot overflow");
         int[] rotations = {0, 90, 180, 270};
         int[] rear = {90, 0, 270, 180};
         int[] front = {90, 180, 270, 0};
@@ -35,6 +44,6 @@ public final class CameraCaptureMathTest {
         check(rejected, "invalid preview dimensions rejected");
         check(CameraCaptureMath.jpegOrientation(-270, 270, false) == 180, "negative sensor normalized");
         check(CameraCaptureMath.jpegOrientation(-270, -270, true) == 180, "negative front display normalized");
-        System.out.println("Camera geometry and bounds: 24 checks passed (no Android camera/device used).");
+        System.out.println("Camera geometry and bounds: 33 checks passed (no Android camera/device used).");
     }
 }

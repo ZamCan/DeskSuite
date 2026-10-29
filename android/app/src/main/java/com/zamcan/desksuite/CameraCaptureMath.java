@@ -9,6 +9,17 @@ public final class CameraCaptureMath {
     public static final int MAX_STILL_SIDE = 8192;
     public static final int MAX_CAPTURE_BYTES = 8 * 1024 * 1024;
 
+    // TextureView buffers may be multiplied by several frames in flight.
+    // Prefer a bounded preview rather than allocating an oversized surface.
+    public static final long MAX_PREVIEW_PIXELS = 3_145_728L; // 2048 x 1536
+    public static final int MAX_PREVIEW_SIDE = 2048;
+
+    public static boolean supportsPreviewSize(int width, int height) {
+        return width > 0 && height > 0 && width <= MAX_PREVIEW_SIDE
+                && height <= MAX_PREVIEW_SIDE
+                && (long) width * height <= MAX_PREVIEW_PIXELS;
+    }
+
     public static boolean supportsStillSize(int width, int height) {
         return width > 0 && height > 0 && width <= MAX_STILL_SIDE
                 && height <= MAX_STILL_SIDE

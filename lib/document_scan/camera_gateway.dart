@@ -74,7 +74,7 @@ class AndroidCameraGateway implements CameraGateway, CommittedCaptureGateway {
       switch (error.code) {
         case 'camera_permission_denied':
           throw const FormatException(
-            'Allow camera access to scan a document.',
+            'Camera access is off. Allow it when prompted or enable Camera for DeskSuite in Android Settings. You can also import an image.',
           );
         case 'camera_unavailable':
           throw const FormatException(

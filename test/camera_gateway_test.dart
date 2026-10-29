@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:desksuite/document_scan/camera_gateway.dart';
 import 'package:desksuite/images/photo_processor.dart';
-import 'package:flutter/services.dart' show MethodChannel;
+import 'package:flutter/services.dart' show MethodChannel, PlatformException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
@@ -124,6 +124,26 @@ void main() {
       await wrongPlace.exists(),
       isTrue,
       reason: 'untrusted paths are never deleted',
+    );
+  });
+
+  test('denied camera permission gives settings and import guidance', () async {
+    const channel = MethodChannel('com.zamcan.desksuite/document_camera');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      throw PlatformException(code: 'camera_permission_denied');
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+    await expectLater(
+      AndroidCameraGateway().capture(),
+      throwsA(
+        isA<FormatException>().having(
+          (error) => error.message,
+          'message',
+          allOf(contains('Android Settings'), contains('import an image')),
+        ),
+      ),
     );
   });
 

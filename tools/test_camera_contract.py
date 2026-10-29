@@ -39,6 +39,13 @@ class CameraContractTest(unittest.TestCase):
         self.assertIn('generation != cameraGeneration', activity)
         self.assertIn('camera.close()', activity)
 
+    def test_preview_sizes_are_bounded_before_selection(self):
+        activity = (ROOT / 'android/app/src/main/kotlin/com/zamcan/desksuite/DocumentCameraActivity.kt').read_text()
+        preview = activity.split('val previews =', 1)[1].split('val generation =', 1)[0]
+        self.assertIn('CameraCaptureMath.supportsPreviewSize(it.width, it.height)', preview)
+        self.assertLess(preview.index('supportsPreviewSize'), preview.index('minByOrNull'))
+        self.assertIn('?: return finishWithError("camera_unavailable")', preview)
+
     def test_permission_and_camera_controls_have_safe_states(self):
         activity = (ROOT / 'android/app/src/main/kotlin/com/zamcan/desksuite/DocumentCameraActivity.kt').read_text()
         ready = activity.split('private fun startCameraIfReady()', 1)[1].split('private fun createPreviewSession', 1)[0]
