@@ -11,7 +11,7 @@ import 'package:desksuite/document_scan/scan_studio_page.dart';
 import 'package:desksuite/images/photo_processor.dart';
 import 'package:desksuite/workspace/file_gateway.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/reveal.dart';
@@ -47,6 +47,9 @@ class ScanCamera implements CameraGateway, CommittedCaptureGateway {
   Future<void> acknowledgeCaptureSaved() async {
     acknowledgements++;
   }
+
+  @override
+  Future<bool> discardPendingCapture() async => true;
 
   @override
   Future<Uint8List?> capture() async => bytes;

@@ -109,6 +109,8 @@ void main() {
       // are checked later by OfficePackage's CRC verification.
     }
   }
+  // Standalone CLI smoke needs a visible success message.
+  // ignore: avoid_print
   print(
     'Office ZIP guard smoke passed: valid package, malformed-input rejections and 3000 mutations.',
   );
