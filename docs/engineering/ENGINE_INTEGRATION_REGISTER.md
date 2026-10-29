@@ -56,3 +56,10 @@ The implementation contract is documented in [PAPER_AND_PRINTER_INTEGRATION_SPEC
 - Test size conversion, orientation, matching, scaling, margins, profile persistence and unknown capability handling. Host fakes do not prove physical-printer behavior.
 
 **Truthful status:** the catalog and system print handoff exist; automatic synchronization across all editors and live printer capability negotiation are not yet verified as implemented. Do not mark this engine complete until the spec's acceptance gates pass.
+
+
+## Shared print-job model — first implementation slice
+
+Added `lib/printing/print_job.dart` with validated physical media targets, source geometry, fit/fill-crop/actual-size placement calculations, explicit unknown printer capability states, and a print-profile data model. Added `test/print_job_test.dart` for geometry, invalid dimensions, crop reporting, profile validation and the rule that unknown hardware capabilities never imply support.
+
+This is a tested-model candidate, not yet a complete printer integration. It does not yet query Android print-service capabilities or persist profiles, and existing UI/export/scan consumers have not all been migrated to it. The next gates are CI verification, review of the geometry tests, then controlled adoption at the print gateway and relevant editor boundaries.
