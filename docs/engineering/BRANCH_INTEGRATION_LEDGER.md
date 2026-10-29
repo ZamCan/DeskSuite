@@ -37,7 +37,7 @@ Compared the following refs against `main` on 2026-10-29. “Ahead” means uniq
 | `integration/office-editor` | 0 | 140 | 0 | No unique commits vs main; candidate for archival after final file/content spot-check |
 | `integration/pdf-studio` | 2 | 29 | 54 | Diverged; inspect the 54-file tree for meaningful unmerged work before deciding |
 | `release/0.2.0-integration` | 0 | 132 | 0 | No unique commits vs main; candidate for archival after final file/content spot-check |
-| `feature/premium-workspace-branding-20261028` | 7 | 0 | 11 | PR #11; current candidate branch; not merge-ready until current CI passes |
+| `feature/premium-workspace-branding-20261028` | 20 | 0 | 16 | PR #11; current candidate branch; current matrix run `40811247150` is in progress; no merge until green |
 
 ## Product acceptance gates
 
@@ -50,7 +50,7 @@ Compared the following refs against `main` on 2026-10-29. “Ahead” means uniq
 
 ## Current blockers and known facts
 
-- PR #11 changes the home workbench and brand assets, but its GitHub Actions run failed during `flutter analyze`; its test and Android build steps were skipped. Do not merge it until the diagnostics are obtained, corrected, and the latest commit passes.
+- PR #11 had earlier failing/cancelled runs during test iteration. The latest observed matrix run is `40811247150` for head `b120ecbf50c64f85c4b5f234c3ac99ae01476e7b`, currently in progress at the time of this update. Treat earlier green-looking or cancelled runs as non-acceptance; inspect this exact head's final result before merge.
 - The current `CameraGateway` uses `image_picker` and launches the device camera application. It is not the desired embedded CameraX-style capture experience.
 - The current `pubspec.yaml` enforces the committed lockfile in CI. Dependency additions must include a correctly regenerated and reviewed `pubspec.lock`; do not add packages while leaving the lock stale.
 - The full reference PNG should be compared with the user-approved logo, including safe-area and small-icon legibility. Passing the asset validator alone does not prove visual equivalence.
@@ -58,3 +58,15 @@ Compared the following refs against `main` on 2026-10-29. “Ahead” means uniq
 ## Per-branch review record
 
 For each candidate branch, record: source head SHA; base SHA; unique files and algorithms; dependency/lock changes; duplicate/conflicting implementations; tests added and executed; manual verification; PR URL; merged commit SHA; and whether the source branch can safely be archived. Until these fields are filled, mark it **not yet audited**, not “obsolete.”
+
+
+## Selective duplicate check — 2026-10-29
+
+A targeted content/hash check against `main` confirms that the current main branch already contains the exact same blobs as the premium workbench candidate and `integration/main-polish-engine-audit-20261028` for:
+
+- `lib/office/office_zip_guard.dart` — bounded Office ZIP preflight and malformed-package rejection.
+- `test/office_package_guard_test.dart` — malicious/corrupt ZIP guard regression tests.
+- `lib/pdf/pdf_combine.dart` and `test/pdf_combine_test.dart` — bounded ordered PDF combination with output inspection.
+- `pubspec.yaml` already declares the direct archive/XML dependencies used by Office package handling.
+
+**Decision:** do not copy these files from old branches or create parallel implementations. They are already canonical on `main`; focus the branch audit on genuinely different UI, office rendering, scan, image, and print/POS work. The candidate's latest compare is 20 commits ahead, 0 behind, with 16 changed files; the PR head and changed-file count must be refreshed again before merge because CI/test fixes may add commits.
