@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that ordinary CI tests all targets and packages Android on main only.
+"""Check that ordinary CI tests all targets and packages Android on main and manual release verification.
 
 This is a structural policy check, not a build or a GitHub Actions execution.
 It intentionally uses only the Python standard library.
@@ -10,7 +10,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / '.github/workflows/build.yml'
 OPT_IN = "if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_release }}"
-ANDROID_RELEASE = "if: ${{ (github.event_name == 'workflow_dispatch' && inputs.package_release) || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}"
+ANDROID_RELEASE = "if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}"
 
 
 def job_steps(source, job):
