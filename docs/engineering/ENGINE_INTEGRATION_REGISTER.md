@@ -40,3 +40,19 @@ Before selecting a runtime, record a reproducible benchmark on the lowest suppor
 ## Package release gate
 
 Before merge/release, resolve and commit the updated pubspec.lock for dart_pdf_editor and all transitive packages, regenerate dependency notices from that resolved lockfile; audit native AAR/JNI/ABI contents, Gradle plugins, platform permissions, fonts, sample images, Tesseract language data and any selected model/runtime. Record checksums and licences, verify Android APK/AAB contents and size, and test actual offline operation. Do not claim all package/licence checks complete from THIRD_PARTY_NOTICES.md alone: it explicitly says nested native binary review remains outstanding.
+
+
+## Coordinated paper and printer control — implementation status
+
+The shared media catalog currently exists at lib/printing/paper_catalog.dart, but it is not yet a complete system-wide auto-synchronization or printer-capability layer. The presence of a preset means only that DeskSuite can prepare a page/canvas of that physical size; it does not mean the selected printer supports it.
+
+The implementation contract is documented in [PAPER_AND_PRINTER_INTEGRATION_SPEC.md](PAPER_AND_PRINTER_INTEGRATION_SPEC.md). Key requirements:
+
+- One canonical physical-media registry reused by Scan Studio, PDF page setup, photo sheets, design/export, office-document preparation and print jobs. No duplicated preset arrays in screens.
+- Keep source-page dimensions, intended output media, finished photo/artwork size, pixel dimensions/DPI, and printer-reported capabilities as distinct values.
+- Add a printer capability adapter behind the existing PrintGateway seam. Query only capabilities genuinely exposed by the active Android print service/driver; otherwise mark them unknown and preserve a safe system-dialog fallback.
+- Add a print profile binding media intent, orientation, margins/bleed, scaling policy and color/duplex preferences when exposed. Save user-approved preferences locally and make them editable/reversible.
+- Recommend sizes automatically when evidence supports it, but never silently crop, stretch, upscale beyond quality budgets, claim borderless output, or override driver settings.
+- Test size conversion, orientation, matching, scaling, margins, profile persistence and unknown capability handling. Host fakes do not prove physical-printer behavior.
+
+**Truthful status:** the catalog and system print handoff exist; automatic synchronization across all editors and live printer capability negotiation are not yet verified as implemented. Do not mark this engine complete until the spec's acceptance gates pass.
