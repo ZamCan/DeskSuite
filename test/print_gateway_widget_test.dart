@@ -6,6 +6,7 @@ import 'package:desksuite/design/design_document.dart';
 import 'package:desksuite/design/editor_screen.dart';
 import 'package:desksuite/main.dart';
 import 'package:desksuite/printing/print_gateway.dart';
+import 'package:desksuite/printing/print_job.dart';
 import 'package:desksuite/workspace/file_gateway.dart';
 import 'package:desksuite/workspace/project_repository.dart';
 import 'package:flutter/material.dart';
