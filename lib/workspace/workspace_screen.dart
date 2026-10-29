@@ -51,7 +51,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   String? _listError;
   bool _loading = true;
   int _refreshVersion = 0;
-  bool _showWelcome = false;
   Uint8List? _recoveredCapture;
   final _shortcutSearch = TextEditingController();
   String _shortcutQuery = '';
@@ -60,7 +59,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   void initState() {
     super.initState();
     _refresh();
-    _loadWelcome();
     widget.cameraRecovery?.then((result) {
       if (!mounted) return;
       if (result.bytes != null) {
@@ -83,27 +81,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   void dispose() {
     _shortcutSearch.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadWelcome() async {
-    try {
-      final seen = await widget.repository.readWelcomeSeen();
-      if (mounted) setState(() => _showWelcome = !seen);
-    } catch (_) {
-      // The workspace still opens if the optional preference cannot be read.
-    }
-  }
-
-  Future<void> _dismissWelcome({bool openGuide = false}) async {
-    setState(() => _showWelcome = false);
-    if (openGuide) _navigate(WorkspaceSection.guide);
-    try {
-      await widget.repository.writeWelcomeSeen();
-    } catch (_) {
-      _message(
-        'Could not save the welcome preference; it may appear again next time.',
-      );
-    }
   }
 
   Future<void> _openEditableExample() async {
@@ -475,8 +452,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _heading(
-          'What would you like to do?',
-          'Choose a local tool to get started.',
+          'Make room for good work',
+          'Create, capture, edit and prepare work for print.',
         ),
         const SizedBox(height: 12),
         TextField(
@@ -486,7 +463,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           onChanged: (value) => setState(() => _shortcutQuery = value),
           onSubmitted: (_) => FocusScope.of(context).unfocus(),
           decoration: InputDecoration(
-            labelText: 'Find a shortcut',
+            labelText: 'Search tools',
             hintText: 'Scan, PDF, photo…',
             prefixIcon: const Icon(Icons.search),
             suffixIcon: _shortcutQuery.isEmpty
@@ -614,53 +591,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           ),
         const SizedBox(height: 26),
         WorkspaceWelcome(onCreate: () => _newDesign(), onImport: _import),
-        if (_showWelcome) ...[
-          const SizedBox(height: 16),
-          Card(
-            key: const Key('welcome-introduction'),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Welcome to DeskSuite',
-                    style: Theme.of(context).textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Create designs, prepare photos and assemble image PDFs locally. Explore examples or skip this introduction; no account is needed.',
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      FilledButton(
-                        key: const Key('welcome-guide'),
-                        onPressed: () => _dismissWelcome(openGuide: true),
-                        child: const Text('Explore examples'),
-                      ),
-                      TextButton(
-                        key: const Key('welcome-skip'),
-                        onPressed: _dismissWelcome,
-                        child: const Text('Skip for now'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-        const SizedBox(height: 34),
+        const SizedBox(height: 22),
+
         Row(
           children: [
             Expanded(
               child: _heading(
-                'Start creating',
-                'Pick up a blank canvas or a ready-to-edit layout.',
+                'Create a project',
+                'Start with a blank canvas or open existing work.',
               ),
             ),
             Text(
@@ -719,8 +657,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           children: [
             Expanded(
               child: _heading(
-                'Recent projects',
-                'Your work stays on this device.',
+                'Recent work',
+                'Projects saved on this device.',
               ),
             ),
             TextButton(
