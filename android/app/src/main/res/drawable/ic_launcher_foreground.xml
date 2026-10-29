@@ -3,8 +3,9 @@
     android:width="108dp" android:height="108dp"
     android:viewportWidth="512" android:viewportHeight="512">
   <group android:pivotX="256" android:pivotY="256" android:scaleX="1.25" android:scaleY="1.25">
-    <path android:fillColor="#fbf8f1" android:fillType="evenOdd" android:pathData="M151 153 H207 C279 153 326 192 326 256 C326 320 279 359 207 359 H151 Z M187 188 V324 H207 C259 324 289 298 289 256 C289 214 259 188 207 188 Z" />
-    <path android:fillColor="#ed9a7a" android:pathData="M359 174 C345 159 326 155 308 160 C284 166 272 185 277 207 C282 229 302 239 323 247 C341 254 346 260 344 270 C342 281 332 289 319 290 C307 290 296 285 288 276 L267 294 C278 310 297 320 318 319 C347 318 370 300 371 272 C373 248 359 232 333 222 C315 215 305 210 306 200 C307 190 315 185 326 184 C339 183 348 189 354 197 Z" />
-    <path android:fillColor="#ed9a7a" android:pathData="M205,273 H237 A5,5 0,0 1,237,283 H205 A5,5 0,0 1,205,273 Z" />
+    <path android:fillColor="#FFF8FBFF" android:fillType="evenOdd" android:pathData="M151 153 H207 C279 153 326 192 326 256 C326 320 279 359 207 359 H151 Z M187 188 V324 H207 C259 324 289 298 289 256 C289 214 259 188 207 188 Z" />
+    <path android:fillColor="#FF26C6DA" android:pathData="M359 174 C345 159 326 155 308 160 C284 166 272 185 277 207 C282 229 302 239 323 247 C341 254 346 260 344 270 C342 281 332 289 319 290 C307 290 296 285 288 276 L267 294 C278 310 297 320 318 319 C347 318 370 300 371 272 C373 248 359 232 333 222 C315 215 305 210 306 200 C307 190 315 185 326 184 C339 183 348 189 354 197 Z" />
+    <path android:fillColor="#FFF3BD50" android:pathData="M202 276 L236 276 L246 286 L212 286 Z" />
+    <path android:fillColor="#FFF3BD50" android:pathData="M231 272 L244 259 L253 268 L240 281 Z" />
   </group>
 </vector>

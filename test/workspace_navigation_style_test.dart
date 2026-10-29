@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('sidebar uses consistent warm icon tiles and a clear selection', (
+  testWidgets('sidebar uses consistent brand-toned icon tiles and a clear selection', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360, 760);

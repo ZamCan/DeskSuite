@@ -57,9 +57,21 @@ void main() {
     final files = FakeFiles();
     await tester.pumpWidget(DeskSuiteApp(repository: repo, fileGateway: files));
     await settleIo(tester);
-    expect(find.text('Make room\nfor good work.'), findsOneWidget);
+    // The premium workbench is task-first; create a design from its
+    // primary action rather than the retired generic landing screen.
+    expect(find.byKey(const Key('home-primary-scan')), findsOneWidget);
+    expect(find.byKey(const Key('home-primary-create')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('home-primary-create')));
+    // The primary action opens Creative Studio. Wait for its local project
+    // list to initialize, then invoke the explicit New design action.
+    await settleIo(tester);
+    expect(find.byKey(const Key('new-design')), findsOneWidget);
     await tester.tap(find.byKey(const Key('new-design')));
-    await tester.pumpAndSettle();
+    // The workspace contains an ongoing animation; pump the dialog directly
+    // rather than waiting for every ticker in the entire app to become idle.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(find.byKey(const Key('project-name')), findsOneWidget);
     await tester.enterText(
       find.byKey(const Key('project-name')),
       'Studio poster',

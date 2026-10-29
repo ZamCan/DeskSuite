@@ -1,11 +1,12 @@
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../app/section_artwork.dart';
 import '../app/theme.dart';
 import '../design/design_document.dart';
-import '../design/template_catalog.dart';
 import '../design/editor_screen.dart';
 import '../document_scan/camera_gateway.dart';
 import '../document_scan/scan_studio_page.dart';
@@ -18,7 +19,6 @@ import 'conversion_catalog_page.dart';
 import 'creative_studio_page.dart';
 import 'file_gateway.dart';
 import 'getting_started_page.dart';
-import 'new_design_dialog.dart';
 import 'project_repository.dart';
 import 'workspace_widgets.dart';
 
@@ -49,14 +49,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   String? _listError;
   bool _loading = true;
   int _refreshVersion = 0;
-  bool _showWelcome = false;
   Uint8List? _recoveredCapture;
 
   @override
   void initState() {
     super.initState();
     _refresh();
-    _loadWelcome();
     widget.cameraRecovery?.then((result) {
       if (!mounted) return;
       if (result.bytes != null) {
@@ -73,27 +71,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         });
       }
     });
-  }
-
-  Future<void> _loadWelcome() async {
-    try {
-      final seen = await widget.repository.readWelcomeSeen();
-      if (mounted) setState(() => _showWelcome = !seen);
-    } catch (_) {
-      // The workspace still opens if the optional preference cannot be read.
-    }
-  }
-
-  Future<void> _dismissWelcome({bool openGuide = false}) async {
-    setState(() => _showWelcome = false);
-    if (openGuide) _navigate(WorkspaceSection.guide);
-    try {
-      await widget.repository.writeWelcomeSeen();
-    } catch (_) {
-      _message(
-        'Could not save the welcome preference; it may appear again next time.',
-      );
-    }
   }
 
   Future<void> _openEditableExample() async {
@@ -138,23 +115,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   void _message(String text) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
-    }
-  }
-
-  Future<void> _newDesign([
-    DesignTemplate template = DesignTemplate.blank,
-  ]) async {
-    final doc = await showDialog<DesignDocument>(
-      context: context,
-      builder: (_) => NewDesignDialog(template: template),
-    );
-    if (doc == null || !mounted) return;
-    try {
-      await widget.repository.save(doc);
-      if (!mounted) return;
-      await _openDocument(doc);
-    } catch (error) {
-      _message('Could not create project: $error');
     }
   }
 
@@ -446,115 +406,384 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        WorkspaceWelcome(onCreate: () => _newDesign(), onImport: _import),
-        if (_showWelcome) ...[
-          const SizedBox(height: 16),
-          Card(
-            key: const Key('welcome-introduction'),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xff153b66), Color(0xff1b5b7a), Color(0xff168b91)],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x22153b66),
+                blurRadius: 22,
+                offset: Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Text(
-                    'Welcome to DeskSuite',
-                    style: Theme.of(context).textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: .14),
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: const BrandMark(size: 48),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Create designs, prepare photos and assemble image PDFs locally. Explore examples or skip this introduction; no account is needed.',
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      FilledButton(
-                        key: const Key('welcome-guide'),
-                        onPressed: () => _dismissWelcome(openGuide: true),
-                        child: const Text('Explore examples'),
-                      ),
-                      TextButton(
-                        key: const Key('welcome-skip'),
-                        onPressed: _dismissWelcome,
-                        child: const Text('Skip for now'),
-                      ),
-                    ],
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'DeskSuite',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 25,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -.6,
+                          ),
+                        ),
+                        SizedBox(height: 3),
+                        Text(
+                          'Scan · Edit · Design · Print',
+                          style: TextStyle(color: Color(0xfff3e4d8), fontSize: 13),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
-        const SizedBox(height: 34),
-        Row(
-          children: [
-            Expanded(
-              child: _heading(
-                'Start creating',
-                'Pick up a blank canvas or a ready-to-edit layout.',
+              const SizedBox(height: 24),
+              const Text(
+                'What are we making today?',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 23,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -.5,
+                ),
               ),
+              const SizedBox(height: 7),
+              const Text(
+                'Your tools, ready.',
+                style: TextStyle(color: Color(0xfff0dfd2), fontSize: 14),
+              ),
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  FilledButton.icon(
+                    key: const Key('home-primary-scan'),
+                    onPressed: () => _navigate(WorkspaceSection.scans),
+                    icon: const Icon(Icons.document_scanner_outlined),
+                    label: const Text('Scan a document'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xff153b66),
+                      minimumSize: const Size(48, 48),
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    key: const Key('home-primary-create'),
+                    onPressed: () => _navigate(WorkspaceSection.design),
+                    icon: const Icon(Icons.draw_outlined),
+                    label: const Text('Create a design'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white70),
+                      minimumSize: const Size(48, 48),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        _heading('Quick actions', ''),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _quickAction(
+              key: const Key('home-quick-pdf'),
+              icon: Icons.picture_as_pdf_outlined,
+              label: 'Open PDF',
+              onPressed: () => _navigate(WorkspaceSection.pdfStudio),
             ),
-            Text(
-              '01 / CREATE',
-              style: Theme.of(context).textTheme.labelSmall
-                  ?.copyWith(letterSpacing: 1.1, color: accent),
+            _quickAction(
+              key: const Key('home-quick-office'),
+              icon: Icons.description_outlined,
+              label: 'Office files',
+              onPressed: () => _navigate(WorkspaceSection.office),
+            ),
+            _quickAction(
+              key: const Key('home-quick-photo'),
+              icon: Icons.photo_outlined,
+              label: 'Photo tools',
+              onPressed: () => _navigate(WorkspaceSection.photos),
+            ),
+            _quickAction(
+              key: const Key('home-quick-print'),
+              icon: Icons.print_outlined,
+              label: 'Print',
+              onPressed: () => _navigate(WorkspaceSection.printing),
+            ),
+            _quickAction(
+              key: const Key('home-quick-projects'),
+              icon: Icons.folder_open_outlined,
+              label: 'Recent projects',
+              onPressed: () => _navigate(WorkspaceSection.projects),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 28),
+        _heading('Your workbench', 'Four studios. One connected workflow.'),
+        const SizedBox(height: 14),
         LayoutBuilder(
           builder: (context, constraints) {
-            final width = constraints.maxWidth >= 700
-                ? (constraints.maxWidth - 24) / 3
-                : constraints.maxWidth;
+            final columns = constraints.maxWidth >= 760 ? 2 : 1;
+            final width = (constraints.maxWidth - (columns - 1) * 12) / columns;
+            Widget studioCard({
+              required Key key,
+              required IconData icon,
+              required String artwork,
+              required Color color,
+              required String eyebrow,
+              required String title,
+              required String subtitle,
+              required String action,
+              required VoidCallback onTap,
+            }) {
+              final scheme = Theme.of(context).colorScheme;
+              return SizedBox(
+                width: width,
+                child: Card(
+                  key: key,
+                  color: scheme.surface.withValues(alpha: .48),
+                  elevation: 0,
+                  clipBehavior: Clip.antiAlias,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(22),
+                    side: BorderSide(
+                      color: scheme.outlineVariant.withValues(alpha: .5),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              scheme.surface.withValues(alpha: .86),
+                              scheme.surface.withValues(alpha: .64),
+                            ],
+                          ),
+                          border: Border.all(
+                            color: Colors.white.withValues(
+                              alpha: Theme.of(context).brightness == Brightness.dark
+                                  ? .10
+                                  : .72,
+                            ),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: .045),
+                              blurRadius: 20,
+                              offset: const Offset(0, 7),
+                            ),
+                          ],
+                        ),
+                        child: InkWell(
+                          onTap: onTap,
+                          child: Padding(
+                            padding: const EdgeInsets.all(18),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SectionArtwork(
+                                  asset: artwork,
+                                  size: 62,
+                                  fallback: icon,
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        eyebrow.toUpperCase(),
+                                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                          color: color,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 1,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Text(
+                                        title,
+                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: -.2,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Text(
+                                        subtitle,
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                          color: scheme.onSurfaceVariant,
+                                          height: 1.35,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              action,
+                                              softWrap: true,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                color: color,
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 5),
+                                          Icon(
+                                            Icons.arrow_forward_rounded,
+                                            size: 16,
+                                            color: color,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+
             return Wrap(
               spacing: 12,
               runSpacing: 12,
               children: [
-                SizedBox(
-                  width: width,
-                  child: StarterCard(
-                    icon: Icons.add_box_outlined,
-                    eyebrow: 'START FRESH',
-                    title: 'Blank design',
-                    subtitle: 'Choose your own canvas',
-                    onTap: () => _newDesign(),
-                  ),
+                studioCard(
+                  key: const Key('home-studio-capture'),
+                  icon: Icons.document_scanner_rounded,
+                  color: accent,
+                  eyebrow: '01 · Capture',
+                  title: 'Scan & documents',
+                  artwork: SectionArt.scan,
+                  subtitle: 'Capture pages, assemble a PDF and extract text.',
+                  action: 'Open Capture Studio',
+                  onTap: () => _navigate(WorkspaceSection.scans),
                 ),
-                SizedBox(
-                  width: width,
-                  child: StarterCard(
-                    icon: Icons.auto_awesome_mosaic_outlined,
-                    eyebrow: 'LOCAL TEMPLATE',
-                    title: 'Editorial poster',
-                    subtitle: 'A simple editable layout',
-                    onTap: () => _newDesign(DesignTemplate.editorial),
-                  ),
+                studioCard(
+                  key: const Key('home-studio-creative'),
+                  icon: Icons.auto_awesome_mosaic_rounded,
+                  color: accent,
+                  eyebrow: '02 · Create',
+                  title: 'Design & creative',
+                  artwork: SectionArt.design,
+                  subtitle: 'Build posters, layouts and editable designs.',
+                  action: 'Open Creative Studio',
+                  onTap: () => _navigate(WorkspaceSection.design),
                 ),
-                SizedBox(
-                  width: width,
-                  child: StarterCard(
-                    icon: Icons.file_open_outlined,
-                    eyebrow: 'YOUR FILES',
-                    title: 'Import a project',
-                    subtitle: 'Open a .dsdesign file',
-                    onTap: _import,
-                  ),
+                studioCard(
+                  key: const Key('home-studio-photo'),
+                  icon: Icons.photo_camera_back_rounded,
+                  color: accent,
+                  eyebrow: '03 · Refine',
+                  title: 'Photo studio',
+                  artwork: SectionArt.photo,
+                  subtitle: 'Prepare images and passport-style photos.',
+                  action: 'Open Photo Studio',
+                  onTap: () => _navigate(WorkspaceSection.photos),
+                ),
+                studioCard(
+                  key: const Key('home-studio-print-business'),
+                  icon: Icons.print_rounded,
+                  color: accent,
+                  eyebrow: '04 · Produce & sell',
+                  title: 'Print shop & business',
+                  artwork: SectionArt.projects,
+                  subtitle: 'Prepare print jobs, manage products and retail or wholesale work.',
+                  action: 'Open Print & POS',
+                  onTap: () => _navigate(WorkspaceSection.printing),
                 ),
               ],
             );
           },
         ),
-        const SizedBox(height: 38),
+        const SizedBox(height: 28),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: const Color(0xfff3bd50).withValues(alpha: .20),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.storefront_outlined, color: Color(0xff9a7427)),
+                ),
+                const SizedBox(width: 13),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Retail & wholesale', style: TextStyle(fontWeight: FontWeight.w800)),
+                      SizedBox(height: 4),
+                      Text(
+                        'Open business tools for pricing, stock and customer jobs.',
+                        style: TextStyle(height: 1.35),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  key: const Key('home-open-business'),
+                  tooltip: 'Open Business & POS',
+                  onPressed: () => _navigate(WorkspaceSection.business),
+                  icon: const Icon(Icons.arrow_forward_rounded),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 30),
         Row(
           children: [
             Expanded(
-              child: _heading(
-                'Recent projects',
-                'Your work stays on this device.',
-              ),
+              child: _heading('Recent projects', 'Your work stays on this device.'),
             ),
             TextButton(
               onPressed: () => _navigate(WorkspaceSection.projects),
@@ -651,8 +880,25 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           ),
         ),
         const SizedBox(height: 24),
-        Text('DeskSuite · 0.1.0', style: Theme.of(context).textTheme.bodySmall),
+        Text('DeskSuite · 0.2.1', style: Theme.of(context).textTheme.bodySmall),
       ],
+    ),
+  );
+
+  Widget _quickAction({
+    required Key key,
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) => OutlinedButton.icon(
+    key: key,
+    onPressed: onPressed,
+    icon: Icon(icon, size: 18),
+    label: Text(label),
+    style: OutlinedButton.styleFrom(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      minimumSize: const Size(48, 46),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     ),
   );
 

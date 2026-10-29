@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 BRAND = ROOT / "assets/brand"
 RES = ROOT / "android/app/src/main/res"
-COLORS = ("#fbf8f1", "#ed9a7a")
+COLORS = ("#f8fbff", "#26c6da", "#f3bd50")
 
 
 def require(condition: bool, message: str) -> None:
@@ -24,7 +24,7 @@ for name in ("desksuite-mark.svg", "desksuite-app-icon.svg"):
     for color in COLORS:
         require(color in content, f"{name} lost canonical color {color}")
     if name == "desksuite-app-icon.svg":
-        require("#292824" in content, "desktop icon lost the ink background")
+        require("#153b66" in content, "desktop icon lost the reference blue background")
 
 manifest = (ROOT / "android/app/src/main/AndroidManifest.xml").read_text(encoding="utf-8")
 require('android:icon="@mipmap/ic_launcher"' in manifest, "manifest icon reference changed")

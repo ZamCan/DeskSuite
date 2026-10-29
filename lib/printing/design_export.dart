@@ -8,9 +8,11 @@ import 'package:pdf/widgets.dart' as pw;
 import '../design/design_document.dart';
 import '../design/design_renderer.dart';
 import '../design/geometry.dart';
+import 'raster_budget.dart' as raster;
 
-const int maxExportPixels = 16000000;
-const int maxExportSide = 8192;
+// Compatibility aliases for existing callers; the limits live in one engine.
+const int maxExportPixels = raster.maxExportPixels;
+const int maxExportSide = raster.maxExportSide;
 
 class ExportDimensions {
   const ExportDimensions(this.width, this.height);
@@ -19,21 +21,12 @@ class ExportDimensions {
 }
 
 ExportDimensions exportDimensions(DesignDocument doc, int dpi) {
-  if (dpi < 36 || dpi > 600) {
-    throw const FormatException('Resolution must be between 36 and 600 dpi.');
-  }
-  final width = mmToPixels(doc.widthMm, dpi);
-  final height = mmToPixels(doc.heightMm, dpi);
-  if (width < 1 ||
-      height < 1 ||
-      width > maxExportSide ||
-      height > maxExportSide ||
-      width * height > maxExportPixels) {
-    throw const FormatException(
-      'Output is too large for this device. Choose a lower resolution or smaller page.',
-    );
-  }
-  return ExportDimensions(width, height);
+  final bounded = raster.boundedRasterDimensions(
+    doc.widthMm,
+    doc.heightMm,
+    dpi,
+  );
+  return ExportDimensions(bounded.width, bounded.height);
 }
 
 /// Effective source detail when an image is fitted inside its physical box.

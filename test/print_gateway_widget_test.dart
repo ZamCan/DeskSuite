@@ -6,6 +6,7 @@ import 'package:desksuite/design/design_document.dart';
 import 'package:desksuite/design/editor_screen.dart';
 import 'package:desksuite/main.dart';
 import 'package:desksuite/printing/print_gateway.dart';
+import 'package:desksuite/printing/print_job.dart';
 import 'package:desksuite/workspace/file_gateway.dart';
 import 'package:desksuite/workspace/project_repository.dart';
 import 'package:flutter/material.dart';
@@ -118,4 +119,50 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  test('prepared print job forwards the intended physical media dimensions', () async {
+    final printer = FakePrinter();
+    final target = PrintMediaTarget(
+      id: 'custom-100x150',
+      label: '100 × 150 mm',
+      widthMm: 100,
+      heightMm: 150,
+    );
+    final bytes = Uint8List.fromList([37, 80, 68, 70, 45]);
+    final job = PrintJob(
+      media: target,
+      sourceWidthMm: 50,
+      sourceHeightMm: 75,
+    );
+
+    await printer.printPreparedJob(bytes: bytes, name: 'test.pdf', job: job);
+
+    expect(printer.bytes, bytes);
+    expect(printer.widthMm, 100);
+    expect(printer.heightMm, 150);
+  });
+
+  test('prepared print job refuses invalid geometry before dispatch', () async {
+    final printer = FakePrinter();
+    final job = PrintJob(
+      media: const PrintMediaTarget(
+        id: 'bad',
+        label: 'Invalid',
+        widthMm: 0,
+        heightMm: 150,
+      ),
+      sourceWidthMm: 50,
+      sourceHeightMm: 75,
+    );
+
+    expect(
+      () => printer.printPreparedJob(
+        bytes: Uint8List.fromList([1]),
+        name: 'invalid.pdf',
+        job: job,
+      ),
+      throwsFormatException,
+    );
+    expect(printer.bytes, isNull);
+  });
 }

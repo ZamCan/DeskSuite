@@ -4,8 +4,10 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../app/section_artwork.dart';
 import '../core/suite_paths.dart';
 import '../images/photo_processor.dart';
+import '../ocr/text_extraction_page.dart';
 import '../printing/paper_catalog.dart';
 import '../workspace/file_gateway.dart';
 import 'camera_gateway.dart';
@@ -263,7 +265,10 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
       if (data != null && mounted) {
         // Retain the camera result if decoding, limits, or draft saving fail.
         setState(() => recovered = data);
-        await _addBytes(data, fromRecovery: true);
+        final saved = await _addBytes(data, fromRecovery: true);
+        if (saved && mounted && widget.camera is AndroidCameraGateway) {
+          await _crop();
+        }
       }
     } catch (e) {
       message(
@@ -453,7 +458,10 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
     if (busy || pages.isEmpty) return;
     final corners = await showDialog<ScanCorners>(
       context: context,
-      builder: (_) => CornerEditor(photo: pages[selected].image),
+      builder: (_) => CornerEditor(
+        photo: pages[selected].image,
+        suggestOnOpen: true,
+      ),
     );
     if (corners != null && mounted) {
       await _edit(
@@ -466,6 +474,20 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
         ),
       );
     }
+  }
+
+  Future<void> _extractText() async {
+    if (busy || pages.isEmpty) return;
+    final page = pages[selected];
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => TextExtractionPage(
+          files: widget.files,
+          initialImage: page.image.bytes,
+          initialImageLabel: 'Scan page ${selected + 1}',
+        ),
+      ),
+    );
   }
 
   Future<void> _cleanup() async {
@@ -741,16 +763,63 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
       children: [
-        Text(
-          'Scan & assemble',
-          style: Theme.of(context).textTheme.headlineSmall
-              ?.copyWith(fontWeight: FontWeight.w800),
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                scheme.primaryContainer.withValues(alpha: .92),
+                scheme.surfaceContainerHighest.withValues(alpha: .72),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: scheme.outlineVariant.withValues(alpha: .65)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  SectionArtwork(
+                    asset: SectionArt.scan,
+                    size: 56,
+                    fallback: Icons.document_scanner_rounded,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Scan a document',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -.35,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Capture  ·  Crop  ·  Clean  ·  PDF',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Add a page to begin. Fine-tune its corners, improve readability, then export a multi-page PDF.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 6),
-        const Text(
-          'Capture or import pages, correct and clean them, then save an image PDF. Originals are not changed automatically.',
-        ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         if (recovered != null)
           Card(
             child: Padding(
@@ -818,22 +887,22 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            FilledButton.icon(
-              key: const Key('scan-import'),
-              onPressed: busy || pages.length >= maxScanPages ? null : _import,
-              icon: const Icon(Icons.add_photo_alternate_outlined),
-              label: const Text('Add image'),
-            ),
             if (widget.camera != null)
-              OutlinedButton.icon(
+              FilledButton.icon(
                 key: const Key('scan-camera'),
                 onPressed:
                     busy || recovered != null || pages.length >= maxScanPages
                     ? null
                     : _capture,
                 icon: const Icon(Icons.photo_camera_outlined),
-                label: const Text('Use camera'),
+                label: const Text('Capture page'),
               ),
+            OutlinedButton.icon(
+              key: const Key('scan-import'),
+              onPressed: busy || pages.length >= maxScanPages ? null : _import,
+              icon: const Icon(Icons.add_photo_alternate_outlined),
+              label: const Text('Import image'),
+            ),
             OutlinedButton.icon(
               key: const Key('scan-samples'),
               onPressed: busy ? null : _samples,
@@ -966,13 +1035,19 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
                 key: const Key('scan-crop'),
                 onPressed: busy ? null : _crop,
                 icon: const Icon(Icons.crop_free),
-                label: const Text('Corners & correct'),
+                label: const Text('Auto-crop & correct'),
               ),
               FilledButton.tonalIcon(
                 key: const Key('scan-cleanup'),
                 onPressed: busy ? null : _cleanup,
                 icon: const Icon(Icons.auto_fix_high),
                 label: const Text('Clean up & compare'),
+              ),
+              OutlinedButton.icon(
+                key: const Key('scan-extract-text'),
+                onPressed: busy ? null : _extractText,
+                icon: const Icon(Icons.text_fields_rounded),
+                label: const Text('Extract text'),
               ),
               OutlinedButton.icon(
                 key: const Key('scan-rotate'),

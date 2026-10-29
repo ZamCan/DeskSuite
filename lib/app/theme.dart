@@ -1,27 +1,35 @@
 import 'package:flutter/material.dart';
 
-const ink = Color(0xff292824);
-const accent = Color(0xffb96045);
-const paper = Color(0xfff7f5f0);
-const line = Color(0xffe6e1d8);
+/// DeskSuite's shared palette follows its supplied mark: ink navy, cyan detail,
+/// paper-white surfaces and restrained gold accents.
+const ink = Color(0xff15243a);
+const accent = Color(0xff153b66);
+const cyan = Color(0xff26c6da);
+const gold = Color(0xfff3bd50);
+const paper = Color(0xfff4f7fb);
+const line = Color(0xffdae4ef);
 
 ThemeData deskTheme(Brightness brightness) {
   final dark = brightness == Brightness.dark;
-  final surface = dark ? const Color(0xff242321) : const Color(0xfffffefa);
-  final background = dark ? const Color(0xff191917) : paper;
-  final scheme = ColorScheme.fromSeed(seedColor: accent, brightness: brightness)
-      .copyWith(
-        primary: dark ? const Color(0xffe6a28b) : accent,
-        surface: surface,
-        onSurface: dark ? const Color(0xfff2ede6) : ink,
-        outline: dark ? const Color(0xff5b5751) : const Color(0xffc9c1b6),
-      );
+  final surface = dark ? const Color(0xff17283d) : const Color(0xfffeffff);
+  final background = dark ? const Color(0xff0c1727) : paper;
+  final scheme = ColorScheme.fromSeed(
+    seedColor: accent,
+    brightness: brightness,
+  ).copyWith(
+    primary: dark ? const Color(0xff83dce7) : accent,
+    onPrimary: dark ? const Color(0xff102a45) : Colors.white,
+    secondary: dark ? const Color(0xfff3bd50) : const Color(0xff9a6b12),
+    surface: surface,
+    onSurface: dark ? const Color(0xfff2f7fd) : ink,
+    outline: dark ? const Color(0xff4c6178) : const Color(0xffc2d1df),
+  );
   return ThemeData(
     useMaterial3: true,
     brightness: brightness,
     colorScheme: scheme,
     scaffoldBackgroundColor: background,
-    dividerColor: dark ? const Color(0xff403d38) : line,
+    dividerColor: dark ? const Color(0xff30445a) : line,
     appBarTheme: AppBarTheme(
       backgroundColor: background,
       surfaceTintColor: Colors.transparent,
@@ -32,106 +40,76 @@ ThemeData deskTheme(Brightness brightness) {
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: dark ? const Color(0xff403d38) : line),
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: dark
+              ? const Color(0xff354a60)
+              : line.withValues(alpha: .9),
+        ),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: dark ? const Color(0xff2d2b28) : const Color(0xfff8f6f2),
+      fillColor: dark ? const Color(0xff20344a) : const Color(0xffedf3f8),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide.none,
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: dark ? const Color(0xffda8a6f) : ink,
-        foregroundColor: dark ? ink : Colors.white,
+        backgroundColor: dark ? cyan : accent,
+        foregroundColor: dark ? const Color(0xff102a45) : Colors.white,
         minimumSize: const Size(48, 48),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(48, 48),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        side: BorderSide(color: dark ? const Color(0xff5b5751) : line),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        side: BorderSide(
+          color: dark ? const Color(0xff526a83) : line,
+        ),
       ),
     ),
   );
 }
 
+/// The canonical in-app mark is the owner-supplied PNG, not an approximated
+/// recreation of its letterforms. Labels provide the accessible app name.
 class BrandMark extends StatelessWidget {
   const BrandMark({super.key, this.size = 38});
   final double size;
-  @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(
-      color: ink,
-      borderRadius: BorderRadius.circular(size * .25),
-    ),
-    child: CustomPaint(painter: _BrandPainter()),
-  );
-}
 
-class _BrandPainter extends CustomPainter {
   @override
-  void paint(Canvas canvas, Size size) {
-    // Same geometry and palette as assets/brand/desksuite-mark.svg and the
-    // Android adaptive icon, drawn locally without an SVG runtime dependency.
-    canvas.save();
-    canvas.scale(size.width / 512, size.height / 512);
-    canvas.translate(256, 256);
-    canvas.scale(1.25);
-    canvas.translate(-256, -256);
-    final d = Path()
-      ..fillType = PathFillType.evenOdd
-      ..moveTo(151, 153)
-      ..lineTo(207, 153)
-      ..cubicTo(279, 153, 326, 192, 326, 256)
-      ..cubicTo(326, 320, 279, 359, 207, 359)
-      ..lineTo(151, 359)
-      ..close()
-      ..moveTo(187, 188)
-      ..lineTo(187, 324)
-      ..lineTo(207, 324)
-      ..cubicTo(259, 324, 289, 298, 289, 256)
-      ..cubicTo(289, 214, 259, 188, 207, 188)
-      ..close();
-    canvas.drawPath(d, Paint()..color = const Color(0xfffbf8f1));
-    final s = Path()
-      ..moveTo(359, 174)
-      ..cubicTo(345, 159, 326, 155, 308, 160)
-      ..cubicTo(284, 166, 272, 185, 277, 207)
-      ..cubicTo(282, 229, 302, 239, 323, 247)
-      ..cubicTo(341, 254, 346, 260, 344, 270)
-      ..cubicTo(342, 281, 332, 289, 319, 290)
-      ..cubicTo(307, 290, 296, 285, 288, 276)
-      ..lineTo(267, 294)
-      ..cubicTo(278, 310, 297, 320, 318, 319)
-      ..cubicTo(347, 318, 370, 300, 371, 272)
-      ..cubicTo(373, 248, 359, 232, 333, 222)
-      ..cubicTo(315, 215, 305, 210, 306, 200)
-      ..cubicTo(307, 190, 315, 185, 326, 184)
-      ..cubicTo(339, 183, 348, 189, 354, 197)
-      ..close();
-    final accentPaint = Paint()..color = const Color(0xffed9a7a);
-    canvas.drawPath(s, accentPaint);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(200, 273, 42, 10),
-        const Radius.circular(5),
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(size * .24),
+    child: Image.asset(
+      'assets/brand/desksuite-reference-mark.png',
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      filterQuality: FilterQuality.high,
+      errorBuilder: (context, error, stackTrace) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: accent,
+          borderRadius: BorderRadius.circular(size * .24),
+        ),
+        alignment: Alignment.center,
+        child: const Text(
+          'DS',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -1.5,
+          ),
+        ),
       ),
-      accentPaint,
-    );
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+    ),
+  );
 }

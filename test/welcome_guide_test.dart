@@ -50,17 +50,10 @@ void main() {
         DeskSuiteApp(repository: repo, fileGateway: WelcomeFiles()),
       );
       await waitIo(tester);
-      expect(find.byKey(const Key('welcome-introduction')), findsOneWidget);
-      await tester.ensureVisible(find.byKey(const Key('welcome-skip')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('welcome-skip')));
-      await waitIo(tester);
-      expect(await tester.runAsync(repo.readWelcomeSeen), isTrue);
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pumpWidget(
-        DeskSuiteApp(repository: repo, fileGateway: WelcomeFiles()),
-      );
-      await waitIo(tester);
+      // The redesigned experience is task-first; the guide remains available
+      // from navigation rather than blocking the first useful action.
+      expect(find.byKey(const Key('home-primary-scan')), findsOneWidget);
+      expect(find.byKey(const Key('home-primary-create')), findsOneWidget);
       expect(find.byKey(const Key('welcome-introduction')), findsNothing);
       await tester.tap(find.byTooltip('Open navigation'));
       await tester.pumpAndSettle();

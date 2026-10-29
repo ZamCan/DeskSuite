@@ -15,15 +15,19 @@ void main() {
     return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
   }
 
-  test('canonical DeskSuite brand SVGs are bundled with the warm palette', () async {
+  test('canonical DeskSuite brand SVGs use the reference palette', () async {
     final mark = await rootBundle.loadString('assets/brand/desksuite-mark.svg');
-    expect(mark, contains('aria-label="DeskSuite interlocking D and S mark"'));
-    expect(mark, contains('fill="#fbf8f1"'));
-    expect(mark, contains('fill="#ed9a7a"'));
+    expect(mark, contains('aria-label="DeskSuite dimensional D and S mark"'));
+    expect(mark, contains('fill="#f8fbff"'));
+    expect(mark, contains('fill="#26c6da"'));
+    expect(mark, contains('fill="#f3bd50"'));
     expect(mark, contains('viewBox="0 0 512 512"'));
     final appIcon = await rootBundle.loadString('assets/brand/desksuite-app-icon.svg');
     expect(appIcon, contains('aria-label="DeskSuite app icon"'));
-    expect(appIcon, contains('fill="#292824"'));
+    expect(appIcon, contains('fill="#153b66"'));
+    expect(appIcon, contains('fill="#f8fbff"'));
+    expect(appIcon, contains('fill="#26c6da"'));
+    expect(appIcon, contains('fill="#f3bd50"'));
   });
 
   test(

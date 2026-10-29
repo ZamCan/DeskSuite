@@ -417,6 +417,10 @@ void main() {
     await tapVisible(tester, find.byKey(const Key('scan-camera')));
     await waitIo(tester);
     expect(find.textContaining('Draft could not be saved'), findsOneWidget);
+    // The scan header and status cards can exceed the short test viewport; the
+    // recovery details intentionally remain scrollable rather than clipped.
+    await tester.drag(find.byType(ListView).first, const Offset(0, 520));
+    await tester.pump();
     expect(
       find.textContaining('camera image is in the unsaved draft'),
       findsOneWidget,
