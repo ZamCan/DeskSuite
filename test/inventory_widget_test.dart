@@ -115,15 +115,6 @@ Future<void> waitUntil(
   fail('Timed out after ${timeout.inSeconds}s waiting for the app.');
 }
 
-Future<void> settleIo(WidgetTester tester) async {
-  for (var i = 0; i < 25; i++) {
-    await tester.pump(const Duration(milliseconds: 50));
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 10)),
-    );
-  }
-}
-
 void main() {
   testWidgets(
     'product form and stock counter persist without pretending to take payment',
@@ -147,7 +138,7 @@ void main() {
           ),
         ),
       );
-      await settleIo(tester);
+      await settleUntil(tester, find.byKey(const Key('add-product')));
       await tester.ensureVisible(find.byKey(const Key('add-product')));
       await tester.tap(find.byKey(const Key('add-product')));
       await tester.pumpAndSettle();
@@ -155,12 +146,18 @@ void main() {
       await tester.enterText(find.byKey(const Key('product-price')), '125.50');
       await tester.enterText(find.byKey(const Key('product-stock')), '1');
       await tester.tap(find.text('Add'));
-      await settleIo(tester);
+      // The field itself contains the same text during the exit animation;
+      // wait for the dialog to leave before looking for the saved list item.
+      await settleUntilGone(tester, find.byKey(const Key('product-name')));
+      // The button is re-enabled only when the real catalogue write finishes.
+      await settleUntilEnabled(tester, find.byKey(const Key('add-product')));
+      await reveal(tester, find.text('Blue pen'));
       expect(find.text('Blue pen'), findsOneWidget);
       final sell = find.byTooltip('Record one unit sold');
-      await tester.ensureVisible(sell);
+      await reveal(tester, sell);
       await tester.tap(sell);
-      await settleIo(tester);
+      // The receipt message is emitted after both the sale and stock writes.
+      await settleUntil(tester, find.textContaining('Sale recorded'));
       final snapshot = await settledIo(
         tester,
         repo.load,
@@ -168,6 +165,9 @@ void main() {
       );
       expect(snapshot.products.single.stock, 0);
       expect(snapshot.products.single.sold, 1);
+      final sales = await settledIo(tester, repo.loadSales, label: 'the sales');
+      expect(sales.single.productName, 'Blue pen');
+      expect(sales.single.quantity, 1);
       final sellButton = find.byWidgetPredicate(
         (widget) =>
             widget is IconButton && widget.tooltip == 'Record one unit sold',
@@ -176,7 +176,7 @@ void main() {
       await tester.ensureVisible(find.byKey(const Key('export-catalogue')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('export-catalogue')));
-      await settleIo(tester);
+      await waitUntil(tester, () => files.name != null);
       expect(files.name, 'desksuite-products.json');
       expect(
         (jsonDecode(utf8.decode(files.bytes!)) as List).single['name'],
@@ -192,6 +192,9 @@ void main() {
     final dir = (await tester.runAsync(
       () => Directory.systemTemp.createTemp('desksuite_inventory_corrupt_'),
     ))!;
+    addTearDown(() async {
+      if (await dir.exists()) await dir.delete(recursive: true);
+    });
     final file = File('${dir.path}/products.json');
     await tester.runAsync(() => file.writeAsString('{broken'));
     await tester.pumpWidget(
@@ -203,7 +206,10 @@ void main() {
         ),
       ),
     );
-    await settleIo(tester);
+    await settleUntil(
+      tester,
+      find.textContaining('original file has not been changed'),
+    );
     expect(
       find.textContaining('original file has not been changed'),
       findsOneWidget,
@@ -230,14 +236,14 @@ void main() {
         ),
       ),
     );
-    await settleIo(tester);
+    await settleUntil(tester, find.text('Product catalogue'));
 
     final sell = find.byTooltip('Record one unit sold');
     // The card sits below the fold on a 360x720 phone; ensureVisible alone does
     // not build a lazy list child that has never been laid out.
     await reveal(tester, sell);
     await tester.tap(sell);
-    await settleIo(tester);
+    await settleUntil(tester, find.textContaining('Sale recorded'));
 
     expect(find.textContaining('Sale recorded'), findsOneWidget);
     expect(find.textContaining('TSh 125.50'), findsOneWidget);
