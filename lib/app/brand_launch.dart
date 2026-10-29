@@ -89,7 +89,7 @@ class _LaunchArtwork extends StatelessWidget {
     return Opacity(
       opacity: fadeOut,
       child: ColoredBox(
-        color: const Color(0xff0b2d70), // Matches Android's launch background.
+        color: const Color(0xfff6f3ed), // Warm paper launch surface.
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -120,12 +120,12 @@ class _LaunchArtwork extends StatelessWidget {
                               children: [
                                 DecoratedBox(
                                   decoration: BoxDecoration(
-                                    color: const Color(0xff174a9a),
+                                    color: const Color(0xffa84f36),
                                     borderRadius: BorderRadius.circular(
                                       size * .22,
                                     ),
                                     border: Border.all(
-                                      color: const Color(0xff75eaf3)
+                                      color: const Color(0xffd9b99f)
                                           .withValues(alpha: .3),
                                     ),
                                   ),
@@ -147,7 +147,7 @@ class _LaunchArtwork extends StatelessWidget {
                             'DeskSuite',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Colors.white,
+                              color: const Color(0xff292721),
                               fontSize: 26,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -.5,
@@ -155,7 +155,7 @@ class _LaunchArtwork extends StatelessWidget {
                           ),
                           const SizedBox(height: 5),
                           const Text(
-                            'CREATE. DESIGN. PRINT. MANAGE.',
+                            'Documents · Design · Print · Business',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Color(0xffc4e8ff),
