@@ -8,9 +8,15 @@ import 'scan_processor.dart';
 
 /// Reviewable four-corner editor with a numeric alternative to dragging.
 class CornerEditor extends StatefulWidget {
-  const CornerEditor({super.key, required this.photo, this.suggester});
+  const CornerEditor({
+    super.key,
+    required this.photo,
+    this.suggester,
+    this.suggestOnOpen = false,
+  });
   final PhotoResult photo;
   final Future<ScanCorners?> Function(PhotoResult)? suggester;
+  final bool suggestOnOpen;
 
   @override
   State<CornerEditor> createState() => _CornerEditorState();
@@ -20,6 +26,16 @@ class _CornerEditorState extends State<CornerEditor> {
   List<ScanPoint> points = const ScanCorners.full().points;
   String? error, notice;
   bool suggesting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.suggestOnOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) suggest();
+      });
+    }
+  }
 
   ScanCorners get corners =>
       ScanCorners(points[0], points[1], points[2], points[3]);

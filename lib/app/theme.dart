@@ -1,27 +1,35 @@
 import 'package:flutter/material.dart';
 
-const ink = Color(0xff292824);
-const accent = Color(0xffb96045);
-const paper = Color(0xfff7f5f0);
-const line = Color(0xffe6e1d8);
+/// DeskSuite's shared palette follows its supplied mark: ink navy, cyan detail,
+/// paper-white surfaces and restrained gold accents.
+const ink = Color(0xff15243a);
+const accent = Color(0xff153b66);
+const cyan = Color(0xff26c6da);
+const gold = Color(0xfff3bd50);
+const paper = Color(0xfff4f7fb);
+const line = Color(0xffdae4ef);
 
 ThemeData deskTheme(Brightness brightness) {
   final dark = brightness == Brightness.dark;
-  final surface = dark ? const Color(0xff242321) : const Color(0xfffffefa);
-  final background = dark ? const Color(0xff191917) : paper;
-  final scheme = ColorScheme.fromSeed(seedColor: accent, brightness: brightness)
-      .copyWith(
-        primary: dark ? const Color(0xffe6a28b) : accent,
-        surface: surface,
-        onSurface: dark ? const Color(0xfff2ede6) : ink,
-        outline: dark ? const Color(0xff5b5751) : const Color(0xffc9c1b6),
-      );
+  final surface = dark ? const Color(0xff17283d) : const Color(0xfffeffff);
+  final background = dark ? const Color(0xff0c1727) : paper;
+  final scheme = ColorScheme.fromSeed(
+    seedColor: accent,
+    brightness: brightness,
+  ).copyWith(
+    primary: dark ? const Color(0xff83dce7) : accent,
+    onPrimary: dark ? const Color(0xff102a45) : Colors.white,
+    secondary: dark ? const Color(0xfff3bd50) : const Color(0xff9a6b12),
+    surface: surface,
+    onSurface: dark ? const Color(0xfff2f7fd) : ink,
+    outline: dark ? const Color(0xff4c6178) : const Color(0xffc2d1df),
+  );
   return ThemeData(
     useMaterial3: true,
     brightness: brightness,
     colorScheme: scheme,
     scaffoldBackgroundColor: background,
-    dividerColor: dark ? const Color(0xff403d38) : line,
+    dividerColor: dark ? const Color(0xff30445a) : line,
     appBarTheme: AppBarTheme(
       backgroundColor: background,
       surfaceTintColor: Colors.transparent,
@@ -32,45 +40,53 @@ ThemeData deskTheme(Brightness brightness) {
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: dark ? const Color(0xff403d38) : line),
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: dark
+              ? const Color(0xff354a60)
+              : line.withValues(alpha: .9),
+        ),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: dark ? const Color(0xff2d2b28) : const Color(0xfff8f6f2),
+      fillColor: dark ? const Color(0xff20344a) : const Color(0xffedf3f8),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide.none,
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: dark ? const Color(0xffda8a6f) : ink,
-        foregroundColor: dark ? ink : Colors.white,
+        backgroundColor: dark ? cyan : accent,
+        foregroundColor: dark ? const Color(0xff102a45) : Colors.white,
         minimumSize: const Size(48, 48),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(48, 48),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        side: BorderSide(color: dark ? const Color(0xff5b5751) : line),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        side: BorderSide(
+          color: dark ? const Color(0xff526a83) : line,
+        ),
       ),
     ),
   );
 }
 
+/// The canonical in-app mark is the owner-supplied PNG, not an approximated
+/// recreation of its letterforms. Labels provide the accessible app name.
 class BrandMark extends StatelessWidget {
   const BrandMark({super.key, this.size = 38});
   final double size;
 
   @override
   Widget build(BuildContext context) => ClipRRect(
-    borderRadius: BorderRadius.circular(size * .25),
+    borderRadius: BorderRadius.circular(size * .24),
     child: Image.asset(
       'assets/brand/desksuite-reference-mark.png',
       width: size,
@@ -81,8 +97,8 @@ class BrandMark extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: const Color(0xff6f4034),
-          borderRadius: BorderRadius.circular(size * .25),
+          color: accent,
+          borderRadius: BorderRadius.circular(size * .24),
         ),
         alignment: Alignment.center,
         child: const Text(

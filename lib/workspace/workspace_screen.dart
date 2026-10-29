@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -557,6 +558,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             Widget studioCard({
               required Key key,
               required IconData icon,
+              required String artwork,
               required Color color,
               required String eyebrow,
               required String title,
@@ -564,84 +566,121 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               required String action,
               required VoidCallback onTap,
             }) {
+              final scheme = Theme.of(context).colorScheme;
               return SizedBox(
                 width: width,
                 child: Card(
                   key: key,
+                  color: scheme.surface.withValues(alpha: .48),
+                  elevation: 0,
                   clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: onTap,
-                    child: Padding(
-                      padding: const EdgeInsets.all(18),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SectionArtwork(
-                            asset: switch (title) {
-                              'Scan & assemble' => SectionArt.scan,
-                              'Photo Studio' => SectionArt.photo,
-                              'Text extraction' => SectionArt.text,
-                              'Document converter' => SectionArt.office,
-                              'Creative Studio' => SectionArt.design,
-                              'Files & Projects' => SectionArt.projects,
-                              _ => SectionArt.design,
-                            },
-                            size: 60,
-                            fallback: icon,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(22),
+                    side: BorderSide(
+                      color: scheme.outlineVariant.withValues(alpha: .5),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              scheme.surface.withValues(alpha: .86),
+                              scheme.surface.withValues(alpha: .64),
+                            ],
                           ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
+                          border: Border.all(
+                            color: Colors.white.withValues(
+                              alpha: Theme.of(context).brightness == Brightness.dark
+                                  ? .10
+                                  : .72,
+                            ),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: .045),
+                              blurRadius: 20,
+                              offset: const Offset(0, 7),
+                            ),
+                          ],
+                        ),
+                        child: InkWell(
+                          onTap: onTap,
+                          child: Padding(
+                            padding: const EdgeInsets.all(18),
+                            child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  eyebrow.toUpperCase(),
-                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: color,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 1,
-                                  ),
+                                SectionArtwork(
+                                  asset: artwork,
+                                  size: 62,
+                                  fallback: icon,
                                 ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  title,
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -.2,
-                                  ),
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  subtitle,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                    height: 1.35,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        action,
-                                        softWrap: true,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        eyebrow.toUpperCase(),
+                                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                           color: color,
                                           fontWeight: FontWeight.w800,
+                                          letterSpacing: 1,
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 5),
-                                    Icon(Icons.arrow_forward_rounded, size: 16, color: color),
-                                  ],
+                                      const SizedBox(height: 5),
+                                      Text(
+                                        title,
+                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: -.2,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Text(
+                                        subtitle,
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                          color: scheme.onSurfaceVariant,
+                                          height: 1.35,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              action,
+                                              softWrap: true,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                color: color,
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 5),
+                                          Icon(
+                                            Icons.arrow_forward_rounded,
+                                            size: 16,
+                                            color: color,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -659,6 +698,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   color: accent,
                   eyebrow: '01 · Capture',
                   title: 'Scan & documents',
+                  artwork: SectionArt.scan,
                   subtitle: 'Capture pages, assemble a PDF and extract text.',
                   action: 'Open Capture Studio',
                   onTap: () => _navigate(WorkspaceSection.scans),
@@ -669,6 +709,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   color: accent,
                   eyebrow: '02 · Create',
                   title: 'Design & creative',
+                  artwork: SectionArt.design,
                   subtitle: 'Build posters, layouts and editable designs.',
                   action: 'Open Creative Studio',
                   onTap: () => _navigate(WorkspaceSection.design),
@@ -679,6 +720,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   color: accent,
                   eyebrow: '03 · Refine',
                   title: 'Photo studio',
+                  artwork: SectionArt.photo,
                   subtitle: 'Prepare images and passport-style photos.',
                   action: 'Open Photo Studio',
                   onTap: () => _navigate(WorkspaceSection.photos),
@@ -689,6 +731,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   color: accent,
                   eyebrow: '04 · Produce & sell',
                   title: 'Print shop & business',
+                  artwork: SectionArt.projects,
                   subtitle: 'Prepare print jobs, manage products and retail or wholesale work.',
                   action: 'Open Print & POS',
                   onTap: () => _navigate(WorkspaceSection.printing),
@@ -707,7 +750,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: const Color(0xffb28a38).withValues(alpha: .13),
+                    color: const Color(0xfff3bd50).withValues(alpha: .20),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Icon(Icons.storefront_outlined, color: Color(0xff9a7427)),

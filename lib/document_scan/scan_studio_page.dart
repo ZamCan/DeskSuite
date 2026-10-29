@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../app/section_artwork.dart';
 import '../core/suite_paths.dart';
 import '../images/photo_processor.dart';
 import '../printing/paper_catalog.dart';
@@ -453,7 +454,10 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
     if (busy || pages.isEmpty) return;
     final corners = await showDialog<ScanCorners>(
       context: context,
-      builder: (_) => CornerEditor(photo: pages[selected].image),
+      builder: (_) => CornerEditor(
+        photo: pages[selected].image,
+        suggestOnOpen: true,
+      ),
     );
     if (corners != null && mounted) {
       await _edit(
@@ -760,14 +764,10 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: scheme.surface.withValues(alpha: .88),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(Icons.document_scanner_rounded, color: scheme.primary, size: 27),
+                  SectionArtwork(
+                    asset: SectionArt.scan,
+                    size: 56,
+                    fallback: Icons.document_scanner_rounded,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -1017,7 +1017,7 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
                 key: const Key('scan-crop'),
                 onPressed: busy ? null : _crop,
                 icon: const Icon(Icons.crop_free),
-                label: const Text('Corners & correct'),
+                label: const Text('Auto-crop & correct'),
               ),
               FilledButton.tonalIcon(
                 key: const Key('scan-cleanup'),
