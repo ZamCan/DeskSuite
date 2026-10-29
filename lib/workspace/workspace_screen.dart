@@ -589,9 +589,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               ),
             ),
           ),
-        const SizedBox(height: 26),
-        WorkspaceWelcome(onCreate: () => _newDesign(), onImport: _import),
-        const SizedBox(height: 22),
+        const SizedBox(height: 24),
 
         Row(
           children: [
@@ -631,11 +629,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 SizedBox(
                   width: width,
                   child: StarterCard(
-                    icon: Icons.auto_awesome_mosaic_outlined,
-                    eyebrow: 'LOCAL TEMPLATE',
-                    title: 'Editorial poster',
-                    subtitle: 'A simple editable layout',
-                    onTap: () => _newDesign(DesignTemplate.editorial),
+                    icon: Icons.photo_camera_back_outlined,
+                    eyebrow: 'PHOTO WORK',
+                    title: 'Edit a photo',
+                    subtitle: 'Open Photo Studio',
+                    onTap: () => _navigate(WorkspaceSection.photos),
                   ),
                 ),
                 SizedBox(
