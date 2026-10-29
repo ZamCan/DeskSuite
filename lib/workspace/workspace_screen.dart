@@ -72,7 +72,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       } else if (result.failed) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _message(
-            'The interrupted camera result could not be recovered. Check your camera app for a copy.',
+            'The interrupted camera capture could not be recovered. Its private cache may still contain a copy.',
           );
         });
       }
@@ -317,6 +317,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           ? ScanStudioPage(
               files: widget.files,
               camera: widget.camera,
+              isActive: _section == WorkspaceSection.scans,
               recoveredCapture: _recoveredCapture,
             )
           : const SizedBox.shrink(),
@@ -472,49 +473,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        WorkspaceWelcome(onCreate: () => _newDesign(), onImport: _import),
-        if (_showWelcome) ...[
-          const SizedBox(height: 16),
-          Card(
-            key: const Key('welcome-introduction'),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Welcome to DeskSuite',
-                    style: Theme.of(context).textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Create designs, prepare photos and assemble image PDFs locally. Explore examples or skip this introduction; no account is needed.',
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      FilledButton(
-                        key: const Key('welcome-guide'),
-                        onPressed: () => _dismissWelcome(openGuide: true),
-                        child: const Text('Explore examples'),
-                      ),
-                      TextButton(
-                        key: const Key('welcome-skip'),
-                        onPressed: _dismissWelcome,
-                        child: const Text('Skip for now'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-        const SizedBox(height: 28),
-        _heading('Your tools', 'Choose a local workflow or find a shortcut.'),
+        _heading(
+          'What would you like to do?',
+          'Choose a local tool to get started.',
+        ),
         const SizedBox(height: 12),
         TextField(
           key: const Key('home-shortcut-search'),
@@ -557,9 +519,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         ))
           LayoutBuilder(
             builder: (context, constraints) {
-              final columns = constraints.maxWidth >= 820
+              final textScale = MediaQuery.textScalerOf(context).scale(1);
+              final columns = constraints.maxWidth >= 960
+                  ? 4
+                  : constraints.maxWidth >= 640
                   ? 3
-                  : constraints.maxWidth >= 520
+                  : constraints.maxWidth >= 260 && textScale <= 1.3
                   ? 2
                   : 1;
               final width =
@@ -682,6 +647,48 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               ),
             ),
           ),
+        const SizedBox(height: 26),
+        WorkspaceWelcome(onCreate: () => _newDesign(), onImport: _import),
+        if (_showWelcome) ...[
+          const SizedBox(height: 16),
+          Card(
+            key: const Key('welcome-introduction'),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Welcome to DeskSuite',
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Create designs, prepare photos and assemble image PDFs locally. Explore examples or skip this introduction; no account is needed.',
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton(
+                        key: const Key('welcome-guide'),
+                        onPressed: () => _dismissWelcome(openGuide: true),
+                        child: const Text('Explore examples'),
+                      ),
+                      TextButton(
+                        key: const Key('welcome-skip'),
+                        onPressed: _dismissWelcome,
+                        child: const Text('Skip for now'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 34),
         Row(
           children: [

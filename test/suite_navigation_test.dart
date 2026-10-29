@@ -99,6 +99,11 @@ void main() {
     await settleIo(tester);
     expect(find.byType(BrandMark), findsWidgets);
     expect(find.byType(WorkspaceToolCard), findsNWidgets(7));
+    final scanTile = tester.getRect(find.byKey(const Key('home-open-scan')));
+    final pdfTile = tester.getRect(find.byKey(const Key('home-open-pdf')));
+    expect(scanTile.top, pdfTile.top, reason: 'phone shortcuts fit two across');
+    expect(scanTile.right, lessThan(pdfTile.left));
+    expect(pdfTile.right, lessThanOrEqualTo(360));
     final search = find.byKey(const Key('home-shortcut-search'));
     await reveal(tester, search);
     await tester.enterText(search, 'PHOTO');

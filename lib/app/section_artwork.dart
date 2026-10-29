@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Earlier icon candidates reused as section illustrations, never app logos.
+/// Internal section illustrations, including the Photo Studio PS adaptation.
+/// None is the selected DS app logo.
 abstract final class SectionArt {
   static const scan = 'assets/brand/sections/scan.png';
   static const photo = 'assets/brand/sections/photo.png';

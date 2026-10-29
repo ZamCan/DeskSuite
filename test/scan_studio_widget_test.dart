@@ -11,6 +11,7 @@ import 'package:desksuite/document_scan/scan_studio_page.dart';
 import 'package:desksuite/images/photo_processor.dart';
 import 'package:desksuite/workspace/file_gateway.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/reveal.dart';
@@ -38,9 +39,15 @@ class ScanFiles implements FileGateway {
   }
 }
 
-class ScanCamera implements CameraGateway {
+class ScanCamera implements CameraGateway, CommittedCaptureGateway {
   ScanCamera(this.bytes);
   final Uint8List bytes;
+  int acknowledgements = 0;
+  @override
+  Future<void> acknowledgeCaptureSaved() async {
+    acknowledgements++;
+  }
+
   @override
   Future<Uint8List?> capture() async => bytes;
   @override
@@ -162,13 +169,17 @@ void main() {
   Widget screen({
     CameraGateway? camera,
     Uint8List? recovered,
+    bool isActive = true,
+    Future<ScanCorners?> Function(PhotoResult)? cornerSuggester,
     Widget Function(Uint8List)? textExtractionBuilder,
   }) => MaterialApp(
     home: Scaffold(
       body: ScanStudioPage(
         files: files,
         camera: camera,
+        isActive: isActive,
         recoveredCapture: recovered,
+        cornerSuggester: cornerSuggester,
         storeFactory: () async => store,
         photoProcessor: (request) async => processPhoto(request),
         scanProcessor: (request) async => processScan(request),
@@ -490,16 +501,22 @@ void main() {
       },
     );
     final original = Uint8List.fromList(files.imported);
-    await tester.pumpWidget(screen(camera: ScanCamera(files.imported)));
+    final camera = ScanCamera(files.imported);
+    await tester.pumpWidget(screen(camera: camera));
     await waitIo(tester);
     await tapVisible(tester, find.byKey(const Key('scan-camera')));
     await waitIo(tester);
     expect(find.textContaining('Draft could not be saved'), findsOneWidget);
+    // The scan header and status cards can exceed the short test viewport; the
+    // recovery details intentionally remain scrollable rather than clipped.
+    await tester.drag(find.byType(ListView).first, const Offset(0, 520));
+    await tester.pump();
     expect(
       find.textContaining('camera image is in the unsaved draft'),
       findsOneWidget,
     );
     expect((await readDraft(tester, store)), isEmpty);
+    expect(camera.acknowledgements, 0);
     await tapVisible(tester, find.text('Export recovered original'));
     await waitIo(tester);
     expect(files.exported, orderedEquals(original));
@@ -516,6 +533,7 @@ void main() {
     );
     final saved = await readDraft(tester, store);
     expect(saved, hasLength(1));
+    expect(camera.acknowledgements, 1);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpWidget(screen());
     await waitIo(tester);
@@ -599,6 +617,86 @@ void main() {
     expect(tester.takeException(), isNull);
     await tapVisible(tester, find.byKey(const Key('apply-corners')));
     await waitIo(tester);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('native capture commits before showing assisted corner review', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final cache = Directory('${temp.path}/cache');
+    await tester.runAsync(() => cache.create());
+    final capture = File('${cache.path}/desksuite-capture-review-123.jpg');
+    final jpeg = Uint8List.fromList(
+      img.encodeJpg(img.Image(width: 80, height: 60)),
+    );
+    await tester.runAsync(() => capture.writeAsBytes(jpeg));
+    const pathChannel = MethodChannel('plugins.flutter.io/path_provider');
+    const cameraChannel = MethodChannel('com.zamcan.desksuite/document_camera');
+    final messenger = tester.binding.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(pathChannel, (call) async => cache.path);
+    messenger.setMockMethodCallHandler(
+      cameraChannel,
+      (call) async => capture.path,
+    );
+    addTearDown(() => messenger.setMockMethodCallHandler(pathChannel, null));
+    addTearDown(() => messenger.setMockMethodCallHandler(cameraChannel, null));
+    var suggestions = 0;
+    await tester.pumpWidget(
+      screen(
+        camera: AndroidCameraGateway(),
+        cornerSuggester: (_) async {
+          suggestions++;
+          return const ScanCorners.full();
+        },
+      ),
+    );
+    await waitIo(tester);
+    await tapVisible(tester, find.byKey(const Key('scan-camera')));
+    await waitIo(tester, until: find.text('Adjust page corners'));
+    expect(find.text('Adjust page corners'), findsOneWidget);
+    await tester.pump();
+    expect(suggestions, 1);
+    expect(await tester.runAsync(capture.exists), isFalse);
+    expect((await readDraft(tester, store)), hasLength(1));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('finished capture does not open a review over another section', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final cache = Directory('${temp.path}/cache');
+    await tester.runAsync(() => cache.create());
+    final capture = File('${cache.path}/desksuite-capture-inactive-123.jpg');
+    final jpeg = Uint8List.fromList(
+      img.encodeJpg(img.Image(width: 80, height: 60)),
+    );
+    await tester.runAsync(() => capture.writeAsBytes(jpeg));
+    const pathChannel = MethodChannel('plugins.flutter.io/path_provider');
+    const cameraChannel = MethodChannel('com.zamcan.desksuite/document_camera');
+    final messenger = tester.binding.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(pathChannel, (call) async => cache.path);
+    messenger.setMockMethodCallHandler(
+      cameraChannel,
+      (call) async => capture.path,
+    );
+    addTearDown(() => messenger.setMockMethodCallHandler(pathChannel, null));
+    addTearDown(() => messenger.setMockMethodCallHandler(cameraChannel, null));
+    await tester.pumpWidget(
+      screen(camera: AndroidCameraGateway(), isActive: false),
+    );
+    await waitIo(tester);
+    await tapVisible(tester, find.byKey(const Key('scan-camera')));
+    await settleUntil(tester, find.textContaining('1 of 8 pages'));
+    expect(find.text('Adjust page corners'), findsNothing);
+    expect((await readDraft(tester, store)), hasLength(1));
     expect(tester.takeException(), isNull);
   });
 

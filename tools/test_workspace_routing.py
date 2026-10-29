@@ -45,7 +45,7 @@ class PhotoPage extends Widget { PhotoPage({required FileGateway files}); }
 class NotesPage extends Widget { const NotesPage(); }
 class PrintPage extends Widget { const PrintPage(); }
 class BusinessPage extends Widget { BusinessPage({required FileGateway files}); }
-class ScanStudioPage extends Widget { ScanStudioPage({required FileGateway files, Object? camera, Object? recoveredCapture}); }
+class ScanStudioPage extends Widget { ScanStudioPage({required FileGateway files, Object? camera, bool isActive = true, Object? recoveredCapture}); }
 class GettingStartedPage extends Widget {
   GettingStartedPage({required this.onScan, required this.onPhoto, required this.onText, required this.onOffice, required this.onPdf, required this.onEditableExample});
   final VoidCallback onScan, onPhoto, onText, onOffice, onPdf, onEditableExample;
@@ -65,6 +65,7 @@ class PdfStudioPage extends Widget {
 class Host {
   final _visited = <WorkspaceSection>{WorkspaceSection.workspace};
   final widget = Params();
+  WorkspaceSection _section = WorkspaceSection.workspace;
   Object? _recoveredCapture;
   WorkspaceSection? opened;
   bool editedExample = false;

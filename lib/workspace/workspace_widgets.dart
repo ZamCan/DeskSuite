@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 
 import '../app/section_artwork.dart';
@@ -56,52 +58,110 @@ class WorkspaceToolCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final artwork = artworkForSection(section);
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: () => onNavigate(section),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              if (artwork != null)
-                SectionArtwork(asset: artwork)
-              else
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    fallbackIcon,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
-                ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final dark = theme.brightness == Brightness.dark;
+    final tint = switch (section) {
+      WorkspaceSection.scans => const Color(0xff5ecdbb),
+      WorkspaceSection.pdfStudio => const Color(0xffef9a9b),
+      WorkspaceSection.photos => const Color(0xff77baf1),
+      WorkspaceSection.text => const Color(0xffafa4e9),
+      WorkspaceSection.office => const Color(0xff89c7a4),
+      WorkspaceSection.design => const Color(0xffeab17c),
+      WorkspaceSection.projects => const Color(0xffdbc88a),
+      _ => scheme.primary,
+    };
+    final bottom = Color.lerp(scheme.surface, tint, dark ? .16 : .20)!;
+    final border = Color.lerp(scheme.outline, tint, dark ? .30 : .62)!;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withValues(alpha: dark ? .17 : .07),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Material(
+            color: Colors.transparent,
+            child: Ink(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    scheme.surface.withValues(alpha: .94),
+                    bottom.withValues(alpha: .91),
                   ],
                 ),
+                border: Border.all(color: border.withValues(alpha: .7)),
+                borderRadius: BorderRadius.circular(20),
               ),
-              const SizedBox(width: 8),
-              const Icon(Icons.north_east, size: 16),
-            ],
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () => onNavigate(section),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 174),
+                  child: Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            if (artwork != null)
+                              SectionArtwork(asset: artwork, size: 50)
+                            else
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: scheme.primaryContainer.withValues(
+                                    alpha: .8,
+                                  ),
+                                  borderRadius: BorderRadius.circular(13),
+                                ),
+                                child: Icon(
+                                  fallbackIcon,
+                                  color: scheme.onPrimaryContainer,
+                                ),
+                              ),
+                            const Spacer(),
+                            Icon(
+                              Icons.north_east_rounded,
+                              size: 17,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 13),
+                        Text(
+                          title,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            height: 1.18,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          description,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -289,59 +349,70 @@ class WorkspaceWelcome extends StatelessWidget {
   final VoidCallback onCreate;
   final VoidCallback onImport;
   @override
-  Widget build(BuildContext context) => Card(
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(18),
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(20),
+    child: Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xff103b7a), Color(0xff266bb1)],
+        ),
+      ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final wide = constraints.maxWidth > 620;
+          final wide = constraints.maxWidth > 600;
           return Padding(
-            padding: EdgeInsets.all(wide ? 32 : 24),
+            padding: EdgeInsets.all(wide ? 26 : 20),
             child: Row(
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'A WORKSPACE FOR YOUR IDEAS',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: accent,
-                          letterSpacing: 1.3,
+                      const Text(
+                        'CREATE ON YOUR DEVICE',
+                        style: TextStyle(
+                          color: Color(0xffbcecff),
+                          fontSize: 10,
+                          letterSpacing: 1.1,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 8),
                       Text(
-                        'Make room\nfor good work.',
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              height: 1.08,
-                              letterSpacing: -1.2,
-                            ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Create, edit and prepare a design for print—all in one place.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          height: 1.5,
+                        'Create something new.',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Start a design or open an existing project.',
+                        style: TextStyle(color: Color(0xffe5f2ff)),
+                      ),
+                      const SizedBox(height: 16),
                       Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
                           FilledButton.icon(
                             key: const Key('new-design'),
                             onPressed: onCreate,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: const Color(0xff103b7a),
+                            ),
                             icon: const Icon(Icons.add, size: 19),
                             label: const Text('New design'),
                           ),
                           OutlinedButton(
                             onPressed: onImport,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              side: const BorderSide(color: Color(0xffbbd9fa)),
+                            ),
                             child: const Text('Import project'),
                           ),
                         ],
@@ -350,12 +421,8 @@ class WorkspaceWelcome extends StatelessWidget {
                   ),
                 ),
                 if (wide) ...[
-                  const SizedBox(width: 30),
-                  SizedBox(
-                    width: 210,
-                    height: 180,
-                    child: CustomPaint(painter: _WelcomeArt()),
-                  ),
+                  const SizedBox(width: 24),
+                  const BrandMark(size: 90),
                 ],
               ],
             ),
@@ -364,52 +431,6 @@ class WorkspaceWelcome extends StatelessWidget {
       ),
     ),
   );
-}
-
-class _WelcomeArt extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(38, 18, 135, 150),
-      const Radius.circular(3),
-    );
-    canvas.save();
-    canvas.translate(8, 0);
-    canvas.rotate(.075);
-    canvas.drawRRect(rect, Paint()..color = const Color(0xffe7dfd4));
-    canvas.restore();
-    canvas.drawRRect(rect, Paint()..color = const Color(0xfff8f3eb));
-    canvas.drawRRect(
-      rect,
-      Paint()
-        ..color = const Color(0xffd5cbc0)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1,
-    );
-    canvas.drawRect(
-      const Rect.fromLTWH(52, 33, 107, 48),
-      Paint()..color = const Color(0xffc77c60),
-    );
-    canvas.drawRect(
-      const Rect.fromLTWH(52, 94, 64, 7),
-      Paint()..color = const Color(0xff393630),
-    );
-    canvas.drawRect(
-      const Rect.fromLTWH(52, 106, 84, 7),
-      Paint()..color = const Color(0xff393630),
-    );
-    canvas.drawRect(
-      const Rect.fromLTWH(52, 129, 48, 3),
-      Paint()..color = const Color(0xffb5a89a),
-    );
-    canvas.drawRect(
-      const Rect.fromLTWH(52, 137, 72, 3),
-      Paint()..color = const Color(0xffb5a89a),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class StarterCard extends StatelessWidget {

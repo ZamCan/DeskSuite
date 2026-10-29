@@ -5,6 +5,11 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      package_release:
+        description: 'Explicitly opt in to unsigned CI packaging (the owner normally packages locally)'
+        type: boolean
+        default: false
 concurrency:
   group: desksuite-${{ github.ref }}
   cancel-in-progress: true
@@ -18,6 +23,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 tools/validate-brand-assets.py
+      - run: python3 tools/test_ci_policy.py
+      - run: python3 tools/test_camera_contract.py
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -41,8 +48,11 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - run: flutter build apk --release
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_release }}
       - run: flutter build appbundle --release
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_release }}
       - uses: actions/upload-artifact@v4
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_release }}
         with:
           name: desksuite-android
           path: |
@@ -65,9 +75,12 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - run: flutter build windows --release
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_release }}
       - shell: pwsh
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_release }}
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath desksuite-windows-x64.zip
       - uses: actions/upload-artifact@v4
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_release }}
         with:
           name: desksuite-windows-x64
           path: desksuite-windows-x64.zip
@@ -89,8 +102,11 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - run: flutter build linux --release
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_release }}
       - run: tar -czf desksuite-linux-x64.tar.gz -C build/linux/x64/release/bundle .
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_release }}
       - name: Assemble AppImage directory
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_release }}
         run: |
           mkdir -p AppDir/usr
           cp -a build/linux/x64/release/bundle/. AppDir/usr/
@@ -115,6 +131,7 @@ jobs:
           chmod +x appimagetool
           ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool AppDir desksuite-x86_64.AppImage
       - uses: actions/upload-artifact@v4
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_release }}
         with:
           name: desksuite-linux-x64
           path: |
@@ -136,8 +153,11 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - run: flutter build ios --release --no-codesign
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_release }}
       - run: ditto -c -k --sequesterRsrc --keepParent build/ios/iphoneos/Runner.app desksuite-ios-unsigned-app.zip
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_release }}
       - uses: actions/upload-artifact@v4
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_release }}
         with:
           name: desksuite-ios-unsigned-validation
           path: desksuite-ios-unsigned-app.zip

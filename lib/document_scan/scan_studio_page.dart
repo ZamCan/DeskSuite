@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../app/section_artwork.dart';
 import '../core/suite_paths.dart';
 import '../images/photo_processor.dart';
 import '../ocr/text_extraction_page.dart';
@@ -34,20 +35,26 @@ class ScanStudioPage extends StatefulWidget {
     super.key,
     required this.files,
     this.camera,
+    this.isActive = true,
     this.recoveredCapture,
     this.storeFactory,
     this.photoProcessor,
     this.scanProcessor,
+    this.cornerSuggester,
     this.cleanupProcessor,
     this.pdfGenerator,
     this.textExtractionBuilder,
   });
   final FileGateway files;
   final CameraGateway? camera;
+
+  /// Prevents a completed capture from presenting a review over another tab.
+  final bool isActive;
   final Uint8List? recoveredCapture;
   final Future<ScanDraftStore> Function()? storeFactory;
   final Future<PhotoResult> Function(PhotoRequest)? photoProcessor;
   final Future<PhotoResult> Function(ScanRequest)? scanProcessor;
+  final Future<ScanCorners?> Function(PhotoResult)? cornerSuggester;
   final Future<PhotoResult> Function(DocumentCleanupRequest)? cleanupProcessor;
   final Future<Uint8List> Function(ScanPdfRequest)? pdfGenerator;
 
@@ -165,17 +172,27 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
   Future<bool> _persist() async {
     try {
       final committed = await store!.save(List.of(pages));
+      final captureCommitted =
+          recoveryAdded && committed.any((page) => page.id == recoveryPageId);
       if (mounted) {
         setState(() {
           pages = committed;
           saveError = null;
-          if (recoveryAdded &&
-              committed.any((page) => page.id == recoveryPageId)) {
+          if (captureCommitted) {
             recovered = null;
             recoveryAdded = false;
             recoveryPageId = null;
           }
         });
+      }
+      if (captureCommitted && widget.camera is CommittedCaptureGateway) {
+        try {
+          await (widget.camera! as CommittedCaptureGateway)
+              .acknowledgeCaptureSaved();
+        } catch (_) {
+          // The draft is already durable. A leftover private capture is safer
+          // than reporting the committed draft as unsaved or deleting blindly.
+        }
       }
       return true;
     } catch (_) {
@@ -228,18 +245,9 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
         recoveryPageId = pages.last.id;
       }
     });
-    final saved = await _persist();
-    if (fromRecovery && saved && mounted) {
-      // Clear the recovery entry only after the draft manifest is committed.
-      // This explicit post-save transition also avoids leaving camera actions
-      // disabled if the store returns normalized page objects.
-      setState(() {
-        recovered = null;
-        recoveryAdded = false;
-        recoveryPageId = null;
-      });
-    }
-    return saved;
+    // _persist clears and acknowledges a recovered original only after its
+    // matching page is in the committed draft.
+    return _persist();
   }
 
   Future<void> _import() async {
@@ -263,22 +271,29 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
   Future<void> _capture() async {
     if (busy || loading || widget.camera == null || recovered != null) return;
     setState(() => busy = true);
+    var reviewCapture = false;
     try {
       final data = await widget.camera!.capture();
       if (data != null && mounted) {
-        // Retain the camera result if decoding, limits, or draft saving fail.
+        // Preserve bytes until the draft has actually been committed.
         setState(() => recovered = data);
-        await _addBytes(data, fromRecovery: true);
+        final saved = await _addBytes(data, fromRecovery: true);
+        reviewCapture = saved && widget.camera is AndroidCameraGateway;
       }
     } catch (e) {
       message(
         readableError(
           e,
-          'Could not open the camera or read its result. Check the camera app and try again.',
+          'Could not start the DeskSuite camera or read its capture. Try again or import an image.',
         ),
       );
     } finally {
       if (mounted) setState(() => busy = false);
+    }
+    // Review only after busy has been cleared, and never on top of another
+    // workspace section if the user navigated while the draft was saving.
+    if (reviewCapture && mounted && widget.isActive) {
+      await _crop(suggestOnOpen: true);
     }
   }
 
@@ -342,7 +357,21 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
       'If you have not exported this image, it may be lost. This does not remove any file you already saved.',
       'Dismiss',
     );
-    if (confirmed && mounted) setState(() => recovered = null);
+    if (!confirmed || !mounted) return;
+    setState(() => busy = true);
+    try {
+      if (widget.camera is CommittedCaptureGateway &&
+          !await (widget.camera! as CommittedCaptureGateway)
+              .discardPendingCapture()) {
+        message('The private camera copy could not be removed. Try again.');
+        return;
+      }
+      if (mounted) setState(() => recovered = null);
+    } catch (_) {
+      message('The private camera copy could not be removed. Try again.');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
   }
 
   Future<void> _samples() async {
@@ -505,11 +534,15 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
     }
   }
 
-  Future<void> _crop() async {
+  Future<void> _crop({bool suggestOnOpen = false}) async {
     if (busy || pages.isEmpty) return;
     final corners = await showDialog<ScanCorners>(
       context: context,
-      builder: (_) => CornerEditor(photo: pages[selected].image),
+      builder: (_) => CornerEditor(
+        photo: pages[selected].image,
+        suggester: widget.cornerSuggester,
+        suggestOnOpen: suggestOnOpen,
+      ),
     );
     if (corners != null && mounted) {
       await _edit(
@@ -812,16 +845,65 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
       children: [
-        Text(
-          'Scan & assemble',
-          style: Theme.of(context).textTheme.headlineSmall
-              ?.copyWith(fontWeight: FontWeight.w800),
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                scheme.primaryContainer.withValues(alpha: .92),
+                scheme.surfaceContainerHighest.withValues(alpha: .72),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: .65),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  SectionArtwork(
+                    asset: SectionArt.scan,
+                    size: 56,
+                    fallback: Icons.document_scanner_rounded,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Scan a document',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -.35,
+                              ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Capture  ·  Crop  ·  Clean  ·  PDF',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Add a page to begin. Fine-tune its corners, improve readability, then export a multi-page PDF.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 6),
-        const Text(
-          'Capture or import pages, correct and clean them, then save an image PDF. Originals are not changed automatically.',
-        ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         if (recovered != null)
           Card(
             child: Padding(
@@ -889,22 +971,22 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            FilledButton.icon(
-              key: const Key('scan-import'),
-              onPressed: busy || pages.length >= maxScanPages ? null : _import,
-              icon: const Icon(Icons.add_photo_alternate_outlined),
-              label: const Text('Add image'),
-            ),
             if (widget.camera != null)
-              OutlinedButton.icon(
+              FilledButton.icon(
                 key: const Key('scan-camera'),
                 onPressed:
                     busy || recovered != null || pages.length >= maxScanPages
                     ? null
                     : _capture,
                 icon: const Icon(Icons.photo_camera_outlined),
-                label: const Text('Use camera'),
+                label: const Text('Capture page'),
               ),
+            OutlinedButton.icon(
+              key: const Key('scan-import'),
+              onPressed: busy || pages.length >= maxScanPages ? null : _import,
+              icon: const Icon(Icons.add_photo_alternate_outlined),
+              label: const Text('Import image'),
+            ),
             OutlinedButton.icon(
               key: const Key('scan-samples'),
               onPressed: busy ? null : _samples,
@@ -1046,6 +1128,12 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
                 label: const Text('Clean up & compare'),
               ),
               OutlinedButton.icon(
+                key: const Key('scan-extract-text'),
+                onPressed: busy ? null : _openTextExtraction,
+                icon: const Icon(Icons.text_fields_rounded),
+                label: const Text('Extract text from page'),
+              ),
+              OutlinedButton.icon(
                 key: const Key('scan-rotate'),
                 onPressed: busy
                     ? null
@@ -1091,12 +1179,6 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
                 key: const Key('scan-reset'),
                 onPressed: busy ? null : _reset,
                 child: const Text('Reset page'),
-              ),
-              OutlinedButton.icon(
-                key: const Key('scan-extract-text'),
-                onPressed: busy ? null : _openTextExtraction,
-                icon: const Icon(Icons.text_fields),
-                label: const Text('Extract text from this page'),
               ),
               OutlinedButton(
                 onPressed: busy ? null : _exportPage,

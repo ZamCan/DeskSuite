@@ -1,5 +1,18 @@
 # Validation record
 
+## Home, camera and online-main reconciliation — 2026-10-29
+
+This entry records host/static evidence for the integrated source, **not** a Flutter, Android or physical-device pass:
+
+- Brand validator and 11 regeneration/resource/routing checks passed; Photo Studio now uses the adapted PS section image while the selected DS launcher sources remain unchanged. Four structural in-app-camera contract checks and two CI packaging-policy checks passed.
+- The actual Java camera geometry helper passed 24 host checks for image limits, orientation normalization and preview center-crop math. This does not compile or execute the Kotlin Activity or prove camera hardware behavior.
+- The actual print-job model passed 2,000 randomized fit/fill cases and extreme numeric/unknown-capability checks through DartPad/Node. No physical printer was used. Workspace routing executed with UI stubs, and the current workspace, scanner and camera-gateway source were analyzed against local interface/plugin stubs. Stubs are not the complete dependency graph.
+- Five fictional Office asset checks, the local WASM fixture/template renderer and fake-DOM viewer checks, the Java preview URL policy, Android XML parsing and the brand checks passed on the host. The WASM viewer was not tested inside Android WebView.
+- New Flutter tests cover private capture acknowledgement, post-capture review, inactive-page protection and two-column phone cards; they are **written but unrun** here. Flutter/Dart, the Android SDK, Kotlin compiler and `adb` were unavailable. No Android toolchain was downloaded; no APK/AAB was built, signed, installed or device-tested.
+- Main push/PR CI still runs analysis/tests. Release APK/AAB and desktop packaging require an explicitly opted-in manual dispatch; the owner normally packages locally. A CI run, when available, must be inspected for this exact commit and is not a substitute for native/device validation.
+
+On a physical device, verify permission denial/settings recovery, back/cancel, pause/resume and process death at each capture stage, low-storage handling, EXIF orientation and preview crop on rear/front and landscape-natural cameras, focus/zoom/flash, assistive technology, compact/large-text layouts and export/reopen behavior. The private JPEG is kept until the matching scan draft commits or the user explicitly dismisses it; Android cache is not guaranteed durable storage. Check for residual files after interrupted sessions.
+
 ## Selective consolidation — 2026-10-28
 
 Public main `177a10f80f51c31ba6de7cc7bb2e321f6e9e07c4` completed [CI run 40704429058](https://github.com/ZamCan/DeskSuite/actions/runs/40704429058). That run predates and **does not validate** this consolidation. No Flutter/Dart SDK, Android SDK, `adb` or LibreOffice was available here; no Android toolchain was installed and no APK/AAB was built, signed or installed. No complete Flutter analyzer, Flutter widget/model suite, native build, or device run was performed for the consolidated tree.
@@ -26,7 +39,7 @@ node tools/test_office_renderer.mjs
 node tools/test_office_viewer_ui.mjs
 ```
 
-Then independently verify real PDF open/save/combine/page-export/split results, Office output and the disabled-by-default preview on representative files, Android camera/picker/OCR lifecycle, low-memory behavior, accessibility and physical printing. Test signing/upgrades locally with the **existing** key. The current main push/PR workflow packages online; resolve that policy before publishing. See [consolidation record](CONSOLIDATION_2026-10-28.md).
+Then independently verify real PDF open/save/combine/page-export/split results, Office output and the disabled-by-default preview on representative files, Android camera/picker/OCR lifecycle, low-memory behavior, accessibility and physical printing. Test signing/upgrades locally with the **existing** key. The current push/PR workflow keeps tests and no longer packages unless a manual dispatch explicitly opts in. See [consolidation record](CONSOLIDATION_2026-10-28.md).
 
 ## Historical validation below
 
