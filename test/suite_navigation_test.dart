@@ -190,7 +190,7 @@ void main() {
       findsNothing,
     );
     await tester.tap(pdfShortcut);
-    await settleUntil(tester, find.byKey(const Key('pdf-open')));
+    await settleUntil(tester, find.byKey(const Key('pdf-studio-open')));
     expect(
       find.byKey(const ValueKey('workspace-page-pdfStudio')),
       findsOneWidget,
