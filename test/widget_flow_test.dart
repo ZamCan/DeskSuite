@@ -57,8 +57,11 @@ void main() {
     final files = FakeFiles();
     await tester.pumpWidget(DeskSuiteApp(repository: repo, fileGateway: files));
     await settleIo(tester);
-    expect(find.text('Make room\nfor good work.'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('new-design')));
+    // The premium workbench is task-first; create a design from its
+    // primary action rather than the retired generic landing screen.
+    expect(find.byKey(const Key('home-primary-scan')), findsOneWidget);
+    expect(find.byKey(const Key('home-primary-create')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('home-primary-create')));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('project-name')),
