@@ -411,12 +411,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xff082b69), Color(0xff0757b8), Color(0xff00aeca)],
+              colors: [Color(0xff49352d), Color(0xff80513f), Color(0xffb96045)],
             ),
             borderRadius: BorderRadius.circular(24),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x22082b69),
+                color: Color(0x2249352d),
                 blurRadius: 22,
                 offset: Offset(0, 10),
               ),
@@ -453,7 +453,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         SizedBox(height: 3),
                         Text(
                           'Create. Prepare. Print. Sell.',
-                          style: TextStyle(color: Color(0xffd7f7ff), fontSize: 13),
+                          style: TextStyle(color: Color(0xfff3e4d8), fontSize: 13),
                         ),
                       ],
                     ),
@@ -473,7 +473,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               const SizedBox(height: 7),
               const Text(
                 'Choose a task. DeskSuite will guide the next step.',
-                style: TextStyle(color: Color(0xffe4f7ff), fontSize: 14),
+                style: TextStyle(color: Color(0xfff0dfd2), fontSize: 14),
               ),
               const SizedBox(height: 18),
               Wrap(
@@ -487,7 +487,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     label: const Text('Scan a document'),
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xff082b69),
+                      foregroundColor: const Color(0xff49352d),
                       minimumSize: const Size(48, 48),
                     ),
                   ),
@@ -612,7 +612,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 studioCard(
                   key: const Key('home-studio-capture'),
                   icon: Icons.document_scanner_rounded,
-                  color: const Color(0xff087e8b),
+                  color: accent,
                   eyebrow: '01 · Capture',
                   title: 'Scan & documents',
                   subtitle: 'Capture pages, assemble a PDF and extract text.',
@@ -622,7 +622,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 studioCard(
                   key: const Key('home-studio-creative'),
                   icon: Icons.auto_awesome_mosaic_rounded,
-                  color: const Color(0xff7651b5),
+                  color: accent,
                   eyebrow: '02 · Create',
                   title: 'Design & creative',
                   subtitle: 'Build posters, layouts and editable designs.',
@@ -632,7 +632,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 studioCard(
                   key: const Key('home-studio-photo'),
                   icon: Icons.photo_camera_back_rounded,
-                  color: const Color(0xffb56a22),
+                  color: accent,
                   eyebrow: '03 · Refine',
                   title: 'Photo studio',
                   subtitle: 'Prepare images and passport-style photos.',
@@ -642,7 +642,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 studioCard(
                   key: const Key('home-studio-print-business'),
                   icon: Icons.print_rounded,
-                  color: const Color(0xff2258a6),
+                  color: accent,
                   eyebrow: '04 · Produce & sell',
                   title: 'Print shop & business',
                   subtitle: 'Prepare print jobs, manage products and retail or wholesale work.',
