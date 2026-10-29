@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that ordinary CI keeps tests but never packages automatically.
+"""Check that ordinary CI tests all targets and packages Android on main only.
 
 This is a structural policy check, not a build or a GitHub Actions execution.
 It intentionally uses only the Python standard library.
