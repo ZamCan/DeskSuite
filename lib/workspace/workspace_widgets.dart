@@ -409,7 +409,7 @@ class WorkspaceWelcome extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xff103b7a), Color(0xff266bb1)],
+          colors: [Color(0xffa84f36), Color(0xff7f3829)],
         ),
       ),
       child: LayoutBuilder(
@@ -426,7 +426,7 @@ class WorkspaceWelcome extends StatelessWidget {
                       const Text(
                         'CREATE ON YOUR DEVICE',
                         style: TextStyle(
-                          color: Color(0xffbcecff),
+                          color: Color(0xffffe0cb),
                           fontSize: 10,
                           letterSpacing: 1.1,
                           fontWeight: FontWeight.w800,
@@ -443,7 +443,7 @@ class WorkspaceWelcome extends StatelessWidget {
                       const SizedBox(height: 6),
                       const Text(
                         'Start a design or open an existing project.',
-                        style: TextStyle(color: Color(0xffe5f2ff)),
+                        style: TextStyle(color: Color(0xfffff1e7)),
                       ),
                       const SizedBox(height: 16),
                       Wrap(
@@ -455,7 +455,7 @@ class WorkspaceWelcome extends StatelessWidget {
                             onPressed: onCreate,
                             style: FilledButton.styleFrom(
                               backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xff103b7a),
+                              foregroundColor: const Color(0xff7f3829),
                             ),
                             icon: const Icon(Icons.add, size: 19),
                             label: const Text('New design'),
@@ -464,7 +464,7 @@ class WorkspaceWelcome extends StatelessWidget {
                             onPressed: onImport,
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.white,
-                              side: const BorderSide(color: Color(0xffbbd9fa)),
+                              side: const BorderSide(color: Color(0xffffd7c4)),
                             ),
                             child: const Text('Import project'),
                           ),
@@ -572,7 +572,7 @@ class ProjectTile extends StatelessWidget {
         width: 48,
         height: 54,
         decoration: BoxDecoration(
-          color: const Color(0xffeee6dd),
+          color: const Color(0xffeee7dc),
           borderRadius: BorderRadius.circular(8),
         ),
         child: const Icon(Icons.description_outlined, color: accent),
