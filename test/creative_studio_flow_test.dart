@@ -73,7 +73,7 @@ void main() {
       'Studio poster',
     );
     await tester.tap(find.byKey(const Key('create-design')));
-    await settleIo(tester);
+    await settleUntil(tester, find.byKey(const Key('design-canvas')));
     expect(find.byKey(const Key('design-canvas')), findsOneWidget);
     await tester.tap(find.byKey(const Key('add-text')));
     await tester.pump();
