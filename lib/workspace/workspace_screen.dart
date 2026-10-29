@@ -470,6 +470,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   );
 
   Widget _workspace() => _scrolling(
+    glassBackdrop: true,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -519,122 +520,86 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         ))
           LayoutBuilder(
             builder: (context, constraints) {
-              final textScale = MediaQuery.textScalerOf(context).scale(1);
-              final columns = constraints.maxWidth >= 960
-                  ? 4
-                  : constraints.maxWidth >= 640
-                  ? 3
-                  : constraints.maxWidth >= 260 && textScale <= 1.3
-                  ? 2
-                  : 1;
-              final width =
-                  (constraints.maxWidth - (columns - 1) * 12) / columns;
-              return Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  if (matchesHomeShortcut(
-                    WorkspaceSection.scans,
-                    _shortcutQuery,
-                  ))
-                    SizedBox(
-                      width: width,
-                      child: WorkspaceToolCard(
-                        key: const Key('home-open-scan'),
-                        section: WorkspaceSection.scans,
-                        title: 'Scan documents',
-                        description: 'Capture, clean and assemble pages.',
-                        onNavigate: _navigate,
-                      ),
-                    ),
-                  if (matchesHomeShortcut(
-                    WorkspaceSection.pdfStudio,
-                    _shortcutQuery,
-                  ))
-                    SizedBox(
-                      width: width,
-                      child: WorkspaceToolCard(
-                        key: const Key('home-open-pdf'),
-                        section: WorkspaceSection.pdfStudio,
-                        title: 'Work with a PDF',
-                        description: 'Review pages and save a separate copy.',
-                        fallbackIcon: Icons.picture_as_pdf_outlined,
-                        onNavigate: _navigate,
-                      ),
-                    ),
-                  if (matchesHomeShortcut(
-                    WorkspaceSection.photos,
-                    _shortcutQuery,
-                  ))
-                    SizedBox(
-                      width: width,
-                      child: WorkspaceToolCard(
-                        key: const Key('home-open-photo'),
-                        section: WorkspaceSection.photos,
-                        title: 'Edit a photo',
-                        description: 'Adjust and resize an image.',
-                        onNavigate: _navigate,
-                      ),
-                    ),
-                  if (matchesHomeShortcut(
-                    WorkspaceSection.text,
-                    _shortcutQuery,
-                  ))
-                    SizedBox(
-                      width: width,
-                      child: WorkspaceToolCard(
-                        key: const Key('home-open-text'),
-                        section: WorkspaceSection.text,
-                        title: 'Extract text',
-                        description: 'Recognize and review words in an image.',
-                        onNavigate: _navigate,
-                      ),
-                    ),
-                  if (matchesHomeShortcut(
-                    WorkspaceSection.office,
-                    _shortcutQuery,
-                  ))
-                    SizedBox(
-                      width: width,
-                      child: WorkspaceToolCard(
-                        key: const Key('home-open-converter'),
-                        section: WorkspaceSection.office,
-                        title: 'Convert file',
-                        description:
-                            'Read and convert supported document content.',
-                        onNavigate: _navigate,
-                      ),
-                    ),
-                  if (matchesHomeShortcut(
-                    WorkspaceSection.design,
-                    _shortcutQuery,
-                  ))
-                    SizedBox(
-                      width: width,
-                      child: WorkspaceToolCard(
-                        key: const Key('home-open-design'),
-                        section: WorkspaceSection.design,
-                        title: 'Creative Studio',
-                        description: 'Design an editable layout for print.',
-                        onNavigate: _navigate,
-                      ),
-                    ),
-                  if (matchesHomeShortcut(
-                    WorkspaceSection.projects,
-                    _shortcutQuery,
-                  ))
-                    SizedBox(
-                      width: width,
-                      child: WorkspaceToolCard(
-                        key: const Key('home-open-projects'),
-                        section: WorkspaceSection.projects,
-                        title: 'Files & Projects',
-                        description: 'Open locally saved design projects.',
-                        onNavigate: _navigate,
-                      ),
-                    ),
-                ],
+              final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
+              final columns = workspaceTaskColumnCount(
+                constraints.maxWidth,
+                textScale,
               );
+              final cards = <Widget>[
+                if (matchesHomeShortcut(WorkspaceSection.scans, _shortcutQuery))
+                  WorkspaceToolCard(
+                    key: const Key('home-open-scan'),
+                    section: WorkspaceSection.scans,
+                    title: 'Scan documents',
+                    description: 'Capture, clean and assemble pages.',
+                    onNavigate: _navigate,
+                  ),
+                if (matchesHomeShortcut(
+                  WorkspaceSection.pdfStudio,
+                  _shortcutQuery,
+                ))
+                  WorkspaceToolCard(
+                    key: const Key('home-open-pdf'),
+                    section: WorkspaceSection.pdfStudio,
+                    title: 'Work with a PDF',
+                    description: 'Review pages and save a separate copy.',
+                    fallbackIcon: Icons.picture_as_pdf_outlined,
+                    onNavigate: _navigate,
+                  ),
+                if (matchesHomeShortcut(
+                  WorkspaceSection.photos,
+                  _shortcutQuery,
+                ))
+                  WorkspaceToolCard(
+                    key: const Key('home-open-photo'),
+                    section: WorkspaceSection.photos,
+                    title: 'Edit a photo',
+                    description: 'Adjust and resize an image.',
+                    onNavigate: _navigate,
+                  ),
+                if (matchesHomeShortcut(WorkspaceSection.text, _shortcutQuery))
+                  WorkspaceToolCard(
+                    key: const Key('home-open-text'),
+                    section: WorkspaceSection.text,
+                    title: 'Extract text',
+                    description: 'Recognize and review words in an image.',
+                    onNavigate: _navigate,
+                  ),
+                if (matchesHomeShortcut(
+                  WorkspaceSection.office,
+                  _shortcutQuery,
+                ))
+                  WorkspaceToolCard(
+                    key: const Key('home-open-converter'),
+                    section: WorkspaceSection.office,
+                    title: 'Convert file',
+                    description: 'Read and convert supported document content.',
+                    onNavigate: _navigate,
+                  ),
+                if (matchesHomeShortcut(
+                  WorkspaceSection.design,
+                  _shortcutQuery,
+                ))
+                  WorkspaceToolCard(
+                    key: const Key('home-open-design'),
+                    section: WorkspaceSection.design,
+                    title: 'Creative Studio',
+                    description: 'Design an editable layout for print.',
+                    onNavigate: _navigate,
+                  ),
+                if (matchesHomeShortcut(
+                  WorkspaceSection.projects,
+                  _shortcutQuery,
+                ))
+                  WorkspaceToolCard(
+                    key: const Key('home-open-projects'),
+                    section: WorkspaceSection.projects,
+                    title: 'Files & Projects',
+                    description: 'Open locally saved design projects.',
+                    onNavigate: _navigate,
+                  ),
+              ];
+              return WorkspaceTaskGrid(columns: columns, cards: cards);
             },
           )
         else
@@ -875,15 +840,43 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     ],
   );
 
-  Widget _scrolling({required Widget child}) => SingleChildScrollView(
-    padding: const EdgeInsets.fromLTRB(24, 30, 24, 40),
-    child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1050),
-        child: child,
+  Widget _scrolling({required Widget child, bool glassBackdrop = false}) {
+    final content = SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 30, 24, 40),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1050),
+          child: child,
+        ),
       ),
-    ),
-  );
+    );
+    if (!glassBackdrop) return content;
+    final theme = Theme.of(context);
+    final base = theme.scaffoldBackgroundColor;
+    final dark = theme.brightness == Brightness.dark;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(
+              base,
+              theme.colorScheme.primaryContainer,
+              dark ? .18 : .28,
+            )!,
+            base,
+            Color.lerp(
+              base,
+              theme.colorScheme.tertiaryContainer,
+              dark ? .10 : .16,
+            )!,
+          ],
+        ),
+      ),
+      child: content,
+    );
+  }
 
   Widget _projectList({int? limit}) {
     if (_loading) {

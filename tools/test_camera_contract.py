@@ -39,6 +39,23 @@ class CameraContractTest(unittest.TestCase):
         self.assertIn('generation != cameraGeneration', activity)
         self.assertIn('camera.close()', activity)
 
+    def test_permission_and_camera_controls_have_safe_states(self):
+        activity = (ROOT / 'android/app/src/main/kotlin/com/zamcan/desksuite/DocumentCameraActivity.kt').read_text()
+        ready = activity.split('private fun startCameraIfReady()', 1)[1].split('private fun createPreviewSession', 1)[0]
+        permission = ready.split('checkSelfPermission', 1)[1].split('try {\n            val id', 1)[0]
+        self.assertIn('if (!permissionRequestPending)', permission)
+        self.assertLess(permission.index('permissionRequestPending = true'), permission.index('requestPermissions('))
+        callback = activity.split('override fun onRequestPermissionsResult(', 1)[1].split('override fun onSurfaceTextureAvailable', 1)[0]
+        self.assertIn('permissionRequestPending = false', callback)
+        controls = activity.split('private fun updateZoomControls()', 1)[1].split('private fun toggleFlash()', 1)[0]
+        self.assertIn('session != null && activeArray != null', controls)
+        self.assertIn('zoom > 1f', controls)
+        self.assertIn('zoom < maxZoom', controls)
+        close = activity.split('private fun closeCamera()', 1)[1].split('private fun finishCancelled()', 1)[0]
+        self.assertIn('flashOn = false', close)
+        self.assertIn('flashButton.isEnabled = false', close)
+        self.assertIn('updateZoomControls()', close)
+
     def test_private_recovery_is_acknowledged_only_after_matching_draft_commit(self):
         gateway = (ROOT / 'lib/document_scan/camera_gateway.dart').read_text()
         page = (ROOT / 'lib/document_scan/scan_studio_page.dart').read_text()

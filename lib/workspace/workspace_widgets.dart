@@ -35,6 +35,57 @@ String? artworkForSection(WorkspaceSection section) => switch (section) {
   _ => null,
 };
 
+/// Number of task cards that can remain comfortably readable in one row.
+/// Larger system text gets fewer columns rather than being clipped or scaled down.
+int workspaceTaskColumnCount(double width, double textScale) {
+  if (textScale > 1.8) return width >= 960 ? 2 : 1;
+  if (textScale > 1.3) return width >= 640 ? 2 : 1;
+  if (width >= 960) return 4;
+  if (width >= 640) return 3;
+  if (width >= 260) return 2;
+  return 1;
+}
+
+/// Small, non-scrolling rows keep neighboring cards the same height while each
+/// row can grow naturally for longer labels, translations or larger text.
+class WorkspaceTaskGrid extends StatelessWidget {
+  const WorkspaceTaskGrid({
+    super.key,
+    required this.columns,
+    required this.cards,
+  }) : assert(columns >= 1 && columns <= 4);
+
+  final int columns;
+  final List<Widget> cards;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = (cards.length + columns - 1) ~/ columns;
+    return Column(
+      children: [
+        for (var row = 0; row < rows; row++) ...[
+          if (row > 0) const SizedBox(height: 12),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var column = 0; column < columns; column++) ...[
+                  if (column > 0) const SizedBox(width: 12),
+                  Expanded(
+                    child: row * columns + column < cards.length
+                        ? cards[row * columns + column]
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 /// A labelled, keyboard- and screen-reader-accessible route to a real tool.
 class WorkspaceToolCard extends StatelessWidget {
   const WorkspaceToolCard({

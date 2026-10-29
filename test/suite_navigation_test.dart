@@ -102,8 +102,13 @@ void main() {
     final scanTile = tester.getRect(find.byKey(const Key('home-open-scan')));
     final pdfTile = tester.getRect(find.byKey(const Key('home-open-pdf')));
     expect(scanTile.top, pdfTile.top, reason: 'phone shortcuts fit two across');
+    expect(scanTile.bottom, pdfTile.bottom, reason: 'neighboring cards align');
     expect(scanTile.right, lessThan(pdfTile.left));
     expect(pdfTile.right, lessThanOrEqualTo(360));
+    final photoTile = tester.getRect(find.byKey(const Key('home-open-photo')));
+    final textTile = tester.getRect(find.byKey(const Key('home-open-text')));
+    expect(photoTile.top, textTile.top);
+    expect(photoTile.bottom, textTile.bottom);
     final search = find.byKey(const Key('home-shortcut-search'));
     await reveal(tester, search);
     await tester.enterText(search, 'PHOTO');

@@ -54,6 +54,8 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
     private lateinit var flashButton: TextView
     private lateinit var shutter: TextView
     private lateinit var zoomLabel: TextView
+    private lateinit var zoomOutButton: TextView
+    private lateinit var zoomInButton: TextView
     private var cameraDevice: CameraDevice? = null
     private var session: CameraCaptureSession? = null
     private var previewRequest: CaptureRequest.Builder? = null
@@ -73,6 +75,7 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
     // generation prevents a late open/configure callback from reviving the
     // camera after pause or after its TextureView has been destroyed.
     private var opening = false
+    private var permissionRequestPending = false
     private var cameraResumed = false
     private var cameraGeneration = 0L
     private val capturing = AtomicBoolean(false)
@@ -147,7 +150,9 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
             typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
         }
         top.addView(title, LinearLayout.LayoutParams(0, dp(48), 1f))
-        flashButton = textButton("Flash off", 13).apply {
+        flashButton = textButton("Checking…", 13).apply {
+            isEnabled = false
+            alpha = .55f
             setOnClickListener { toggleFlash() }
         }
         top.addView(flashButton, LinearLayout.LayoutParams(dp(88), dp(48)))
@@ -172,11 +177,13 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
         }
-        val minus = textButton("−", 28).apply {
+        zoomOutButton = textButton("−", 28).apply {
             contentDescription = "Zoom out"
+            isEnabled = false
+            alpha = .45f
             setOnClickListener { changeZoom(-0.25f) }
         }
-        controls.addView(minus, LinearLayout.LayoutParams(dp(64), dp(62)))
+        controls.addView(zoomOutButton, LinearLayout.LayoutParams(dp(64), dp(62)))
         shutter = TextView(this).apply {
             text = "●"
             textSize = 45f
@@ -196,11 +203,13 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
         val shutterParams = LinearLayout.LayoutParams(dp(76), dp(76))
         shutterParams.setMargins(dp(22), 0, dp(22), 0)
         controls.addView(shutter, shutterParams)
-        val plus = textButton("+", 26).apply {
+        zoomInButton = textButton("+", 26).apply {
             contentDescription = "Zoom in"
+            isEnabled = false
+            alpha = .45f
             setOnClickListener { changeZoom(0.25f) }
         }
-        controls.addView(plus, LinearLayout.LayoutParams(dp(64), dp(62)))
+        controls.addView(zoomInButton, LinearLayout.LayoutParams(dp(64), dp(62)))
         bottom.addView(controls, LinearLayout.LayoutParams(-1, dp(84)))
         zoomLabel = TextView(this).apply {
             text = "1.0×"
@@ -255,7 +264,17 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
             checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
         ) {
-            requestPermissions(arrayOf(Manifest.permission.CAMERA), REQUEST_CAMERA_PERMISSION)
+            // onResume and SurfaceTexture callbacks can arrive together. Only
+            // one system permission request may be outstanding at a time.
+            if (!permissionRequestPending) {
+                permissionRequestPending = true
+                try {
+                    requestPermissions(arrayOf(Manifest.permission.CAMERA), REQUEST_CAMERA_PERMISSION)
+                } catch (_: RuntimeException) {
+                    permissionRequestPending = false
+                    finishWithError("camera_permission_denied")
+                }
+            }
             return
         }
         try {
@@ -278,8 +297,10 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
                 afModes.contains(CaptureRequest.CONTROL_AF_MODE_AUTO) -> CaptureRequest.CONTROL_AF_MODE_AUTO
                 else -> CaptureRequest.CONTROL_AF_MODE_OFF
             }
+            flashOn = false
             flashButton.text = if (hasFlash) "Flash off" else "No flash"
             flashButton.isEnabled = hasFlash
+            flashButton.alpha = if (hasFlash) 1f else .55f
 
             val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
                 ?: return finishWithError("camera_unavailable")
@@ -417,6 +438,7 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
                             previewRequest = builder
                             shutter.isEnabled = true
                             shutter.contentDescription = "Capture page"
+                            updateZoomControls()
                         } catch (_: CameraAccessException) {
                             configured.close()
                             finishWithError("camera_unavailable")
@@ -456,9 +478,19 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
         )
     }
 
+    private fun updateZoomControls() {
+        val available = cameraResumed && session != null && activeArray != null
+        zoomOutButton.isEnabled = available && zoom > 1f
+        zoomInButton.isEnabled = available && zoom < maxZoom
+        zoomOutButton.alpha = if (zoomOutButton.isEnabled) 1f else .45f
+        zoomInButton.alpha = if (zoomInButton.isEnabled) 1f else .45f
+    }
+
     private fun changeZoom(delta: Float) {
+        if (!cameraResumed || session == null || activeArray == null) return
         zoom = (zoom + delta).coerceIn(1f, maxZoom)
         zoomLabel.text = String.format("%.1f×", zoom)
+        updateZoomControls()
         previewRequest?.let { builder ->
             try {
                 applyPreviewControls(builder)
@@ -590,6 +622,12 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
         try { session?.close() } catch (_: Exception) { }
         session = null
         previewRequest = null
+        // A resumed camera starts with the torch off, matching its label.
+        flashOn = false
+        flashButton.isEnabled = false
+        flashButton.alpha = .55f
+        flashButton.text = "Checking…"
+        updateZoomControls()
         try { cameraDevice?.close() } catch (_: Exception) { }
         cameraDevice = null
         try { imageReader?.close() } catch (_: Exception) { }
@@ -617,6 +655,7 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
+            permissionRequestPending = false
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 startCameraIfReady()
             } else {
