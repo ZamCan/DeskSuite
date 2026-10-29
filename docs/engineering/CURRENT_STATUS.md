@@ -5,8 +5,8 @@
 ## Validation and publishing state
 
 - The **earlier public main** at `177a10f` completed its build matrix in [run 40704429058](https://github.com/ZamCan/DeskSuite/actions/runs/40704429058). That run does **not** validate the later selective consolidation.
-- [Run 40864502151](https://github.com/ZamCan/DeskSuite/actions/runs/40864502151) for `e6953e0` passed Flutter analysis and the test suite on all four CI hosts. Release packaging was skipped; native compilation, installation and device tests have **not** been performed. Later changes require their own validation. Host and stub checks are recorded in [VALIDATION.md](VALIDATION.md).
-- The original 18 heads and subsequently observed online heads were backed up and independently restored. No remote branch was deleted during this integration; verify current refs, unique work, backups and tests before retiring any branch.
+- [Run 40864502151](https://github.com/ZamCan/DeskSuite/actions/runs/40864502151) for `e6953e0` passed Flutter analysis and the test suite on all four CI hosts. The later `67c0b09` run passed analysis everywhere and 335 tests on three hosts, with one Windows save-wait failure; the follow-up fix requires its own CI result. Release packaging was skipped; native compilation, installation and device tests have **not** been performed. Details are in [VALIDATION.md](VALIDATION.md).
+- Eight redundant remote refs whose exact tips were already in `main` and restored backups were retired. Eleven refs with unique commits remain; see [BRANCH_INTEGRATION_LEDGER.md](BRANCH_INTEGRATION_LEDGER.md). Copy backups to independent storage and complete the outstanding review and device gates before further retirement.
 - The main push/PR workflow retains Flutter analysis and tests but its packaging steps now run only when a manual workflow dispatch explicitly opts in. The owner intends to package locally with existing tools. No credentials or signing keys belong in Git.
 
 ## Source capability inventory

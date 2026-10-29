@@ -14,9 +14,33 @@ Default branch: `main`
 7. Delete a branch only after its unique useful work has been accounted for and the merged result is verified. A branch name alone is not proof that its work is redundant.
 8. Do not commit keystores, passwords, signing properties, private customer data, build output, or generated duplicate APKs.
 
-## Branch inventory (GitHub compare against current main)
+## Current branch retirement and remaining refs
 
-This is a dated 2026-10-29 comparison and may predate later changes; re-fetch before decisions. Compared the following refs against `main`. “Ahead” means unique commits not present in main; “behind” is commits main has that the candidate lacks. A zero-ahead branch is historically behind main and contributes no unique commits in this comparison. Do not delete it until any externally valuable notes are checked.
+At `67c0b09` on 2026-10-29, eight remote branch references were retired after a fresh fetch, confirmation that no pull requests were open, verification that each exact tip was an ancestor of `main`, and comparison with separately restored Git bundles. Deletion was atomic and lease-protected so an advanced ref would stop the operation. No commit reachable from `main` was removed:
+
+- `agent/creative-studio-android`, `agent/document-workflows`, `engineering/office-content-editor`, `fix/windows-creative-studio-test-wait`, `integration/creative-studio-reconciled`, `integration/engine-completion-phase-1`, `integration/office-editor`, `release/0.2.0-integration`.
+
+The following eleven refs still contain unique commits. Some useful changes were selectively integrated, but a full, safe disposition of every unique change is not established. Keep these refs until their work is accounted for, backups are copied to independent storage, and relevant native/device checks pass; do not replace newer main files wholesale.
+
+| Remaining branch | Tip at audit | Unique commits ahead of `main` |
+|---|---|---:|
+| `agent/integration-candidate-20261028` | `4b1226197f9c` | 23 |
+| `agent/magic-scan-20261028` | `90904cd80c80` | 21 |
+| `engineering/document-workflows-phase-1` | `90e8087257d7` | 48 |
+| `engineering/engine-capability-audit` | `679f16ad51a7` | 27 |
+| `engineering/pdf-studio-editor` | `40ee7ad124e0` | 20 |
+| `engineering/scan-studio-ci-fixes` | `aef9dfd6a041` | 8 |
+| `feature/premium-workspace-branding-20261028` | `f4491ab945bf` | 51 |
+| `integration/complete-product-android-ready` | `c76f42918304` | 56 |
+| `integration/full-product-consolidation-2026-10-28` | `0d6a65d11f71` | 58 |
+| `integration/main-polish-engine-audit-20261028` | `07122cde9360` | 53 |
+| `integration/pdf-studio` | `c4dfedf9e2d7` | 2 |
+
+Re-fetch and recalculate before any later cleanup: these counts reflect commit ancestry, not necessarily distinct product features.
+
+## Historical branch inventory (before consolidation)
+
+This dated comparison predates the integration and the reference retirement above. It is kept as audit history, not as the current branch list. “Ahead” means unique commits not present in the then-current main; “behind” is commits main had that the candidate lacked.
 
 | Branch | Ahead | Behind | Changed files in compare | Decision |
 |---|---:|---:|---:|---|
@@ -50,10 +74,10 @@ This is a dated 2026-10-29 comparison and may predate later changes; re-fetch be
 
 ## Current blockers and known facts
 
-- PR #11 had earlier failing/cancelled runs during test iteration. The latest observed matrix run is `40811247150` for head `b120ecbf50c64f85c4b5f234c3ac99ae01476e7b`, currently in progress at the time of this update. Treat earlier green-looking or cancelled runs as non-acceptance; inspect this exact head's final result before merge.
-- The current `CameraGateway` uses `image_picker` and launches the device camera application. It is not the desired embedded CameraX-style capture experience.
+- [CI run 40864502151](https://github.com/ZamCan/DeskSuite/actions/runs/40864502151) passed Flutter analysis and tests on four hosts for `e6953e0`. The subsequent task-grid run and its follow-up must be checked separately; see [VALIDATION.md](VALIDATION.md).
+- The current `CameraGateway` opens the app-owned Android Camera2 activity for new captures. Image imports may use the platform picker. Camera2 was not compiled or exercised on a device here; permission, rotation, lifecycle, recovery, focus, flash and zoom remain device gates.
 - The current `pubspec.yaml` enforces the committed lockfile in CI. Dependency additions must include a correctly regenerated and reviewed `pubspec.lock`; do not add packages while leaving the lock stale.
-- The full reference PNG should be compared with the user-approved logo, including safe-area and small-icon legibility. Passing the asset validator alone does not prove visual equivalence.
+- The owner-selected blue DS scan-frame PNG is the launcher and boot identity; the adapted PS mark is used for Photo Studio. Passing asset tests does not prove safe-area, accessibility or small-icon appearance on actual devices.
 
 ## Per-branch review record
 
@@ -69,7 +93,7 @@ A targeted content/hash check against `main` confirms that the current main bran
 - `lib/pdf/pdf_combine.dart` and `test/pdf_combine_test.dart` — bounded ordered PDF combination with output inspection.
 - `pubspec.yaml` already declares the direct archive/XML dependencies used by Office package handling.
 
-**Decision:** do not copy these files from old branches or create parallel implementations. They are already canonical on `main`; focus the branch audit on genuinely different UI, office rendering, scan, image, and print/POS work. The candidate's latest compare is 20 commits ahead, 0 behind, with 16 changed files; the PR head and changed-file count must be refreshed again before merge because CI/test fixes may add commits.
+**Decision:** do not copy these files from old branches or create parallel implementations. They are already canonical on `main`; focus the branch audit on genuinely different UI, office rendering, scan, image, and print/POS work. The old 20-ahead, 0-behind comparison described an earlier PR head and is not the current graph; see the current inventory above.
 
 - `engineering/engine-capability-audit` `lib/image_engine/image_processing_service.dart` was reviewed against canonical `lib/images/photo_processor.dart`. Do **not** port it as a second image engine: it duplicates inspect/resize/crop/rotate behavior, permits a larger 40-megapixel synchronous decode path, and does not use the existing background-isolate boundary. Reuse or extend the canonical bounded processor instead; if an API is needed, add a thin adapter and tests around the existing limits.
 - `integration/pdf-studio` contains a substantial separate Office renderer (`office_preview.dart`, `office_layout.dart`, `pptx_layout.dart`, `xlsx_layout.dart`) and brand/bootstrap work. These files are absent from main and are not safe to cherry-pick individually without their parser, layout, font, asset, and golden-test dependencies. Audit that branch as one coherent rendering feature and port only after format-specific fixtures and fidelity tests pass.
