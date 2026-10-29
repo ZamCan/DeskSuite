@@ -264,7 +264,10 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
       if (data != null && mounted) {
         // Retain the camera result if decoding, limits, or draft saving fail.
         setState(() => recovered = data);
-        await _addBytes(data, fromRecovery: true);
+        final saved = await _addBytes(data, fromRecovery: true);
+        if (saved && mounted && widget.camera is AndroidCameraGateway) {
+          await _crop();
+        }
       }
     } catch (e) {
       message(
