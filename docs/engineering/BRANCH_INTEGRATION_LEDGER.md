@@ -14,31 +14,30 @@ Default branch: `main`
 7. Delete a branch only after its unique useful work has been accounted for and the merged result is verified. A branch name alone is not proof that its work is redundant.
 8. Do not commit keystores, passwords, signing properties, private customer data, build output, or generated duplicate APKs.
 
-## Branch inventory (initial triage)
+## Branch inventory (GitHub compare against current main)
 
-The following branches were visible during this review. This is an inventory, not a claim that every branch has already been line-by-line audited.
+Compared the following refs against `main` on 2026-10-29. “Ahead” means unique commits not present in main; “behind” is commits main has that the candidate lacks. A zero-ahead branch is historically behind main and contributes no unique commits in this comparison. Do not delete it until any externally valuable notes are checked.
 
-| Branch | Initial role inferred from name | Integration status |
-|---|---|---|
-| `main` | Canonical product | Protected as release source; current baseline |
-| `feature/premium-workspace-branding-20261028` | Task-first workspace and supplied brand mark | Candidate PR #11; CI failed at `flutter analyze`; not merge-ready |
-| `agent/creative-studio-android` | Creative studio work | Needs diff and behavior review |
-| `agent/document-workflows` | Document workflow work | Needs diff and behavior review |
-| `agent/integration-candidate-20261028` | Integration candidate | Needs diff and behavior review |
-| `agent/magic-scan-20261028` | Scan and brand assets | Candidate assets found; needs diff, dependency, and device review |
-| `engineering/document-workflows-phase-1` | Document workflows phase 1 | Needs diff and tests review |
-| `engineering/engine-capability-audit` | Engine capability audit | Candidate audit material; reconcile with current code |
-| `engineering/office-content-editor` | Office content editor | Needs diff and format-preservation tests |
-| `engineering/pdf-studio-editor` | PDF editing studio | Needs diff, memory/performance, and PDF fidelity tests |
-| `engineering/scan-studio-ci-fixes` | Scan Studio/CI work | Existing camera gateway delegates to external camera app; not native in-app capture |
-| `integration/complete-product-android-ready` | Broad Android integration | Needs full diff and clean CI; branch label is not validation |
-| `integration/creative-studio-reconciled` | Reconciled creative studio | Needs diff and conflict review |
-| `integration/engine-completion-phase-1` | Engine completion phase 1 | Needs diff and behavior tests |
-| `integration/full-product-consolidation-2026-10-28` | Broad consolidation | Previously observed far ahead and behind main; do not wholesale merge |
-| `integration/main-polish-engine-audit-20261028` | Main polish and audit | Needs diff and test review |
-| `integration/office-editor` | Office editor | Needs diff and document round-trip tests |
-| `integration/pdf-studio` | PDF studio | Needs diff and rendering/edit/export tests |
-| `release/0.2.0-integration` | Historical release candidate | Check for unique fixes; do not replace current version metadata blindly |
+| Branch | Ahead | Behind | Changed files in compare | Decision |
+|---|---:|---:|---:|---|
+| `agent/creative-studio-android` | 0 | 209 | 0 | No unique commits vs main; candidate for archival after final file/content spot-check |
+| `agent/document-workflows` | 0 | 175 | 0 | No unique commits vs main; candidate for archival after final file/content spot-check |
+| `agent/integration-candidate-20261028` | 23 | 29 | 242 | Diverged; do not merge wholesale; review unique assets and engine code in small batches |
+| `agent/magic-scan-20261028` | 21 | 33 | 208 | Diverged; selectively review brand and scan assets; do not merge wholesale |
+| `engineering/document-workflows-phase-1` | 48 | 189 | 28 | Diverged; review Android, document-format, and audit docs individually |
+| `engineering/engine-capability-audit` | 27 | 189 | 11 | Diverged; review image engine and its tests as a coherent candidate |
+| `engineering/office-content-editor` | 0 | 142 | 0 | No unique commits vs main; candidate for archival after final file/content spot-check |
+| `engineering/pdf-studio-editor` | 20 | 169 | 13 | Diverged; review PDF editor, conversion catalog, and tests individually |
+| `engineering/scan-studio-ci-fixes` | 8 | 169 | 2 | Diverged; scan Studio and widget test are a small reviewable unit |
+| `integration/complete-product-android-ready` | 56 | 134 | 29 | Diverged; review release docs, brand assets, build workflow and unique modules; no wholesale merge |
+| `integration/creative-studio-reconciled` | 0 | 191 | 0 | No unique commits vs main; candidate for archival after final file/content spot-check |
+| `integration/engine-completion-phase-1` | 0 | 18 | 0 | No unique commits vs main; candidate for archival after final file/content spot-check |
+| `integration/full-product-consolidation-2026-10-28` | 58 | 29 | 50 | Diverged and heavily changed; treat as a reference source only, port tested units |
+| `integration/main-polish-engine-audit-20261028` | 53 | 6 | 33 | Nearer to main but diverged; high-priority review for engine register, current status, and startup polish |
+| `integration/office-editor` | 0 | 140 | 0 | No unique commits vs main; candidate for archival after final file/content spot-check |
+| `integration/pdf-studio` | 2 | 29 | 54 | Diverged; inspect the 54-file tree for meaningful unmerged work before deciding |
+| `release/0.2.0-integration` | 0 | 132 | 0 | No unique commits vs main; candidate for archival after final file/content spot-check |
+| `feature/premium-workspace-branding-20261028` | 7 | 0 | 11 | PR #11; current candidate branch; not merge-ready until current CI passes |
 
 ## Product acceptance gates
 
