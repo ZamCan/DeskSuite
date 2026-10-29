@@ -89,7 +89,7 @@ class _LaunchArtwork extends StatelessWidget {
     return Opacity(
       opacity: fadeOut,
       child: ColoredBox(
-        color: const Color(0xff0b2d70), // Matches Android's launch background.
+        color: const Color(0xff292721), // Matches Android's launch background.
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -120,12 +120,12 @@ class _LaunchArtwork extends StatelessWidget {
                               children: [
                                 DecoratedBox(
                                   decoration: BoxDecoration(
-                                    color: const Color(0xff174a9a),
+                                    color: const Color(0xffa84f36),
                                     borderRadius: BorderRadius.circular(
                                       size * .22,
                                     ),
                                     border: Border.all(
-                                      color: const Color(0xff75eaf3)
+                                      color: const Color(0xffd9b29f)
                                           .withValues(alpha: .3),
                                     ),
                                   ),
@@ -155,10 +155,10 @@ class _LaunchArtwork extends StatelessWidget {
                           ),
                           const SizedBox(height: 5),
                           const Text(
-                            'CREATE. DESIGN. PRINT. MANAGE.',
+                            'Documents · Design · Print · Business',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Color(0xffc4e8ff),
+                              color: Color(0xfff0dfd5),
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 1.1,
@@ -202,7 +202,7 @@ class _DrawBrand extends CustomPainter {
       ..lineTo(.26, .75)
       ..close();
     stroke
-      ..color = const Color(0xfff4faff).withValues(alpha: opacity)
+      ..color = const Color(0xfff6f3ed).withValues(alpha: opacity)
       ..strokeWidth = .055;
     _drawPartial(canvas, d, (progress / .48).clamp(0.0, 1.0), stroke);
 
@@ -212,7 +212,7 @@ class _DrawBrand extends CustomPainter {
       ..cubicTo(.52, .45, .68, .44, .73, .51)
       ..cubicTo(.8, .6, .7, .73, .56, .67);
     stroke
-      ..color = const Color(0xff50ddea).withValues(alpha: opacity)
+      ..color = const Color(0xffa84f36).withValues(alpha: opacity)
       ..strokeWidth = .052;
     _drawPartial(canvas, s, ((progress - .15) / .48).clamp(0.0, 1.0), stroke);
 
@@ -239,7 +239,7 @@ class _DrawBrand extends CustomPainter {
       ..quadraticBezierTo(.88, .88, .88, .86)
       ..lineTo(.88, .75);
     stroke
-      ..color = const Color(0xff75eaf3).withValues(alpha: opacity)
+      ..color = const Color(0xffd9b29f).withValues(alpha: opacity)
       ..strokeWidth = .022;
     _drawPartial(canvas, frame, (progress / .4).clamp(0.0, 1.0), stroke);
     canvas.restore();
