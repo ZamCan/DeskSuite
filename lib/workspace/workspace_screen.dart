@@ -411,12 +411,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xff49352d), Color(0xff80513f), Color(0xffb96045)],
+              colors: [Color(0xff153b66), Color(0xff1b5b7a), Color(0xff168b91)],
             ),
             borderRadius: BorderRadius.circular(24),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x2249352d),
+                color: Color(0x22153b66),
                 blurRadius: 22,
                 offset: Offset(0, 10),
               ),
@@ -452,7 +452,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         ),
                         SizedBox(height: 3),
                         Text(
-                          'Create. Prepare. Print. Sell.',
+                          'Scan · Edit · Design · Print',
                           style: TextStyle(color: Color(0xfff3e4d8), fontSize: 13),
                         ),
                       ],
@@ -472,7 +472,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               ),
               const SizedBox(height: 7),
               const Text(
-                'Choose a task. DeskSuite will guide the next step.',
+                'Your tools, ready.',
                 style: TextStyle(color: Color(0xfff0dfd2), fontSize: 14),
               ),
               const SizedBox(height: 18),
@@ -487,7 +487,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     label: const Text('Scan a document'),
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xff49352d),
+                      foregroundColor: const Color(0xff153b66),
                       minimumSize: const Size(48, 48),
                     ),
                   ),
@@ -508,7 +508,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           ),
         ),
         const SizedBox(height: 18),
-        _heading('Quick actions', 'Open the tool you need—without hunting through navigation.'),
+        _heading('Quick actions', '');
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
@@ -832,7 +832,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           ),
         ),
         const SizedBox(height: 24),
-        Text('DeskSuite · 0.1.0', style: Theme.of(context).textTheme.bodySmall),
+        Text('DeskSuite · 0.2.1', style: Theme.of(context).textTheme.bodySmall),
       ],
     ),
   );
