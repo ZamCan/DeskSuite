@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../app/section_artwork.dart';
 import '../app/theme.dart';
 import '../design/design_document.dart';
 import '../design/editor_screen.dart';
@@ -575,14 +576,18 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 54,
-                            height: 54,
-                            decoration: BoxDecoration(
-                              color: color.withValues(alpha: .11),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Icon(icon, color: color, size: 28),
+                          SectionArtwork(
+                            asset: switch (title) {
+                              'Scan & assemble' => SectionArt.scan,
+                              'Photo Studio' => SectionArt.photo,
+                              'Text extraction' => SectionArt.text,
+                              'Document converter' => SectionArt.office,
+                              'Creative Studio' => SectionArt.design,
+                              'Files & Projects' => SectionArt.projects,
+                              _ => SectionArt.design,
+                            },
+                            size: 60,
+                            fallback: icon,
                           ),
                           const SizedBox(width: 14),
                           Expanded(
