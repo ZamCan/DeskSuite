@@ -18,7 +18,6 @@ import 'conversion_catalog_page.dart';
 import 'creative_studio_page.dart';
 import 'file_gateway.dart';
 import 'getting_started_page.dart';
-import 'new_design_dialog.dart';
 import 'project_repository.dart';
 import 'workspace_widgets.dart';
 
@@ -49,14 +48,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   String? _listError;
   bool _loading = true;
   int _refreshVersion = 0;
-  bool _showWelcome = false;
   Uint8List? _recoveredCapture;
 
   @override
   void initState() {
     super.initState();
     _refresh();
-    _loadWelcome();
     widget.cameraRecovery?.then((result) {
       if (!mounted) return;
       if (result.bytes != null) {
@@ -73,27 +70,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         });
       }
     });
-  }
-
-  Future<void> _loadWelcome() async {
-    try {
-      final seen = await widget.repository.readWelcomeSeen();
-      if (mounted) setState(() => _showWelcome = !seen);
-    } catch (_) {
-      // The workspace still opens if the optional preference cannot be read.
-    }
-  }
-
-  Future<void> _dismissWelcome({bool openGuide = false}) async {
-    setState(() => _showWelcome = false);
-    if (openGuide) _navigate(WorkspaceSection.guide);
-    try {
-      await widget.repository.writeWelcomeSeen();
-    } catch (_) {
-      _message(
-        'Could not save the welcome preference; it may appear again next time.',
-      );
-    }
   }
 
   Future<void> _openEditableExample() async {
@@ -138,23 +114,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   void _message(String text) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
-    }
-  }
-
-  Future<void> _newDesign([
-    DesignTemplate template = DesignTemplate.blank,
-  ]) async {
-    final doc = await showDialog<DesignDocument>(
-      context: context,
-      builder: (_) => NewDesignDialog(template: template),
-    );
-    if (doc == null || !mounted) return;
-    try {
-      await widget.repository.save(doc);
-      if (!mounted) return;
-      await _openDocument(doc);
-    } catch (error) {
-      _message('Could not create project: $error');
     }
   }
 
