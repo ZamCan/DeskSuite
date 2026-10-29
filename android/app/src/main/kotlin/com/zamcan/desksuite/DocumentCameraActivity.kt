@@ -162,6 +162,7 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
             contentDescription = "Capture page"
             isClickable = true
             isFocusable = true
+            isEnabled = false
             setOnClickListener { captureStill() }
         }
         val shutterParams = LinearLayout.LayoutParams(dp(76), dp(76))
@@ -341,7 +342,15 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
                         builder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
                         previewRequest = builder
                         applyPreviewControls(builder)
-                        configured.setRepeatingRequest(builder.build(), null, handler)
+                        try {
+                            configured.setRepeatingRequest(builder.build(), null, handler)
+                            runOnUiThread {
+                                shutter.isEnabled = true
+                                shutter.contentDescription = "Capture page"
+                            }
+                        } catch (_: CameraAccessException) {
+                            finishWithError("camera_unavailable")
+                        }
                     }
                     override fun onConfigureFailed(configured: CameraCaptureSession) {
                         configured.close()
@@ -402,7 +411,8 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
     private fun captureStill() {
         val device = cameraDevice ?: return
         val reader = imageReader ?: return
-        if (!capturing.compareAndSet(false, true)) return
+        val activeSession = session ?: return
+        if (!shutter.isEnabled || !capturing.compareAndSet(false, true)) return
         shutter.isEnabled = false
         shutter.text = "…"
         try {
@@ -413,7 +423,7 @@ class DocumentCameraActivity : Activity(), TextureView.SurfaceTextureListener {
                 set(CaptureRequest.JPEG_ORIENTATION, jpegOrientation())
                 applyPreviewControls(this)
             }
-            session?.capture(request.build(), object : CameraCaptureSession.CaptureCallback() {
+            activeSession.capture(request.build(), object : CameraCaptureSession.CaptureCallback() {
                 override fun onCaptureFailed(
                     session: CameraCaptureSession,
                     request: CaptureRequest,
