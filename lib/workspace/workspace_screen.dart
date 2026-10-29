@@ -507,6 +507,45 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             ],
           ),
         ),
+        const SizedBox(height: 18),
+        _heading('Quick actions', 'Open the tool you need—without hunting through navigation.'),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _quickAction(
+              key: const Key('home-quick-pdf'),
+              icon: Icons.picture_as_pdf_outlined,
+              label: 'Open PDF',
+              onPressed: () => _navigate(WorkspaceSection.pdfStudio),
+            ),
+            _quickAction(
+              key: const Key('home-quick-office'),
+              icon: Icons.description_outlined,
+              label: 'Office files',
+              onPressed: () => _navigate(WorkspaceSection.office),
+            ),
+            _quickAction(
+              key: const Key('home-quick-photo'),
+              icon: Icons.photo_outlined,
+              label: 'Photo tools',
+              onPressed: () => _navigate(WorkspaceSection.photos),
+            ),
+            _quickAction(
+              key: const Key('home-quick-print'),
+              icon: Icons.print_outlined,
+              label: 'Print',
+              onPressed: () => _navigate(WorkspaceSection.printing),
+            ),
+            _quickAction(
+              key: const Key('home-quick-projects'),
+              icon: Icons.folder_open_outlined,
+              label: 'Recent projects',
+              onPressed: () => _navigate(WorkspaceSection.projects),
+            ),
+          ],
+        ),
         const SizedBox(height: 28),
         _heading('Your workbench', 'Four studios. One connected workflow.'),
         const SizedBox(height: 14),
@@ -795,6 +834,23 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         const SizedBox(height: 24),
         Text('DeskSuite · 0.1.0', style: Theme.of(context).textTheme.bodySmall),
       ],
+    ),
+  );
+
+  Widget _quickAction({
+    required Key key,
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) => OutlinedButton.icon(
+    key: key,
+    onPressed: onPressed,
+    icon: Icon(icon, size: 18),
+    label: Text(label),
+    style: OutlinedButton.styleFrom(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      minimumSize: const Size(48, 46),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     ),
   );
 
