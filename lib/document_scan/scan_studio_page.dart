@@ -741,16 +741,67 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
       children: [
-        Text(
-          'Scan & assemble',
-          style: Theme.of(context).textTheme.headlineSmall
-              ?.copyWith(fontWeight: FontWeight.w800),
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                scheme.primaryContainer.withValues(alpha: .92),
+                scheme.surfaceContainerHighest.withValues(alpha: .72),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: scheme.outlineVariant.withValues(alpha: .65)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: scheme.surface.withValues(alpha: .88),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(Icons.document_scanner_rounded, color: scheme.primary, size: 27),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Scan a document',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -.35,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Capture  ·  Crop  ·  Clean  ·  PDF',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Add a page to begin. Fine-tune its corners, improve readability, then export a multi-page PDF.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 6),
-        const Text(
-          'Capture or import pages, correct and clean them, then save an image PDF. Originals are not changed automatically.',
-        ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         if (recovered != null)
           Card(
             child: Padding(
@@ -818,22 +869,22 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            FilledButton.icon(
-              key: const Key('scan-import'),
-              onPressed: busy || pages.length >= maxScanPages ? null : _import,
-              icon: const Icon(Icons.add_photo_alternate_outlined),
-              label: const Text('Add image'),
-            ),
             if (widget.camera != null)
-              OutlinedButton.icon(
+              FilledButton.icon(
                 key: const Key('scan-camera'),
                 onPressed:
                     busy || recovered != null || pages.length >= maxScanPages
                     ? null
                     : _capture,
                 icon: const Icon(Icons.photo_camera_outlined),
-                label: const Text('Use camera'),
+                label: const Text('Capture page'),
               ),
+            OutlinedButton.icon(
+              key: const Key('scan-import'),
+              onPressed: busy || pages.length >= maxScanPages ? null : _import,
+              icon: const Icon(Icons.add_photo_alternate_outlined),
+              label: const Text('Import image'),
+            ),
             OutlinedButton.icon(
               key: const Key('scan-samples'),
               onPressed: busy ? null : _samples,
