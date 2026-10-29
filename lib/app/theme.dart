@@ -81,7 +81,7 @@ class BrandMark extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: const Color(0xff073b91),
+          color: const Color(0xff6f4034),
           borderRadius: BorderRadius.circular(size * .25),
         ),
         alignment: Alignment.center,
