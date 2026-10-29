@@ -62,7 +62,10 @@ void main() {
     expect(find.byKey(const Key('home-primary-scan')), findsOneWidget);
     expect(find.byKey(const Key('home-primary-create')), findsOneWidget);
     await tester.tap(find.byKey(const Key('home-primary-create')));
-    await tester.pumpAndSettle();
+    // The workspace contains an ongoing animation; pump the dialog directly
+    // rather than waiting for every ticker in the entire app to become idle.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
     await tester.enterText(
       find.byKey(const Key('project-name')),
       'Studio poster',
