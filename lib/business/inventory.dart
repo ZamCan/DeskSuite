@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'business_settings.dart';
 import 'sale_receipt.dart';
 
 import '../core/ids.dart';
@@ -38,6 +39,9 @@ class InventoryProduct {
     required this.id,
     required this.name,
     required this.priceMinor,
+    this.wholesalePriceMinor,
+    this.wholesaleMinQuantity = 10,
+    this.unitLabel = 'piece',
     required this.stock,
     required this.sold,
     Map<String, Object?> extraFields = const {},
@@ -47,6 +51,13 @@ class InventoryProduct {
         name.length > 200 ||
         priceMinor < 0 ||
         priceMinor > maxUnitPriceMinor ||
+        (wholesalePriceMinor != null &&
+            (wholesalePriceMinor! < 0 ||
+                wholesalePriceMinor! > maxUnitPriceMinor)) ||
+        wholesaleMinQuantity < 1 ||
+        wholesaleMinQuantity > maxSaleQuantity ||
+        unitLabel.trim().isEmpty ||
+        unitLabel.length > 24 ||
         stock < 0 ||
         stock > maxStockCount ||
         sold < 0 ||
@@ -58,6 +69,9 @@ class InventoryProduct {
   final String id;
   final String name;
   final int priceMinor;
+  final int? wholesalePriceMinor;
+  final int wholesaleMinQuantity;
+  final String unitLabel;
   final int stock;
   final int sold;
   final Map<String, Object?> extraFields;
@@ -68,6 +82,9 @@ class InventoryProduct {
         id: json['id'] as String,
         name: json['name'] as String,
         priceMinor: json['priceMinor'] as int,
+        wholesalePriceMinor: json['wholesalePriceMinor'] as int?,
+        wholesaleMinQuantity: json['wholesaleMinQuantity'] as int? ?? 10,
+        unitLabel: json['unitLabel'] as String? ?? 'piece',
         stock: json['stock'] as int,
         sold: json['sold'] as int,
         extraFields: Map<String, Object?>.from(json)
@@ -76,6 +93,9 @@ class InventoryProduct {
               'id',
               'name',
               'priceMinor',
+              'wholesalePriceMinor',
+              'wholesaleMinQuantity',
+              'unitLabel',
               'stock',
               'sold',
             }.contains(key),
@@ -93,6 +113,9 @@ class InventoryProduct {
     'id': id,
     'name': name,
     'priceMinor': priceMinor,
+    if (wholesalePriceMinor != null) 'wholesalePriceMinor': wholesalePriceMinor,
+    'wholesaleMinQuantity': wholesaleMinQuantity,
+    'unitLabel': unitLabel,
     'stock': stock,
     'sold': sold,
   };
@@ -112,6 +135,9 @@ class InventoryProduct {
       id: id,
       name: name,
       priceMinor: priceMinor,
+      wholesalePriceMinor: wholesalePriceMinor,
+      wholesaleMinQuantity: wholesaleMinQuantity,
+      unitLabel: unitLabel,
       stock: stock - quantity,
       sold: sold + quantity,
       extraFields: extraFields,
@@ -182,12 +208,18 @@ class InventoryRepository {
     required String name,
     required int priceMinor,
     required int stock,
+    int? wholesalePriceMinor,
+    int wholesaleMinQuantity = 10,
+    String unitLabel = 'piece',
   }) => _transaction(() async {
     final current = await load();
     final product = InventoryProduct(
       id: newId(),
       name: name.trim(),
       priceMinor: priceMinor,
+      wholesalePriceMinor: wholesalePriceMinor,
+      wholesaleMinQuantity: wholesaleMinQuantity,
+      unitLabel: unitLabel.trim(),
       stock: stock,
       sold: 0,
     );
@@ -219,53 +251,86 @@ class InventoryRepository {
   /// Records a sale: stock goes down, the sold counter goes up, and the sale is
   /// appended to `sales.json` so a receipt can be reprinted later.
   ///
-  /// The two files cannot be written in one atomic step. The stock file is
-  /// written first and restored if the sales log fails, so a failure never
-  /// leaves stock sold without a record.
-  Future<SaleOutcome> recordSale({required String id, int quantity = 1}) =>
-      _transaction(() async {
-        if (!isSafeId(id)) {
-          throw const FormatException('Invalid product identifier.');
-        }
-        final current = await load();
-        final index = current.products.indexWhere((p) => p.id == id);
-        if (index < 0) throw StateError('Product not found.');
-        final product = current.products[index];
-        final pending = List.of(await loadSales());
-        final next = [...current.products];
-        next[index] = product.recordUnits(quantity);
-
-        final previousText = current.encodeJson();
-        final snapshot = await _save(next);
-        final record = SaleRecord(
-          number:
-              (pending.isEmpty
-                  ? 0
-                  : pending
-                        .map((sale) => sale.number)
-                        .reduce((a, b) => a > b ? a : b)) +
-              1,
-          productId: product.id,
-          productName: product.name,
-          quantity: quantity,
-          unitPriceMinor: product.priceMinor,
-          soldAt: DateTime.now(),
+  /// The two files cannot be written in one atomic step. On a sales-log write
+  /// error a rollback is attempted, but interruption or a failed rollback can
+  /// still leave them inconsistent. This is not a transactional POS ledger.
+  Future<SaleOutcome> recordSale({
+    required String id,
+    int quantity = 1,
+    String currency = 'TSh',
+    bool wholesale = false,
+  }) => _transaction(() async {
+    if (!isSafeId(id)) {
+      throw const FormatException('Invalid product identifier.');
+    }
+    if (!isSupportedBusinessCurrency(currency)) {
+      throw const FormatException('Choose a supported shop currency.');
+    }
+    final current = await load();
+    final index = current.products.indexWhere((p) => p.id == id);
+    if (index < 0) throw StateError('Product not found.');
+    final product = current.products[index];
+    if (wholesale &&
+        (product.wholesalePriceMinor == null ||
+            quantity < product.wholesaleMinQuantity)) {
+      throw FormatException(
+        'Wholesale pricing requires at least ${product.wholesaleMinQuantity} ${product.unitLabel}(s).',
+      );
+    }
+    final unitPrice = wholesale
+        ? product.wholesalePriceMinor!
+        : product.priceMinor;
+    final pending = List.of(await loadSales());
+    final next = [...current.products];
+    next[index] = product.recordUnits(quantity);
+    final previousText = current.encodeJson();
+    // Validate all receipt data before changing stock. The receipt engine has
+    // a deliberately lower per-unit limit than the inventory-value model.
+    final record = SaleRecord(
+      number:
+          (pending.isEmpty
+              ? 0
+              : pending
+                    .map((sale) => sale.number)
+                    .reduce((a, b) => a > b ? a : b)) +
+          1,
+      productId: product.id,
+      productName: product.name,
+      quantity: quantity,
+      unitPriceMinor: unitPrice,
+      soldAt: DateTime.now(),
+      currency: currency,
+      unitLabel: product.unitLabel,
+      priceTier: wholesale ? 'wholesale' : 'retail',
+    );
+    if (record.number > 999999) {
+      throw StateError(
+        'Receipt number limit reached; export your records before continuing.',
+      );
+    }
+    record.toLine(); // Reject an unprintable line before the stock write.
+    final snapshot = await _save(next);
+    final log = [...pending, record];
+    final retained = log.length > maxSalesRetained
+        ? log.sublist(log.length - maxSalesRetained)
+        : log;
+    try {
+      await files.writeText(
+        'sales.json',
+        jsonEncode(retained.map((sale) => sale.toJson()).toList()),
+      );
+    } catch (error) {
+      try {
+        await files.writeText('products.json', previousText);
+      } catch (_) {
+        throw StateError(
+          'The sales log and stock rollback both failed. Check the local records and backups before continuing.',
         );
-        final log = [...pending, record];
-        final retained = log.length > maxSalesRetained
-            ? log.sublist(log.length - maxSalesRetained)
-            : log;
-        try {
-          await files.writeText(
-            'sales.json',
-            jsonEncode(retained.map((sale) => sale.toJson()).toList()),
-          );
-        } catch (error) {
-          await files.writeText('products.json', previousText);
-          throw StateError('The sale was not recorded: $error');
-        }
-        return SaleOutcome(snapshot: snapshot, sale: record);
-      });
+      }
+      throw StateError('The sale was not recorded: $error');
+    }
+    return SaleOutcome(snapshot: snapshot, sale: record);
+  });
 
   Future<InventorySnapshot> recordOneUnit(String id) async =>
       (await recordSale(id: id)).snapshot;
@@ -283,6 +348,7 @@ class SaleOutcome {
         number: sale.number,
         issuedAt: sale.soldAt,
         shopName: shopName,
+        currency: sale.currency,
         lines: [sale.toLine()],
       );
 }

@@ -54,7 +54,12 @@ class FakeSalesRepository extends InventoryRepository {
   Future<List<SaleRecord>> loadSales() async => const [];
 
   @override
-  Future<SaleOutcome> recordSale({required String id, int quantity = 1}) async {
+  Future<SaleOutcome> recordSale({
+    required String id,
+    int quantity = 1,
+    String currency = 'TSh',
+    bool wholesale = false,
+  }) async {
     _product = _product.recordUnits(quantity);
     final sale = SaleRecord(
       number: ++_sales,
@@ -63,6 +68,9 @@ class FakeSalesRepository extends InventoryRepository {
       quantity: quantity,
       unitPriceMinor: _product.priceMinor,
       soldAt: DateTime(2026, 10, 28, 9, 30),
+      currency: currency,
+      unitLabel: _product.unitLabel,
+      priceTier: wholesale ? 'wholesale' : 'retail',
     );
     return SaleOutcome(snapshot: InventorySnapshot([_product]), sale: sale);
   }

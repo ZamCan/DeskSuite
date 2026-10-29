@@ -28,6 +28,69 @@ void main() {
     },
   );
 
+  test('legacy and tiered product fields round-trip and stock updates preserve them', () {
+    final old = InventoryProduct.fromJson({
+      'id': 'p',
+      'name': 'Paper',
+      'priceMinor': 100,
+      'stock': 5,
+      'sold': 0,
+      'supplier': 'kept',
+    });
+    expect(old.wholesalePriceMinor, isNull);
+    expect(old.wholesaleMinQuantity, 10);
+    expect(old.unitLabel, 'piece');
+    expect(old.extraFields['supplier'], 'kept');
+    final tiered = InventoryProduct(
+      id: 'q',
+      name: 'Sheet',
+      priceMinor: 100,
+      stock: 20,
+      sold: 0,
+      wholesalePriceMinor: 80,
+      wholesaleMinQuantity: 5,
+      unitLabel: 'sheet',
+      extraFields: const {'supplier': 'kept'},
+    );
+    final saved = InventoryProduct.fromJson(tiered.recordUnits(5).toJson());
+    expect(saved.wholesalePriceMinor, 80);
+    expect(saved.wholesaleMinQuantity, 5);
+    expect(saved.unitLabel, 'sheet');
+    expect(saved.stock, 15);
+    expect(saved.extraFields['supplier'], 'kept');
+    for (final bad in [0, 1000]) {
+      expect(
+        () => InventoryProduct(
+          id: 'p',
+          name: 'x',
+          priceMinor: 1,
+          stock: 1,
+          sold: 0,
+          wholesaleMinQuantity: bad,
+        ),
+        throwsFormatException,
+      );
+    }
+  });
+
+  test('receipt price limits are checked before stock is changed', () async {
+    final dir = await Directory.systemTemp.createTemp('desksuite_sale_limit_');
+    addTearDown(() => dir.delete(recursive: true));
+    final repo = InventoryRepository(LocalFileStore(() async => dir));
+    final added = await repo.addProduct(
+      name: 'High-value stock',
+      priceMinor: 1000000001,
+      stock: 1,
+    );
+    await expectLater(
+      repo.recordSale(id: added.products.single.id),
+      throwsFormatException,
+    );
+    expect((await repo.load()).products.single.stock, 1);
+    expect((await repo.load()).products.single.sold, 0);
+    expect(await repo.loadSales(), isEmpty);
+  });
+
   test(
     'legacy catalogue is retained and concurrent stock updates do not oversell',
     () async {
@@ -99,4 +162,41 @@ void main() {
       }
     },
   );
+  test('wholesale tier requires its minimum and snapshots currency in the sale log', () async {
+    final dir = await Directory.systemTemp.createTemp('desksuite_wholesale_');
+    addTearDown(() => dir.delete(recursive: true));
+    final repo = InventoryRepository(LocalFileStore(() async => dir));
+    final added = await repo.addProduct(
+      name: 'A4 sheet',
+      priceMinor: 100,
+      wholesalePriceMinor: 80,
+      wholesaleMinQuantity: 5,
+      unitLabel: 'sheet',
+      stock: 20,
+    );
+    final id = added.products.single.id;
+    await expectLater(
+      repo.recordSale(id: id, quantity: 4, currency: 'USD', wholesale: true),
+      throwsFormatException,
+    );
+    final sold = await repo.recordSale(
+      id: id,
+      quantity: 5,
+      currency: 'USD',
+      wholesale: true,
+    );
+    expect(sold.snapshot.products.single.stock, 15);
+    expect(sold.snapshot.products.single.sold, 5);
+    expect(sold.sale.priceTier, 'wholesale');
+    expect(sold.sale.unitLabel, 'sheet');
+    expect(sold.sale.currency, 'USD');
+    expect(sold.sale.unitPriceMinor, 80);
+    expect(sold.receipt().formattedTotal, 'USD 4.00');
+    final loaded = await InventoryRepository(LocalFileStore(() async => dir))
+        .loadSales();
+    expect(loaded.single.currency, 'USD');
+    expect(loaded.single.priceTier, 'wholesale');
+    expect(loaded.single.unitLabel, 'sheet');
+    expect(loaded.single.totalMinor, 400);
+  });
 }
