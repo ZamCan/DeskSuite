@@ -247,9 +247,11 @@ void main() {
 
     expect(find.textContaining('Sale recorded'), findsOneWidget);
     expect(find.textContaining('TSh 125.50'), findsOneWidget);
-    expect(find.widgetWithText(SnackBarAction, 'Receipt'), findsOneWidget);
-
-    await tester.tap(find.widgetWithText(SnackBarAction, 'Receipt'));
+    final receipt = find.widgetWithText(SnackBarAction, 'Receipt');
+    expect(receipt, findsOneWidget);
+    // The snackbar's widget exists before its slide-in animation is tappable.
+    await settleUntil(tester, receipt.hitTestable());
+    await tester.tap(receipt.hitTestable());
     await waitUntil(tester, () => printer.bytes != null);
     expect(String.fromCharCodes(printer.bytes!.take(5)), '%PDF-');
     expect(printer.name, 'receipt-0001');
