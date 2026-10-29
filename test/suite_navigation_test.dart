@@ -286,7 +286,7 @@ void main() {
       await tester.ensureVisible(legacy);
       await tester.pumpAndSettle();
       await tester.tap(legacy);
-      await settleIo(tester);
+      await settleUntil(tester, find.byKey(const Key('design-canvas')));
       expect(find.byKey(const Key('design-canvas')), findsOneWidget);
       await tester.tap(find.byTooltip('Back to workspace'));
       await settleIo(tester);

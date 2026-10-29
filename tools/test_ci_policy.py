@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that ordinary CI keeps tests but never packages automatically.
+"""Check that ordinary CI tests all targets and packages Android on main only.
 
 This is a structural policy check, not a build or a GitHub Actions execution.
 It intentionally uses only the Python standard library.
@@ -10,6 +10,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / '.github/workflows/build.yml'
 OPT_IN = "if: ${{ github.event_name == 'workflow_dispatch' && inputs.package_release }}"
+ANDROID_RELEASE = "if: ${{ (github.event_name == 'workflow_dispatch' && inputs.package_release) || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}"
 
 
 def job_steps(source, job):
@@ -50,7 +51,7 @@ class WorkflowPolicyTest(unittest.TestCase):
     def test_release_build_archive_and_upload_steps_require_manual_opt_in(self):
         source = WORKFLOW.read_text()
         expected = {
-            'android': ['flutter build apk --release', 'flutter build appbundle --release', 'name: desksuite-android'],
+            'android': ['flutter build apk --release', 'flutter build appbundle --release', 'name: desksuite-android-unsigned'],
             'windows': ['flutter build windows --release', 'Compress-Archive', 'name: desksuite-windows-x64'],
             'linux': ['flutter build linux --release', 'tar -czf desksuite-linux', 'name: Assemble AppImage directory', 'name: desksuite-linux-x64'],
             'ios': ['flutter build ios --release --no-codesign', 'ditto -c -k', 'name: desksuite-ios-unsigned-validation'],
@@ -60,7 +61,8 @@ class WorkflowPolicyTest(unittest.TestCase):
             for marker in markers:
                 matches = [step for step in steps if marker in step]
                 self.assertEqual(len(matches), 1, (job, marker))
-                self.assertIn(OPT_IN, matches[0], (job, marker))
+                expected_condition = ANDROID_RELEASE if job == 'android' else OPT_IN
+                self.assertIn(expected_condition, matches[0], (job, marker))
 
 
 if __name__ == '__main__':
