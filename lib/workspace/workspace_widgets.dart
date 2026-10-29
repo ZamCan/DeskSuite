@@ -236,22 +236,24 @@ class WorkspaceSidebar extends StatelessWidget {
               children: [
                 BrandMark(),
                 SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'DeskSuite',
-                      style: TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -.6,
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'DeskSuite',
+                        style: TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -.6,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'CREATIVE WORKSPACE',
-                      style: TextStyle(fontSize: 9, letterSpacing: 1.05),
-                    ),
-                  ],
+                      Text(
+                        'CREATIVE WORKSPACE',
+                        style: TextStyle(fontSize: 9, letterSpacing: 1.05),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

@@ -116,7 +116,7 @@ void main() {
     await tester.pump();
     await tester.tap(find.byTooltip('Export design'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Print-ready PDF · 150 dpi'));
+    await tester.tap(find.text('PDF page · 150 dpi'));
     // The resolution check decodes the embedded image, so on a loaded runner it
     // arrives later than any fixed number of pumps. Waiting for the warning is
     // also an assertion that it appears at all.

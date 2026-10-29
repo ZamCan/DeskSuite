@@ -40,16 +40,21 @@ class ScanFiles implements FileGateway {
 }
 
 class ScanCamera implements CameraGateway, CommittedCaptureGateway {
-  ScanCamera(this.bytes);
+  ScanCamera(this.bytes, {this.discardSucceeds = true});
   final Uint8List bytes;
+  bool discardSucceeds;
   int acknowledgements = 0;
+  int discardAttempts = 0;
   @override
   Future<void> acknowledgeCaptureSaved() async {
     acknowledgements++;
   }
 
   @override
-  Future<bool> discardPendingCapture() async => true;
+  Future<bool> discardPendingCapture() async {
+    discardAttempts++;
+    return discardSucceeds;
+  }
 
   @override
   Future<Uint8List?> capture() async => bytes;
@@ -74,32 +79,42 @@ Future<void> waitIo(
   }
 }
 
-/// Reads the draft store without ever hanging the test.
+/// Waits for the real draft read while continuing to pump the test zone.
 ///
-/// The store's read/write queue is created in the fake-async zone, so awaiting a
-/// read inside runAsync can deadlock on a slower machine: the future completes
-/// but its continuation is scheduled back into a zone that only advances on
-/// pump. This bounds each attempt in real time and reports a failure instead of
-/// letting the suite sit until the ten-minute test timeout.
+/// A queued write can depend on fake-async microtasks; awaiting its read inside
+/// runAsync deadlocks that queue. Start one read in the test zone, then pump
+/// and yield to the real I/O/isolate event loop until it completes or times out.
 Future<List<ScanDraftPage>> readDraft(
   WidgetTester tester,
   ScanDraftStore store,
 ) async {
+  List<ScanDraftPage>? pages;
   Object? error;
-  for (var attempt = 0; attempt < 40; attempt++) {
-    List<ScanDraftPage>? pages;
-    await tester.runAsync(() async {
-      try {
-        pages = await store.load().timeout(const Duration(milliseconds: 500));
-      } catch (e) {
-        error = e;
-      }
-    });
-    if (pages != null) return pages!;
-    if (error is FormatException) throw error!;
+  StackTrace? trace;
+  var complete = false;
+  store.load().then<void>(
+    (value) {
+      pages = value;
+      complete = true;
+    },
+    onError: (Object failure, StackTrace stack) {
+      error = failure;
+      trace = stack;
+      complete = true;
+    },
+  );
+  final deadline = DateTime.now().add(const Duration(seconds: 30));
+  while (!complete && DateTime.now().isBefore(deadline)) {
     await tester.pump(const Duration(milliseconds: 25));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 10)),
+    );
   }
-  fail('The scan draft could not be read back within 20 seconds: $error');
+  if (!complete) {
+    fail('The scan draft could not be read back within 30 seconds.');
+  }
+  if (error != null) Error.throwWithStackTrace(error!, trace!);
+  return pages!;
 }
 
 Future<void> tapVisible(WidgetTester tester, Finder finder) async {
@@ -486,6 +501,43 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('failed camera deletion keeps the recoverable image', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final original = Uint8List.fromList(files.imported);
+    final camera = ScanCamera(original, discardSucceeds: false);
+    await tester.pumpWidget(screen(camera: camera, recovered: original));
+    await settleUntil(tester, find.byKey(const Key('scan-add-recovered')));
+
+    Future<void> confirmDismissal() async {
+      await tapVisible(tester, find.text('Dismiss'));
+      final confirm = find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(FilledButton, 'Dismiss'),
+      );
+      await tapVisible(tester, confirm);
+    }
+
+    await confirmDismissal();
+    await settleUntil(tester, find.textContaining('private camera copy'));
+    expect(camera.discardAttempts, 1);
+    expect(find.byKey(const Key('scan-add-recovered')), findsOneWidget);
+    await tapVisible(tester, find.text('Export recovered original'));
+    await waitIo(tester);
+    expect(files.exported, orderedEquals(original));
+    expect(camera.acknowledgements, 0);
+
+    camera.discardSucceeds = true;
+    await confirmDismissal();
+    await settleUntilGone(tester, find.byKey(const Key('scan-add-recovered')));
+    expect(camera.discardAttempts, 2);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('failed camera draft save keeps recovery and retry commits it', (
     tester,
   ) async {
@@ -508,10 +560,17 @@ void main() {
     await tester.pumpWidget(screen(camera: camera));
     await waitIo(tester);
     await tapVisible(tester, find.byKey(const Key('scan-camera')));
-    await waitIo(tester);
+    await settleUntil(
+      tester,
+      find.textContaining('camera image is in the unsaved draft'),
+    );
+    // The save-error card sits below the recovery card on a compact screen.
+    // Scroll it into the lazy ListView before waiting for the failed write.
+    await tester.drag(find.byType(ListView).first, const Offset(0, -360));
+    await tester.pump();
+    await settleUntil(tester, find.textContaining('Draft could not be saved'));
     expect(find.textContaining('Draft could not be saved'), findsOneWidget);
-    // The scan header and status cards can exceed the short test viewport; the
-    // recovery details intentionally remain scrollable rather than clipped.
+    // The recovery details remain reachable rather than clipped.
     await tester.drag(find.byType(ListView).first, const Offset(0, 520));
     await tester.pump();
     expect(

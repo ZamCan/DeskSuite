@@ -5,14 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Future<void> settleIo(WidgetTester tester) async {
-  for (var i = 0; i < 25; i++) {
-    await tester.pump(const Duration(milliseconds: 50));
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 10)),
-    );
-  }
-}
+import 'support/reveal.dart';
 
 void main() {
   testWidgets('notes save, recover after a failed write, and reopen', (
@@ -42,12 +35,12 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(home: Scaffold(body: NotesPage())),
     );
-    await settleIo(tester);
+    await settleUntil(tester, find.text('Saved on this device'));
     await tester.enterText(
       find.byKey(const Key('notes-editor')),
       'First saved note',
     );
-    await settleIo(tester);
+    await settleUntil(tester, find.text('Saved on this device'));
     final file = File('${temp.path}/desksuite/notes.txt');
     expect(
       await tester.runAsync(() => file.readAsString()),
@@ -66,7 +59,7 @@ void main() {
           find.byKey(const Key('notes-editor')),
           'Changes after failure',
         );
-        await settleIo(tester);
+        await settleUntil(tester, find.text('Retry saving'));
         expect(find.text('Changes are not saved'), findsOneWidget);
         expect(find.text('Retry saving'), findsOneWidget);
         expect(
@@ -79,7 +72,7 @@ void main() {
         );
       }
       await tester.tap(find.text('Retry saving'));
-      await settleIo(tester);
+      await settleUntil(tester, find.text('Saved on this device'));
       expect(
         await tester.runAsync(() => file.readAsString()),
         'Changes after failure',
@@ -89,7 +82,7 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(home: Scaffold(body: NotesPage())),
     );
-    await settleIo(tester);
+    await settleUntil(tester, find.text('Saved on this device'));
     final field = tester.widget<TextField>(
       find.byKey(const Key('notes-editor')),
     );

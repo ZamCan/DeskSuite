@@ -524,7 +524,7 @@ void main() {
     await tester.tap(find.text('Optimise & preview'));
     await settleUntil(tester, find.text('Review optimised export'));
     expect(
-      find.textContaining('One image is fitted inside an A4 page'),
+      find.textContaining('One image is fitted on A4 with 10 mm margins'),
       findsOneWidget,
     );
     await tester.tap(find.byKey(const Key('photo-optimizer-save')));

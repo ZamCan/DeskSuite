@@ -140,7 +140,7 @@ void main() {
         SectionArt.design,
       ),
       'home-open-projects': (
-        'projects-page',
+        'workspace-page-projects',
         WorkspaceSection.projects,
         SectionArt.projects,
       ),

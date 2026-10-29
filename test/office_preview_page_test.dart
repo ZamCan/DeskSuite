@@ -36,18 +36,23 @@ void main() {
     'unsupported platforms fail closed rather than showing a fake preview',
     (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.linux;
-      addTearDown(() => debugDefaultTargetPlatformOverride = null);
-      await tester.pumpWidget(
-        MaterialApp(
-          home: OfficePreviewPage(
-            source: Uint8List(1),
-            sourceName: 'file.docx',
+      // Widget-test invariants run before addTearDown. Reset the foundation
+      // override inside the test body even if an assertion fails.
+      try {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: OfficePreviewPage(
+              source: Uint8List(1),
+              sourceName: 'file.docx',
+            ),
           ),
-        ),
-      );
-      expect(find.byType(AndroidView), findsNothing);
-      expect(find.textContaining('available on Android'), findsOneWidget);
-      expect(tester.takeException(), isNull);
+        );
+        expect(find.byType(AndroidView), findsNothing);
+        expect(find.textContaining('available on Android'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
     },
   );
 }
