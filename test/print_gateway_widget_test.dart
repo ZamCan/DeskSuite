@@ -118,10 +118,7 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
-}
 
-
-void preparedPrintJobGatewayTests() {
   test('prepared print job forwards the intended physical media dimensions', () async {
     final printer = FakePrinter();
     final target = PrintMediaTarget(
@@ -168,4 +165,3 @@ void preparedPrintJobGatewayTests() {
     expect(printer.bytes, isNull);
   });
 }
-
