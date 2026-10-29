@@ -119,3 +119,53 @@ void main() {
     },
   );
 }
+
+
+void preparedPrintJobGatewayTests() {
+  test('prepared print job forwards the intended physical media dimensions', () async {
+    final printer = FakePrinter();
+    final target = PrintMediaTarget(
+      id: 'custom-100x150',
+      label: '100 × 150 mm',
+      widthMm: 100,
+      heightMm: 150,
+    );
+    final bytes = Uint8List.fromList([37, 80, 68, 70, 45]);
+    final job = PrintJob(
+      media: target,
+      sourceWidthMm: 50,
+      sourceHeightMm: 75,
+    );
+
+    await printer.printPreparedJob(bytes: bytes, name: 'test.pdf', job: job);
+
+    expect(printer.bytes, bytes);
+    expect(printer.widthMm, 100);
+    expect(printer.heightMm, 150);
+  });
+
+  test('prepared print job refuses invalid geometry before dispatch', () async {
+    final printer = FakePrinter();
+    final job = PrintJob(
+      media: const PrintMediaTarget(
+        id: 'bad',
+        label: 'Invalid',
+        widthMm: 0,
+        heightMm: 150,
+      ),
+      sourceWidthMm: 50,
+      sourceHeightMm: 75,
+    );
+
+    expect(
+      () => printer.printPreparedJob(
+        bytes: Uint8List.fromList([1]),
+        name: 'invalid.pdf',
+        job: job,
+      ),
+      throwsFormatException,
+    );
+    expect(printer.bytes, isNull);
+  });
+}
+
