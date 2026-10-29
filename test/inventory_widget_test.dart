@@ -255,10 +255,10 @@ void main() {
     final receiptAction = tester.widget<SnackBarAction>(
       find.widgetWithText(SnackBarAction, 'Receipt'),
     );
-    receiptAction.onPressed!();
+    receiptAction.onPressed();
     await tester.pump();
     await waitUntil(tester, () => printer.bytes != null);
-    expect(String.fromCharCodes(printer.bytes.take(5)), '%PDF-');
+    expect(String.fromCharCodes(printer.bytes!.take(5)), '%PDF-');
     expect(printer.name, 'receipt-0001');
     expect(printer.widthMm, 148);
     expect(printer.heightMm, 210);
