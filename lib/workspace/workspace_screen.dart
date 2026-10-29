@@ -509,7 +509,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           ),
         ),
         const SizedBox(height: 18),
-        _heading('Quick actions', '');
+        _heading('Quick actions', ''),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
