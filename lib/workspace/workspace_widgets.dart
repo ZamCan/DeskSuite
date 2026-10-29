@@ -115,7 +115,7 @@ class WorkspaceToolCard extends StatelessWidget {
     final tint = switch (section) {
       WorkspaceSection.scans => const Color(0xff5ecdbb),
       WorkspaceSection.pdfStudio => const Color(0xffef9a9b),
-      WorkspaceSection.photos => const Color(0xff77baf1),
+      WorkspaceSection.photos => const Color(0xffd9b29f),
       WorkspaceSection.text => const Color(0xffafa4e9),
       WorkspaceSection.office => const Color(0xff89c7a4),
       WorkspaceSection.design => const Color(0xffeab17c),
@@ -409,7 +409,7 @@ class WorkspaceWelcome extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xff103b7a), Color(0xff266bb1)],
+          colors: [Color(0xff292721), Color(0xffa84f36)],
         ),
       ),
       child: LayoutBuilder(
@@ -426,7 +426,7 @@ class WorkspaceWelcome extends StatelessWidget {
                       const Text(
                         'CREATE ON YOUR DEVICE',
                         style: TextStyle(
-                          color: Color(0xffbcecff),
+                          color: Color(0xfff0dfd5),
                           fontSize: 10,
                           letterSpacing: 1.1,
                           fontWeight: FontWeight.w800,
@@ -443,7 +443,7 @@ class WorkspaceWelcome extends StatelessWidget {
                       const SizedBox(height: 6),
                       const Text(
                         'Start a design or open an existing project.',
-                        style: TextStyle(color: Color(0xffe5f2ff)),
+                        style: TextStyle(color: Color(0xfff6f3ed)),
                       ),
                       const SizedBox(height: 16),
                       Wrap(
@@ -455,7 +455,7 @@ class WorkspaceWelcome extends StatelessWidget {
                             onPressed: onCreate,
                             style: FilledButton.styleFrom(
                               backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xff103b7a),
+                              foregroundColor: const Color(0xff292721),
                             ),
                             icon: const Icon(Icons.add, size: 19),
                             label: const Text('New design'),
@@ -464,7 +464,7 @@ class WorkspaceWelcome extends StatelessWidget {
                             onPressed: onImport,
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.white,
-                              side: const BorderSide(color: Color(0xffbbd9fa)),
+                              side: const BorderSide(color: Color(0xffe5ded3)),
                             ),
                             child: const Text('Import project'),
                           ),
