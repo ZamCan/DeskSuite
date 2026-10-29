@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,6 +22,8 @@ class TextExtractionPage extends StatefulWidget {
     this.engine,
     this.sampleLoader,
     this.prepare,
+    this.initialImage,
+    this.initialImageLabel = 'Scanned page',
   });
 
   final FileGateway files;
@@ -34,6 +37,8 @@ class TextExtractionPage extends StatefulWidget {
   /// Injected in tests so the widget does not need an isolate; production uses
   /// [prepareImageForOcrInBackground].
   final Future<Uint8List> Function(Uint8List bytes)? prepare;
+  final Uint8List? initialImage;
+  final String initialImageLabel;
 
   @override
   State<TextExtractionPage> createState() => _TextExtractionPageState();
@@ -58,6 +63,8 @@ class _TextExtractionPageState extends State<TextExtractionPage> {
   void initState() {
     super.initState();
     _checkAvailability();
+    final initial = widget.initialImage;
+    if (initial != null) _load(initial, widget.initialImageLabel);
   }
 
   @override

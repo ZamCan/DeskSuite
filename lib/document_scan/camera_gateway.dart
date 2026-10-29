@@ -138,3 +138,20 @@ class AndroidCameraGateway implements CameraGateway {
     }
   }
 }
+
+class CameraRecovery {
+  const CameraRecovery({this.bytes, this.failed = false});
+  final Uint8List? bytes;
+  final bool failed;
+}
+
+/// Called once at startup to recover a capture saved before Android recreated
+/// the app process. Error details stay private; the caller receives a safe state.
+Future<CameraRecovery> recoverCameraCapture(CameraGateway? gateway) async {
+  if (gateway == null) return const CameraRecovery();
+  try {
+    return CameraRecovery(bytes: await gateway.retrieveLostCapture());
+  } catch (_) {
+    return const CameraRecovery(failed: true);
+  }
+}

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import '../app/section_artwork.dart';
 import '../core/suite_paths.dart';
 import '../images/photo_processor.dart';
+import '../ocr/text_extraction_page.dart';
 import '../printing/paper_catalog.dart';
 import '../workspace/file_gateway.dart';
 import 'camera_gateway.dart';
@@ -473,6 +474,20 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
         ),
       );
     }
+  }
+
+  Future<void> _extractText() async {
+    if (busy || pages.isEmpty) return;
+    final page = pages[selected];
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => TextExtractionPage(
+          files: widget.files,
+          initialImage: page.image.bytes,
+          initialImageLabel: 'Scan page ${selected + 1}',
+        ),
+      ),
+    );
   }
 
   Future<void> _cleanup() async {
@@ -1027,6 +1042,12 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
                 onPressed: busy ? null : _cleanup,
                 icon: const Icon(Icons.auto_fix_high),
                 label: const Text('Clean up & compare'),
+              ),
+              OutlinedButton.icon(
+                key: const Key('scan-extract-text'),
+                onPressed: busy ? null : _extractText,
+                icon: const Icon(Icons.text_fields_rounded),
+                label: const Text('Extract text'),
               ),
               OutlinedButton.icon(
                 key: const Key('scan-rotate'),
