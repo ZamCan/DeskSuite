@@ -417,8 +417,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _heading(
-          'Make room for good work',
-          'Create, capture, edit and prepare work for print.',
+          'Your creative workspace',
+          'Choose a tool and get straight to work.',
         ),
         const SizedBox(height: 12),
         TextField(
@@ -429,7 +429,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           onSubmitted: (_) => FocusScope.of(context).unfocus(),
           decoration: InputDecoration(
             labelText: 'Search tools',
-            hintText: 'Scan, PDF, photo…',
+            hintText: 'Find a tool',
             prefixIcon: const Icon(Icons.search),
             suffixIcon: _shortcutQuery.isEmpty
                 ? null
@@ -549,66 +549,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           ),
         const SizedBox(height: 24),
 
-        Row(
-          children: [
-            Expanded(
-              child: _heading(
-                'Create a project',
-                'Start with a blank canvas or open existing work.',
-              ),
-            ),
-            Text(
-              '01 / CREATE',
-              style: Theme.of(context).textTheme.labelSmall
-                  ?.copyWith(letterSpacing: 1.1, color: accent),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth >= 700
-                ? (constraints.maxWidth - 24) / 3
-                : constraints.maxWidth;
-            return Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                SizedBox(
-                  width: width,
-                  child: StarterCard(
-                    icon: Icons.add_box_outlined,
-                    eyebrow: 'START FRESH',
-                    title: 'Blank design',
-                    subtitle: 'Choose your own canvas',
-                    onTap: () => _newDesign(),
-                  ),
-                ),
-                SizedBox(
-                  width: width,
-                  child: StarterCard(
-                    icon: Icons.photo_camera_back_outlined,
-                    eyebrow: 'PHOTO WORK',
-                    title: 'Edit a photo',
-                    subtitle: 'Open Photo Studio',
-                    onTap: () => _navigate(WorkspaceSection.photos),
-                  ),
-                ),
-                SizedBox(
-                  width: width,
-                  child: StarterCard(
-                    icon: Icons.file_open_outlined,
-                    eyebrow: 'YOUR FILES',
-                    title: 'Import a project',
-                    subtitle: 'Open a .dsdesign file',
-                    onTap: _import,
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: 38),
+        const SizedBox(height: 30),
         Row(
           children: [
             Expanded(
