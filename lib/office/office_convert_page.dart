@@ -382,12 +382,6 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
                       icon: const Icon(Icons.upload_file),
                       label: const Text('Choose file'),
                     ),
-                    OutlinedButton.icon(
-                      key: const Key('office-sample'),
-                      onPressed: _busy ? null : _loadSample,
-                      icon: const Icon(Icons.school_outlined),
-                      label: const Text('Browse templates & samples'),
-                    ),
                   ],
                 ),
                 if (_detected != null) ...[
