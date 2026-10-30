@@ -16,7 +16,6 @@ enum WorkspaceSection {
   printing,
   business,
   scans,
-  guide,
   conversions,
   // Appended last: IndexedStack children are indexed by this order.
   text,
@@ -314,11 +313,6 @@ class WorkspaceSidebar extends StatelessWidget {
           const SizedBox(height: 35),
           _navLabel(context, 'WORKSPACE'),
           item(Icons.grid_view_rounded, 'Home', WorkspaceSection.workspace),
-          item(
-            Icons.menu_book_outlined,
-            'Getting started',
-            WorkspaceSection.guide,
-          ),
           item(
             Icons.folder_open_outlined,
             'Files & Projects',
