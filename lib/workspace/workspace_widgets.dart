@@ -92,7 +92,7 @@ class WorkspaceToolCard extends StatelessWidget {
     super.key,
     required this.section,
     required this.title,
-    required this.description,
+    this.description = '',
     required this.onNavigate,
     this.fallbackIcon = Icons.grid_view_rounded,
   });
@@ -158,7 +158,7 @@ class WorkspaceToolCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 onTap: () => onNavigate(section),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 174),
+                  constraints: const BoxConstraints(minHeight: 142),
                   child: Padding(
                     padding: const EdgeInsets.all(15),
                     child: Column(
@@ -199,14 +199,16 @@ class WorkspaceToolCard extends StatelessWidget {
                             height: 1.18,
                           ),
                         ),
-                        const SizedBox(height: 5),
-                        Text(
-                          description,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                            height: 1.3,
+                        if (description.isNotEmpty) ...[
+                          const SizedBox(height: 5),
+                          Text(
+                            description,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                              height: 1.3,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
