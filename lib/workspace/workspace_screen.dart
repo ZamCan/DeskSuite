@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 
 import '../app/section_artwork.dart';
 import '../app/theme.dart';
@@ -18,7 +17,6 @@ import 'conversion_catalog.dart';
 import 'conversion_catalog_page.dart';
 import 'creative_studio_page.dart';
 import 'file_gateway.dart';
-import 'getting_started_page.dart';
 import 'new_design_dialog.dart';
 import 'project_repository.dart';
 import 'shortcut_search.dart';
@@ -81,24 +79,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   void dispose() {
     _shortcutSearch.dispose();
     super.dispose();
-  }
-
-  Future<void> _openEditableExample() async {
-    try {
-      final data = await rootBundle.load(
-        'assets/samples/editable-example.dsdesign',
-      );
-      final bytes = data.buffer.asUint8List(
-        data.offsetInBytes,
-        data.lengthInBytes,
-      );
-      final document = await widget.repository.import(bytes);
-      if (mounted) await _openDocument(document);
-    } catch (_) {
-      _message(
-        'Could not open the example design. Try again or check local storage.',
-      );
-    }
   }
 
   Future<void> _refresh() async {
@@ -298,17 +278,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               recoveredCapture: _recoveredCapture,
             )
           : const SizedBox.shrink(),
-    WorkspaceSection.guide =>
-      _visited.contains(section)
-          ? GettingStartedPage(
-              onScan: () => _navigate(WorkspaceSection.scans),
-              onPhoto: () => _navigate(WorkspaceSection.photos),
-              onText: () => _navigate(WorkspaceSection.text),
-              onOffice: () => _navigate(WorkspaceSection.office),
-              onPdf: () => _navigate(WorkspaceSection.pdfStudio),
-              onEditableExample: _openEditableExample,
-            )
-          : const SizedBox.shrink(),
     WorkspaceSection.conversions =>
       _visited.contains(section)
           ? ConversionCatalogPage(
@@ -405,10 +374,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               ),
             ),
           if (!wide) const SizedBox(width: 6),
-          if (_section == WorkspaceSection.workspace) ...[
-            const BrandMark(size: 32),
-            const SizedBox(width: 10),
-          ] else if (artworkForSection(_section) case final artwork?) ...[
+          if (_section != WorkspaceSection.workspace && artworkForSection(_section) case final artwork?) ...[
             SectionArtwork(
               key: ValueKey('section-header-art-${_section.name}'),
               asset: artwork,
@@ -428,7 +394,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 WorkspaceSection.printing => 'Print Studio',
                 WorkspaceSection.business => 'Business & POS',
                 WorkspaceSection.scans => 'Scan & assemble',
-                WorkspaceSection.guide => 'Getting started',
                 WorkspaceSection.conversions => 'Conversion routes',
                 WorkspaceSection.text => 'Text extraction',
                 WorkspaceSection.office => 'Document converter',
