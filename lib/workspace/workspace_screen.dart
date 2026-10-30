@@ -508,7 +508,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     key: const Key('home-open-scan'),
                     section: WorkspaceSection.scans,
                     title: 'Scan documents',
-                    description: 'Capture, clean and assemble pages.',
                     onNavigate: _navigate,
                   ),
                 if (matchesHomeShortcut(
@@ -519,7 +518,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     key: const Key('home-open-pdf'),
                     section: WorkspaceSection.pdfStudio,
                     title: 'Work with a PDF',
-                    description: 'Review pages and save a separate copy.',
                     fallbackIcon: Icons.picture_as_pdf_outlined,
                     onNavigate: _navigate,
                   ),
@@ -531,7 +529,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     key: const Key('home-open-photo'),
                     section: WorkspaceSection.photos,
                     title: 'Edit a photo',
-                    description: 'Adjust and resize an image.',
                     onNavigate: _navigate,
                   ),
                 if (matchesHomeShortcut(WorkspaceSection.text, _shortcutQuery))
@@ -539,7 +536,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     key: const Key('home-open-text'),
                     section: WorkspaceSection.text,
                     title: 'Extract text',
-                    description: 'Recognize and review words in an image.',
                     onNavigate: _navigate,
                   ),
                 if (matchesHomeShortcut(
@@ -550,7 +546,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     key: const Key('home-open-converter'),
                     section: WorkspaceSection.office,
                     title: 'Convert file',
-                    description: 'Read and convert supported document content.',
                     onNavigate: _navigate,
                   ),
                 if (matchesHomeShortcut(
@@ -561,7 +556,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     key: const Key('home-open-design'),
                     section: WorkspaceSection.design,
                     title: 'Creative Studio',
-                    description: 'Design an editable layout for print.',
                     onNavigate: _navigate,
                   ),
                 if (matchesHomeShortcut(
@@ -572,7 +566,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     key: const Key('home-open-projects'),
                     section: WorkspaceSection.projects,
                     title: 'Files & Projects',
-                    description: 'Open locally saved design projects.',
                     onNavigate: _navigate,
                   ),
               ];
