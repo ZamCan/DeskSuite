@@ -105,7 +105,9 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                   labelText: 'Starting template',
                 ),
                 items: [
-                  for (final item in designTemplateCatalog)
+                  for (final item in designTemplateCatalog.where(
+                    (item) => item.template == DesignTemplate.blank,
+                  ))
                     DropdownMenuItem(
                       value: item.template,
                       child: Text(
@@ -134,10 +136,6 @@ class _NewDesignDialogState extends State<NewDesignDialog> {
                 },
               ),
               const SizedBox(height: 8),
-              Text(
-                designTemplateDefinition(_template).description,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
               if (_template == DesignTemplate.identityBadge ||
                   _template == DesignTemplate.memberCard ||
                   _template == DesignTemplate.eventBadge) ...[
