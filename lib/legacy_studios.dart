@@ -807,41 +807,6 @@ class _PhotoPageState extends State<PhotoPage> {
     }
   }
 
-  Future<void> loadExample({bool noisy = false, bool stillLife = false}) async {
-    if (busy || !await confirmReplace() || !mounted) return;
-    setState(() => busy = true);
-    try {
-      final data = await rootBundle.load(
-        stillLife
-            ? 'assets/samples/studio-still-life.jpg'
-            : noisy
-            ? 'assets/samples/noisy-garden.png'
-            : 'assets/samples/practice-photo.jpg',
-      );
-      final result = await process(
-        PhotoRequest(
-          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
-          PhotoAction.inspect,
-        ),
-      );
-      if (mounted) {
-        setState(() {
-          photo = result;
-          original = result;
-          undoPhoto = null;
-          showingOriginal = false;
-          isExample = !noisy && !stillLife;
-          isNoisyExample = noisy && !stillLife;
-          isStillLifeExample = stillLife;
-        });
-      }
-    } catch (_) {
-      note('Could not load the example image. Try again.');
-    } finally {
-      if (mounted) setState(() => busy = false);
-    }
-  }
-
   void undo() {
     if (undoPhoto == null || busy) return;
     setState(() {
@@ -1288,26 +1253,6 @@ class _PhotoPageState extends State<PhotoPage> {
                         label: const Text('Choose image'),
                       ),
                       const SizedBox(height: 6),
-                      TextButton.icon(
-                        key: const Key('photo-example'),
-                        onPressed: busy ? null : () => loadExample(),
-                        icon: const Icon(Icons.school_outlined),
-                        label: const Text('Try a sample image'),
-                      ),
-                      TextButton.icon(
-                        key: const Key('photo-noisy-example'),
-                        onPressed: busy ? null : () => loadExample(noisy: true),
-                        icon: const Icon(Icons.auto_fix_high),
-                        label: const Text('Try a noisy garden photo'),
-                      ),
-                      TextButton.icon(
-                        key: const Key('photo-still-life-example'),
-                        onPressed: busy
-                            ? null
-                            : () => loadExample(stillLife: true),
-                        icon: const Icon(Icons.photo_library_outlined),
-                        label: const Text('Try a studio still life'),
-                      ),
                     ],
                   ),
                 ),
@@ -1346,18 +1291,6 @@ class _PhotoPageState extends State<PhotoPage> {
           const Text(
             'Previewing original; edits and exports use the working copy.',
           ),
-        if (isExample)
-          const Text(
-            'Example: try Resize, enter a width such as 512 px, review the result, then save a new copy.',
-          ),
-        if (isNoisyExample)
-          const Text(
-            'Synthetic garden with added black and white specks: reduce specks, pinch to zoom, then compare with the original.',
-          ),
-        if (isStillLifeExample)
-          const Text(
-            'Fictional studio still life: try centre crop, rotate, resize or optimise, then compare and export a copy.',
-          ),
         const Text(
           'Pinch the preview to inspect details. Reducing isolated specks can soften fine details; it does not remove blur, scratches or every kind of noise.',
         ),
@@ -1371,18 +1304,6 @@ class _PhotoPageState extends State<PhotoPage> {
               onPressed: busy ? null : pick,
               icon: const Icon(Icons.upload_file),
               label: const Text('Choose another'),
-            ),
-            OutlinedButton.icon(
-              key: const Key('photo-noisy-example'),
-              onPressed: busy ? null : () => loadExample(noisy: true),
-              icon: const Icon(Icons.school_outlined),
-              label: const Text('Noisy garden example'),
-            ),
-            OutlinedButton.icon(
-              key: const Key('photo-still-life-example'),
-              onPressed: busy ? null : () => loadExample(stillLife: true),
-              icon: const Icon(Icons.photo_library_outlined),
-              label: const Text('Studio still life'),
             ),
             OutlinedButton(
               key: const Key('photo-compare'),
