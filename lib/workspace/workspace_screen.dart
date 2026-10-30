@@ -662,14 +662,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       Text(
         title,
         style: Theme.of(context).textTheme.titleLarge
-            ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -.4),
+            ?.copyWith(fontWeight: FontWeight.w750, letterSpacing: -.55),
       ),
-      const SizedBox(height: 4),
-      Text(
-        subtitle,
-        style: Theme.of(context).textTheme.bodyMedium
-            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-      ),
+      if (subtitle.isNotEmpty) ...[
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        ),
+      ],
     ],
   );
 
