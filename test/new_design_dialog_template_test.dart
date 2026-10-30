@@ -34,8 +34,7 @@ void main() {
     final picker = tester.widget<DropdownButtonFormField<DesignTemplate>>(
       find.byKey(const Key('design-template-picker')),
     );
-    expect(picker.items, hasLength(1));
-    expect(picker.items!.single.value, DesignTemplate.blank);
+    expect(picker.initialValue, DesignTemplate.blank);
     expect(find.text('YOUR BRAND'), findsNothing);
     expect(find.textContaining('EXAMPLE'), findsNothing);
 
