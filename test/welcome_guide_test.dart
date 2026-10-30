@@ -33,7 +33,7 @@ Future<void> waitIo(WidgetTester tester) async {
 
 void main() {
   testWidgets(
-    'first-run introduction is skippable, remembered and tutorials remain revisitable',
+    'dashboard stays focused while the getting-started guide remains revisitable',
     (tester) async {
       tester.view.physicalSize = const Size(360, 720);
       tester.view.devicePixelRatio = 1;
@@ -46,21 +46,6 @@ void main() {
         if (await temp.exists()) await temp.delete(recursive: true);
       });
       final repo = ProjectRepository(Directory('${temp.path}/documents'));
-      await tester.pumpWidget(
-        DeskSuiteApp(
-          showStartupAnimation: false,
-          repository: repo,
-          fileGateway: WelcomeFiles(),
-        ),
-      );
-      await waitIo(tester);
-      expect(find.byKey(const Key('welcome-introduction')), findsOneWidget);
-      await tester.ensureVisible(find.byKey(const Key('welcome-skip')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('welcome-skip')));
-      await waitIo(tester);
-      expect(await tester.runAsync(repo.readWelcomeSeen), isTrue);
-      await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpWidget(
         DeskSuiteApp(
           showStartupAnimation: false,
