@@ -215,9 +215,14 @@ void main() {
       find.byKey(const ValueKey('workspace-page-pdfStudio')),
       findsOneWidget,
     );
-    // Switching sections should not recreate a visited page and lose its work.
+    // Returning to Photo Studio restores its real, user-import starting
+    // workflow. Bundled example projects are intentionally not exposed.
     await navigate(tester, 'Photo Studio');
-    expect(find.byKey(const Key('photo-zoom')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('workspace-page-photos')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('photo-choose')), findsOneWidget);
     expect(find.byKey(const Key('photo-example')), findsNothing);
     expect(tester.takeException(), isNull);
   });
