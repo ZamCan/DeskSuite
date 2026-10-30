@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 
 import '../core/suite_paths.dart';
@@ -209,32 +211,7 @@ class _CreativeStudioPageState extends State<CreativeStudioPage> {
       child: ListView(
         padding: const EdgeInsets.all(22),
         children: [
-          Text(
-            'Creative Studio',
-            style: Theme.of(context).textTheme.headlineMedium
-                ?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          const Text('Editable designs, saved locally and prepared for print.'),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              FilledButton.icon(
-                key: const Key('new-design'),
-                onPressed: () => _newDesign(),
-                icon: const Icon(Icons.add),
-                label: const Text('New design'),
-              ),
-              OutlinedButton.icon(
-                key: const Key('import-project'),
-                onPressed: _importFile,
-                icon: const Icon(Icons.upload_file_outlined),
-                label: const Text('Import project'),
-              ),
-            ],
-          ),
+          _studioHeader(context),
           const SizedBox(height: 26),
           Text(
             'Your designs',
@@ -243,10 +220,7 @@ class _CreativeStudioPageState extends State<CreativeStudioPage> {
           ),
           const SizedBox(height: 8),
           if (projects.projects.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Text('No designs yet. Create one to get started.'),
-            )
+            _emptyDesignState(context)
           else
             ...projects.projects.map(
               (item) => Card(
@@ -319,6 +293,153 @@ class _CreativeStudioPageState extends State<CreativeStudioPage> {
                 label: const Text('Open earlier editor'),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _studioHeader(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final dark = theme.brightness == Brightness.dark;
+    final border = scheme.outlineVariant.withValues(alpha: dark ? .55 : .72);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(28),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                scheme.primaryContainer.withValues(alpha: dark ? .42 : .78),
+                scheme.surface.withValues(alpha: dark ? .88 : .82),
+                scheme.tertiaryContainer.withValues(alpha: dark ? .22 : .38),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: border),
+            boxShadow: [
+              BoxShadow(
+                color: scheme.shadow.withValues(alpha: dark ? .18 : .07),
+                blurRadius: 28,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: scheme.surface.withValues(alpha: .72),
+                      borderRadius: BorderRadius.circular(17),
+                      border: Border.all(color: border),
+                    ),
+                    child: Icon(Icons.design_services_rounded,
+                        color: scheme.primary, size: 27),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('CREATIVE WORKSPACE',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              letterSpacing: 1.35,
+                              fontWeight: FontWeight.w800,
+                              color: scheme.primary,
+                            )),
+                        const SizedBox(height: 3),
+                        Text('Creative Studio',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -.7,
+                            )),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 15),
+              Text(
+                'Build, refine and prepare your own designs for print.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  FilledButton.icon(
+                    key: const Key('new-design'),
+                    onPressed: () => _newDesign(),
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text('New design'),
+                  ),
+                  OutlinedButton.icon(
+                    key: const Key('import-project'),
+                    onPressed: _importFile,
+                    icon: const Icon(Icons.file_open_outlined),
+                    label: const Text('Import project'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _emptyDesignState(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 30),
+      decoration: BoxDecoration(
+        color: scheme.surface.withValues(alpha: .72),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: .65),
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 62,
+            height: 62,
+            decoration: BoxDecoration(
+              color: scheme.primaryContainer.withValues(alpha: .72),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(Icons.layers_outlined,
+                size: 29, color: scheme.onPrimaryContainer),
+          ),
+          const SizedBox(height: 14),
+          Text('Your canvas starts here',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  )),
+          const SizedBox(height: 5),
+          Text(
+            'Create a blank design or import a project to begin.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+          ),
         ],
       ),
     );
