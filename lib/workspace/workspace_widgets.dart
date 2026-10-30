@@ -313,7 +313,7 @@ class WorkspaceSidebar extends StatelessWidget {
           _navLabel(context, 'WORKSPACE'),
           item(Icons.grid_view_rounded, 'Home', WorkspaceSection.workspace),
           item(
-            Icons.school_outlined,
+            Icons.menu_book_outlined,
             'Getting started',
             WorkspaceSection.guide,
           ),
@@ -323,7 +323,7 @@ class WorkspaceSidebar extends StatelessWidget {
             WorkspaceSection.projects,
           ),
           item(
-            Icons.swap_horiz_rounded,
+            Icons.route_outlined,
             'Conversion routes',
             WorkspaceSection.conversions,
           ),
@@ -352,7 +352,7 @@ class WorkspaceSidebar extends StatelessWidget {
             WorkspaceSection.text,
           ),
           item(
-            Icons.sync_alt_rounded,
+            Icons.transform_outlined,
             'Document converter',
             WorkspaceSection.office,
           ),
@@ -371,7 +371,7 @@ class WorkspaceSidebar extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'CREATE. DESIGN. PRINT. MANAGE.',
+              'DOCUMENTS · DESIGN · PRINT',
               style: Theme.of(context).textTheme.labelSmall
                   ?.copyWith(letterSpacing: .8, color: scheme.onSurfaceVariant),
             ),
@@ -388,99 +388,6 @@ class WorkspaceSidebar extends StatelessWidget {
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
         letterSpacing: 1.2,
         color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
-    ),
-  );
-}
-
-class WorkspaceWelcome extends StatelessWidget {
-  const WorkspaceWelcome({
-    super.key,
-    required this.onCreate,
-    required this.onImport,
-  });
-  final VoidCallback onCreate;
-  final VoidCallback onImport;
-  @override
-  Widget build(BuildContext context) => ClipRRect(
-    borderRadius: BorderRadius.circular(20),
-    child: Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xff292721), Color(0xffa84f36)],
-        ),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final wide = constraints.maxWidth > 600;
-          return Padding(
-            padding: EdgeInsets.all(wide ? 26 : 20),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'CREATE ON YOUR DEVICE',
-                        style: TextStyle(
-                          color: Color(0xfff0dfd5),
-                          fontSize: 10,
-                          letterSpacing: 1.1,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Create something new.',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Start a design or open an existing project.',
-                        style: TextStyle(color: Color(0xfff6f3ed)),
-                      ),
-                      const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          FilledButton.icon(
-                            key: const Key('new-design'),
-                            onPressed: onCreate,
-                            style: FilledButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xff292721),
-                            ),
-                            icon: const Icon(Icons.add, size: 19),
-                            label: const Text('New design'),
-                          ),
-                          OutlinedButton(
-                            onPressed: onImport,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              side: const BorderSide(color: Color(0xffe5ded3)),
-                            ),
-                            child: const Text('Import project'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                if (wide) ...[
-                  const SizedBox(width: 24),
-                  const BrandMark(size: 90),
-                ],
-              ],
-            ),
-          );
-        },
       ),
     ),
   );
