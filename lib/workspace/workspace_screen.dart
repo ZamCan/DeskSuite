@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import '../app/section_artwork.dart';
 import '../app/theme.dart';
 import '../design/design_document.dart';
-import '../design/template_catalog.dart';
-import '../design/editor_screen.dart';
 import '../document_scan/camera_gateway.dart';
 import '../document_scan/scan_studio_page.dart';
 import '../legacy_studios.dart' as legacy;
@@ -17,7 +15,6 @@ import 'conversion_catalog.dart';
 import 'conversion_catalog_page.dart';
 import 'creative_studio_page.dart';
 import 'file_gateway.dart';
-import 'new_design_dialog.dart';
 import 'project_repository.dart';
 import 'shortcut_search.dart';
 import 'workspace_widgets.dart';
@@ -105,23 +102,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   void _message(String text) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
-    }
-  }
-
-  Future<void> _newDesign([
-    DesignTemplate template = DesignTemplate.blank,
-  ]) async {
-    final doc = await showDialog<DesignDocument>(
-      context: context,
-      builder: (_) => NewDesignDialog(template: template),
-    );
-    if (doc == null || !mounted) return;
-    try {
-      await widget.repository.save(doc);
-      if (!mounted) return;
-      await _openDocument(doc);
-    } catch (error) {
-      _message('Could not create project: $error');
     }
   }
 
@@ -374,10 +354,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               ),
             ),
           if (!wide) const SizedBox(width: 6),
-          if (_section != WorkspaceSection.workspace && artworkForSection(_section) case final artwork?) ...[
+          if (_section != WorkspaceSection.workspace &&
+              artworkForSection(_section) != null) ...[
             SectionArtwork(
               key: ValueKey('section-header-art-${_section.name}'),
-              asset: artwork,
+              asset: artworkForSection(_section)!,
               size: 32,
             ),
             const SizedBox(width: 10),
