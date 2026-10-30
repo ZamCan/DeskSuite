@@ -35,6 +35,13 @@ void main() {
       find.byKey(const Key('design-template-picker')),
     );
     expect(picker.initialValue, DesignTemplate.blank);
+    await tester.tap(find.byKey(const Key('design-template-picker')));
+    await tester.pumpAndSettle();
+    expect(find.text('Blank canvas'), findsWidgets);
+    expect(find.text('Staff ID badge'), findsNothing);
+    expect(find.text('Editorial poster'), findsNothing);
+    await tester.tapAt(const Offset(20, 20));
+    await tester.pumpAndSettle();
     expect(find.text('YOUR BRAND'), findsNothing);
     expect(find.textContaining('EXAMPLE'), findsNothing);
 
