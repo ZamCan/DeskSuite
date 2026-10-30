@@ -374,138 +374,6 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
     }
   }
 
-  Future<void> _samples() async {
-    if (busy || loading) return;
-    final paths = await showDialog<List<String>>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('Choose a fictional example'),
-        children: [
-          SimpleDialogOption(
-            key: const Key('sample-magic-page'),
-            onPressed: () =>
-                Navigator.pop(context, ['shadowed-practice-page.png']),
-            child: const Text(
-              'Shadowed practice report · compare enhancement modes',
-            ),
-          ),
-          SimpleDialogOption(
-            key: const Key('sample-angled-page'),
-            onPressed: () =>
-                Navigator.pop(context, ['angled-practice-page.jpg']),
-            child: const Text(
-              'Angled practice report · correct corners and clean',
-            ),
-          ),
-          SimpleDialogOption(
-            key: const Key('sample-clean-page'),
-            onPressed: () =>
-                Navigator.pop(context, ['clean-practice-page.png']),
-            child: const Text('Clean practice report · reference page'),
-          ),
-          SimpleDialogOption(
-            key: const Key('sample-cleanup'),
-            onPressed: () =>
-                Navigator.pop(context, ['shadowed-field-notes.png']),
-            child: const Text(
-              'Shadowed field notes · practise before/after cleanup',
-            ),
-          ),
-          SimpleDialogOption(
-            key: const Key('sample-perspective'),
-            onPressed: () => Navigator.pop(context, ['perspective-letter.png']),
-            child: const Text(
-              'Perspective letter · practise corner correction',
-            ),
-          ),
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(context, ['letter.png']),
-            child: const Text('Formal letter'),
-          ),
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(context, ['invoice.png']),
-            child: const Text('Example invoice'),
-          ),
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(context, ['application-form.png']),
-            child: const Text('Practice application form'),
-          ),
-          SimpleDialogOption(
-            key: const Key('sample-report'),
-            onPressed: () =>
-                Navigator.pop(context, ['report-1.png', 'report-2.png']),
-            child: const Text('Two-page report · practise a multipage PDF'),
-          ),
-          SimpleDialogOption(
-            key: const Key('sample-office-pack'),
-            onPressed: () => Navigator.pop(context, [
-              'letter.png',
-              'invoice.png',
-              'application-form.png',
-            ]),
-            child: const Text(
-              'Three-page office pack · letter, invoice and practice form',
-            ),
-          ),
-          SimpleDialogOption(
-            key: const Key('sample-cleanup-pack'),
-            onPressed: () => Navigator.pop(context, [
-              'clean-practice-page.png',
-              'shadowed-practice-page.png',
-              'angled-practice-page.jpg',
-            ]),
-            child: const Text(
-              'Three-page scan pack · clean, shadowed and angled examples',
-            ),
-          ),
-        ],
-      ),
-    );
-    if (paths == null || !mounted) return;
-    setState(() => busy = true);
-    try {
-      if (pages.length + paths.length > maxScanPages) {
-        throw const FormatException(
-          'This package would exceed the 8-page draft limit. Remove pages first.',
-        );
-      }
-      final prepared = <PhotoResult>[];
-      for (final path in paths) {
-        final data = await rootBundle.load('assets/samples/$path');
-        prepared.add(
-          await processPhoto(
-            PhotoRequest(
-              data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
-              PhotoAction.png,
-            ),
-          ),
-        );
-      }
-      _checkCapacity(prepared);
-      if (!mounted) return;
-      setState(() {
-        pages = [
-          ...pages,
-          for (final image in prepared)
-            ScanDraftPage(original: image, image: image),
-        ];
-        selected = pages.length - prepared.length;
-        undoImage = null;
-        undoId = null;
-      });
-      final saved = await _persist();
-      message(
-        saved
-            ? 'Example added. Adjust the pages or export the PDF using the same tools as your own files.'
-            : 'Example added in memory, but the draft was not saved. Retry saving or export before closing.',
-      );
-    } catch (e) {
-      message(readableError(e, 'Could not load the example. Try again.'));
-    } finally {
-      if (mounted) setState(() => busy = false);
-    }
-  }
-
   Future<void> _edit(
     Future<PhotoResult> Function(PhotoResult) operation,
   ) async {
@@ -987,18 +855,12 @@ class _ScanStudioPageState extends State<ScanStudioPage> {
               icon: const Icon(Icons.add_photo_alternate_outlined),
               label: const Text('Import image'),
             ),
-            OutlinedButton.icon(
-              key: const Key('scan-samples'),
-              onPressed: busy ? null : _samples,
-              icon: const Icon(Icons.school_outlined),
-              label: const Text('Try an example'),
-            ),
           ],
         ),
         const SizedBox(height: 12),
         Text(
           pages.isEmpty
-              ? 'No pages yet. Add an image or try an example.'
+              ? 'No pages yet. Capture a page or import an image.'
               : '${pages.length} of $maxScanPages pages · ${saveError == null ? 'Draft saved on this device' : 'Draft not saved'}',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
