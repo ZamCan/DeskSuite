@@ -22,7 +22,6 @@ class OfficeConvertPage extends StatefulWidget {
     required this.files,
     this.engine,
     this.pickDocument,
-    this.sampleLoader,
   });
 
   final DocumentPicker picker;
@@ -33,9 +32,6 @@ class OfficeConvertPage extends StatefulWidget {
 
   /// Injected in tests to supply document bytes without a platform picker.
   final Future<({Uint8List bytes, String name})?> Function()? pickDocument;
-
-  /// Injected in tests to avoid the asset bundle.
-  final Future<({Uint8List bytes, String name})?> Function()? sampleLoader;
 
   @override
   State<OfficeConvertPage> createState() => _OfficeConvertPageState();
@@ -94,70 +90,6 @@ class _OfficeConvertPageState extends State<OfficeConvertPage> {
   Future<({Uint8List bytes, String name})?> _pickFromStore() =>
       widget.picker.pickDocument();
 
-  Future<void> _loadSample() async {
-    if (_busy) return;
-    setState(() => _error = null);
-    final loader = widget.sampleLoader;
-    OfficeTemplateDefinition? template;
-    if (loader == null) {
-      template = await showDialog<OfficeTemplateDefinition>(
-        context: context,
-        builder: (context) => SimpleDialog(
-          title: const Text('Choose a fictional Office template'),
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(24, 0, 24, 8),
-              child: Text(
-                'Save an unchanged original for full editing in a compatible '
-                'Office app. DeskSuite edits readable content, not exact layout; '
-                'it cannot write edited PPTX or convert legacy DOC/XLS/PPT.',
-              ),
-            ),
-            for (final item in officeTemplateCatalog)
-              SimpleDialogOption(
-                key: Key('office-template-${item.id}'),
-                onPressed: () => Navigator.pop(context, item),
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(switch (item.kind) {
-                    OfficeTemplateKind.word => Icons.description_outlined,
-                    OfficeTemplateKind.spreadsheet =>
-                      Icons.table_chart_outlined,
-                    OfficeTemplateKind.presentation => Icons.slideshow_outlined,
-                  }),
-                  title: Text(item.title),
-                  subtitle: Text(item.description),
-                ),
-              ),
-          ],
-        ),
-      );
-      if (template == null || !mounted) return;
-    }
-    setState(() => _busy = true);
-    try {
-      if (loader != null) {
-        final sample = await loader();
-        if (sample == null || !mounted) return;
-        await _load(sample.bytes, sample.name);
-      } else {
-        final item = template!;
-        final data = await rootBundle.load(item.assetPath);
-        if (!mounted) return;
-        await _load(
-          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
-          item.fileName,
-          template: item,
-        );
-      }
-    } catch (error) {
-      if (mounted) {
-        setState(() => _error = 'The sample could not be loaded: $error');
-      }
-    } finally {
-      if (mounted && _busy) setState(() => _busy = false);
-    }
-  }
 
   Future<void> _load(
     Uint8List bytes,
