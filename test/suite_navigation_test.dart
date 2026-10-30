@@ -110,7 +110,14 @@ void main() {
       ),
     );
     await settleIo(tester);
-    expect(find.byType(BrandMark), findsWidgets);
+    // On compact phones the branded sidebar is intentionally closed until
+    // requested; verify its mark in the drawer rather than expecting a hidden
+    // desktop sidebar logo in the home viewport.
+    await tester.tap(find.byTooltip('Open navigation'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BrandMark), findsOneWidget);
+    Navigator.of(tester.element(find.byType(Drawer))).pop();
+    await tester.pumpAndSettle();
     expect(find.byType(WorkspaceToolCard), findsNWidgets(7));
     final scanTile = tester.getRect(find.byKey(const Key('home-open-scan')));
     final pdfTile = tester.getRect(find.byKey(const Key('home-open-pdf')));
