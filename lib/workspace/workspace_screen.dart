@@ -417,8 +417,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _heading(
-          'Your creative workspace',
-          'Choose a tool and get straight to work.',
+          'Make something',
+          '',
         ),
         const SizedBox(height: 12),
         TextField(
@@ -547,15 +547,13 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               ),
             ),
           ),
-        const SizedBox(height: 24),
-
-        const SizedBox(height: 30),
+        const SizedBox(height: 26),
         Row(
           children: [
             Expanded(
               child: _heading(
                 'Recent work',
-                'Projects saved on this device.',
+                '',
               ),
             ),
             TextButton(
