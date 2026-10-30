@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../app/section_artwork.dart';
 import '../app/theme.dart';
 import '../design/design_document.dart';
+import '../design/editor_screen.dart';
 import '../document_scan/camera_gateway.dart';
 import '../document_scan/scan_studio_page.dart';
 import '../legacy_studios.dart' as legacy;
@@ -643,7 +644,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       Text(
         title,
         style: Theme.of(context).textTheme.titleLarge
-            ?.copyWith(fontWeight: FontWeight.w750, letterSpacing: -.55),
+            ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -.55),
       ),
       if (subtitle.isNotEmpty) ...[
         const SizedBox(height: 4),
