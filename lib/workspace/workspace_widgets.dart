@@ -128,16 +128,17 @@ class WorkspaceToolCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: scheme.shadow.withValues(alpha: dark ? .17 : .07),
-            blurRadius: 18,
-            offset: const Offset(0, 7),
+            color: scheme.shadow.withValues(alpha: dark ? .22 : .09),
+            blurRadius: 24,
+            spreadRadius: -3,
+            offset: const Offset(0, 9),
           ),
         ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Material(
             color: Colors.transparent,
             child: Ink(
@@ -146,11 +147,11 @@ class WorkspaceToolCard extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    scheme.surface.withValues(alpha: .94),
-                    bottom.withValues(alpha: .91),
+                    scheme.surface.withValues(alpha: .88),
+                    bottom.withValues(alpha: .76),
                   ],
                 ),
-                border: Border.all(color: border.withValues(alpha: .7)),
+                border: Border.all(color: border.withValues(alpha: .82), width: 1.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: InkWell(
