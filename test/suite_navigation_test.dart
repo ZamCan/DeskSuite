@@ -194,12 +194,7 @@ void main() {
       );
       expect(headerArt, findsOneWidget);
       expect(tester.widget<SectionArtwork>(headerArt).asset, expectedArt);
-      if (section == WorkspaceSection.photos) {
-        final sample = find.byKey(const Key('photo-example'));
-        await reveal(tester, sample);
-        await tester.tap(sample);
-        await settleUntil(tester, find.byKey(const Key('photo-zoom')));
-      }
+      // Photo Studio now starts with user import; no bundled demo project is opened.
       expect(tester.takeException(), isNull, reason: route.key);
     }
     // PDF uses an honest standard icon rather than a new launcher logo.
