@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('startup uses the canonical DeskSuite mark and local-first copy', (
-    tester,
-  ) async {
+  testWidgets('loading state uses only the DeskSuite identity and real activity', (tester) async {
     tester.view.physicalSize = const Size(320, 640);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -21,13 +19,13 @@ void main() {
 
     expect(find.byType(BrandMark), findsOneWidget);
     expect(find.text('DeskSuite'), findsOneWidget);
-    expect(find.text('Documents, photos and print'), findsOneWidget);
-    expect(find.text('Preparing your local workspace…'), findsOneWidget);
-    expect(find.byKey(const Key('workspace-startup-progress')), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('Documents, photos and print'), findsNothing);
+    expect(find.text('Preparing your local workspace…'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('startup remains legible in dark appearance', (tester) async {
+  testWidgets('loading state remains legible in dark appearance', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: deskTheme(Brightness.dark),
