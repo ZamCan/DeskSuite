@@ -367,7 +367,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           Expanded(
             child: Text(
               switch (_section) {
-                WorkspaceSection.workspace => 'Workspace',
+                WorkspaceSection.workspace => 'Home',
                 WorkspaceSection.projects => 'Files & Projects',
                 WorkspaceSection.settings => 'Settings',
                 WorkspaceSection.design => 'Creative Studio',
@@ -446,13 +446,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 textScale,
               );
               final cards = <Widget>[
-                if (matchesHomeShortcut(WorkspaceSection.photos, _shortcutQuery))
-                  WorkspaceToolCard(
-                    key: const Key('home-open-photo'),
-                    section: WorkspaceSection.photos,
-                    title: 'Photo Studio',
-                    onNavigate: _navigate,
-                  ),
                 if (matchesHomeShortcut(WorkspaceSection.scans, _shortcutQuery))
                   WorkspaceToolCard(
                     key: const Key('home-open-scan'),
@@ -469,6 +462,13 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     section: WorkspaceSection.pdfStudio,
                     title: 'PDF Studio',
                     fallbackIcon: Icons.picture_as_pdf_outlined,
+                    onNavigate: _navigate,
+                  ),
+                if (matchesHomeShortcut(WorkspaceSection.photos, _shortcutQuery))
+                  WorkspaceToolCard(
+                    key: const Key('home-open-photo'),
+                    section: WorkspaceSection.photos,
+                    title: 'Photo Studio',
                     onNavigate: _navigate,
                   ),
                 if (matchesHomeShortcut(WorkspaceSection.office, _shortcutQuery))
