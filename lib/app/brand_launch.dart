@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'brand_motion.dart';
 import 'theme.dart';
+import 'stationery_pattern.dart';
 
 /// A short cold-start treatment above the already-initializing workspace.
 /// It is removed when complete and is skipped when system animations are off.
@@ -26,7 +27,7 @@ class _BrandLaunchState extends State<BrandLaunch>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1900),
+      duration: const Duration(milliseconds: 900),
     )..addStatusListener(_onStatus);
   }
 
@@ -88,10 +89,13 @@ class _LaunchArtwork extends StatelessWidget {
     final reveal = brandArtworkReveal(progress);
     return Opacity(
       opacity: fadeOut,
-      child: ColoredBox(
-        color: const Color(0xfff5f1eb),
-        child: SafeArea(
-          child: LayoutBuilder(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const ColoredBox(color: Color(0xfff5f1eb)),
+          const StationeryPattern(),
+          SafeArea(
+            child: LayoutBuilder(
             builder: (context, constraints) {
               final size = math.min(
                 216.0,
@@ -139,14 +143,20 @@ class _LaunchArtwork extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 18),
-                          const Text(
-                            'DeskSuite',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Color(0xff1d1a18),
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -.5,
+                          Opacity(
+                            opacity: ((progress - .22) / .24).clamp(0.0, 1.0),
+                            child: Transform.translate(
+                              offset: Offset(0, 7 * (1 - ((progress - .22) / .24).clamp(0.0, 1.0))),
+                              child: const Text(
+                                'DeskSuite',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Color(0xff1d1a18),
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -.5,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -157,7 +167,8 @@ class _LaunchArtwork extends StatelessWidget {
               );
             },
           ),
-        ),
+          ),
+        ],
       ),
     );
   }
