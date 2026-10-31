@@ -281,113 +281,39 @@ class WorkspaceSidebar extends StatelessWidget {
     return Material(
       color: scheme.surface,
       child: ListView(
+        padding: const EdgeInsets.fromLTRB(0, 22, 0, 24),
         children: [
-          const SizedBox(height: 24),
           const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              children: [
-                BrandMark(),
-                SizedBox(width: 12),
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'DeskSuite',
-                        style: TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -.6,
-                        ),
-                      ),
-                      Text(
-                        'CREATIVE WORKSPACE',
-                        style: TextStyle(fontSize: 9, letterSpacing: 1.05),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 35),
-          _navLabel(context, 'WORKSPACE'),
-          item(Icons.grid_view_rounded, 'Home', WorkspaceSection.workspace),
-          item(
-            Icons.folder_open_outlined,
-            'Files & Projects',
-            WorkspaceSection.projects,
-          ),
-          item(
-            Icons.route_outlined,
-            'Conversion routes',
-            WorkspaceSection.conversions,
-          ),
-          item(Icons.tune_rounded, 'Settings', WorkspaceSection.settings),
-          const SizedBox(height: 24),
-          _navLabel(context, 'STUDIOS'),
-          item(
-            Icons.palette_outlined,
-            'Creative Studio',
-            WorkspaceSection.design,
-          ),
-          item(Icons.photo_outlined, 'Photo Studio', WorkspaceSection.photos),
-          item(
-            Icons.document_scanner_outlined,
-            'Scan & assemble',
-            WorkspaceSection.scans,
-          ),
-          item(
-            Icons.edit_note_outlined,
-            'Office Notes',
-            WorkspaceSection.notes,
-          ),
-          item(
-            Icons.text_snippet_outlined,
-            'Text extraction',
-            WorkspaceSection.text,
-          ),
-          item(
-            Icons.transform_outlined,
-            'Document converter',
-            WorkspaceSection.office,
-          ),
-          item(
-            Icons.picture_as_pdf_outlined,
-            'PDF Studio',
-            WorkspaceSection.pdfStudio,
-          ),
-          item(Icons.print_outlined, 'Print Studio', WorkspaceSection.printing),
-          item(
-            Icons.storefront_outlined,
-            'Business & POS',
-            WorkspaceSection.business,
-          ),
-          const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.fromLTRB(24, 4, 24, 22),
             child: Text(
-              'DOCUMENTS · DESIGN · PRINT',
-              style: Theme.of(context).textTheme.labelSmall
-                  ?.copyWith(letterSpacing: .8, color: scheme.onSurfaceVariant),
+              'DeskSuite',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -.6,
+              ),
             ),
           ),
+          item(Icons.home_outlined, 'Home', WorkspaceSection.workspace),
+          item(Icons.photo_outlined, 'Photo Studio', WorkspaceSection.photos),
+          item(Icons.document_scanner_outlined, 'Scanner', WorkspaceSection.scans),
+          item(Icons.picture_as_pdf_outlined, 'PDF Studio', WorkspaceSection.pdfStudio),
+          item(Icons.description_outlined, 'Documents', WorkspaceSection.office),
+          item(Icons.text_snippet_outlined, 'Text extraction', WorkspaceSection.text),
+          item(Icons.palette_outlined, 'Creative Studio', WorkspaceSection.design),
+          item(Icons.edit_note_outlined, 'Office Notes', WorkspaceSection.notes),
+          item(Icons.print_outlined, 'Print Studio', WorkspaceSection.printing),
+          item(Icons.storefront_outlined, 'Business & POS', WorkspaceSection.business),
+          const Divider(height: 28, indent: 20, endIndent: 20),
+          item(Icons.folder_open_outlined, 'Files & Projects', WorkspaceSection.projects),
+          item(Icons.route_outlined, 'Conversion routes', WorkspaceSection.conversions),
+          item(Icons.tune_rounded, 'Settings', WorkspaceSection.settings),
         ],
       ),
     );
   }
 
-  Widget _navLabel(BuildContext context, String value) => Padding(
-    padding: const EdgeInsets.fromLTRB(26, 0, 12, 8),
-    child: Text(
-      value,
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        letterSpacing: 1.2,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
-    ),
-  );
+
 }
 
 class StarterCard extends StatelessWidget {

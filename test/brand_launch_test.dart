@@ -4,29 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('startup draws, reveals the selected logo and returns control', (
-    tester,
-  ) async {
+  testWidgets('boot reveals the official mark before the app name', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: BrandLaunch(child: Scaffold(body: Text('Ready'))),
       ),
     );
     expect(find.byKey(const Key('brand-launch-surface')), findsOneWidget);
-    expect(find.byKey(const Key('brand-launch-drawing')), findsOneWidget);
-    expect(
-      tester
-          .widget<Opacity>(find.byKey(const Key('brand-launch-artwork')))
-          .opacity,
-      0,
-    );
     expect(find.byType(BrandMark), findsOneWidget);
-    await tester.pump(); // Start the ticker before advancing fake time.
-    await tester.pump(const Duration(milliseconds: 1400));
+    expect(find.text('DeskSuite'), findsOneWidget);
+    expect(find.byKey(const Key('brand-launch-name')), findsOneWidget);
+    expect(find.text('Documents · Design · Print · Business'), findsNothing);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
     expect(
-      tester
-          .widget<Opacity>(find.byKey(const Key('brand-launch-artwork')))
-          .opacity,
+      tester.widget<Opacity>(find.byKey(const Key('brand-launch-artwork'))).opacity,
+      greaterThan(0),
+    );
+    expect(
+      tester.widget<Opacity>(find.byKey(const Key('brand-launch-name'))).opacity,
       greaterThan(0),
     );
     await tester.pumpAndSettle();
@@ -35,9 +31,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('startup blocks input, then returns it to the workspace', (
-    tester,
-  ) async {
+  testWidgets('boot blocks input only until the short reveal completes', (tester) async {
     var taps = 0;
     await tester.pumpWidget(
       MaterialApp(
@@ -61,9 +55,7 @@ void main() {
     expect(taps, 1);
   });
 
-  testWidgets('startup fits a short narrow screen with larger text', (
-    tester,
-  ) async {
+  testWidgets('boot fits a short narrow screen with larger text', (tester) async {
     tester.view.physicalSize = const Size(220, 180);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -84,7 +76,7 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('reduced motion skips the startup animation', (tester) async {
+  testWidgets('reduced motion skips the boot reveal', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: MediaQuery(

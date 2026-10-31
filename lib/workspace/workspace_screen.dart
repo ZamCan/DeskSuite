@@ -367,7 +367,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           Expanded(
             child: Text(
               switch (_section) {
-                WorkspaceSection.workspace => 'Workspace',
+                WorkspaceSection.workspace => 'Home',
                 WorkspaceSection.projects => 'Files & Projects',
                 WorkspaceSection.settings => 'Settings',
                 WorkspaceSection.design => 'Creative Studio',
@@ -398,11 +398,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _heading(
-          'Make something',
-          '',
-        ),
-        const SizedBox(height: 12),
+        _heading('Workspaces', ''),
+        const SizedBox(height: 18),
         TextField(
           key: const Key('home-shortcut-search'),
           controller: _shortcutSearch,
@@ -410,14 +407,13 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           onChanged: (value) => setState(() => _shortcutQuery = value),
           onSubmitted: (_) => FocusScope.of(context).unfocus(),
           decoration: InputDecoration(
-            labelText: 'Search tools',
-            hintText: 'Find a tool',
+            hintText: 'Find a workspace',
             prefixIcon: const Icon(Icons.search),
             suffixIcon: _shortcutQuery.isEmpty
                 ? null
                 : IconButton(
                     key: const Key('home-clear-shortcut-search'),
-                    tooltip: 'Clear shortcut search',
+                    tooltip: 'Clear search',
                     onPressed: () => setState(() {
                       _shortcutSearch.clear();
                       _shortcutQuery = '';
@@ -432,13 +428,13 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             liveRegion: true,
             child: Text(
               '${homeShortcutSearchTerms.keys.where((section) => matchesHomeShortcut(section, _shortcutQuery)).length} '
-              'of ${homeShortcutSearchTerms.length} shortcuts',
+              'of ${homeShortcutSearchTerms.length} workspaces',
               key: const Key('home-shortcut-result-count'),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
         ],
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         if (homeShortcutSearchTerms.keys.any(
           (section) => matchesHomeShortcut(section, _shortcutQuery),
         ))
@@ -454,7 +450,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   WorkspaceToolCard(
                     key: const Key('home-open-scan'),
                     section: WorkspaceSection.scans,
-                    title: 'Scan documents',
+                    title: 'Scanner',
                     onNavigate: _navigate,
                   ),
                 if (matchesHomeShortcut(
@@ -464,55 +460,36 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   WorkspaceToolCard(
                     key: const Key('home-open-pdf'),
                     section: WorkspaceSection.pdfStudio,
-                    title: 'Work with a PDF',
+                    title: 'PDF Studio',
                     fallbackIcon: Icons.picture_as_pdf_outlined,
                     onNavigate: _navigate,
                   ),
-                if (matchesHomeShortcut(
-                  WorkspaceSection.photos,
-                  _shortcutQuery,
-                ))
+                if (matchesHomeShortcut(WorkspaceSection.photos, _shortcutQuery))
                   WorkspaceToolCard(
                     key: const Key('home-open-photo'),
                     section: WorkspaceSection.photos,
-                    title: 'Edit a photo',
+                    title: 'Photo Studio',
+                    onNavigate: _navigate,
+                  ),
+                if (matchesHomeShortcut(WorkspaceSection.office, _shortcutQuery))
+                  WorkspaceToolCard(
+                    key: const Key('home-open-converter'),
+                    section: WorkspaceSection.office,
+                    title: 'Documents',
                     onNavigate: _navigate,
                   ),
                 if (matchesHomeShortcut(WorkspaceSection.text, _shortcutQuery))
                   WorkspaceToolCard(
                     key: const Key('home-open-text'),
                     section: WorkspaceSection.text,
-                    title: 'Extract text',
+                    title: 'Text Extraction',
                     onNavigate: _navigate,
                   ),
-                if (matchesHomeShortcut(
-                  WorkspaceSection.office,
-                  _shortcutQuery,
-                ))
-                  WorkspaceToolCard(
-                    key: const Key('home-open-converter'),
-                    section: WorkspaceSection.office,
-                    title: 'Convert file',
-                    onNavigate: _navigate,
-                  ),
-                if (matchesHomeShortcut(
-                  WorkspaceSection.design,
-                  _shortcutQuery,
-                ))
+                if (matchesHomeShortcut(WorkspaceSection.design, _shortcutQuery))
                   WorkspaceToolCard(
                     key: const Key('home-open-design'),
                     section: WorkspaceSection.design,
                     title: 'Creative Studio',
-                    onNavigate: _navigate,
-                  ),
-                if (matchesHomeShortcut(
-                  WorkspaceSection.projects,
-                  _shortcutQuery,
-                ))
-                  WorkspaceToolCard(
-                    key: const Key('home-open-projects'),
-                    section: WorkspaceSection.projects,
-                    title: 'Files & Projects',
                     onNavigate: _navigate,
                   ),
               ];
@@ -520,33 +497,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             },
           )
         else
-          const Card(
-            child: Padding(
-              padding: EdgeInsets.all(18),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 28),
+            child: Center(
               child: Text(
-                'No matching shortcuts. Try a different search or clear it.',
+                'No matching workspaces.',
                 key: Key('home-shortcut-empty'),
               ),
             ),
           ),
-        const SizedBox(height: 26),
-        Row(
-          children: [
-            Expanded(
-              child: _heading(
-                'Recent work',
-                '',
-              ),
-            ),
-            TextButton(
-              onPressed: () => _navigate(WorkspaceSection.projects),
-              child: const Text('View all'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        _projectList(limit: 4),
-        const SizedBox(height: 26),
+        const SizedBox(height: 28),
       ],
     ),
   );
