@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('sidebar uses consistent icon tiles and a clear selection', (
+  testWidgets('sidebar uses a consistent icon family and clear selection', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360, 760);
@@ -28,26 +28,20 @@ void main() {
       ),
     );
 
-    final selectedTile = find.byKey(const Key('nav-icon-tile-workspace'));
-    final otherTile = find.byKey(const Key('nav-icon-tile-projects'));
+    final selectedTile = find.byKey(const Key('nav-workspace'));
+    final otherTile = find.byKey(const Key('nav-projects'));
     expect(selectedTile, findsOneWidget);
     expect(otherTile, findsOneWidget);
-
-    final selectedBox = tester.widget<Container>(selectedTile);
-    final otherBox = tester.widget<Container>(otherTile);
-    final selectedDecoration = selectedBox.decoration! as BoxDecoration;
-    final otherDecoration = otherBox.decoration! as BoxDecoration;
-    expect(selectedDecoration.color!.a, greaterThan(otherDecoration.color!.a));
-    expect(
-      tester
-          .widget<Icon>(
-            find.descendant(of: selectedTile, matching: find.byType(Icon)),
-          )
-          .color,
-      accent,
+    final selectedIcon = tester.widget<Icon>(
+      find.descendant(of: selectedTile, matching: find.byType(Icon)),
     );
+    final otherIcon = tester.widget<Icon>(
+      find.descendant(of: otherTile, matching: find.byType(Icon)),
+    );
+    expect(selectedIcon.color, accent);
+    expect(otherIcon.color, Theme.of(tester.element(otherTile)).colorScheme.onSurfaceVariant);
 
-    await tester.tap(find.byKey(const Key('nav-projects')));
+    await tester.tap(otherTile);
     await tester.pump();
     expect(selected, WorkspaceSection.projects);
     expect(tester.takeException(), isNull);
