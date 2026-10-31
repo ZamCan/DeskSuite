@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:desksuite/app/section_artwork.dart';
-import 'package:desksuite/app/theme.dart';
 import 'package:desksuite/main.dart';
 import 'package:desksuite/design/design_document.dart';
 import 'package:desksuite/workspace/creative_studio_page.dart';
