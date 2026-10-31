@@ -22,7 +22,7 @@ void main() {
     );
     expect(find.byType(BrandMark), findsOneWidget);
     await tester.pump(); // Start the ticker before advancing fake time.
-    await tester.pump(const Duration(milliseconds: 1400));
+    await tester.pump(const Duration(milliseconds: 650));
     expect(
       tester
           .widget<Opacity>(find.byKey(const Key('brand-launch-artwork')))
