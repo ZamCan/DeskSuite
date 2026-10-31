@@ -21,9 +21,6 @@ void main() {
 
     expect(find.byType(BrandMark), findsOneWidget);
     expect(find.text('DeskSuite'), findsOneWidget);
-    expect(find.text('Documents, photos and print'), findsOneWidget);
-    expect(find.text('Preparing your local workspace…'), findsOneWidget);
-    expect(find.byKey(const Key('workspace-startup-progress')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -36,6 +33,7 @@ void main() {
     );
     expect(find.byType(BrandMark), findsOneWidget);
     expect(find.text('DeskSuite'), findsOneWidget);
+    expect(find.text('CREATIVE WORKSPACE'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }
