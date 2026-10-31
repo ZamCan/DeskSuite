@@ -3,8 +3,8 @@ import 'package:desksuite/workspace/workspace_widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('empty and whitespace queries show every real Home shortcut', () {
-    expect(homeShortcutSearchTerms, hasLength(7));
+  test('empty and whitespace queries show every real Home workspace', () {
+    expect(homeShortcutSearchTerms, hasLength(6));
     for (final section in homeShortcutSearchTerms.keys) {
       expect(matchesHomeShortcut(section, ''), isTrue);
       expect(matchesHomeShortcut(section, '  \t '), isTrue);
