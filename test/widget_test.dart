@@ -37,13 +37,13 @@ void main() {
         fileGateway: _NoFiles(),
       ),
     );
-    for (var i = 0; i < 100 && find.text('Workspace').evaluate().isEmpty; i++) {
+    for (var i = 0; i < 100 && find.text('Home').evaluate().isEmpty; i++) {
       await tester.pump(const Duration(milliseconds: 20));
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 10)),
       );
     }
-    expect(find.text('Workspace'), findsWidgets);
+    expect(find.text('Home'), findsWidgets);
     expect(find.text('Offline'), findsNothing);
     expect(find.text('LOCAL WORKSPACE'), findsNothing);
     expect(tester.takeException(), isNull);
