@@ -115,10 +115,10 @@ void main() {
     // desktop sidebar logo in the home viewport.
     await tester.tap(find.byTooltip('Open navigation'));
     await tester.pumpAndSettle();
-    expect(find.byType(BrandMark), findsOneWidget);
+    expect(find.text('DeskSuite'), findsOneWidget);
     Navigator.of(tester.element(find.byType(Drawer))).pop();
     await tester.pumpAndSettle();
-    expect(find.byType(WorkspaceToolCard), findsNWidgets(7));
+    expect(find.byType(WorkspaceToolCard), findsNWidgets(6));
     final scanTile = tester.getRect(find.byKey(const Key('home-open-scan')));
     final pdfTile = tester.getRect(find.byKey(const Key('home-open-pdf')));
     expect(scanTile.top, pdfTile.top, reason: 'phone shortcuts fit two across');
@@ -135,7 +135,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('home-open-photo')), findsOneWidget);
     expect(find.byKey(const Key('home-open-scan')), findsNothing);
-    expect(find.text('1 of 7 shortcuts'), findsOneWidget);
+    expect(find.text('1 of 6 workspaces'), findsOneWidget);
     await tester.enterText(search, 'not-a-real-shortcut');
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('home-shortcut-empty')), findsOneWidget);
@@ -163,11 +163,6 @@ void main() {
         'new-design',
         WorkspaceSection.design,
         SectionArt.design,
-      ),
-      'home-open-projects': (
-        'workspace-page-projects',
-        WorkspaceSection.projects,
-        SectionArt.projects,
       ),
     };
     var first = true;
