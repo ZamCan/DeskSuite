@@ -264,7 +264,7 @@ class WorkspaceSidebar extends StatelessWidget {
             child: Row(children: [
               BrandMark(size: 34),
               SizedBox(width: 11),
-              Text('DeskSuite', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -.55)),
+              Flexible(child: Text('DeskSuite', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -.55))),
             ]),
           ),
           label('WORKSPACE'),
