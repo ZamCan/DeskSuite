@@ -438,16 +438,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
               final columns = workspaceTaskColumnCount(constraints.maxWidth, textScale);
               final cards = <Widget>[
-                if (matchesHomeShortcut(WorkspaceSection.photos, _shortcutQuery))
-                  WorkspaceToolCard(key: const Key('home-open-photo'), section: WorkspaceSection.photos, title: 'Photo Studio', onNavigate: _navigate),
                 if (matchesHomeShortcut(WorkspaceSection.scans, _shortcutQuery))
                   WorkspaceToolCard(key: const Key('home-open-scan'), section: WorkspaceSection.scans, title: 'Scanner', onNavigate: _navigate),
                 if (matchesHomeShortcut(WorkspaceSection.pdfStudio, _shortcutQuery))
                   WorkspaceToolCard(key: const Key('home-open-pdf'), section: WorkspaceSection.pdfStudio, title: 'PDF Studio', fallbackIcon: Icons.picture_as_pdf_outlined, onNavigate: _navigate),
-                if (matchesHomeShortcut(WorkspaceSection.office, _shortcutQuery))
-                  WorkspaceToolCard(key: const Key('home-open-converter'), section: WorkspaceSection.office, title: 'Documents', onNavigate: _navigate),
+                if (matchesHomeShortcut(WorkspaceSection.photos, _shortcutQuery))
+                  WorkspaceToolCard(key: const Key('home-open-photo'), section: WorkspaceSection.photos, title: 'Photo Studio', onNavigate: _navigate),
                 if (matchesHomeShortcut(WorkspaceSection.text, _shortcutQuery))
                   WorkspaceToolCard(key: const Key('home-open-text'), section: WorkspaceSection.text, title: 'Text extraction', onNavigate: _navigate),
+                if (matchesHomeShortcut(WorkspaceSection.office, _shortcutQuery))
+                  WorkspaceToolCard(key: const Key('home-open-converter'), section: WorkspaceSection.office, title: 'Documents', onNavigate: _navigate),
                 if (matchesHomeShortcut(WorkspaceSection.design, _shortcutQuery))
                   WorkspaceToolCard(key: const Key('home-open-design'), section: WorkspaceSection.design, title: 'Creative Studio', onNavigate: _navigate),
               ];
