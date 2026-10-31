@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'brand_launch.dart';
-import 'theme.dart';
-
 /// Quiet local-startup state shown only while the workspace is being prepared.
 class WorkspaceLoadingView extends StatelessWidget {
   const WorkspaceLoadingView({super.key});
