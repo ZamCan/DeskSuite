@@ -100,30 +100,36 @@ class _LaunchArtwork extends StatelessWidget {
       child: StationeryWallpaper(
         child: SafeArea(
           child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Opacity(
-                  key: const Key('brand-launch-artwork'),
-                  opacity: markOpacity,
-                  child: const BrandMark(size: 112),
-                ),
-                const SizedBox(height: 18),
-                Opacity(
-                  key: const Key('brand-launch-name'),
-                  opacity: nameOpacity,
-                  child: const Text(
-                    'DeskSuite',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Color(0xff292721),
-                      fontSize: 27,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -.7,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Opacity(
+                      key: const Key('brand-launch-artwork'),
+                      opacity: markOpacity,
+                      child: const BrandMark(size: 112),
                     ),
-                  ),
+                    const SizedBox(height: 18),
+                    Opacity(
+                      key: const Key('brand-launch-name'),
+                      opacity: nameOpacity,
+                      child: const Text(
+                        'DeskSuite',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Color(0xff292721),
+                          fontSize: 27,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -.7,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
