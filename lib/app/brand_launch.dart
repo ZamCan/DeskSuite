@@ -90,10 +90,10 @@ class _LaunchArtwork extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final markOpacity = Curves.easeOut.transform(
-      (progress / .42).clamp(0.0, 1.0),
+      (progress / .42).clamp(0.0, 1.0).toDouble(),
     );
     final nameOpacity = Curves.easeOut.transform(
-      ((progress - .28) / .42).clamp(0.0, 1.0),
+      ((progress - .28) / .42).clamp(0.0, 1.0).toDouble(),
     );
     return ColoredBox(
       color: const Color(0xfff3efe7),
