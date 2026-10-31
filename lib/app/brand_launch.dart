@@ -85,7 +85,7 @@ class _LaunchArtwork extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fadeOut = 1 - ((progress - .9) / .1).clamp(0.0, 1.0);
+    final fadeOut = 1 - ((progress - .97) / .03).clamp(0.0, 1.0);
     final reveal = brandArtworkReveal(progress);
     return Opacity(
       opacity: fadeOut,
@@ -144,9 +144,9 @@ class _LaunchArtwork extends StatelessWidget {
                           ),
                           const SizedBox(height: 18),
                           Opacity(
-                            opacity: ((progress - .22) / .24).clamp(0.0, 1.0),
+                            opacity: ((progress - .85) / .13).clamp(0.0, 1.0),
                             child: Transform.translate(
-                              offset: Offset(0, 7 * (1 - ((progress - .22) / .24).clamp(0.0, 1.0))),
+                              offset: Offset(0, 7 * (1 - ((progress - .85) / .13).clamp(0.0, 1.0))),
                               child: const Text(
                                 'DeskSuite',
                                 textAlign: TextAlign.center,
