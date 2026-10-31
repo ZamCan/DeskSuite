@@ -42,10 +42,10 @@ void main() {
     }
   });
 
-  testWidgets('each drawer illustration belongs to its actual destination', (
+  testWidgets('navigation uses clean standard icons, not section logo artwork', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(400, 1600);
+    tester.view.physicalSize = const Size(400, 1200);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -64,21 +64,29 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    final expected = <WorkspaceSection, String>{
-      WorkspaceSection.scans: SectionArt.scan,
-      WorkspaceSection.photos: SectionArt.photo,
-      WorkspaceSection.text: SectionArt.text,
-      WorkspaceSection.office: SectionArt.office,
-      WorkspaceSection.design: SectionArt.design,
-      WorkspaceSection.projects: SectionArt.projects,
+    final routes = <WorkspaceSection, String>{
+      WorkspaceSection.scans: 'nav-scans',
+      WorkspaceSection.photos: 'nav-photos',
+      WorkspaceSection.text: 'nav-text',
+      WorkspaceSection.office: 'nav-office',
+      WorkspaceSection.design: 'nav-design',
+      WorkspaceSection.projects: 'nav-projects',
     };
-    for (final item in expected.entries) {
-      final art = find.byKey(ValueKey('nav-section-art-${item.key.name}'));
-      expect(art, findsOneWidget, reason: item.key.name);
-      expect(tester.widget<SectionArtwork>(art).asset, item.value);
-      await tester.tap(art);
+    for (final entry in routes.entries) {
+      final tile = find.byKey(Key(entry.value));
+      expect(tile, findsOneWidget, reason: entry.key.name);
+      expect(
+        find.descendant(of: tile, matching: find.byType(Icon)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: tile, matching: find.byType(SectionArtwork)),
+        findsNothing,
+      );
+      await tester.ensureVisible(tile);
+      await tester.tap(tile);
       await tester.pumpAndSettle();
-      expect(selected, item.key);
+      expect(selected, entry.key);
     }
     expect(tester.takeException(), isNull);
   });
