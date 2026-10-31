@@ -13,7 +13,6 @@ const homeShortcutSearchTerms = <WorkspaceSection, String>{
       'convert office file document word excel presentation',
   WorkspaceSection.design:
       'creative studio design template poster print layout',
-  WorkspaceSection.projects: 'files projects saved local open design',
 };
 
 /// Each search word must occur in the section's local, case-insensitive terms.
