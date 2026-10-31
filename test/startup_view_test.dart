@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('loading state uses only the DeskSuite identity and real activity', (tester) async {
+  testWidgets('loading state stays quiet while local storage opens', (tester) async {
     tester.view.physicalSize = const Size(320, 640);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -17,8 +17,8 @@ void main() {
       ),
     );
 
-    expect(find.byType(BrandMark), findsOneWidget);
-    expect(find.text('DeskSuite'), findsOneWidget);
+    expect(find.byType(BrandMark), findsNothing);
+    expect(find.text('DeskSuite'), findsNothing);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(find.text('Documents, photos and print'), findsNothing);
     expect(find.text('Preparing your local workspace…'), findsNothing);
@@ -32,8 +32,8 @@ void main() {
         home: const WorkspaceLoadingView(),
       ),
     );
-    expect(find.byType(BrandMark), findsOneWidget);
-    expect(find.text('DeskSuite'), findsOneWidget);
+    expect(find.byType(BrandMark), findsNothing);
+    expect(find.text('DeskSuite'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }
