@@ -313,16 +313,7 @@ class WorkspaceSidebar extends StatelessWidget {
     );
   }
 
-  Widget _navLabel(BuildContext context, String value) => Padding(
-    padding: const EdgeInsets.fromLTRB(26, 0, 12, 8),
-    child: Text(
-      value,
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        letterSpacing: 1.2,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
-    ),
-  );
+
 }
 
 class StarterCard extends StatelessWidget {
