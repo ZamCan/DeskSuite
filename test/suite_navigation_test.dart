@@ -110,6 +110,15 @@ void main() {
       ),
     );
     await settleIo(tester);
+    expect(find.byKey(const Key('home-premium-scan-banner')), findsOneWidget);
+    final scanAction = find.byKey(const Key('home-premium-scan-action'));
+    await tester.tap(scanAction);
+    await settleUntil(tester, find.byKey(const Key('scan-import')));
+    expect(
+      find.byKey(const ValueKey('workspace-page-scans')),
+      findsOneWidget,
+    );
+    await navigate(tester, 'Home');
     // On compact phones the branded sidebar is intentionally closed until
     // requested; verify its mark in the drawer rather than expecting a hidden
     // desktop sidebar logo in the home viewport.
