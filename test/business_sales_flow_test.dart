@@ -272,11 +272,18 @@ void main() {
     await settleUntil(tester, find.textContaining('USD 250.00'));
     await settleUntil(tester, find.textContaining('USD 1.50'));
 
-    await reveal(tester, find.byKey(const Key('shop-currency')));
+    await settleUntil(tester, find.byKey(const Key('shop-currency')));
     await tester.tap(find.byKey(const Key('shop-currency')));
-    await tester.pumpAndSettle();
+    await settleUntil(tester, find.byKey(const Key('shop-currency')));
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
     await tester.tap(find.text('Kenyan shilling (KSh)'));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
 
     // The selection persists to the real settings file and drives the labels.
     await waitUntil(
