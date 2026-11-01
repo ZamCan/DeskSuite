@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — business baskets, receipts and backups (not a release)
+
+- Added receipt currency and price-tier settings to the Business screen: the shop currency labels every money display and travels into recorded sales; it is a label only, with no exchange-rate behaviour implied.
+- Added customer basket sales: several catalogue products with per-line quantities and retail/wholesale tiers complete into one itemised receipt (`recordCartSale`), reusing the serialized transaction, store bounds and sales-log rollback protection of single-product sales.
+- Added automatic internal receipt storage: receipts are always kept (capped at 400), the newest 20 are listed, and reprinting an A5 PDF is optional and on demand.
+- Added one-file business backups bundling the catalogue, stored receipts and shop settings, restored only after full validation. An interruption between restore writes can leave a partial state; in that case run the restore again.
+- Prepared for a later cloud phase: the backup document is a complete bounded snapshot that a future Google Drive app-folder sync can upload unchanged. Sign-in/OAuth, consent-screen setup, a network permission change and device verification are still missing, and cloud sync is not integrated.
+- Added cart-engine, backup round-trip/tamper and business widget-flow tests. New tests still need a hosted CI run and device-level checks; nothing here claims a release.
+
 ## 0.2.1+4 — PDF merge and Office package safety integration
 
 - Add ordered multi-PDF combination with source-count/byte limits, isolate-backed processing, output inspection and page-count verification; originals remain untouched.

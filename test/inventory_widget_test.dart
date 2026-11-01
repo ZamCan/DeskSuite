@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:desksuite/business/business_settings.dart';
 import 'package:desksuite/business/inventory.dart';
 import 'package:desksuite/business/sale_receipt.dart';
 import 'package:desksuite/printing/print_gateway.dart';
@@ -130,11 +131,18 @@ void main() {
         if (await dir.exists()) await dir.delete(recursive: true);
       });
       final repo = InventoryRepository(LocalFileStore(() async => dir));
+      final shopSettings = BusinessSettingsRepository(
+        LocalFileStore(() async => dir),
+      );
       final files = CaptureFiles();
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: BusinessPage(repository: repo, files: files),
+            body: BusinessPage(
+              repository: repo,
+              settings: shopSettings,
+              files: files,
+            ),
           ),
         ),
       );
@@ -202,6 +210,9 @@ void main() {
         home: Scaffold(
           body: BusinessPage(
             repository: InventoryRepository(LocalFileStore(() async => dir)),
+            settings: BusinessSettingsRepository(
+              LocalFileStore(() async => dir),
+            ),
           ),
         ),
       ),
@@ -230,6 +241,9 @@ void main() {
         home: Scaffold(
           body: BusinessPage(
             repository: repo,
+            settings: BusinessSettingsRepository(
+              LocalFileStore(() async => Directory.systemTemp),
+            ),
             printer: printer,
             shopName: 'Mussa Stationery',
           ),

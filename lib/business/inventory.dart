@@ -332,8 +332,146 @@ class InventoryRepository {
     return SaleOutcome(snapshot: snapshot, sale: record);
   });
 
+  /// Records one basket sale for a customer from several catalogue products.
+  ///
+  /// Every line is validated before any stock changes, the whole basket is
+  /// stored as a single sale record (one receipt, itemised), and the same
+  /// serialized transaction and rollback protection as [recordSale] applies.
+  Future<SaleOutcome> recordCartSale({
+    required List<CartSaleLineRequest> lines,
+    String currency = 'TSh',
+  }) => _transaction(() async {
+    if (lines.isEmpty) {
+      throw const FormatException('A sale needs at least one item.');
+    }
+    if (lines.length > maxSaleLines) {
+      throw const FormatException(
+        'A single sale can hold at most $maxSaleLines item lines. Complete this sale and start a new one.',
+      );
+    }
+    if (!isSupportedBusinessCurrency(currency)) {
+      throw const FormatException('Choose a supported shop currency.');
+    }
+    final requested = lines
+        .map((line) => line.productId)
+        .toSet();
+    if (requested.length != lines.length) {
+      throw const FormatException(
+        'Each catalogue product may appear once in a sale. Use its quantity field instead.',
+      );
+    }
+    final current = await load();
+    final byId = {for (final product in current.products) product.id: product};
+    // Resolve and validate all lines first: a basket either completes as a
+    // whole or leaves the catalogue and sales log untouched.
+    final updates = <String, InventoryProduct>{};
+    final items = <SaleItem>[];
+    for (final line in lines) {
+      final product = byId[line.productId];
+      if (product == null) {
+        throw StateError('A product in this sale is no longer in the catalogue.');
+      }
+      if (line.quantity < 1 || line.quantity > maxSaleQuantity) {
+        throw const FormatException('Invalid sale quantity.');
+      }
+      if (product.stock < line.quantity) {
+        throw StateError(
+          'Not enough stock for ${product.name}: ${product.stock} left.',
+        );
+      }
+      if (product.sold + line.quantity > maxStockCount) {
+        throw StateError('Sold count would exceed its limit.');
+      }
+      if (line.wholesale) {
+        if (product.wholesalePriceMinor == null ||
+            line.quantity < product.wholesaleMinQuantity) {
+          throw FormatException(
+            'Wholesale pricing requires at least ${product.wholesaleMinQuantity} ${product.unitLabel}(s) of ${product.name}.',
+          );
+        }
+      }
+      updates[product.id] = product.recordUnits(line.quantity);
+      items.add(
+        SaleItem(
+          productId: product.id,
+          productName: product.name,
+          quantity: line.quantity,
+          unitPriceMinor: line.wholesale
+              ? product.wholesalePriceMinor!
+              : product.priceMinor,
+          unitLabel: product.unitLabel,
+          priceTier: line.wholesale ? 'wholesale' : 'retail',
+        ),
+      );
+    }
+    final pending = List.of(await loadSales());
+    final record = SaleRecord(
+      number:
+          (pending.isEmpty
+              ? 0
+              : pending
+                    .map((sale) => sale.number)
+                    .reduce((a, b) => a > b ? a : b)) +
+          1,
+      productId: items.first.productId,
+      productName: items.first.productName,
+      quantity: items.first.quantity,
+      unitPriceMinor: items.first.unitPriceMinor,
+      soldAt: DateTime.now(),
+      currency: currency,
+      unitLabel: items.first.unitLabel,
+      priceTier: items.first.priceTier,
+      items: items,
+    );
+    if (record.number > 999999) {
+      throw StateError(
+        'Receipt number limit reached; export your records before continuing.',
+      );
+    }
+    record.toLines(); // Reject an unprintable line before the stock write.
+    final next = [
+      for (final product in current.products)
+        updates[product.id] ?? product,
+    ];
+    final previousText = current.encodeJson();
+    final snapshot = await _save(next);
+    final log = [...pending, record];
+    final retained = log.length > maxSalesRetained
+        ? log.sublist(log.length - maxSalesRetained)
+        : log;
+    try {
+      await files.writeText(
+        'sales.json',
+        jsonEncode(retained.map((sale) => sale.toJson()).toList()),
+      );
+    } catch (error) {
+      try {
+        await files.writeText('products.json', previousText);
+      } catch (_) {
+        throw StateError(
+          'The sales log and stock rollback both failed. Check the local records and backups before continuing.',
+        );
+      }
+      throw StateError('The sale was not recorded: $error');
+    }
+    return SaleOutcome(snapshot: snapshot, sale: record);
+  });
+
   Future<InventorySnapshot> recordOneUnit(String id) async =>
       (await recordSale(id: id)).snapshot;
+}
+
+/// One requested cart line: which product, how many, and which price tier.
+/// The repository validates every field before stock changes.
+class CartSaleLineRequest {
+  const CartSaleLineRequest({
+    required this.productId,
+    required this.quantity,
+    this.wholesale = false,
+  });
+  final String productId;
+  final int quantity;
+  final bool wholesale;
 }
 
 /// The stock after a sale and the sale itself.
@@ -349,6 +487,6 @@ class SaleOutcome {
         issuedAt: sale.soldAt,
         shopName: shopName,
         currency: sale.currency,
-        lines: [sale.toLine()],
+        lines: sale.toLines(),
       );
 }

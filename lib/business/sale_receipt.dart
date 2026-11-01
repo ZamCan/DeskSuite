@@ -37,6 +37,75 @@ class SaleLine {
   int get totalMinor => quantity * unitPriceMinor;
 }
 
+/// One purchased product inside a stored sale. A cart sale keeps these so a
+/// single receipt can cover several products for one customer; older
+/// single-product records store only the top-level fields.
+class SaleItem {
+  SaleItem({
+    required this.productId,
+    required this.productName,
+    required this.quantity,
+    required this.unitPriceMinor,
+    this.unitLabel = 'piece',
+    this.priceTier = 'retail',
+  }) {
+    if (productId.isEmpty ||
+        productId.length > 64 ||
+        productName.trim().isEmpty ||
+        productName.length > 200 ||
+        quantity < 1 ||
+        quantity > maxSaleQuantity ||
+        unitPriceMinor < 0 ||
+        unitPriceMinor > maxUnitPriceMinor ||
+        unitLabel.trim().isEmpty ||
+        unitLabel.length > 24 ||
+        !const {'retail', 'wholesale'}.contains(priceTier)) {
+      throw const FormatException('Invalid sale line item.');
+    }
+  }
+
+  final String productId;
+  final String productName;
+  final int quantity;
+  final int unitPriceMinor;
+  final String unitLabel;
+  final String priceTier;
+
+  int get totalMinor => quantity * unitPriceMinor;
+
+  SaleLine toLine() => SaleLine(
+    name: '$productName ($unitLabel)',
+    quantity: quantity,
+    unitPriceMinor: unitPriceMinor,
+  );
+
+  factory SaleItem.fromJson(Map<String, dynamic> json) {
+    try {
+      return SaleItem(
+        productId: json['productId'] as String,
+        productName: json['productName'] as String,
+        quantity: json['quantity'] as int,
+        unitPriceMinor: json['unitPriceMinor'] as int,
+        unitLabel: json['unitLabel'] as String? ?? 'piece',
+        priceTier: json['priceTier'] as String? ?? 'retail',
+      );
+    } on FormatException {
+      rethrow;
+    } catch (_) {
+      throw const FormatException('Invalid sale line item.');
+    }
+  }
+
+  Map<String, Object?> toJson() => {
+    'productId': productId,
+    'productName': productName,
+    'quantity': quantity,
+    'unitPriceMinor': unitPriceMinor,
+    'unitLabel': unitLabel,
+    'priceTier': priceTier,
+  };
+}
+
 /// A completed sale, ready to be rendered as a receipt.
 class SaleReceipt {
   SaleReceipt({
@@ -101,6 +170,7 @@ class SaleRecord {
     this.currency = 'TSh',
     this.unitLabel = 'piece',
     this.priceTier = 'retail',
+    this.items = const [],
   }) {
     if (number < 1 ||
         productId.isEmpty ||
@@ -117,6 +187,12 @@ class SaleRecord {
         !const {'retail', 'wholesale'}.contains(priceTier)) {
       throw const FormatException('Invalid sale record.');
     }
+    if (items.isNotEmpty &&
+        (items.length > maxSaleLines ||
+            items.map((item) => item.productId).toSet().length !=
+                items.length)) {
+      throw const FormatException('Invalid sale record.');
+    }
   }
 
   final int number;
@@ -129,7 +205,15 @@ class SaleRecord {
   final String unitLabel;
   final String priceTier;
 
-  int get totalMinor => quantity * unitPriceMinor;
+  /// Cart lines when this record covers several products for one customer,
+  /// or an empty list for a single-product sale.
+  final List<SaleItem> items;
+
+  bool get isCartSale => items.isNotEmpty;
+
+  int get totalMinor => isCartSale
+      ? items.fold(0, (sum, item) => sum + item.totalMinor)
+      : quantity * unitPriceMinor;
 
   SaleLine toLine() => SaleLine(
     name: '$productName ($unitLabel)',
@@ -137,8 +221,27 @@ class SaleRecord {
     unitPriceMinor: unitPriceMinor,
   );
 
+  /// The receipt lines this record produces, honouring cart sales.
+  List<SaleLine> toLines() =>
+      isCartSale ? [for (final item in items) item.toLine()] : [toLine()];
+
   factory SaleRecord.fromJson(Map<String, dynamic> json) {
     try {
+      final rawItems = json['items'];
+      final items = <SaleItem>[];
+      if (rawItems is List) {
+        if (rawItems.length > maxSaleLines) {
+          throw const FormatException('Invalid sale record.');
+        }
+        for (final entry in rawItems) {
+          if (entry is! Map) {
+            throw const FormatException('Invalid sale record.');
+          }
+          items.add(SaleItem.fromJson(Map<String, dynamic>.from(entry)));
+        }
+      } else if (rawItems != null) {
+        throw const FormatException('Invalid sale record.');
+      }
       return SaleRecord(
         number: json['number'] as int,
         productId: json['productId'] as String,
@@ -149,6 +252,7 @@ class SaleRecord {
         currency: json['currency'] as String? ?? 'TSh',
         unitLabel: json['unitLabel'] as String? ?? 'piece',
         priceTier: json['priceTier'] as String? ?? 'retail',
+        items: items,
       );
     } on FormatException {
       rethrow;
@@ -167,6 +271,8 @@ class SaleRecord {
     'currency': currency,
     'unitLabel': unitLabel,
     'priceTier': priceTier,
+    if (isCartSale)
+      'items': [for (final item in items) item.toJson()],
   };
 }
 

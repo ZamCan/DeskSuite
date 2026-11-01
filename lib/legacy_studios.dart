@@ -10,6 +10,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import 'business/business_backup.dart';
+import 'business/business_settings.dart';
 import 'business/inventory.dart';
 import 'business/sale_receipt.dart';
 import 'core/local_file_store.dart';
@@ -2110,6 +2112,7 @@ class BusinessPage extends StatefulWidget {
     this.repository,
     this.files,
     this.printer,
+    this.settings,
     this.shopName = 'DeskSuite Stationery',
   });
   final InventoryRepository? repository;
@@ -2118,6 +2121,10 @@ class BusinessPage extends StatefulWidget {
   /// Injected so a test can capture the receipt instead of opening the system
   /// print dialog. Defaults to the real platform dialog.
   final PrintGateway? printer;
+
+  /// Injected so a test can preseed or capture shop settings. Defaults to the
+  /// real private-file store.
+  final BusinessSettingsRepository? settings;
 
   /// Printed at the top of every receipt.
   final String shopName;
@@ -2128,8 +2135,14 @@ class BusinessPage extends StatefulWidget {
 class _BusinessPageState extends State<BusinessPage> {
   late final InventoryRepository repository =
       widget.repository ?? InventoryRepository(LocalStore._files);
+  late final BusinessSettingsRepository settingsRepository =
+      widget.settings ?? BusinessSettingsRepository(LocalStore._files);
   InventorySnapshot? snapshot;
+  List<SaleRecord>? sales;
   String? loadError;
+  String? salesError;
+  String shopCurrency = 'TSh';
+  String? settingsError;
   bool loading = true, busy = false;
 
   @override
@@ -2157,6 +2170,59 @@ class _BusinessPageState extends State<BusinessPage> {
         });
       }
     }
+    await _reloadSales();
+    // Settings are read separately so a corrupt settings file never looks
+    // like a corrupt catalogue and is never silently overwritten.
+    try {
+      final settings = await settingsRepository.load();
+      if (mounted) {
+        setState(() {
+          shopCurrency = settings.currency;
+          settingsError = null;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          settingsError = '$error';
+        });
+      }
+    }
+  }
+
+  /// Re-reads the stored receipts. A corrupt sales log is reported, never
+  /// silently repaired, because it is the shop's money record.
+  Future<void> _reloadSales() async {
+    try {
+      final log = await repository.loadSales();
+      if (mounted) {
+        setState(() {
+          sales = log;
+          salesError = null;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          sales = null;
+          salesError = '$error';
+        });
+      }
+    }
+  }
+
+  Future<void> chooseCurrency(String currency) async {
+    try {
+      await settingsRepository.save(BusinessSettings(currency: currency));
+      if (mounted) {
+        setState(() {
+          shopCurrency = currency;
+          settingsError = null;
+        });
+      }
+    } catch (error) {
+      note('Could not save the shop currency. The file was not changed: $error');
+    }
   }
 
   void note(String value) {
@@ -2169,7 +2235,7 @@ class _BusinessPageState extends State<BusinessPage> {
   Future<void> addProduct() async {
     final draft = await showDialog<_ProductDraft>(
       context: context,
-      builder: (_) => const _AddProductDialog(),
+      builder: (_) => _AddProductDialog(currency: shopCurrency),
     );
     if (draft == null || !mounted) return;
     setState(() => busy = true);
@@ -2178,6 +2244,9 @@ class _BusinessPageState extends State<BusinessPage> {
         name: draft.name,
         priceMinor: draft.priceMinor,
         stock: draft.stock,
+        wholesalePriceMinor: draft.wholesalePriceMinor,
+        wholesaleMinQuantity: draft.wholesaleMinQuantity,
+        unitLabel: draft.unitLabel,
       );
       if (mounted) setState(() => snapshot = next);
     } catch (error) {
@@ -2205,10 +2274,76 @@ class _BusinessPageState extends State<BusinessPage> {
     }
   }
 
-  Future<void> sell(InventoryProduct item) async {
+  /// Exports catalogue, stored receipts and shop settings as one backup file
+  /// that can be moved to other storage or a cloud drive by the user.
+  Future<void> exportBackup() async {
+    if (busy) return;
     setState(() => busy = true);
     try {
-      final outcome = await repository.recordSale(id: item.id);
+      final source = await readBusinessBackupSource(
+        dataFiles: repository.files,
+        settingsFiles: settingsRepository.files,
+      );
+      final encoded = encodeBusinessBackup(
+        products: source.products,
+        sales: source.sales,
+        settings: source.settings,
+      );
+      final saved = await (widget.files ?? NativeFileGateway()).save(
+        name: businessBackupFileName(DateTime.now()),
+        bytes: Uint8List.fromList(utf8.encode(encoded)),
+        mimeType: 'application/json',
+      );
+      if (saved) note('Business backup exported.');
+    } catch (error) {
+      note('Could not create the backup: $error');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  /// Imports a business backup after explicit confirmation, because it
+  /// replaces the on-device catalogue, receipts and shop settings.
+  Future<void> importBackup() async {
+    if (busy) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => const _BackupRestoreDialog(),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => busy = true);
+    try {
+      final picked = await (widget.files ?? NativeFileGateway()).pickProject();
+      if (picked == null || !mounted) return;
+      final backup = parseBusinessBackupBytes(picked);
+      await restoreBusinessBackup(
+        backup,
+        dataFiles: repository.files,
+        settingsFiles: settingsRepository.files,
+      );
+      // Reload everything from the restored files so the screen can only show
+      // what is actually stored from now on.
+      setState(() => loading = true);
+      await _load();
+      if (mounted) note('Business backup restored.');
+    } catch (error) {
+      note('Could not restore this backup. Stored files were not intentionally changed: $error');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  Future<void> sell(InventoryProduct item) async {
+    if (settingsError != null) {
+      note('Could not read the shop currency, so the sale was not recorded.');
+      return;
+    }
+    setState(() => busy = true);
+    try {
+      final outcome = await repository.recordSale(
+        id: item.id,
+        currency: shopCurrency,
+      );
       if (mounted) setState(() => snapshot = outcome.snapshot);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2223,8 +2358,81 @@ class _BusinessPageState extends State<BusinessPage> {
           ),
         );
       }
+      await _reloadSales();
     } catch (error) {
       note('Could not record the sale. No change was made: $error');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  /// Runs the basket workflow: the customer buys several catalogue products
+  /// with per-line quantities and price tiers on one receipt.
+  Future<void> openNewSale() async {
+    final current = snapshot;
+    if (current == null || busy) return;
+    if (settingsError != null) {
+      note('Could not read the shop currency, so the sale was not recorded.');
+      return;
+    }
+    final lines = await showDialog<List<CartSaleLineRequest>>(
+      context: context,
+      builder: (_) =>
+          _NewSaleDialog(catalogue: current.products, currency: shopCurrency),
+    );
+    if (lines == null || !mounted) return;
+    setState(() => busy = true);
+    try {
+      final outcome = await repository.recordCartSale(
+        lines: lines,
+        currency: shopCurrency,
+      );
+      if (mounted) setState(() => snapshot = outcome.snapshot);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Sale recorded · ${outcome.receipt(shopName: widget.shopName).formattedTotal} · ${outcome.sale.items.length} item(s)',
+            ),
+            action: SnackBarAction(
+              label: 'Receipt',
+              onPressed: () => printReceipt(outcome),
+            ),
+          ),
+        );
+      }
+      await _reloadSales();
+    } catch (error) {
+      note('Could not record the sale. No change was made: $error');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  /// Renders a stored receipt again as a real A5 PDF. Stored sales remain on
+  /// this device and never have to be printed to be kept.
+  Future<void> reprintStoredReceipt(SaleRecord record) async {
+    if (busy) return;
+    setState(() => busy = true);
+    try {
+      final receipt = SaleReceipt(
+        number: record.number,
+        issuedAt: record.soldAt,
+        shopName: widget.shopName,
+        currency: record.currency,
+        lines: record.toLines(),
+      );
+      final bytes = await buildReceiptPdf(receipt);
+      final printed = await (widget.printer ?? const SystemPrintGateway())
+          .printPdf(
+            bytes: bytes,
+            name: 'receipt-${receipt.receiptNumber}',
+            widthMm: 148,
+            heightMm: 210,
+          );
+      if (!printed) note('The print dialog was closed without printing.');
+    } catch (error) {
+      note('The receipt could not be prepared: $error');
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -2254,6 +2462,7 @@ class _BusinessPageState extends State<BusinessPage> {
   @override
   Widget build(BuildContext context) {
     final current = snapshot;
+    final receipts = sales;
     return ListView(
       padding: const EdgeInsets.all(22),
       children: [
@@ -2263,7 +2472,7 @@ class _BusinessPageState extends State<BusinessPage> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Local catalogue and basic stock counter.',
+          'Local catalogue, stock, stored receipts and backups.',
           style: TextStyle(color: muted),
         ),
         const SizedBox(height: 18),
@@ -2307,10 +2516,71 @@ class _BusinessPageState extends State<BusinessPage> {
           const SizedBox(height: 10),
           Metric(
             label: 'Stock value at listed prices',
-            value: 'TZS ${formatMinorAmount(current.stockValueMinor)}',
+            value: '$shopCurrency ${formatMinorAmount(current.stockValueMinor)}',
             icon: Icons.payments_outlined,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
+          if (settingsError != null) ...[
+            const Text(
+              'Could not read business settings, so sales are paused until they load:',
+            ),
+            Text(settingsError!),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                key: const Key('retry-settings'),
+                onPressed: busy ? null : _load,
+                child: const Text('Retry loading'),
+              ),
+            ),
+          ] else
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Shop settings',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 10),
+                    DropdownButtonFormField<String>(
+                      key: const Key('shop-currency'),
+                      initialValue: isSupportedBusinessCurrency(shopCurrency)
+                          ? shopCurrency
+                          : null,
+                      decoration: const InputDecoration(
+                        labelText: 'Receipt currency',
+                        helperText:
+                            'Labels receipts only. Prices stay in one currency; no rates are fetched.',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: [
+                        for (final option in supportedBusinessCurrencies)
+                          DropdownMenuItem(value: option.code, child: Text(option.name)),
+                      ],
+                      onChanged: busy
+                          ? null
+                          : (code) {
+                              if (code != null) chooseCurrency(code);
+                            },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          const SizedBox(height: 14),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FilledButton.icon(
+              key: const Key('new-sale'),
+              onPressed: busy || settingsError != null ? null : openNewSale,
+              icon: const Icon(Icons.receipt_long_outlined, size: 18),
+              label: const Text('New sale'),
+            ),
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
               const Expanded(
@@ -2328,16 +2598,6 @@ class _BusinessPageState extends State<BusinessPage> {
             ],
           ),
           const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
-              key: const Key('export-catalogue'),
-              onPressed: busy ? null : exportCatalogue,
-              icon: const Icon(Icons.file_download_outlined),
-              label: const Text('Export catalogue JSON'),
-            ),
-          ),
-          const SizedBox(height: 8),
           if (busy) const LinearProgressIndicator(),
           if (current.products.isEmpty)
             const EmptyState(
@@ -2360,11 +2620,13 @@ class _BusinessPageState extends State<BusinessPage> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   subtitle: Text(
-                    'TZS ${formatMinorAmount(BigInt.from(product.priceMinor))} · Stock: ${product.stock}',
+                    '$shopCurrency ${formatMinorAmount(BigInt.from(product.priceMinor))}'
+                    '${product.wholesalePriceMinor == null ? '' : ' · wholesale $shopCurrency ${formatMinorAmount(BigInt.from(product.wholesalePriceMinor!))} from ${product.wholesaleMinQuantity} ${product.unitLabel}(s)'}'
+                    ' · Stock: ${product.stock}',
                   ),
                   trailing: IconButton(
                     tooltip: 'Record one unit sold',
-                    onPressed: !busy && product.stock > 0
+                    onPressed: !busy && product.stock > 0 && settingsError == null
                         ? () => sell(product)
                         : null,
                     icon: const Icon(Icons.point_of_sale_outlined),
@@ -2372,25 +2634,137 @@ class _BusinessPageState extends State<BusinessPage> {
                 ),
               ),
             ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              OutlinedButton.icon(
+                key: const Key('export-catalogue'),
+                onPressed: busy ? null : exportCatalogue,
+                icon: const Icon(Icons.file_download_outlined),
+                label: const Text('Export catalogue JSON'),
+              ),
+              OutlinedButton.icon(
+                key: const Key('export-backup'),
+                onPressed: busy ? null : exportBackup,
+                icon: const Icon(Icons.file_upload_outlined),
+                label: const Text('Backup to a file'),
+              ),
+              OutlinedButton.icon(
+                key: const Key('import-backup'),
+                onPressed: busy ? null : importBackup,
+                icon: const Icon(Icons.restore),
+                label: const Text('Restore a backup'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          if (salesError != null) ...[
+            const Text(
+              'Could not read stored receipts. The sales log was not changed.',
+            ),
+            Text(salesError!),
+          ] else if (receipts != null) ...[
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Stored receipts',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                  ),
+                ),
+                Text(
+                  '${receipts.length} of up to $maxSalesRetained kept',
+                  style: const TextStyle(color: muted, fontSize: 12),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            if (receipts.isEmpty)
+              const EmptyState(
+                icon: Icons.receipt_long_outlined,
+                title: 'No receipts yet',
+                detail: 'Completed sales are stored here automatically.',
+              )
+            else
+              ...receipts.reversed
+                  .take(20)
+                  .map(
+                    (record) => Card(
+                      child: ListTile(
+                        key: ValueKey('stored-receipt-${record.number}'),
+                        leading: const Icon(
+                          Icons.receipt_long_outlined,
+                          color: accent,
+                        ),
+                        title: Text(
+                          '${record.receiptNumber} · ${formatGroupedMoney(record.totalMinor, currency: record.currency)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          '${_receiptTimestamp(record)} · '
+                          '${record.isCartSale ? '${record.items.length} products' : '1 product'}'
+                          ' · ${record.priceTier}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: IconButton(
+                          tooltip: 'Reprint receipt',
+                          onPressed: busy ? null : () => reprintStoredReceipt(record),
+                          icon: const Icon(Icons.print_outlined),
+                        ),
+                      ),
+                    ),
+                  ),
+            if (receipts.length > 20)
+              const Padding(
+                padding: EdgeInsets.only(top: 6),
+                child: Text(
+                  'Showing the newest 20 receipts; older receipts stay stored on this device.',
+                  style: TextStyle(color: muted, fontSize: 12),
+                ),
+              ),
+          ],
         ],
         const SizedBox(height: 14),
-        const InfoNote(
-          text: 'Sales are recorded on this device: stock goes down, the sale is kept in sales.json and a printable A5 receipt can be produced for each one. Still missing: multi-item baskets, refunds, supplier records, expenses, profit reports and tax-compliant invoicing.',
+        InfoNote(
+          text: 'Sales and itemised baskets are recorded on this device with their receipts kept automatically; store also stays offline. A backup bundles the catalogue, receipts and settings into one file you can keep anywhere, including a cloud drive. Still missing: refunds, discounts, payment methods, supplier records, expenses, profit reports and tax-compliant invoicing.',
         ),
       ],
     );
   }
+
+  String _receiptTimestamp(SaleRecord record) {
+    final moment = record.soldAt.toLocal();
+    final two(int value) => value.toString().padLeft(2, '0');
+    return '${moment.year}-${two(moment.month)}-${two(moment.day)} '
+        '${two(moment.hour)}:${two(moment.minute)}';
+  }
 }
 
 class _ProductDraft {
-  const _ProductDraft(this.name, this.priceMinor, this.stock);
+  const _ProductDraft(
+    this.name,
+    this.priceMinor,
+    this.stock, {
+    this.unitLabel = 'piece',
+    this.wholesalePriceMinor,
+    this.wholesaleMinQuantity = 10,
+  });
   final String name;
   final int priceMinor;
   final int stock;
+  final String unitLabel;
+  final int? wholesalePriceMinor;
+  final int wholesaleMinQuantity;
 }
 
 class _AddProductDialog extends StatefulWidget {
-  const _AddProductDialog();
+  const _AddProductDialog({required this.currency});
+  final String currency;
+
   @override
   State<_AddProductDialog> createState() => _AddProductDialogState();
 }
@@ -2400,12 +2774,18 @@ class _AddProductDialogState extends State<_AddProductDialog> {
   final name = TextEditingController();
   final price = TextEditingController();
   final stock = TextEditingController(text: '1');
+  final unit = TextEditingController(text: 'piece');
+  final wholesalePrice = TextEditingController();
+  final wholesaleMin = TextEditingController(text: '10');
 
   @override
   void dispose() {
     name.dispose();
     price.dispose();
     stock.dispose();
+    unit.dispose();
+    wholesalePrice.dispose();
+    wholesaleMin.dispose();
     super.dispose();
   }
 
@@ -2432,7 +2812,9 @@ class _AddProductDialogState extends State<_AddProductDialog> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              decoration: const InputDecoration(labelText: 'Unit price (TZS)'),
+              decoration: InputDecoration(
+                labelText: 'Unit price (${widget.currency})',
+              ),
               validator: (v) {
                 try {
                   parseMinorAmount(v ?? '');
@@ -2454,6 +2836,56 @@ class _AddProductDialogState extends State<_AddProductDialog> {
                     : null;
               },
             ),
+            TextFormField(
+              key: const Key('product-unit'),
+              controller: unit,
+              maxLength: 24,
+              decoration: const InputDecoration(
+                labelText: 'Unit label, e.g. piece or box',
+              ),
+              validator: (v) =>
+                  v == null || v.trim().isEmpty ? 'Enter a unit label' : null,
+            ),
+            TextFormField(
+              key: const Key('product-wholesale-price'),
+              controller: wholesalePrice,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: InputDecoration(
+                labelText:
+                    'Wholesale unit price, optional (${widget.currency})',
+                helperText:
+                    'Leave empty if this product has no wholesale price.',
+              ),
+              validator: (v) {
+                final text = (v ?? '').trim();
+                if (text.isEmpty) return null;
+                try {
+                  parseMinorAmount(text);
+                  return null;
+                } on FormatException catch (error) {
+                  return error.message;
+                }
+              },
+            ),
+            TextFormField(
+              key: const Key('product-wholesale-min'),
+              controller: wholesaleMin,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Wholesale minimum quantity',
+              ),
+              validator: (v) {
+                if (wholesalePrice.text.trim().isEmpty) return null;
+                final value = int.tryParse(v ?? '');
+                return value == null ||
+                        value < 1 ||
+                        value > maxSaleQuantity
+                    ? 'Enter a quantity between 1 and $maxSaleQuantity'
+                    : null;
+              },
+            ),
           ],
         ),
       ),
@@ -2466,17 +2898,312 @@ class _AddProductDialogState extends State<_AddProductDialog> {
       FilledButton(
         onPressed: () {
           if (form.currentState!.validate()) {
+            final hasWholesale = wholesalePrice.text.trim().isNotEmpty;
             Navigator.pop(
               context,
               _ProductDraft(
                 name.text.trim(),
                 parseMinorAmount(price.text),
                 int.parse(stock.text),
+                unitLabel: unit.text.trim(),
+                wholesalePriceMinor: hasWholesale
+                    ? parseMinorAmount(wholesalePrice.text)
+                    : null,
+                wholesaleMinQuantity: hasWholesale
+                    ? int.parse(wholesaleMin.text)
+                    : 10,
               ),
             );
           }
         },
         child: const Text('Add'),
+      ),
+    ],
+  );
+}
+
+/// Mutable quantity/tier holder for one product inside the basket dialog.
+class _CartEntry {
+  _CartEntry(this.product, {this.quantity = 1, this.wholesale = false});
+  final InventoryProduct product;
+  int quantity;
+  bool wholesale;
+}
+
+/// Assembles one customer's basket: several products, each with a quantity
+/// and a price tier, completed as one receipt. It only returns requests; the
+/// page records them through the repository so every error stays visible
+/// where the money writes happen.
+class _NewSaleDialog extends StatefulWidget {
+  const _NewSaleDialog({required this.catalogue, required this.currency});
+  final List<InventoryProduct> catalogue;
+  final String currency;
+
+  @override
+  State<_NewSaleDialog> createState() => _NewSaleDialogState();
+}
+
+class _NewSaleDialogState extends State<_NewSaleDialog> {
+  final search = TextEditingController();
+  final cart = <String, _CartEntry>{};
+
+  @override
+  void dispose() {
+    search.dispose();
+    super.dispose();
+  }
+
+  List<InventoryProduct> get _pickable {
+    final query = search.text.trim().toLowerCase();
+    return widget.catalogue
+        .where(
+          (product) =>
+              !cart.containsKey(product.id) &&
+              product.stock > 0 &&
+              (query.isEmpty || product.name.toLowerCase().contains(query)),
+        )
+        .toList();
+  }
+
+  int _unitPrice(_CartEntry entry) => entry.wholesale
+      ? entry.product.wholesalePriceMinor!
+      : entry.product.priceMinor;
+
+  BigInt get _totalMinor => cart.values.fold(
+    BigInt.zero,
+    (sum, entry) => sum + BigInt.from(_unitPrice(entry) * entry.quantity),
+  );
+
+  int get _itemCount =>
+      cart.values.fold(0, (sum, entry) => sum + entry.quantity);
+
+  /// Bounded row list so even a large catalogue builds lazily. The list is
+  /// computed once per build and only read by the scroll builder.
+  List<Widget> _rows() {
+    final currency = widget.currency;
+    final query = search.text.trim().toLowerCase();
+    final pickable = _pickable;
+    final rows = <Widget>[];
+    if (cart.isNotEmpty) {
+      rows.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 4, bottom: 4),
+          child: Text(
+            'In this sale',
+            style: TextStyle(fontWeight: FontWeight.w700, color: muted),
+          ),
+        ),
+      );
+      rows.addAll(
+        cart.values.map(
+          (entry) => ListTile(
+            key: ValueKey('cart-line-${entry.product.id}'),
+            contentPadding: const EdgeInsets.symmetric(vertical: 2),
+            title: Text(
+              entry.product.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DropdownButton<String>(
+                  key: ValueKey('cart-tier-${entry.product.id}'),
+                  value: entry.wholesale ? 'wholesale' : 'retail',
+                  isDense: true,
+                  items: [
+                    DropdownMenuItem(
+                      value: 'retail',
+                      child: Text(
+                        'Retail $currency ${formatMinorAmount(BigInt.from(entry.product.priceMinor))}',
+                      ),
+                    ),
+                    if (entry.product.wholesalePriceMinor != null)
+                      DropdownMenuItem(
+                        value: 'wholesale',
+                        child: Text(
+                          'Wholesale $currency ${formatMinorAmount(BigInt.from(entry.product.wholesalePriceMinor!))} · from ${entry.product.wholesaleMinQuantity} ${entry.product.unitLabel}(s)',
+                        ),
+                      ),
+                  ],
+                  onChanged: (tier) => setState(
+                    () => entry.wholesale = tier == 'wholesale',
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      key: ValueKey('cart-dec-${entry.product.id}'),
+                      tooltip: 'Remove one ${entry.product.unitLabel}',
+                      onPressed: entry.quantity <= 1
+                          ? null
+                          : () => setState(() => entry.quantity -= 1),
+                      icon: const Icon(Icons.remove_circle_outline, size: 20),
+                    ),
+                    Text('${entry.quantity}'),
+                    IconButton(
+                      key: ValueKey('cart-inc-${entry.product.id}'),
+                      tooltip: 'Add one ${entry.product.unitLabel}',
+                      onPressed: entry.quantity >= maxSaleQuantity
+                          ? null
+                          : () => setState(() => entry.quantity += 1),
+                      icon: const Icon(Icons.add_circle_outline, size: 20),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            trailing: IconButton(
+              key: ValueKey('cart-remove-${entry.product.id}'),
+              tooltip: 'Remove ${entry.product.name} from this sale',
+              onPressed: () => setState(() => cart.remove(entry.product.id)),
+              icon: const Icon(Icons.delete_outline, size: 20),
+            ),
+          ),
+        ),
+      );
+    }
+    rows.add(
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Text(
+          cart.isEmpty ? 'Find a product to add to this sale' : 'Add more',
+          style: TextStyle(fontWeight: FontWeight.w700, color: muted),
+        ),
+      ),
+    );
+    if (pickable.isEmpty) {
+      rows.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            cart.isNotEmpty && query.isEmpty
+                ? 'Every product with stock is already in this sale.'
+                : 'No products match. Products without stock cannot be sold.',
+            style: const TextStyle(color: muted),
+          ),
+        ),
+      );
+    }
+    rows.addAll(
+      pickable.map(
+        (product) => ListTile(
+          key: ValueKey('cart-pick-${product.id}'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(
+            product.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(
+            '$currency ${formatMinorAmount(BigInt.from(product.priceMinor))} · Stock: ${product.stock}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: IconButton(
+            key: ValueKey('cart-add-${product.id}'),
+            tooltip: maxSaleLines <= cart.length
+                ? 'A single receipt holds up to $maxSaleLines item lines'
+                : 'Add ${product.name} to this sale',
+            onPressed: maxSaleLines <= cart.length
+                ? null
+                : () => setState(() {
+                    cart[product.id] = _CartEntry(product);
+                  }),
+            icon: const Icon(Icons.add_circle_outline),
+          ),
+        ),
+      ),
+    );
+    return rows;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currency = widget.currency;
+    final rows = _rows();
+    return AlertDialog(
+      title: const Text('New sale'),
+      content: SizedBox(
+        width: 360,
+        height: 420,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              key: const Key('cart-search'),
+              controller: search,
+              onChanged: (_) => setState(() {}),
+              decoration: const InputDecoration(
+                hintText: 'Find a product',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView.builder(
+                key: const Key('cart-rows'),
+                itemCount: rows.length,
+                itemBuilder: (context, index) => rows[index],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Total: $currency ${formatMinorAmount(_totalMinor)} · $_itemCount item(s)',
+              key: const Key('cart-total'),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          key: const Key('complete-sale'),
+          onPressed: cart.isEmpty
+              ? null
+              : () => Navigator.pop(
+                  context,
+                  [
+                    for (final entry in cart.values)
+                      CartSaleLineRequest(
+                        productId: entry.product.id,
+                        quantity: entry.quantity,
+                        wholesale: entry.wholesale,
+                      ),
+                  ],
+                ),
+          child: const Text('Complete sale'),
+        ),
+      ],
+    );
+  }
+}
+
+class _BackupRestoreDialog extends StatelessWidget {
+  const _BackupRestoreDialog();
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Restore business backup?'),
+    content: const Text(
+      'Restoring replaces the products, stored receipts and shop settings on this device with the contents of the chosen backup file. The current on-device data cannot be recovered from this dialog. Keep a fresh backup before continuing if the local records matter.',
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context, false),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(
+        key: const Key('restore-backup'),
+        onPressed: () => Navigator.pop(context, true),
+        child: const Text('Restore'),
       ),
     ],
   );
