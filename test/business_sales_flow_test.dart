@@ -273,14 +273,18 @@ void main() {
     // The product row is below the fold on a 360x720 phone, so the lazy list
     // has not built it yet; scroll it into view instead of pumping for it.
     await reveal(tester, find.textContaining('USD 15.00'));
+    // Return to the top so the settings card is on screen again before the
+    // dropdown interaction.
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 2000));
+    await tester.pump();
 
     final currencyDropdown = find.byKey(const Key('shop-currency'));
     await reveal(tester, currencyDropdown);
     await tester.tap(currencyDropdown);
     await tester.pumpAndSettle();
-    final kshOption = find.text('Kenyan shilling (KSh)').last;
+    final kshOption = find.text('Kenyan shilling (KSh)');
     await settleUntil(tester, kshOption);
-    await tester.tap(kshOption);
+    await tester.tap(kshOption.last);
     await tester.pumpAndSettle();
 
     // The selection persists to the real settings file and drives the labels.
