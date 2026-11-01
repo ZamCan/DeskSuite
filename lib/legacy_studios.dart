@@ -2738,7 +2738,7 @@ class _BusinessPageState extends State<BusinessPage> {
 
   String _receiptTimestamp(SaleRecord record) {
     final moment = record.soldAt.toLocal();
-    final two(int value) => value.toString().padLeft(2, '0');
+    String two(int value) => value.toString().padLeft(2, '0');
     return '${moment.year}-${two(moment.month)}-${two(moment.day)} '
         '${two(moment.hour)}:${two(moment.minute)}';
   }
@@ -2924,10 +2924,10 @@ class _AddProductDialogState extends State<_AddProductDialog> {
 
 /// Mutable quantity/tier holder for one product inside the basket dialog.
 class _CartEntry {
-  _CartEntry(this.product, {this.quantity = 1, this.wholesale = false});
+  _CartEntry(this.product);
   final InventoryProduct product;
-  int quantity;
-  bool wholesale;
+  int quantity = 1;
+  bool wholesale = false;
 }
 
 /// Assembles one customer's basket: several products, each with a quantity

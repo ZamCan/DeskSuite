@@ -201,7 +201,7 @@ Future<void> restoreBusinessBackup(
 
 /// A stable, sortable file name for shared or cloud-uploaded backups.
 String businessBackupFileName(DateTime moment) {
-  final two(int value) => value.toString().padLeft(2, '0');
+  String two(int value) => value.toString().padLeft(2, '0');
   return 'desksuite-business-backup-'
       '${moment.year}${two(moment.month)}${two(moment.day)}-'
       '${two(moment.hour)}${two(moment.minute)}.json';

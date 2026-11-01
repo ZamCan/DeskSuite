@@ -182,7 +182,10 @@ void main() {
     final pen = await seed('Pen', 1000, stock: 4);
     final paper = await seed('Paper', 2000, stock: 4);
     var failSalesLog = false;
-    final guarded = _FailingSalesLogStore(files, () => failSalesLog = true);
+    final guarded = _FailingSalesLogStore(
+      LocalFileStore(() async => dir),
+      () => failSalesLog = true,
+    );
     final guardedRepository = InventoryRepository(guarded);
     await expectLater(
       guardedRepository.recordCartSale(
@@ -219,7 +222,7 @@ class _FailingSalesLogStore extends LocalFileStore {
   Future<void> writeText(String name, String value) {
     if (name == 'sales.json') {
       _onFailure();
-      return Future.error(const StateError('simulated sales-log failure'));
+      return Future.error(StateError('simulated sales-log failure'));
     }
     return _fallback.writeText(name, value);
   }

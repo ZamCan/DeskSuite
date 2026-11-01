@@ -211,6 +211,8 @@ class SaleRecord {
 
   bool get isCartSale => items.isNotEmpty;
 
+  String get receiptNumber => number.toString().padLeft(4, '0');
+
   int get totalMinor => isCartSale
       ? items.fold(0, (sum, item) => sum + item.totalMinor)
       : quantity * unitPriceMinor;
