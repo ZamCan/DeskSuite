@@ -1,17 +1,28 @@
 # DeskSuite — current engineering status
 
-**Updated:** 2026-10-29. This describes the integrated source, not a signed or device-verified release. The earlier consolidation started from `177a10f80f51c31ba6de7cc7bb2e321f6e9e07c4`; public main and the feature branches subsequently advanced. Check `git log` and the remote ref for the exact published commit. See [branch consolidation](CONSOLIDATION_2026-10-28.md), [validation](VALIDATION.md) and the full [master directive](MASTER_ENGINEERING_DIRECTIVE.md).
+**Updated:** 2026-11-01. This is a source and CI status note, not a signed or device-verified release. The earlier detailed capability inventory below is retained as the last consolidated engineering snapshot; consult the newer [repository audit](REPOSITORY_AUDIT_2026-11-01.md) for the 2026-11-01 source-tree review and [master product engineering plan](MASTER_PRODUCT_ENGINEERING_PLAN.md) for the governing architecture and workspace requirements.
+
+## Latest repository checkpoint — 2026-11-01
+
+- Audited online `main` at source snapshot `cf35d1988267b9dc6567c8752568be0c043a71df`.
+- [GitHub Actions run 41261807220](https://github.com/ZamCan/DeskSuite/actions/runs/41261807220) completed with conclusion **success**. It verifies the workflow jobs for that commit only; it is not evidence of physical-device camera/OCR behaviour, printer output, release signing, installation or owner visual approval.
+- Added [MASTER_PRODUCT_ENGINEERING_PLAN.md](MASTER_PRODUCT_ENGINEERING_PLAN.md), governing the shared architecture, operation lifecycle, file identity, cross-workspace handoffs, engine capability boundaries, data safety, performance, responsive design and verification gates.
+- Added [REPOSITORY_AUDIT_2026-11-01.md](REPOSITORY_AUDIT_2026-11-01.md), recording inspected source locations, current evidence, limitations and recommended engineering priorities.
+- The current approval gate remains Boot, Home and Side Navigation. Do not begin internal workspace redesign until the owner has reviewed and approved that foundation.
+- Continue working on `main` with focused commits. Re-fetch the latest branch before each write and preserve the existing application ID, working features, user data and signing identity.
 
 ## Validation and publishing state
 
+The following detailed inventory and local validation instructions are retained from the 2026-10-29 engineering snapshot. They describe known capability boundaries and must not be interpreted as proof that the current source has been installed or tested on a physical device.
+
 - The **earlier public main** at `177a10f` completed its build matrix in [run 40704429058](https://github.com/ZamCan/DeskSuite/actions/runs/40704429058). That run does **not** validate the later selective consolidation.
 - [Run 40864502151](https://github.com/ZamCan/DeskSuite/actions/runs/40864502151) for `e6953e0` passed Flutter analysis and the test suite on all four CI hosts. Later runs exposed fixed-delay test races; inspect the latest run for the current commit. No Android package was built locally, signed, installed or device-tested here. Details are in [VALIDATION.md](VALIDATION.md).
-- Eight redundant remote refs whose exact tips were already in `main` and restored backups were retired. Twelve non-main refs with unique commits remain, including a later concurrent branch; see [BRANCH_INTEGRATION_LEDGER.md](BRANCH_INTEGRATION_LEDGER.md). Copy backups to independent storage and complete outstanding review and device gates before further retirement.
-- Concurrent main commit `b520220` changed CI to build/upload an unsigned Android APK and AAB after successful main pushes; other release packaging remains manual opt-in. This differs from the earlier instruction to package locally, so clarify the intended policy before changing it again. No credentials or signing keys belong in Git.
+- Eight redundant remote refs whose exact tips were already in `main` and restored backups were retired. Twelve non-main refs with unique commits remained in the 2026-10-29 snapshot; re-check current refs before any cleanup.
+- The main CI workflow has previously been configured to build/upload unsigned Android packages. Confirm the current workflow and artifacts before relying on this. No credentials or signing keys belong in Git.
 
 ## Source capability inventory
 
-| Area | Present in this source | Limits and release gates |
+| Area | Present in the 2026-10-29 source snapshot | Limits and release gates |
 | --- | --- | --- |
 | Scan & assemble | Imported images or an Android-owned Camera2 activity, manual correction and optional corner suggestions, six local cleanup modes with comparison, page ordering, private draft/recovery, image PDF or page PNG export, and selected-page handoff to Text extraction. Permission prompts are guarded against duplicate requests, denial explains Settings/import, unavailable zoom and flash controls are disabled, and preview buffers are size-bounded. | Suggestions and cleanup are heuristics. Scan PDF is image-only. Devices offering no preview within 2048 px per side and 3,145,728 pixels cannot use this camera; importing remains available. Camera permission, lifecycle, image rotation, recovery, memory and hardware compatibility need real-device verification; Android may clear app cache under storage pressure. |
 | OCR | Android Tesseract bridge, bundled English/Kiswahili models, bounded preparation, editable review, TXT/DOCX and searchable image-PDF. | Searchable PDF uses the original recognized words and positions, not later text corrections. Recognition quality, native lifecycle and coordinates need device/independent-reader tests. |
