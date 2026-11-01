@@ -393,76 +393,251 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     ),
   );
 
-  Widget _workspace() => _scrolling(
-    glassBackdrop: true,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _heading('Workspaces', ''),
-        const SizedBox(height: 16),
-        TextField(
-          key: const Key('home-shortcut-search'),
-          controller: _shortcutSearch,
-          textInputAction: TextInputAction.search,
-          onChanged: (value) => setState(() => _shortcutQuery = value),
-          onSubmitted: (_) => FocusScope.of(context).unfocus(),
-          decoration: InputDecoration(
-            hintText: 'Search workspaces',
-            prefixIcon: const Icon(Icons.search),
-            suffixIcon: _shortcutQuery.isEmpty ? null : IconButton(
-              key: const Key('home-clear-shortcut-search'),
-              tooltip: 'Clear search',
-              onPressed: () => setState(() {
-                _shortcutSearch.clear();
-                _shortcutQuery = '';
-              }),
-              icon: const Icon(Icons.close),
+  Widget _workspace() {
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? 'Good morning'
+        : hour < 17
+            ? 'Good afternoon'
+            : 'Good evening';
+    final hasQuery = _shortcutQuery.trim().isNotEmpty;
+
+    return _scrolling(
+      glassBackdrop: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            greeting,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: Theme.of(context).colorScheme.secondary,
+              letterSpacing: .5,
             ),
           ),
+          const SizedBox(height: 5),
+          _heading('Your workspace', 'Create, scan, organise and produce.'),
+          if (!hasQuery) ...[
+            const SizedBox(height: 22),
+            _premiumScanBanner(),
+          ],
+          const SizedBox(height: 20),
+          TextField(
+            key: const Key('home-shortcut-search'),
+            controller: _shortcutSearch,
+            textInputAction: TextInputAction.search,
+            onChanged: (value) => setState(() => _shortcutQuery = value),
+            onSubmitted: (_) => FocusScope.of(context).unfocus(),
+            decoration: InputDecoration(
+              hintText: 'Search tools and workflows',
+              prefixIcon: const Icon(Icons.search_rounded),
+              suffixIcon: _shortcutQuery.isEmpty
+                  ? null
+                  : IconButton(
+                      key: const Key('home-clear-shortcut-search'),
+                      tooltip: 'Clear search',
+                      onPressed: () => setState(() {
+                        _shortcutSearch.clear();
+                        _shortcutQuery = '';
+                      }),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+            ),
+          ),
+          if (hasQuery) ...[
+            const SizedBox(height: 8),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                '${homeShortcutSearchTerms.keys.where((section) => matchesHomeShortcut(section, _shortcutQuery)).length} of ${homeShortcutSearchTerms.length} workspaces',
+                key: const Key('home-shortcut-result-count'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          ],
+          const SizedBox(height: 22),
+          Text(
+            hasQuery ? 'SEARCH RESULTS' : 'STUDIOS',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              letterSpacing: 1.35,
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (homeShortcutSearchTerms.keys.any(
+            (section) => matchesHomeShortcut(section, _shortcutQuery),
+          ))
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final textScale =
+                    MediaQuery.textScalerOf(context).scale(16) / 16;
+                final columns = workspaceTaskColumnCount(
+                  constraints.maxWidth,
+                  textScale,
+                );
+                final cards = <Widget>[
+                  if (matchesHomeShortcut(WorkspaceSection.scans, _shortcutQuery))
+                    WorkspaceToolCard(
+                      key: const Key('home-open-scan'),
+                      section: WorkspaceSection.scans,
+                      title: 'Scanner',
+                      description: 'Capture clean documents',
+                      onNavigate: _navigate,
+                    ),
+                  if (matchesHomeShortcut(WorkspaceSection.pdfStudio, _shortcutQuery))
+                    WorkspaceToolCard(
+                      key: const Key('home-open-pdf'),
+                      section: WorkspaceSection.pdfStudio,
+                      title: 'PDF Studio',
+                      description: 'Review, combine and inspect',
+                      fallbackIcon: Icons.picture_as_pdf_outlined,
+                      onNavigate: _navigate,
+                    ),
+                  if (matchesHomeShortcut(WorkspaceSection.photos, _shortcutQuery))
+                    WorkspaceToolCard(
+                      key: const Key('home-open-photo'),
+                      section: WorkspaceSection.photos,
+                      title: 'Photo Studio',
+                      description: 'Edit and prepare images',
+                      onNavigate: _navigate,
+                    ),
+                  if (matchesHomeShortcut(WorkspaceSection.text, _shortcutQuery))
+                    WorkspaceToolCard(
+                      key: const Key('home-open-text'),
+                      section: WorkspaceSection.text,
+                      title: 'Text extraction',
+                      description: 'Recognise text from images',
+                      onNavigate: _navigate,
+                    ),
+                  if (matchesHomeShortcut(WorkspaceSection.office, _shortcutQuery))
+                    WorkspaceToolCard(
+                      key: const Key('home-open-converter'),
+                      section: WorkspaceSection.office,
+                      title: 'Documents',
+                      description: 'Convert office formats',
+                      onNavigate: _navigate,
+                    ),
+                  if (matchesHomeShortcut(WorkspaceSection.design, _shortcutQuery))
+                    WorkspaceToolCard(
+                      key: const Key('home-open-design'),
+                      section: WorkspaceSection.design,
+                      title: 'Creative Studio',
+                      description: 'Design posters and layouts',
+                      onNavigate: _navigate,
+                    ),
+                ];
+                return WorkspaceTaskGrid(columns: columns, cards: cards);
+              },
+            )
+          else
+            const Card(
+              child: Padding(
+                padding: EdgeInsets.all(18),
+                child: Text(
+                  'No matching workspaces. Try another search.',
+                  key: Key('home-shortcut-empty'),
+                ),
+              ),
+            ),
+          const SizedBox(height: 26),
+        ],
+      ),
+    );
+  }
+
+  Widget _premiumScanBanner() {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      key: const Key('home-premium-scan-banner'),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            ink,
+            Color.lerp(ink, accent, .28)!,
+          ],
         ),
-        if (_shortcutQuery.trim().isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Semantics(
-            liveRegion: true,
-            child: Text(
-              '${homeShortcutSearchTerms.keys.where((section) => matchesHomeShortcut(section, _shortcutQuery)).length} of ${homeShortcutSearchTerms.length} workspaces',
-              key: const Key('home-shortcut-result-count'),
-              style: Theme.of(context).textTheme.bodySmall,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: (dark ? scheme.outline : accent).withValues(alpha: .42),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: ink.withValues(alpha: dark ? .18 : .16),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'READY WHEN YOU ARE',
+                  style: text.labelSmall?.copyWith(
+                    color: const Color(0xffe6b7a5),
+                    letterSpacing: 1.25,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 9),
+                Text(
+                  'Scan a page',
+                  style: text.titleLarge?.copyWith(
+                    color: paper,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -.35,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  'Capture, clean and save paper as a document.',
+                  style: text.bodySmall?.copyWith(
+                    color: paper.withValues(alpha: .78),
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 15),
+                FilledButton.icon(
+                  key: const Key('home-premium-scan-action'),
+                  onPressed: () => _navigate(WorkspaceSection.scans),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xfff4e5dc),
+                    foregroundColor: ink,
+                    minimumSize: const Size(48, 44),
+                  ),
+                  icon: const Icon(Icons.document_scanner_outlined, size: 19),
+                  label: const Text('Start scanning'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            width: 66,
+            height: 66,
+            decoration: BoxDecoration(
+              color: paper.withValues(alpha: .10),
+              borderRadius: BorderRadius.circular(19),
+              border: Border.all(color: paper.withValues(alpha: .18)),
+            ),
+            child: const Icon(
+              Icons.document_scanner_rounded,
+              color: Color(0xfff0c6b3),
+              size: 34,
             ),
           ),
         ],
-        const SizedBox(height: 18),
-        if (homeShortcutSearchTerms.keys.any((section) => matchesHomeShortcut(section, _shortcutQuery)))
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
-              final columns = workspaceTaskColumnCount(constraints.maxWidth, textScale);
-              final cards = <Widget>[
-                if (matchesHomeShortcut(WorkspaceSection.scans, _shortcutQuery))
-                  WorkspaceToolCard(key: const Key('home-open-scan'), section: WorkspaceSection.scans, title: 'Scanner', onNavigate: _navigate),
-                if (matchesHomeShortcut(WorkspaceSection.pdfStudio, _shortcutQuery))
-                  WorkspaceToolCard(key: const Key('home-open-pdf'), section: WorkspaceSection.pdfStudio, title: 'PDF Studio', fallbackIcon: Icons.picture_as_pdf_outlined, onNavigate: _navigate),
-                if (matchesHomeShortcut(WorkspaceSection.photos, _shortcutQuery))
-                  WorkspaceToolCard(key: const Key('home-open-photo'), section: WorkspaceSection.photos, title: 'Photo Studio', onNavigate: _navigate),
-                if (matchesHomeShortcut(WorkspaceSection.text, _shortcutQuery))
-                  WorkspaceToolCard(key: const Key('home-open-text'), section: WorkspaceSection.text, title: 'Text extraction', onNavigate: _navigate),
-                if (matchesHomeShortcut(WorkspaceSection.office, _shortcutQuery))
-                  WorkspaceToolCard(key: const Key('home-open-converter'), section: WorkspaceSection.office, title: 'Documents', onNavigate: _navigate),
-                if (matchesHomeShortcut(WorkspaceSection.design, _shortcutQuery))
-                  WorkspaceToolCard(key: const Key('home-open-design'), section: WorkspaceSection.design, title: 'Creative Studio', onNavigate: _navigate),
-              ];
-              return WorkspaceTaskGrid(columns: columns, cards: cards);
-            },
-          )
-        else
-          const Card(child: Padding(
-            padding: EdgeInsets.all(18),
-            child: Text('No matching workspaces. Try another search.', key: Key('home-shortcut-empty')),
-          )),
-        const SizedBox(height: 26),
-      ],
-    ),
-  );
+      ),
+    );
+  }
 
   Widget _projectPage() => _scrolling(
     child: Column(
