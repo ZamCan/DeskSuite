@@ -7,7 +7,7 @@
 - Added automatic internal receipt storage: receipts are always kept (capped at 400), the newest 20 are listed, and reprinting an A5 PDF is optional and on demand.
 - Added one-file business backups bundling the catalogue, stored receipts and shop settings, restored only after full validation. An interruption between restore writes can leave a partial state; in that case run the restore again.
 - Prepared for a later cloud phase: the backup document is a complete bounded snapshot that a future Google Drive app-folder sync can upload unchanged. Sign-in/OAuth, consent-screen setup, a network permission change and device verification are still missing, and cloud sync is not integrated.
-- Added cart-engine, backup round-trip/tamper and business widget-flow tests. New tests still need a hosted CI run and device-level checks; nothing here claims a release.
+- Added cart-engine, backup round-trip/tamper and business widget-flow tests. The hosted matrix ran these new tests (336 passed, 3 failed; the final follow-up round applied the receipt-currency dropdown and inventory sale waits and is pending the next run). Nothing here claims a release.
 
 ## 0.2.1+4 — PDF merge and Office package safety integration
 

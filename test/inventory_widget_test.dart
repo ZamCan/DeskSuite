@@ -163,6 +163,10 @@ void main() {
       expect(find.text('Blue pen'), findsOneWidget);
       final sell = find.byTooltip('Record one unit sold');
       await reveal(tester, sell);
+      // The action can be disabled while a write is in flight; wait for it to
+      // accept a tap instead of tapping blindly and waiting for a result that
+      // will never appear.
+      await settleUntilEnabled(tester, sell);
       await tester.tap(sell);
       // The receipt message is emitted after both the sale and stock writes.
       await settleUntil(tester, find.textContaining('Sale recorded'));
@@ -256,6 +260,10 @@ void main() {
     // The card sits below the fold on a 360x720 phone; ensureVisible alone does
     // not build a lazy list child that has never been laid out.
     await reveal(tester, sell);
+    // The action can be disabled while a write is in flight; wait for it to
+    // accept a tap instead of tapping blindly and waiting for a result that
+    // will never appear.
+    await settleUntilEnabled(tester, sell);
     await tester.tap(sell);
     await settleUntil(tester, find.textContaining('Sale recorded'));
 
