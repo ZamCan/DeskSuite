@@ -284,15 +284,14 @@ void main() {
     await tester.pumpAndSettle();
 
     // The selection persists to the real settings file and drives the labels.
-    await waitUntil(
-      tester,
-      () => File('${settingsDir.path}/business-settings.json').existsSync(),
-    );
+    // The label changes only after the save completes, so waiting for it is
+    // also the signal that the file has been rewritten (the file already
+    // exists from the seeded USD value, so existence alone proves nothing).
+    await settleUntil(tester, find.textContaining('KSh 250.00'));
     final stored = await tester.runAsync(
       () => File('${settingsDir.path}/business-settings.json').readAsString(),
     );
     expect(stored, contains('KSh'));
-    await settleUntil(tester, find.textContaining('KSh 250.00'));
     await reveal(tester, find.textContaining('KSh 15.00'));
 
     // A one-tap retail sale carries the selected currency into the receipt.

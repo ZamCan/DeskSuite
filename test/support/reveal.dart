@@ -8,6 +8,11 @@ import 'package:flutter_test/flutter_test.dart';
 /// finder matches nothing, which happens for children a lazy list has not
 /// created yet. Tests must scroll first; this helper searches down and then
 /// back up so it works regardless of the current scroll offset.
+///
+/// This intentionally uses single pumps rather than `pumpAndSettle`: a page can
+/// legitimately keep an indeterminate progress indicator running while real
+/// file I/O is in flight, and the caller already waits for the state it needs
+/// with [settleUntil] / [settleUntilEnabled].
 Future<void> reveal(
   WidgetTester tester,
   Finder target, {
@@ -15,10 +20,10 @@ Future<void> reveal(
   double step = 220,
   Finder? within,
 }) async {
-  await tester.pumpAndSettle();
+  await tester.pump();
   if (target.evaluate().isNotEmpty) {
     await tester.ensureVisible(target);
-    await tester.pumpAndSettle();
+    await tester.pump();
     return;
   }
   final scrollables = within == null
@@ -31,10 +36,10 @@ Future<void> reveal(
   for (final direction in <double>[-1, 1]) {
     for (var i = 0; i < maxScrolls; i++) {
       await tester.drag(scrollable, Offset(0, direction * step));
-      await tester.pumpAndSettle();
+      await tester.pump();
       if (target.evaluate().isNotEmpty) {
         await tester.ensureVisible(target);
-        await tester.pumpAndSettle();
+        await tester.pump();
         return;
       }
     }
