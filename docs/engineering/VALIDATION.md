@@ -206,3 +206,13 @@ The latest matrix run failed static analysis because `photoSpecifications.length
 ### Authority-data precision correction
 
 The ICAO portrait profile no longer treats 35 × 45 mm as a universal ICAO print size. The current ICAO Doc 9303 printed-portrait guidance cited for this work describes a minimum width of 35 mm in that context and discusses larger 7 × 10 cm photos for redesigned submission processes; it does not establish one universal national passport-photo width × height. The profile now leaves dimensions unspecified, retains the 70–80% head-height guidance as contextual guidance, and prompts the user to enter a verified issuing-authority size. A regression test guards against turning this guidance into an exact print preset. Await CI confirmation.
+
+
+## 2026-11-01 — business widget-test failures resolved (CI run 41325035017)
+
+Online `main` CI was red at `7cca591`: run 41319127543 reported 337 passed and 2 failed on all four hosts.
+
+- `test/inventory_widget_test.dart` — after a sale backed by real file writes, the page kept an indeterminate `LinearProgressIndicator` running, so `reveal()`'s `pumpAndSettle()` could never settle. The test now waits for the busy indicator to clear, dismisses the persistent receipt snackbar, and waits for the export control to accept a tap.
+- `test/business_sales_flow_test.dart` — the product price row and the summary metric are lazily built at 360 × 720, so pumping for them could never find them. The test now scrolls to them, returns to the top before the dropdown interaction, and asserts the saved currency only after the summary label changes instead of treating the pre-existing settings file as proof of the new value.
+
+`test/support/reveal.dart` now uses bounded single pumps (a page may legitimately keep a progress indicator running while I/O completes) and reveals the first match when a finder matches several rows. Pull request #19, run [41325035017](https://github.com/ZamCan/DeskSuite/actions/runs/41325035017), passed formatting, static analysis, 339 tests and the Linux, Windows, Android and iOS jobs. No application code, assets, identifiers, signing configuration or user data changed.

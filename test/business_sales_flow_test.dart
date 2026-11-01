@@ -270,32 +270,40 @@ void main() {
     // the default 'TSh'.
     await settleUntil(tester, find.textContaining('Stock value at listed prices'));
     await settleUntil(tester, find.textContaining('USD 250.00'));
-    await settleUntil(tester, find.textContaining('USD 15.00'));
+    // The product row is below the fold on a 360x720 phone, so the lazy list
+    // has not built it yet; scroll it into view instead of pumping for it.
+    await reveal(tester, find.textContaining('USD 15.00'));
+    // Return to the top so the settings card is on screen again before the
+    // dropdown interaction.
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 2000));
+    await tester.pump();
 
     final currencyDropdown = find.byKey(const Key('shop-currency'));
     await reveal(tester, currencyDropdown);
     await tester.tap(currencyDropdown);
     await tester.pumpAndSettle();
-    final kshOption = find.text('Kenyan shilling (KSh)').last;
+    final kshOption = find.text('Kenyan shilling (KSh)');
     await settleUntil(tester, kshOption);
-    await tester.tap(kshOption);
+    await tester.tap(kshOption.last);
     await tester.pumpAndSettle();
 
     // The selection persists to the real settings file and drives the labels.
-    await waitUntil(
-      tester,
-      () => File('${settingsDir.path}/business-settings.json').existsSync(),
-    );
+    // The label changes only after the save completes, so finding it is also
+    // the signal that the file has been rewritten (the file already exists from
+    // the seeded USD value, so existence alone proves nothing). Scroll back to
+    // the summary first: revealing the dropdown above may have pushed it off
+    // the top of the lazy list, so pumping alone could never find it.
+    await reveal(tester, find.textContaining('Stock value at listed prices'));
+    await settleUntil(tester, find.textContaining('KSh 250.00'));
     final stored = await tester.runAsync(
       () => File('${settingsDir.path}/business-settings.json').readAsString(),
     );
     expect(stored, contains('KSh'));
-    await settleUntil(tester, find.textContaining('KSh 250.00'));
-    await settleUntil(tester, find.textContaining('KSh 15.00'));
+    await reveal(tester, find.textContaining('KSh 15.00'));
 
     // A one-tap retail sale carries the selected currency into the receipt.
     final sell = find.byTooltip('Record one unit sold');
-    await reveal(tester, sell);
+    await reveal(tester, sell.first);
     await settleUntilEnabled(tester, sell.first);
     await tester.tap(sell.first);
     await settleUntil(tester, find.textContaining('Sale recorded'));
