@@ -146,7 +146,7 @@ void main() {
           ),
         ),
       );
-      await settleUntil(tester, find.byKey(const Key('add-product')));
+      await settleUntil(tester, find.byKey(const Key('new-sale')));
       await tester.ensureVisible(find.byKey(const Key('add-product')));
       await tester.tap(find.byKey(const Key('add-product')));
       await tester.pumpAndSettle();
@@ -250,7 +250,7 @@ void main() {
         ),
       ),
     );
-    await settleUntil(tester, find.text('Product catalogue'));
+    await settleUntil(tester, find.byKey(const Key('new-sale')));
 
     final sell = find.byTooltip('Record one unit sold');
     // The card sits below the fold on a 360x720 phone; ensureVisible alone does

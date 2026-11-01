@@ -268,8 +268,9 @@ void main() {
 
     // Stock value and product price lines use the saved currency instead of
     // the default 'TSh'.
-    await reveal(tester, find.textContaining('USD 250.00'));
-    await reveal(tester, find.textContaining('USD 1.50'));
+    await settleUntil(tester, find.textContaining('Stock value at listed prices'));
+    await settleUntil(tester, find.textContaining('USD 250.00'));
+    await settleUntil(tester, find.textContaining('USD 1.50'));
 
     await reveal(tester, find.byKey(const Key('shop-currency')));
     await tester.tap(find.byKey(const Key('shop-currency')));
@@ -286,8 +287,8 @@ void main() {
       () => File('${settingsDir.path}/business-settings.json').readAsString(),
     );
     expect(stored, contains('KSh'));
-    await reveal(tester, find.textContaining('KSh 250.00'));
-    await reveal(tester, find.textContaining('KSh 1.50'));
+    await settleUntil(tester, find.textContaining('KSh 250.00'));
+    await settleUntil(tester, find.textContaining('KSh 1.50'));
 
     // A one-tap retail sale carries the selected currency into the receipt.
     await reveal(tester, find.byTooltip('Record one unit sold'));
