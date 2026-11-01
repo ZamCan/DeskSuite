@@ -3018,24 +3018,26 @@ class _NewSaleDialogState extends State<_NewSaleDialog> {
               children: [
                 Row(
                   children: [
-                    DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        key: ValueKey('cart-tier-${entry.product.id}'),
-                        value: entry.wholesale ? 'wholesale' : 'retail',
-                        isDense: true,
-                        items: [
-                          const DropdownMenuItem(
-                            value: 'retail',
-                            child: Text('Retail'),
-                          ),
-                          if (entry.product.wholesalePriceMinor != null)
+                    Expanded(
+                      flex: 3,
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          key: ValueKey('cart-tier-${entry.product.id}'),
+                          value: entry.wholesale ? 'wholesale' : 'retail',
+                          isDense: true,
+                          items: [
                             const DropdownMenuItem(
-                              value: 'wholesale',
-                              child: Text('Wholesale'),
+                              value: 'retail',
+                              child: Text('Retail'),
                             ),
-                        ],
-                        onChanged: (tier) => setState(
-                          () => entry.wholesale = tier == 'wholesale',
+                            if (entry.product.wholesalePriceMinor != null)
+                              const DropdownMenuItem(
+                                value: 'wholesale',
+                                child: Text('Wholesale'),
+                              ),
+                          ],
+                          onChanged: (tier) =>
+                              setState(() => entry.wholesale = tier == 'wholesale'),
                         ),
                       ),
                     ),
@@ -3052,7 +3054,6 @@ class _NewSaleDialogState extends State<_NewSaleDialog> {
                   ],
                 ),
                 Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
                       key: ValueKey('cart-dec-${entry.product.id}'),
@@ -3072,10 +3073,12 @@ class _NewSaleDialogState extends State<_NewSaleDialog> {
                       icon: const Icon(Icons.add_circle_outline, size: 20),
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      '$currency ${formatMinorAmount(BigInt.from(_unitPrice(entry) * entry.quantity))}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Expanded(
+                      child: Text(
+                        '$currency ${formatMinorAmount(BigInt.from(_unitPrice(entry) * entry.quantity))}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),

@@ -36,7 +36,14 @@ void main() {
 
   test('a basket sale stores one itemised receipt and reduces every stock', () async {
     final pen = await seed('Blue pen', 1500, stock: 10);
-    final paper = await seed('A4 paper', 5000, stock: 7, unit: 'box');
+    final paper = await seed(
+      'A4 paper',
+      5000,
+      stock: 7,
+      unit: 'box',
+      wholesalePriceMinor: 5000,
+      wholesaleMinQuantity: 1,
+    );
     final outcome = await repository.recordCartSale(
       lines: [
         CartSaleLineRequest(productId: pen.id, quantity: 2),
