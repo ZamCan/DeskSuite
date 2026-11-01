@@ -2550,6 +2550,7 @@ class _BusinessPageState extends State<BusinessPage> {
                       initialValue: isSupportedBusinessCurrency(shopCurrency)
                           ? shopCurrency
                           : null,
+                      isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'Receipt currency',
                         helperText:
@@ -2558,7 +2559,14 @@ class _BusinessPageState extends State<BusinessPage> {
                       ),
                       items: [
                         for (final option in supportedBusinessCurrencies)
-                          DropdownMenuItem(value: option.code, child: Text(option.name)),
+                          DropdownMenuItem(
+                            value: option.code,
+                            child: Text(
+                              option.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                       ],
                       onChanged: busy
                           ? null
@@ -3006,29 +3014,42 @@ class _NewSaleDialogState extends State<_NewSaleDialog> {
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                DropdownButton<String>(
-                  key: ValueKey('cart-tier-${entry.product.id}'),
-                  value: entry.wholesale ? 'wholesale' : 'retail',
-                  isDense: true,
-                  items: [
-                    DropdownMenuItem(
-                      value: 'retail',
-                      child: Text(
-                        'Retail $currency ${formatMinorAmount(BigInt.from(entry.product.priceMinor))}',
-                      ),
-                    ),
-                    if (entry.product.wholesalePriceMinor != null)
-                      DropdownMenuItem(
-                        value: 'wholesale',
-                        child: Text(
-                          'Wholesale $currency ${formatMinorAmount(BigInt.from(entry.product.wholesalePriceMinor!))} · from ${entry.product.wholesaleMinQuantity} ${entry.product.unitLabel}(s)',
+                Row(
+                  children: [
+                    DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        key: ValueKey('cart-tier-${entry.product.id}'),
+                        value: entry.wholesale ? 'wholesale' : 'retail',
+                        isDense: true,
+                        items: [
+                          const DropdownMenuItem(
+                            value: 'retail',
+                            child: Text('Retail'),
+                          ),
+                          if (entry.product.wholesalePriceMinor != null)
+                            const DropdownMenuItem(
+                              value: 'wholesale',
+                              child: Text('Wholesale'),
+                            ),
+                        ],
+                        onChanged: (tier) => setState(
+                          () => entry.wholesale = tier == 'wholesale',
                         ),
                       ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        entry.wholesale
+                            ? '$currency ${formatMinorAmount(BigInt.from(entry.product.wholesalePriceMinor!))} each · from ${entry.product.wholesaleMinQuantity} ${entry.product.unitLabel}(s)'
+                            : '$currency ${formatMinorAmount(BigInt.from(entry.product.priceMinor))} each',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
-                  onChanged: (tier) => setState(
-                    () => entry.wholesale = tier == 'wholesale',
-                  ),
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -3049,6 +3070,12 @@ class _NewSaleDialogState extends State<_NewSaleDialog> {
                           ? null
                           : () => setState(() => entry.quantity += 1),
                       icon: const Icon(Icons.add_circle_outline, size: 20),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$currency ${formatMinorAmount(BigInt.from(_unitPrice(entry) * entry.quantity))}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

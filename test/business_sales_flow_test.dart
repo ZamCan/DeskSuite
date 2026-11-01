@@ -253,9 +253,17 @@ void main() {
   testWidgets('the receipt currency setting drives stock labels and sales', (
     tester,
   ) async {
-    await BusinessSettingsRepository(
-      settingsFiles,
-    ).save(const BusinessSettings(currency: 'USD'));
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    // The seeded USD setting is real file IO; without runAsync the fake-async
+    // test zone would suspend it forever (the ten-minute widget timeout).
+    await tester.runAsync(() async {
+      await BusinessSettingsRepository(
+        settingsFiles,
+      ).save(const BusinessSettings(currency: 'USD'));
+    });
     await pumpPage(tester);
 
     // Stock value and product price lines use the saved currency instead of

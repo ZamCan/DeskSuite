@@ -31,7 +31,7 @@ void main() {
       wholesalePriceMinor: wholesalePriceMinor,
       wholesaleMinQuantity: wholesaleMinQuantity,
     );
-    return snapshot.products.single;
+    return snapshot.products.last;
   }
 
   test('a basket sale stores one itemised receipt and reduces every stock', () async {

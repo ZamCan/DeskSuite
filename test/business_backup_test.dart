@@ -134,7 +134,9 @@ void main() {
     final oversized = Uint8List(maxBackupBytes + 1);
     expect(() => parseBusinessBackupBytes(oversized), throwsFormatException);
     // Nothing was written by the refused restore attempt.
-    expect(await targetRepository.load(), isEmpty);
+    final untouched = await targetRepository.load();
+    expect(untouched.products, isEmpty);
+    expect(await targetRepository.loadSales(), isEmpty);
   });
 
   test('picked bytes with a broken date cannot enter the store', () {
