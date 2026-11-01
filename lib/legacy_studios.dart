@@ -3016,40 +3016,37 @@ class _NewSaleDialogState extends State<_NewSaleDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      flex: 3,
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          key: ValueKey('cart-tier-${entry.product.id}'),
-                          value: entry.wholesale ? 'wholesale' : 'retail',
-                          isDense: true,
-                          items: [
+                    DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        key: ValueKey('cart-tier-${entry.product.id}'),
+                        value: entry.wholesale ? 'wholesale' : 'retail',
+                        isExpanded: true,
+                        isDense: true,
+                        items: [
+                          const DropdownMenuItem(
+                            value: 'retail',
+                            child: Text('Retail'),
+                          ),
+                          if (entry.product.wholesalePriceMinor != null)
                             const DropdownMenuItem(
-                              value: 'retail',
-                              child: Text('Retail'),
+                              value: 'wholesale',
+                              child: Text('Wholesale'),
                             ),
-                            if (entry.product.wholesalePriceMinor != null)
-                              const DropdownMenuItem(
-                                value: 'wholesale',
-                                child: Text('Wholesale'),
-                              ),
-                          ],
-                          onChanged: (tier) =>
-                              setState(() => entry.wholesale = tier == 'wholesale'),
-                        ),
+                        ],
+                        onChanged: (tier) =>
+                            setState(() => entry.wholesale = tier == 'wholesale'),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        entry.wholesale
-                            ? '$currency ${formatMinorAmount(BigInt.from(entry.product.wholesalePriceMinor!))} each · from ${entry.product.wholesaleMinQuantity} ${entry.product.unitLabel}(s)'
-                            : '$currency ${formatMinorAmount(BigInt.from(entry.product.priceMinor))} each',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                    Text(
+                      entry.wholesale
+                          ? '$currency ${formatMinorAmount(BigInt.from(entry.product.wholesalePriceMinor!))} each · from ${entry.product.wholesaleMinQuantity} ${entry.product.unitLabel}(s)'
+                          : '$currency ${formatMinorAmount(BigInt.from(entry.product.priceMinor))} each',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
