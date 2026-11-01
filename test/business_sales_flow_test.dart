@@ -270,7 +270,9 @@ void main() {
     // the default 'TSh'.
     await settleUntil(tester, find.textContaining('Stock value at listed prices'));
     await settleUntil(tester, find.textContaining('USD 250.00'));
-    await settleUntil(tester, find.textContaining('USD 15.00'));
+    // The product row is below the fold on a 360x720 phone, so the lazy list
+    // has not built it yet; scroll it into view instead of pumping for it.
+    await reveal(tester, find.textContaining('USD 15.00'));
 
     final currencyDropdown = find.byKey(const Key('shop-currency'));
     await reveal(tester, currencyDropdown);
@@ -291,7 +293,7 @@ void main() {
     );
     expect(stored, contains('KSh'));
     await settleUntil(tester, find.textContaining('KSh 250.00'));
-    await settleUntil(tester, find.textContaining('KSh 15.00'));
+    await reveal(tester, find.textContaining('KSh 15.00'));
 
     // A one-tap retail sale carries the selected currency into the receipt.
     final sell = find.byTooltip('Record one unit sold');

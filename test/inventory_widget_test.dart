@@ -185,6 +185,15 @@ void main() {
             widget is IconButton && widget.tooltip == 'Record one unit sold',
       );
       expect(tester.widget<IconButton>(sellButton).onPressed, isNull);
+      // The sale's real file writes keep the page busy after the snackbar is
+      // shown. Wait for the indeterminate progress bar to leave instead of
+      // pumping through frames that never settle, then dismiss the persistent
+      // receipt snackbar so it cannot cover the export control.
+      await settleUntilGone(tester, find.byType(LinearProgressIndicator));
+      ScaffoldMessenger.of(
+        tester.element(find.byType(Scaffold)),
+      ).clearSnackBars();
+      await tester.pumpAndSettle();
       await reveal(tester, find.byKey(const Key('export-catalogue')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('export-catalogue')));
