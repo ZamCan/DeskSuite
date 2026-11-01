@@ -288,9 +288,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // The selection persists to the real settings file and drives the labels.
-    // The label changes only after the save completes, so waiting for it is
-    // also the signal that the file has been rewritten (the file already
-    // exists from the seeded USD value, so existence alone proves nothing).
+    // The label changes only after the save completes, so finding it is also
+    // the signal that the file has been rewritten (the file already exists from
+    // the seeded USD value, so existence alone proves nothing). Scroll back to
+    // the summary first: revealing the dropdown above may have pushed it off
+    // the top of the lazy list, so pumping alone could never find it.
+    await reveal(tester, find.textContaining('Stock value at listed prices'));
     await settleUntil(tester, find.textContaining('KSh 250.00'));
     final stored = await tester.runAsync(
       () => File('${settingsDir.path}/business-settings.json').readAsString(),
