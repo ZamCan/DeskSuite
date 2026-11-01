@@ -303,7 +303,7 @@ void main() {
 
     // A one-tap retail sale carries the selected currency into the receipt.
     final sell = find.byTooltip('Record one unit sold');
-    await reveal(tester, sell);
+    await reveal(tester, sell.first);
     await settleUntilEnabled(tester, sell.first);
     await tester.tap(sell.first);
     await settleUntil(tester, find.textContaining('Sale recorded'));

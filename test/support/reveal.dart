@@ -13,6 +13,10 @@ import 'package:flutter_test/flutter_test.dart';
 /// legitimately keep an indeterminate progress indicator running while real
 /// file I/O is in flight, and the caller already waits for the state it needs
 /// with [settleUntil] / [settleUntilEnabled].
+///
+/// When [target] matches several widgets (for example one action button per
+/// catalogue row), the first one is revealed; use `.first` at the call site
+/// when the choice of row matters.
 Future<void> reveal(
   WidgetTester tester,
   Finder target, {
@@ -22,7 +26,7 @@ Future<void> reveal(
 }) async {
   await tester.pump();
   if (target.evaluate().isNotEmpty) {
-    await tester.ensureVisible(target);
+    await tester.ensureVisible(target.first);
     await tester.pump();
     return;
   }
@@ -38,7 +42,7 @@ Future<void> reveal(
       await tester.drag(scrollable, Offset(0, direction * step));
       await tester.pump();
       if (target.evaluate().isNotEmpty) {
-        await tester.ensureVisible(target);
+        await tester.ensureVisible(target.first);
         await tester.pump();
         return;
       }
