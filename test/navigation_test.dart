@@ -127,7 +127,13 @@ void main() {
 
       // The menu button really opens the drawer on a 320 px phone.
       await openDrawer(tester, viaButton: true);
-      expect(find.text('Photo Studio'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(Drawer),
+          matching: find.text('Photo Studio'),
+        ),
+        findsOneWidget,
+      );
       // There are no placeholder entries left: every listed studio is a real
       // screen, so no drawer row is disabled.
       expect(find.text('PLANNED'), findsNothing);
