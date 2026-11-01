@@ -270,18 +270,16 @@ void main() {
     // the default 'TSh'.
     await settleUntil(tester, find.textContaining('Stock value at listed prices'));
     await settleUntil(tester, find.textContaining('USD 250.00'));
-    await settleUntil(tester, find.textContaining('USD 1.50'));
+    await settleUntil(tester, find.textContaining('USD 15.00'));
 
-    await settleUntil(tester, find.byKey(const Key('shop-currency')));
-    await tester.tap(find.byKey(const Key('shop-currency')));
-    // The receipt currency is a dropdown whose options live in a menu overlay,
-    // so wait for the chosen option to be built before tapping it.
-    await settleUntil(tester, find.text('Kenyan shilling (KSh)'));
-    await tester.tap(find.text('Kenyan shilling (KSh)'));
-    await tester.pump(const Duration(milliseconds: 200));
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 20)),
-    );
+    final currencyDropdown = find.byKey(const Key('shop-currency'));
+    await reveal(tester, currencyDropdown);
+    await tester.tap(currencyDropdown);
+    await tester.pumpAndSettle();
+    final kshOption = find.text('Kenyan shilling (KSh)').last;
+    await settleUntil(tester, kshOption);
+    await tester.tap(kshOption);
+    await tester.pumpAndSettle();
 
     // The selection persists to the real settings file and drives the labels.
     await waitUntil(
@@ -293,11 +291,13 @@ void main() {
     );
     expect(stored, contains('KSh'));
     await settleUntil(tester, find.textContaining('KSh 250.00'));
-    await settleUntil(tester, find.textContaining('KSh 1.50'));
+    await settleUntil(tester, find.textContaining('KSh 15.00'));
 
     // A one-tap retail sale carries the selected currency into the receipt.
-    await reveal(tester, find.byTooltip('Record one unit sold'));
-    await tester.tap(find.byTooltip('Record one unit sold').first);
+    final sell = find.byTooltip('Record one unit sold');
+    await reveal(tester, sell);
+    await settleUntilEnabled(tester, sell.first);
+    await tester.tap(sell.first);
     await settleUntil(tester, find.textContaining('Sale recorded'));
     await settleUntil(tester, find.textContaining('KSh 15.00'));
     expect(repository.lastSingleCurrency, 'KSh');

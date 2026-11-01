@@ -147,7 +147,7 @@ void main() {
         ),
       );
       await settleUntil(tester, find.byKey(const Key('new-sale')));
-      await tester.ensureVisible(find.byKey(const Key('add-product')));
+      await reveal(tester, find.byKey(const Key('add-product')));
       await tester.tap(find.byKey(const Key('add-product')));
       await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const Key('product-name')), 'Blue pen');
@@ -185,7 +185,7 @@ void main() {
             widget is IconButton && widget.tooltip == 'Record one unit sold',
       );
       expect(tester.widget<IconButton>(sellButton).onPressed, isNull);
-      await tester.ensureVisible(find.byKey(const Key('export-catalogue')));
+      await reveal(tester, find.byKey(const Key('export-catalogue')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('export-catalogue')));
       await waitUntil(tester, () => files.name != null);
@@ -268,7 +268,13 @@ void main() {
     await settleUntil(tester, find.textContaining('Sale recorded'));
 
     expect(find.textContaining('Sale recorded'), findsOneWidget);
-    expect(find.textContaining('TSh 125.50'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(SnackBar),
+        matching: find.textContaining('TSh 125.50'),
+      ),
+      findsOneWidget,
+    );
     final receipt = find.widgetWithText(SnackBarAction, 'Receipt');
     expect(receipt, findsOneWidget);
     // The snackbar's widget exists before its slide-in animation is tappable.
