@@ -31,6 +31,7 @@ class DesignElement {
     this.color = 0xff292722,
     this.opacity = 1,
     this.visible = true,
+    this.locked = false,
     this.text = '',
     this.fontSizePt = 28,
     this.bold = false,
@@ -81,6 +82,7 @@ class DesignElement {
   final int color;
   final double opacity;
   final bool visible;
+  final bool locked;
   final String text;
   final double fontSizePt;
   final bool bold;
@@ -97,6 +99,7 @@ class DesignElement {
     int? color,
     double? opacity,
     bool? visible,
+    bool? locked,
     String? text,
     double? fontSizePt,
     bool? bold,
@@ -112,6 +115,7 @@ class DesignElement {
     color: color ?? this.color,
     opacity: opacity ?? this.opacity,
     visible: visible ?? this.visible,
+    locked: locked ?? this.locked,
     text: text ?? this.text,
     fontSizePt: fontSizePt ?? this.fontSizePt,
     bold: bold ?? this.bold,
@@ -130,6 +134,7 @@ class DesignElement {
     'color': color,
     'opacity': opacity,
     'visible': visible,
+    'locked': locked,
     'text': text,
     'fontSizePt': fontSizePt,
     'bold': bold,
@@ -157,6 +162,7 @@ class DesignElement {
         color: json['color'] as int,
         opacity: (json['opacity'] as num).toDouble(),
         visible: json['visible'] as bool? ?? true,
+        locked: json['locked'] as bool? ?? false,
         text: json['text'] as String,
         fontSizePt: (json['fontSizePt'] as num).toDouble(),
         bold: json['bold'] as bool,
