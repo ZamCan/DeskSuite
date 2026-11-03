@@ -17,7 +17,7 @@ class DesignImageCache {
 
   Future<void> sync(DesignDocument document) async {
     final ids = document.elements
-        .where((e) => e.kind == ElementKind.image)
+        .where((e) => e.kind == ElementKind.image && e.visible)
         .map((e) => e.id)
         .toSet();
     for (final id in _images.keys.where((id) => !ids.contains(id)).toList()) {
@@ -30,6 +30,7 @@ class DesignImageCache {
     }
     for (final element in document.elements) {
       if (element.kind != ElementKind.image ||
+          !element.visible ||
           _images.containsKey(element.id)) {
         continue;
       }
