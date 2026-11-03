@@ -30,6 +30,7 @@ class DesignElement {
     this.rotation = 0,
     this.color = 0xff292722,
     this.opacity = 1,
+    this.visible = true,
     this.text = '',
     this.fontSizePt = 28,
     this.bold = false,
@@ -79,6 +80,7 @@ class DesignElement {
   final double rotation;
   final int color;
   final double opacity;
+  final bool visible;
   final String text;
   final double fontSizePt;
   final bool bold;
@@ -94,6 +96,7 @@ class DesignElement {
     double? rotation,
     int? color,
     double? opacity,
+    bool? visible,
     String? text,
     double? fontSizePt,
     bool? bold,
@@ -108,6 +111,7 @@ class DesignElement {
     rotation: rotation ?? this.rotation,
     color: color ?? this.color,
     opacity: opacity ?? this.opacity,
+    visible: visible ?? this.visible,
     text: text ?? this.text,
     fontSizePt: fontSizePt ?? this.fontSizePt,
     bold: bold ?? this.bold,
@@ -125,6 +129,7 @@ class DesignElement {
     'rotation': rotation,
     'color': color,
     'opacity': opacity,
+    'visible': visible,
     'text': text,
     'fontSizePt': fontSizePt,
     'bold': bold,
@@ -151,6 +156,7 @@ class DesignElement {
         rotation: (json['rotation'] as num).toDouble(),
         color: json['color'] as int,
         opacity: (json['opacity'] as num).toDouble(),
+        visible: json['visible'] as bool? ?? true,
         text: json['text'] as String,
         fontSizePt: (json['fontSizePt'] as num).toDouble(),
         bold: json['bold'] as bool,
