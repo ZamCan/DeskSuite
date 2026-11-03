@@ -88,6 +88,30 @@ void main() {
     expect(DesignElement.fromJson(oldElement).visible, isTrue);
   });
 
+  test('old projects default missing canvas lock to unlocked', () {
+    final oldElement = Map<String, dynamic>.from(
+      sample().elements.first.toJson(),
+    )
+      ..remove('visible')
+      ..remove('locked');
+    final restored = DesignElement.fromJson(oldElement);
+    expect(restored.visible, isTrue);
+    expect(restored.locked, isFalse);
+  });
+
+  test('locked layers remain selectable but cannot be moved on canvas', () {
+    final controller = DesignController(sample());
+    addTearDown(controller.dispose);
+    controller.select('text_1');
+    controller.updateSelected((element) => element.copyWith(locked: true));
+    controller.beginGesture(const Offset(30, 30), handleRadiusMm: 2);
+    controller.updateGesture(const Offset(25, 20));
+    controller.endGesture();
+    expect(controller.selected!.locked, isTrue);
+    expect(controller.selected!.x, 10);
+    expect(controller.selected!.y, 20);
+  });
+
   test('object opacity is editable, persistent and undoable', () {
     final controller = DesignController(sample());
     addTearDown(controller.dispose);
