@@ -46,6 +46,11 @@ void main() {
     await tester.pump();
     expect(controller.selected!.opacity, 0.5);
 
+    await tester.tap(find.byTooltip('Lock canvas movement'));
+    await tester.pump();
+    expect(controller.selected!.locked, isTrue);
+    expect(find.byTooltip('Unlock canvas movement'), findsOneWidget);
+
     await tester.tap(find.byTooltip('Hide object'));
     await tester.pump();
     expect(controller.selected!.visible, isFalse);
