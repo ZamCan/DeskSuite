@@ -106,6 +106,13 @@ class ObjectInspector extends StatelessWidget {
                       ],
                     ),
                   ),
+                  action(
+                    item.visible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    item.visible ? 'Hide object' : 'Show object',
+                    () => controller.updateSelected(
+                      (e) => e.copyWith(visible: !e.visible),
+                    ),
+                  ),
                   action(Icons.copy_outlined, 'Duplicate object', () {
                     try {
                       controller.duplicateSelected();
