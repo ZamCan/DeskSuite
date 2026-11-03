@@ -113,6 +113,15 @@ class ObjectInspector extends StatelessWidget {
                       (e) => e.copyWith(visible: !e.visible),
                     ),
                   ),
+                  action(
+                    item.locked ? Icons.lock_outline : Icons.lock_open_outlined,
+                    item.locked
+                        ? 'Unlock canvas movement'
+                        : 'Lock canvas movement',
+                    () => controller.updateSelected(
+                      (e) => e.copyWith(locked: !e.locked),
+                    ),
+                  ),
                   action(Icons.copy_outlined, 'Duplicate object', () {
                     try {
                       controller.duplicateSelected();
