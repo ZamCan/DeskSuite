@@ -134,6 +134,25 @@ class ObjectInspector extends StatelessWidget {
                   label: const Text('Fill photo slot with image'),
                 ),
               ],
+              const SizedBox(height: 18),
+              const Text(
+                'Opacity',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final value in [0.25, 0.5, 0.75, 1.0])
+                    ChoiceChip(
+                      label: Text('${(value * 100).round()}%'),
+                      selected: (item.opacity - value).abs() < 0.001,
+                      onSelected: (_) => controller.updateSelected(
+                        (e) => e.copyWith(opacity: value),
+                      ),
+                    ),
+                ],
+              ),
               if (item.kind == ElementKind.text) ...[
                 const SizedBox(height: 18),
                 OutlinedButton.icon(
