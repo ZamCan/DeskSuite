@@ -109,6 +109,7 @@ class DesignPainter extends CustomPainter {
       Paint()..color = Color(document.backgroundColor),
     );
     for (final item in document.elements) {
+      if (!item.visible) continue;
       canvas.save();
       final center = Offset(item.x + item.width / 2, item.y + item.height / 2);
       canvas.translate(center.dx, center.dy);
