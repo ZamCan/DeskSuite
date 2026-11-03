@@ -221,9 +221,9 @@ class DesignController extends ChangeNotifier {
     final start = _gestureStart;
     final id = _gestureId;
     if (start == null || id == null) return;
-    _gestureDelta += delta;
     final original = start.elements.firstWhere((e) => e.id == id);
     if (!original.visible || original.locked) return;
+    _gestureDelta += delta;
     DesignElement changed;
     if (_resizing) {
       final theta = -original.rotation * math.pi / 180;
