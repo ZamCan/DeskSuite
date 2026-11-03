@@ -149,7 +149,7 @@ class DesignController extends ChangeNotifier {
         for (final e in document.elements) e.id == item.id ? updated : e,
       ],
     );
-    if (updated.text != item.text && next.encode().length > maxProjectBytes) {
+    if (next.encode().length > maxProjectBytes) {
       throw StateError('The project would exceed the 32 MB limit.');
     }
     _commit(next);
@@ -199,11 +199,12 @@ class DesignController extends ChangeNotifier {
     final current = selected;
     _resizing =
         current != null &&
+        current.visible &&
         (point - handlePosition(current)).distance <= handleRadiusMm;
     if (!_resizing) {
       String? hit;
       for (final e in document.elements.reversed) {
-        if (containsPoint(e, point)) {
+        if (e.visible && containsPoint(e, point)) {
           hit = e.id;
           break;
         }
@@ -222,6 +223,7 @@ class DesignController extends ChangeNotifier {
     if (start == null || id == null) return;
     _gestureDelta += delta;
     final original = start.elements.firstWhere((e) => e.id == id);
+    if (!original.visible) return;
     DesignElement changed;
     if (_resizing) {
       final theta = -original.rotation * math.pi / 180;
