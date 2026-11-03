@@ -50,9 +50,36 @@ void main() {
       expect(restored.elements.first.text, 'Hello 世界');
       expect(restored.elements.first.rotation, 15);
       expect(restored.elements.first.bold, isTrue);
+      expect(restored.elements.first.visible, isTrue);
       expect(restored.elements.last.imageBytes, orderedEquals([1, 2, 3, 4]));
     },
   );
+
+  test('layer visibility persists and is undoable', () {
+    final hidden = sample().copyWith(
+      elements: [
+        sample().elements.first.copyWith(visible: false),
+        sample().elements.last,
+      ],
+    );
+    final reopened = DesignDocument.decode(hidden.encode());
+    expect(reopened.elements.first.visible, isFalse);
+
+    final controller = DesignController(sample());
+    addTearDown(controller.dispose);
+    controller.select('text_1');
+    controller.updateSelected((element) => element.copyWith(visible: false));
+    expect(controller.selected!.visible, isFalse);
+
+    // Hidden layers are excluded from canvas hit testing.
+    controller.beginGesture(const Offset(30, 30), handleRadiusMm: 2);
+    expect(controller.selectedId, isNull);
+
+    controller.undo();
+    expect(controller.document.elements.first.visible, isTrue);
+    controller.redo();
+    expect(controller.document.elements.first.visible, isFalse);
+  });
 
   test(
     'rejects invalid versions, dangerous identifiers and bad dimensions',
