@@ -2,6 +2,16 @@
 
 **Updated:** 2026-11-01. This is a source and CI status note, not a signed or device-verified release. The earlier detailed capability inventory below is retained as the last consolidated engineering snapshot; consult the newer [repository audit](REPOSITORY_AUDIT_2026-11-01.md) for the 2026-11-01 source-tree review and [master product engineering plan](MASTER_PRODUCT_ENGINEERING_PLAN.md) for the governing architecture and workspace requirements.
 
+## Creative editor engineering increment — 2026-11-03
+
+- Updated the existing Creative Studio object model with a backward-compatible `visible` property. Existing version-1 projects without this field decode as visible; the project format version remains unchanged.
+- Added a working visibility toggle to the object inspector. Hidden objects are omitted from canvas rendering and raster/PDF output, excluded from canvas hit testing, and their decoded image resources are released from the editor cache until shown again.
+- Added editable opacity presets (25%, 50%, 75%, 100%) in the object inspector. The existing renderer applies opacity to text, vector shapes and image layers; edits remain part of the saved project and undo/redo history.
+- Hardened the shared object update path so every object edit is checked against the project byte limit, rather than checking only text changes.
+- Added unit coverage for visibility serialization, old-project compatibility, hit testing, undo/redo and opacity round-tripping, plus a widget test for the actual inspector controls.
+- Source changes are committed directly to `main`; the current implementation checkpoint is `9a535204bc2162c19e2fc9a6e3bde81805c46b25`. GitHub Actions run [41667397957](https://github.com/ZamCan/DeskSuite/actions/runs/41667397957) was queued at the time of this status update. Do not treat the new tests, analyzer, APK build or device behaviour as verified until that run completes and real-device checks are performed.
+- This is a focused editor foundation increment, not delivery of the full raster, vector or motion-graphics roadmap. No APK was built, signed or installed during this remote source update.
+
 ## Latest repository checkpoint — 2026-11-01
 
 - Audited online `main` at source snapshot `cf35d1988267b9dc6567c8752568be0c043a71df`.
