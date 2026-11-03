@@ -81,6 +81,27 @@ void main() {
     expect(controller.document.elements.first.visible, isFalse);
   });
 
+  test('old projects default missing visibility to visible', () {
+    final oldElement = Map<String, dynamic>.from(
+      sample().elements.first.toJson(),
+    )..remove('visible');
+    expect(DesignElement.fromJson(oldElement).visible, isTrue);
+  });
+
+  test('object opacity is editable, persistent and undoable', () {
+    final controller = DesignController(sample());
+    addTearDown(controller.dispose);
+    controller.select('text_1');
+    controller.updateSelected((element) => element.copyWith(opacity: 0.5));
+    expect(controller.selected!.opacity, 0.5);
+    final reopened = DesignDocument.decode(controller.document.encode());
+    expect(reopened.elements.first.opacity, 0.5);
+    controller.undo();
+    expect(controller.selected!.opacity, 1);
+    controller.redo();
+    expect(controller.selected!.opacity, 0.5);
+  });
+
   test(
     'rejects invalid versions, dangerous identifiers and bad dimensions',
     () {
