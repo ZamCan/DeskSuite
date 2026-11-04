@@ -49,7 +49,12 @@ class _BrandLaunchState extends State<BrandLaunch> {
     ]);
     if (!mounted) return;
     if (welcome) {
-      await widget.onWelcomeCompleted();
+      // A preference-write failure must never hold the user outside the app.
+      try {
+        await widget.onWelcomeCompleted();
+      } catch (_) {
+        // The next opening may show the short welcome again.
+      }
     }
     if (!mounted) return;
     setState(() => _resolved = true);
