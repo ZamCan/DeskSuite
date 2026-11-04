@@ -52,10 +52,7 @@ class _BrandLaunchState extends State<BrandLaunch> {
       await widget.onWelcomeCompleted();
     }
     if (!mounted) return;
-    setState(() {
-      _resolved = true;
-      _visible = false;
-    });
+    setState(() => _resolved = true);
   }
 
   @override
@@ -74,6 +71,11 @@ class _BrandLaunchState extends State<BrandLaunch> {
               child: AnimatedOpacity(
                 opacity: _resolved ? 0 : 1,
                 duration: const Duration(milliseconds: 180),
+                onEnd: () {
+                  if (_resolved && mounted) {
+                    setState(() => _visible = false);
+                  }
+                },
                 child: WorkspaceLoadingView(showWelcome: _showWelcome),
               ),
             ),
