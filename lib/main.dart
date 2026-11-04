@@ -87,7 +87,16 @@ class _DeskSuiteAppState extends State<DeskSuiteApp> {
     darkTheme: deskTheme(Brightness.dark),
     themeMode: _dark ? ThemeMode.dark : ThemeMode.light,
     home: widget.showStartupAnimation
-        ? BrandLaunch(child: _workspaceBuilder())
+        ? BrandLaunch(
+            showWelcome: _repository.then((repo) => repo.readWelcomeSeen())
+                .then((seen) => !seen),
+            workspaceReady: _repository.then<void>((_) {}),
+            onWelcomeCompleted: () async {
+              final repo = await _repository;
+              await repo.writeWelcomeSeen();
+            },
+            child: _workspaceBuilder(),
+          )
         : _workspaceBuilder(),
   );
 
@@ -120,7 +129,7 @@ class _DeskSuiteAppState extends State<DeskSuiteApp> {
         );
       }
       if (!snapshot.hasData) {
-        return const WorkspaceLoadingView();
+        return const SizedBox.expand();
       }
       final repo = snapshot.requireData;
       return WorkspaceScreen(
