@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import 'app/brand_launch.dart';
-import 'app/startup_view.dart';
 import 'app/theme.dart';
 import 'document_scan/camera_gateway.dart';
 import 'core/suite_paths.dart';
@@ -88,9 +87,14 @@ class _DeskSuiteAppState extends State<DeskSuiteApp> {
     themeMode: _dark ? ThemeMode.dark : ThemeMode.light,
     home: widget.showStartupAnimation
         ? BrandLaunch(
-            showWelcome: _repository.then((repo) => repo.readWelcomeSeen())
-                .then((seen) => !seen),
-            workspaceReady: _repository.then<void>((_) {}),
+            showWelcome: _repository.then(
+              (repo) async => !(await repo.readWelcomeSeen()),
+              onError: (Object _, StackTrace __) => false,
+            ),
+            workspaceReady: _repository.then<void>(
+              (_) {},
+              onError: (Object _, StackTrace __) {},
+            ),
             onWelcomeCompleted: () async {
               final repo = await _repository;
               await repo.writeWelcomeSeen();
