@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Creative Studio vertical alignment (not a release)
+
+- Added top/middle/bottom page alignment for the selected object in the Creative Studio inspector, next to the existing left/centre/right actions. It is undoable and saved with the project. Aligning an object that is already in place no longer creates an empty undo entry.
+- Added controller and inspector widget tests. **Not run:** no Flutter/Dart toolchain was available when this was written; CI or a local `flutter analyze` and `flutter test` must confirm it. Nothing here claims a release.
+
 ## Unreleased — restore a passing analyzer on main (not a release)
 
 - `flutter analyze` failed on `main` (14 issues, all four CI hosts): `BrandLaunch` gained required `showWelcome`, `workspaceReady` and `onWelcomeCompleted` parameters, but `test/brand_launch_test.dart` still constructed it without them, and `lib/main.dart` used `__` for an unused parameter.
