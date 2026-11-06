@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — restore a passing analyzer on main (not a release)
+
+- `flutter analyze` failed on `main` (14 issues, all four CI hosts): `BrandLaunch` gained required `showWelcome`, `workspaceReady` and `onWelcomeCompleted` parameters, but `test/brand_launch_test.dart` still constructed it without them, and `lib/main.dart` used `__` for an unused parameter.
+- Rewrote the BrandLaunch tests against the current widget. Dropped assertions about the removed logo-reveal startup (`brand-launch-drawing`, `brand-launch-artwork`) and the old "reduced motion skips the overlay" expectation, which the current widget does not implement (reduced motion now only stops the loading animation inside `WorkspaceLoadingView`). Added tests for the first-run welcome, the one-time preference write, and a failed write not trapping the user on the startup surface.
+- No product behaviour changed. **Not run locally** (no Flutter/Dart toolchain was available); the CI run on this change is the first verification.
+
 ## Unreleased — business baskets, receipts and backups (not a release)
 
 - Added receipt currency and price-tier settings to the Business screen: the shop currency labels every money display and travels into recorded sales; it is a label only, with no exchange-rate behaviour implied.
