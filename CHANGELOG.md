@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Creative Studio vertical alignment (not a release)
+
+- Added top/middle/bottom page alignment for the selected object in the Creative Studio inspector, next to the existing left/centre/right actions. It is undoable and saved with the project. Aligning an object that is already in place no longer creates an empty undo entry.
+- Added controller and inspector widget tests. **Not run:** no Flutter/Dart toolchain was available when this was written; CI or a local `flutter analyze` and `flutter test` must confirm it. Nothing here claims a release.
+
 ## Unreleased — business baskets, receipts and backups (not a release)
 
 - Added receipt currency and price-tier settings to the Business screen: the shop currency labels every money display and travels into recorded sales; it is a label only, with no exchange-rate behaviour implied.

@@ -2,6 +2,14 @@
 
 **Updated:** 2026-11-01. This is a source and CI status note, not a signed or device-verified release. The earlier detailed capability inventory below is retained as the last consolidated engineering snapshot; consult the newer [repository audit](REPOSITORY_AUDIT_2026-11-01.md) for the 2026-11-01 source-tree review and [master product engineering plan](MASTER_PRODUCT_ENGINEERING_PLAN.md) for the governing architecture and workspace requirements.
 
+## Creative editor engineering increment — 2026-11-06 (vertical alignment)
+
+- Added `DesignController.alignVertical` (top, middle, bottom of the page) beside the existing horizontal alignment, and three matching buttons in the object inspector's "Align on page" row. The change edits the real object position, is part of undo/redo and is saved in `.dsdesign`; the project format version is unchanged.
+- Page alignment is now a no-op when the object is already at the requested position, so repeated alignment no longer adds empty undo entries (this also applies to the existing horizontal actions).
+- Alignment uses the object's unrotated bounding box; rotated objects are not aligned by their visual extent.
+- Tests added: two controller tests in `test/design_engine_test.dart` (page-relative geometry, undo/redo, persistence, no empty history) and one inspector widget test in `test/design_editor_widgets_test.dart`.
+- **Verification state: not verified.** The environment that produced this change had no Flutter or Dart toolchain, so `dart format`, `flutter analyze` and `flutter test` were not run, and no build or device check was performed. Treat the change and its tests as unverified until CI or a local run passes.
+
 ## Creative editor engineering increment — 2026-11-03
 
 - Updated the existing Creative Studio object model with a backward-compatible `visible` property. Existing version-1 projects without this field decode as visible; the project format version remains unchanged.

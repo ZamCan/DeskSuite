@@ -321,6 +321,7 @@ class ObjectInspector extends StatelessWidget {
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
+                runSpacing: 8,
                 children: [
                   action(
                     Icons.align_horizontal_left,
@@ -336,6 +337,23 @@ class ObjectInspector extends StatelessWidget {
                     Icons.align_horizontal_right,
                     'Align object right',
                     () => controller.alignHorizontal(TextAlignment.right),
+                  ),
+                  action(
+                    Icons.align_vertical_top,
+                    'Align object top',
+                    () => controller.alignVertical(PageVerticalAlignment.top),
+                  ),
+                  action(
+                    Icons.align_vertical_center,
+                    'Middle of page',
+                    () =>
+                        controller.alignVertical(PageVerticalAlignment.middle),
+                  ),
+                  action(
+                    Icons.align_vertical_bottom,
+                    'Align object bottom',
+                    () =>
+                        controller.alignVertical(PageVerticalAlignment.bottom),
                   ),
                 ],
               ),
