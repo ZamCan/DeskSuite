@@ -89,11 +89,11 @@ class _DeskSuiteAppState extends State<DeskSuiteApp> {
         ? BrandLaunch(
             showWelcome: _repository.then(
               (repo) async => !(await repo.readWelcomeSeen()),
-              onError: (Object _, StackTrace __) => false,
+              onError: (Object _, StackTrace _) => false,
             ),
             workspaceReady: _repository.then<void>(
               (_) {},
-              onError: (Object _, StackTrace __) {},
+              onError: (Object _, StackTrace _) {},
             ),
             onWelcomeCompleted: () async {
               final repo = await _repository;
