@@ -1,115 +1,213 @@
 import 'package:flutter/material.dart';
 
-/// DeskSuite's shared visual system: warm paper, near-black ink and restrained clay.
-/// Individual documents retain their own colors; application chrome stays coherent.
-const ink = Color(0xff292721);
-const accent = Color(0xffa84f36);
-const paper = Color(0xfff6f3ed);
-const line = Color(0xffe5ded3);
+/// DeskSuite Slate Coral design system.
+/// The original brand asset and deskTheme / BrandMark interfaces are retained.
+const ink = Color(0xff0f172a);
+const surface = Color(0xff1e293b);
+const elevated = Color(0xff273449);
+const accent = Color(0xffff6b5b);
+const accentDeep = Color(0xffe8505f);
+const paper = Color(0xfff1f5f9);
+const muted = Color(0xff94a3b8);
+const line = Color(0x14ffffff);
 const deskSuiteBrandAsset = 'assets/brand/desksuite-mark.png';
+
+const coralGradient = LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  colors: [Color(0xffff8a5b), accentDeep],
+);
+
+class SectionTones {
+  static const scan = Color(0xffff6b5b);
+  static const pdf = Color(0xfff45b78);
+  static const photo = Color(0xfff5b84a);
+  static const text = Color(0xff3cc6d0);
+  static const docs = Color(0xff6aa0ff);
+  static const create = Color(0xffe56bd0);
+  static const print = Color(0xff4fd09a);
+  static const business = Color(0xffc9d860);
+}
+
+BoxDecoration toneChip(Color tone, {double radius = 12}) => BoxDecoration(
+  color: tone.withValues(alpha: .16),
+  borderRadius: BorderRadius.circular(radius),
+  border: Border.all(color: tone.withValues(alpha: .28)),
+);
 
 ThemeData deskTheme(Brightness brightness) {
   final dark = brightness == Brightness.dark;
-  const clay = Color(0xffa84f36);
-  final surface = dark ? const Color(0xff24231f) : const Color(0xfffffdf9);
-  final background = dark ? const Color(0xff171714) : paper;
-  final primary = dark ? const Color(0xffe6a18a) : clay;
-  final onPrimary = dark ? const Color(0xff2b1711) : Colors.white;
-  final scheme = ColorScheme.fromSeed(seedColor: clay, brightness: brightness).copyWith(
+  final background = dark ? ink : const Color(0xfff8fafc);
+  final cardSurface = dark ? surface : Colors.white;
+  final raised = dark ? elevated : const Color(0xffe9eef5);
+  final foreground = dark ? paper : ink;
+  final subtle = dark ? muted : const Color(0xff526174);
+  final border = dark ? line : const Color(0xffdbe3ed);
+  final primary = dark ? accent : const Color(0xffc43f38);
+  final onPrimary = dark ? ink : Colors.white;
+  final scheme = ColorScheme.fromSeed(
+    seedColor: accent,
+    brightness: brightness,
+  ).copyWith(
     primary: primary,
     onPrimary: onPrimary,
-    secondary: dark ? const Color(0xffd8bba8) : const Color(0xff735d4e),
-    surface: surface,
-    onSurface: dark ? const Color(0xfff3eee6) : ink,
-    outline: dark ? const Color(0xff62594f) : const Color(0xffcfc5b8),
-    surfaceContainerHighest: dark ? const Color(0xff302e29) : const Color(0xffeee8de),
+    secondary: dark ? elevated : const Color(0xffe8edf5),
+    onSecondary: foreground,
+    surface: cardSurface,
+    onSurface: foreground,
+    outline: border,
+    error: dark ? const Color(0xfff2555a) : const Color(0xffb42332),
+    surfaceContainerHighest: raised,
   );
-  final textTheme = ThemeData(useMaterial3: true, brightness: brightness).textTheme.apply(
-    bodyColor: scheme.onSurface,
-    displayColor: scheme.onSurface,
+  final base = ThemeData(useMaterial3: true, brightness: brightness).textTheme;
+  final typography = base.apply(
+    bodyColor: foreground,
+    displayColor: foreground,
     fontFamily: 'DeskSuiteSans',
+  ).copyWith(
+    headlineMedium: base.headlineMedium?.copyWith(
+      fontWeight: FontWeight.w700, letterSpacing: -.5, color: foreground),
+    titleMedium: base.titleMedium?.copyWith(
+      fontWeight: FontWeight.w700, color: foreground),
+    labelSmall: base.labelSmall?.copyWith(
+      letterSpacing: 2, fontWeight: FontWeight.w700, color: subtle),
+    bodySmall: base.bodySmall?.copyWith(color: subtle),
+  );
+  final rounded = RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(12),
   );
   return ThemeData(
     useMaterial3: true,
     brightness: brightness,
     colorScheme: scheme,
-    textTheme: textTheme,
+    textTheme: typography,
     scaffoldBackgroundColor: background,
-    dividerColor: dark ? const Color(0xff3c3932) : line,
+    dividerColor: border,
+    splashFactory: InkSparkle.splashFactory,
     appBarTheme: AppBarTheme(
-      backgroundColor: background,
-      foregroundColor: scheme.onSurface,
+      backgroundColor: background.withValues(alpha: .85),
+      foregroundColor: foreground,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       centerTitle: false,
+      titleTextStyle: typography.titleMedium,
     ),
     cardTheme: CardThemeData(
-      color: surface,
+      color: cardSurface,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: dark ? const Color(0xff3c3932) : line),
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: border),
       ),
+    ),
+    drawerTheme: DrawerThemeData(
+      backgroundColor: cardSurface,
+      surfaceTintColor: Colors.transparent,
+      width: 300,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.horizontal(right: Radius.circular(24)),
+      ),
+    ),
+    navigationDrawerTheme: NavigationDrawerThemeData(
+      backgroundColor: cardSurface,
+      indicatorColor: primary.withValues(alpha: .14),
+      indicatorShape: rounded,
+    ),
+    listTileTheme: ListTileThemeData(
+      iconColor: subtle,
+      textColor: foreground,
+      shape: rounded,
+      selectedColor: primary,
+      selectedTileColor: raised,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: dark ? const Color(0xff292823) : const Color(0xfff0ebe2),
+      fillColor: cardSurface,
+      hintStyle: TextStyle(color: subtle),
+      prefixIconColor: subtle,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: border),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: dark ? const Color(0xff49443b) : line),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: border),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: scheme.primary, width: 1.5),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: primary, width: 1.5),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: scheme.primary,
-        foregroundColor: scheme.onPrimary,
-        minimumSize: const Size(48, 48),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: primary,
+        foregroundColor: onPrimary,
+        minimumSize: const Size(48, 46),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+        shape: rounded,
+        elevation: 0,
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: scheme.onSurface,
-        minimumSize: const Size(48, 48),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        side: BorderSide(color: dark ? const Color(0xff62594f) : line),
+        foregroundColor: foreground,
+        minimumSize: const Size(48, 46),
+        shape: rounded,
+        side: BorderSide(color: border),
+        textStyle: const TextStyle(fontWeight: FontWeight.w700),
       ),
     ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: primary,
+        shape: rounded,
+        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(foregroundColor: foreground, shape: rounded),
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected) ? onPrimary : subtle),
+      trackColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected) ? primary : raised),
+    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+      color: primary, linearTrackColor: raised),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      backgroundColor: dark ? const Color(0xff302e29) : const Color(0xff292721),
-      contentTextStyle: const TextStyle(color: Colors.white),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      backgroundColor: dark ? raised : ink,
+      contentTextStyle: TextStyle(color: dark ? paper : Colors.white),
+      shape: rounded,
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: cardSurface,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: surface,
-      indicatorColor: dark ? const Color(0xff493027) : const Color(0xfff0dfd5),
+      backgroundColor: cardSurface,
+      indicatorColor: primary.withValues(alpha: .16),
       elevation: 0,
     ),
   );
 }
 
-/// The owner-selected app icon. Nearby labels supply the accessible app name;
-/// the image itself is decorative. A fallback remains usable if loading fails.
 class BrandMark extends StatelessWidget {
   const BrandMark({super.key, this.size = 38});
   final double size;
 
   @override
   Widget build(BuildContext context) => ClipRRect(
-    borderRadius: BorderRadius.circular(size * .22),
+    borderRadius: BorderRadius.circular(size * .28),
     child: Image.asset(
       deskSuiteBrandAsset,
       width: size,
@@ -120,8 +218,9 @@ class BrandMark extends StatelessWidget {
       errorBuilder: (context, error, stackTrace) => Container(
         width: size,
         height: size,
-        color: accent,
-        child: Icon(Icons.document_scanner_outlined, size: size * .6, color: Colors.white),
+        decoration: const BoxDecoration(gradient: coralGradient),
+        child: Icon(Icons.description_outlined,
+          size: size * .55, color: ink),
       ),
     ),
   );
