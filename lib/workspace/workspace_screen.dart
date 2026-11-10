@@ -1,6 +1,5 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app/section_artwork.dart';
 import '../app/theme.dart';
@@ -317,7 +316,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 child: Column(
                   children: [
                     _topBar(wide),
-                    const Divider(height: 1),
                     Expanded(
                       child: IndexedStack(
                         index: _section.index,
@@ -340,66 +338,113 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     },
   );
 
-  Widget _topBar(bool wide) => SizedBox(
-    height: 68,
-    child: Padding(
-      padding: EdgeInsets.symmetric(horizontal: wide ? 30 : 14),
-      child: Row(
-        children: [
-          if (!wide)
-            Builder(
-              builder: (context) => IconButton(
-                tooltip: 'Open navigation',
-                onPressed: () => Scaffold.of(context).openDrawer(),
-                icon: const Icon(Icons.menu_rounded),
+  Widget _topBar(bool wide) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final dark = theme.brightness == Brightness.dark;
+    final art = artworkForSection(_section);
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      child: Container(
+        height: 68,
+        decoration: BoxDecoration(
+          color: Color.lerp(scheme.surface, theme.scaffoldBackgroundColor, .45),
+          border: Border(bottom: BorderSide(color: theme.dividerColor)),
+        ),
+        padding: EdgeInsets.only(left: wide ? 26 : 6, right: wide ? 24 : 12),
+        child: Row(
+          children: [
+            if (!wide)
+              Builder(
+                builder: (context) => IconButton(
+                  tooltip: 'Open navigation',
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                  icon: const Icon(Icons.menu_rounded),
+                ),
+              ),
+            if (!wide) const SizedBox(width: 2),
+            if (art != null) ...[
+              SectionArtwork(
+                key: ValueKey('section-header-art-${_section.name}'),
+                asset: art,
+                size: 30,
+              ),
+              const SizedBox(width: 12),
+            ],
+            Expanded(
+              child: Text(
+                switch (_section) {
+                  WorkspaceSection.workspace => 'Home',
+                  WorkspaceSection.projects => 'Files',
+                  WorkspaceSection.settings => 'Settings',
+                  WorkspaceSection.design => 'Creative Studio',
+                  WorkspaceSection.photos => 'Photo Studio',
+                  WorkspaceSection.notes => 'Office Notes',
+                  WorkspaceSection.printing => 'Print Studio',
+                  WorkspaceSection.business => 'Business & POS',
+                  WorkspaceSection.scans => 'Scanner',
+                  WorkspaceSection.conversions => 'Conversion routes',
+                  WorkspaceSection.text => 'Text extraction',
+                  WorkspaceSection.office => 'Documents',
+                  WorkspaceSection.pdfStudio => 'PDF Studio',
+                },
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: wide
+                    ? theme.textTheme.titleLarge
+                    : theme.textTheme.titleMedium,
               ),
             ),
-          if (!wide) const SizedBox(width: 6),
-          if (_section != WorkspaceSection.workspace &&
-              artworkForSection(_section) != null) ...[
-            SectionArtwork(
-              key: ValueKey('section-header-art-${_section.name}'),
-              asset: artworkForSection(_section)!,
-              size: 32,
-            ),
-            const SizedBox(width: 10),
+            if (wide) ...[const SizedBox(width: 12), _localPill()],
           ],
-          Expanded(
-            child: Text(
-              switch (_section) {
-                WorkspaceSection.workspace => 'Home',
-                WorkspaceSection.projects => 'Files',
-                WorkspaceSection.settings => 'Settings',
-                WorkspaceSection.design => 'Creative Studio',
-                WorkspaceSection.photos => 'Photo Studio',
-                WorkspaceSection.notes => 'Office Notes',
-                WorkspaceSection.printing => 'Print Studio',
-                WorkspaceSection.business => 'Business & POS',
-                WorkspaceSection.scans => 'Scanner',
-                WorkspaceSection.conversions => 'Conversion routes',
-                WorkspaceSection.text => 'Text extraction',
-                WorkspaceSection.office => 'Documents',
-                WorkspaceSection.pdfStudio => 'PDF Studio',
-              },
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+  }
+
+  /// A quiet reminder of the product's actual contract: work stays on the
+  /// device until the user exports or shares it.
+  Widget _localPill() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final dark = theme.brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(
+          alpha: dark ? .55 : .5,
+        ),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.cloud_off_rounded,
+            size: 13,
+            color: scheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'On device',
+            style: theme.textTheme.labelSmall?.copyWith(
+              letterSpacing: .3,
+              color: scheme.onSurfaceVariant,
             ),
           ),
-          if (wide) const SizedBox(width: 12),
         ],
       ),
-    ),
-  );
+    );
+  }
 
   Widget _workspace() {
     final hour = DateTime.now().hour;
     final greeting = hour < 12
         ? 'Good morning'
         : hour < 17
-            ? 'Good afternoon'
-            : 'Good evening';
+        ? 'Good afternoon'
+        : 'Good evening';
     final hasQuery = _shortcutQuery.trim().isNotEmpty;
 
     return _scrolling(
@@ -409,17 +454,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         children: [
           Text(
             greeting,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.secondary,
-              letterSpacing: .5,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              letterSpacing: 1.1,
             ),
           ),
           const SizedBox(height: 5),
           _heading('Your workspace', 'Create, scan, organise and produce.'),
-          if (!hasQuery) ...[
-            const SizedBox(height: 22),
-            _premiumScanBanner(),
-          ],
+          if (!hasQuery) ...[const SizedBox(height: 22), _premiumScanBanner()],
           const SizedBox(height: 20),
           TextField(
             key: const Key('home-shortcut-search'),
@@ -458,8 +500,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           Text(
             hasQuery ? 'SEARCH RESULTS' : 'STUDIOS',
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              letterSpacing: 1.35,
-              fontWeight: FontWeight.w800,
+              letterSpacing: 1.5,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
@@ -476,7 +517,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   textScale,
                 );
                 final cards = <Widget>[
-                  if (matchesHomeShortcut(WorkspaceSection.scans, _shortcutQuery))
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.scans,
+                    _shortcutQuery,
+                  ))
                     WorkspaceToolCard(
                       key: const Key('home-open-scan'),
                       section: WorkspaceSection.scans,
@@ -484,7 +528,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       description: 'Capture clean documents',
                       onNavigate: _navigate,
                     ),
-                  if (matchesHomeShortcut(WorkspaceSection.pdfStudio, _shortcutQuery))
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.pdfStudio,
+                    _shortcutQuery,
+                  ))
                     WorkspaceToolCard(
                       key: const Key('home-open-pdf'),
                       section: WorkspaceSection.pdfStudio,
@@ -493,7 +540,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       fallbackIcon: Icons.picture_as_pdf_outlined,
                       onNavigate: _navigate,
                     ),
-                  if (matchesHomeShortcut(WorkspaceSection.photos, _shortcutQuery))
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.photos,
+                    _shortcutQuery,
+                  ))
                     WorkspaceToolCard(
                       key: const Key('home-open-photo'),
                       section: WorkspaceSection.photos,
@@ -501,7 +551,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       description: 'Edit and prepare images',
                       onNavigate: _navigate,
                     ),
-                  if (matchesHomeShortcut(WorkspaceSection.text, _shortcutQuery))
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.text,
+                    _shortcutQuery,
+                  ))
                     WorkspaceToolCard(
                       key: const Key('home-open-text'),
                       section: WorkspaceSection.text,
@@ -509,7 +562,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       description: 'Recognise text from images',
                       onNavigate: _navigate,
                     ),
-                  if (matchesHomeShortcut(WorkspaceSection.office, _shortcutQuery))
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.office,
+                    _shortcutQuery,
+                  ))
                     WorkspaceToolCard(
                       key: const Key('home-open-converter'),
                       section: WorkspaceSection.office,
@@ -517,7 +573,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       description: 'Convert office formats',
                       onNavigate: _navigate,
                     ),
-                  if (matchesHomeShortcut(WorkspaceSection.design, _shortcutQuery))
+                  if (matchesHomeShortcut(
+                    WorkspaceSection.design,
+                    _shortcutQuery,
+                  ))
                     WorkspaceToolCard(
                       key: const Key('home-open-design'),
                       section: WorkspaceSection.design,
@@ -546,9 +605,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   }
 
   Widget _premiumScanBanner() {
-    final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final dark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       key: const Key('home-premium-scan-banner'),
       decoration: BoxDecoration(
@@ -556,21 +613,15 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            ink,
-            Color.lerp(ink, accent, .28)!,
+            const Color(0xff231c14),
+            Color.lerp(const Color(0xff231c14), clay, .38)!,
           ],
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(duneCardRadius),
         border: Border.all(
-          color: (dark ? scheme.outline : accent).withValues(alpha: .42),
+          color: Color.lerp(clay, accent, .45)!.withValues(alpha: .55),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: ink.withValues(alpha: dark ? .18 : .16),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        boxShadow: duneShadow(Theme.of(context).brightness, blur: 26, y: 11),
       ),
       padding: const EdgeInsets.all(20),
       child: Row(
@@ -582,19 +633,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 Text(
                   'READY WHEN YOU ARE',
                   style: text.labelSmall?.copyWith(
-                    color: const Color(0xffe6b7a5),
-                    letterSpacing: 1.25,
-                    fontWeight: FontWeight.w800,
+                    color: const Color(0xffe8b294),
+                    letterSpacing: 1.5,
                   ),
                 ),
                 const SizedBox(height: 9),
                 Text(
                   'Scan a page',
-                  style: text.titleLarge?.copyWith(
-                    color: paper,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -.35,
-                  ),
+                  style: text.headlineSmall?.copyWith(color: paper),
                 ),
                 const SizedBox(height: 5),
                 Text(
@@ -609,7 +655,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   key: const Key('home-premium-scan-action'),
                   onPressed: () => _navigate(WorkspaceSection.scans),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xfff4e5dc),
+                    backgroundColor: paper,
                     foregroundColor: ink,
                     minimumSize: const Size(48, 44),
                   ),
@@ -630,7 +676,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             ),
             child: const Icon(
               Icons.document_scanner_rounded,
-              color: Color(0xfff0c6b3),
+              color: Color(0xffeab99b),
               size: 34,
             ),
           ),
@@ -647,10 +693,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: _heading(
-                'Files',
-                'Designs saved locally on this device.',
-              ),
+              child: _heading('Files', 'Designs saved locally on this device.'),
             ),
             const SizedBox(width: 12),
             IconButton.outlined(
@@ -729,11 +772,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   Widget _heading(String title, String subtitle) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
-        title,
-        style: Theme.of(context).textTheme.titleLarge
-            ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -.55),
-      ),
+      Text(title, style: Theme.of(context).textTheme.headlineSmall),
       if (subtitle.isNotEmpty) ...[
         const SizedBox(height: 4),
         Text(
@@ -759,24 +798,20 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     final theme = Theme.of(context);
     final base = theme.scaffoldBackgroundColor;
     final dark = theme.brightness == Brightness.dark;
+    // Dune daylight: sun-bleached sand at the top, paper through the middle
+    // and a faint phosphate wash underneath. Mixed from explicit tokens so the
+    // backdrop cannot inherit a cold seeded container colour.
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
           colors: [
-            Color.lerp(
-              base,
-              theme.colorScheme.primaryContainer,
-              dark ? .18 : .28,
-            )!,
+            Color.lerp(base, sandDeep, dark ? .40 : .55)!,
             base,
-            Color.lerp(
-              base,
-              theme.colorScheme.tertiaryContainer,
-              dark ? .10 : .16,
-            )!,
+            Color.lerp(base, phosphateWash, dark ? .24 : .50)!,
           ],
+          stops: const [0, .52, 1],
         ),
       ),
       child: content,

@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — Dune Phosphate shared shell (not a release)
+
+- Replaced the default Material type sizes with an explicit DeskSuite scale in `lib/app/theme.dart`: tightened display and heading sizes with negative tracking, calmer body leading, and tracked eyebrow labels. The styles use only the two weights the bundled Noto Sans files actually provide (400 and 700), so headings no longer depend on synthesised bold.
+- Added shared surface tokens — `sandDeep`, `phosphateWash`, `clay`, one family of corner radii and a single `duneShadow` recipe — and wired them into the app bar, card, drawer, dialog and list themes so every screen inherits the same paper, hairline border and elevation instead of hard-coding its own.
+- The Home workspace grid now paints each tool card from the section's own mineral tone (`SectionTones`) rather than the six unrelated neon tints it used before. The live `BackdropFilter` behind each card was removed: it sat on a gradient where it could not be seen and only cost frames on the phone.
+- The navigation drawer gained a brand header with an honest `On-device workspace` line, eyebrow group labels, a teal wash and icon chip for the selected section, and a quiet closing note. The top bar is now a Dune sand surface with a hairline base, a section illustration sized to match, and an `On device` pill on wide layouts.
+- The Home backdrop is mixed from the sand and phosphate tokens instead of the seeded container colours, and the greeting uses the accent instead of `colorScheme.secondary`, which was sand-on-sand and effectively unreadable in the light theme.
+- Added `test/shell_style_test.dart` to hold the scale (sizes ordered, 400/700 only, eyebrow tracking), the surface recipe (radius, hairline, zero elevation, drawer and toolbar metrics) and the drawer selection.
+- Verified with Flutter 3.47.8 / Dart 3.13.7: `flutter analyze --no-pub` reported no issues and the full `flutter test --no-pub` suite passed (378 tests, 0 failures). No Android build, signing, device or visual review was performed, so the rendered shell is not claimed as verified.
+
 ## Unreleased — Creative Studio vertical alignment (not a release)
 
 - Added top/middle/bottom page alignment for the selected object in the Creative Studio inspector, beside the existing left/centre/right actions. It edits the real object position, is undoable, is saved with the project and keeps the project format version unchanged.

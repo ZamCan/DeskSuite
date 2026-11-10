@@ -16,6 +16,36 @@ const muted = Color(0xff9c9484);
 const line = Color(0x1affffff);
 const deskSuiteBrandAsset = 'assets/brand/desksuite-mark.png';
 
+/// Shared Dune Phosphate surface tokens. Screens should reach for these instead
+/// of mixing one-off neutrals, so a new page cannot drift colder than the shell.
+const sandDeep = Color(0xffe7dcc6);
+const phosphateWash = Color(0xffdfeee9);
+
+/// Date-fruit terracotta: emphasis only, never a large background.
+const clay = Color(0xffb3562f);
+
+const duneRadius = 12.0;
+const duneCardRadius = 18.0;
+const dunePanelRadius = 24.0;
+
+/// One elevation recipe for the whole suite: a warm ink shadow that is a
+/// whisper in light and a deeper pool in dark.
+List<BoxShadow> duneShadow(
+  Brightness brightness, {
+  double blur = 20,
+  double y = 8,
+  double spread = -3,
+}) => [
+  BoxShadow(
+    color: (brightness == Brightness.dark ? Colors.black : ink).withValues(
+      alpha: brightness == Brightness.dark ? .30 : .08,
+    ),
+    blurRadius: blur,
+    spreadRadius: spread,
+    offset: Offset(0, y),
+  ),
+];
+
 const duneGradient = LinearGradient(
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
@@ -63,32 +93,121 @@ ThemeData deskTheme(Brightness brightness) {
         error: dark ? const Color(0xfff08a7a) : const Color(0xffa3341f),
         surfaceContainerHighest: raised,
       );
+  // DeskSuiteSans ships two real weights (400 and 700) from Noto Sans. The
+  // scale below therefore uses only those, so headings never render as
+  // synthesised bold, and it tightens display sizes while relaxing body
+  // leading for a calmer, more editorial read.
   final base = ThemeData(useMaterial3: true, brightness: brightness).textTheme;
-  final typography = base
-      .apply(
-        bodyColor: foreground,
-        displayColor: foreground,
-        fontFamily: 'DeskSuiteSans',
-      )
-      .copyWith(
-        headlineMedium: base.headlineMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: -.5,
-          color: foreground,
-        ),
-        titleMedium: base.titleMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: foreground,
-        ),
-        labelSmall: base.labelSmall?.copyWith(
-          letterSpacing: 2,
-          fontWeight: FontWeight.w700,
-          color: subtle,
-        ),
-        bodySmall: base.bodySmall?.copyWith(color: subtle),
-      );
+  TextStyle? sized(
+    TextStyle? style,
+    double size, {
+    FontWeight weight = FontWeight.w400,
+    double spacing = 0,
+    double height = 1.45,
+    Color? color,
+  }) => style?.copyWith(
+    fontSize: size,
+    fontWeight: weight,
+    letterSpacing: spacing,
+    height: height,
+    color: color ?? foreground,
+  );
+  final applied = base.apply(
+    bodyColor: foreground,
+    displayColor: foreground,
+    fontFamily: 'DeskSuiteSans',
+  );
+  final typography = applied.copyWith(
+    displayLarge: sized(
+      applied.displayLarge,
+      48,
+      weight: FontWeight.w700,
+      spacing: -1.5,
+      height: 1.06,
+    ),
+    displayMedium: sized(
+      applied.displayMedium,
+      38,
+      weight: FontWeight.w700,
+      spacing: -1.2,
+      height: 1.1,
+    ),
+    displaySmall: sized(
+      applied.displaySmall,
+      32,
+      weight: FontWeight.w700,
+      spacing: -.9,
+      height: 1.12,
+    ),
+    headlineLarge: sized(
+      applied.headlineLarge,
+      30,
+      weight: FontWeight.w700,
+      spacing: -.8,
+      height: 1.16,
+    ),
+    headlineMedium: sized(
+      applied.headlineMedium,
+      25,
+      weight: FontWeight.w700,
+      spacing: -.6,
+      height: 1.18,
+    ),
+    headlineSmall: sized(
+      applied.headlineSmall,
+      21,
+      weight: FontWeight.w700,
+      spacing: -.45,
+      height: 1.2,
+    ),
+    titleLarge: sized(
+      applied.titleLarge,
+      19,
+      weight: FontWeight.w700,
+      spacing: -.3,
+      height: 1.25,
+    ),
+    titleMedium: sized(
+      applied.titleMedium,
+      16,
+      weight: FontWeight.w700,
+      spacing: -.15,
+      height: 1.3,
+    ),
+    titleSmall: sized(
+      applied.titleSmall,
+      14,
+      weight: FontWeight.w700,
+      height: 1.32,
+    ),
+    bodyLarge: sized(applied.bodyLarge, 15.5),
+    bodyMedium: sized(applied.bodyMedium, 14),
+    bodySmall: sized(applied.bodySmall, 12.5, height: 1.4, color: subtle),
+    labelLarge: sized(
+      applied.labelLarge,
+      13.5,
+      weight: FontWeight.w700,
+      spacing: .2,
+      height: 1.2,
+    ),
+    labelMedium: sized(
+      applied.labelMedium,
+      11.5,
+      weight: FontWeight.w700,
+      spacing: .55,
+      height: 1.2,
+    ),
+    labelSmall: sized(
+      applied.labelSmall,
+      10.5,
+      weight: FontWeight.w700,
+      spacing: 1.6,
+      height: 1.25,
+      color: subtle,
+    ),
+  );
   final rounded = RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(12),
+    borderRadius: BorderRadius.circular(duneRadius),
   );
   return ThemeData(
     useMaterial3: true,
@@ -99,29 +218,38 @@ ThemeData deskTheme(Brightness brightness) {
     dividerColor: border,
     splashFactory: InkSparkle.splashFactory,
     appBarTheme: AppBarTheme(
-      backgroundColor: background.withValues(alpha: .85),
+      backgroundColor: cardSurface.withValues(alpha: .92),
       foregroundColor: foreground,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
+      scrolledUnderElevation: 0,
       centerTitle: false,
-      titleTextStyle: typography.titleMedium,
+      titleSpacing: 20,
+      titleTextStyle: typography.titleLarge,
+      toolbarHeight: 68,
     ),
     cardTheme: CardThemeData(
       color: cardSurface,
       surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.transparent,
       elevation: 0,
+      clipBehavior: Clip.antiAlias,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(duneCardRadius),
         side: BorderSide(color: border),
       ),
     ),
     drawerTheme: DrawerThemeData(
       backgroundColor: cardSurface,
       surfaceTintColor: Colors.transparent,
-      width: 300,
+      scrimColor: ink.withValues(alpha: .42),
+      width: 288,
+      elevation: 0,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.horizontal(right: Radius.circular(24)),
+        borderRadius: BorderRadius.horizontal(
+          right: Radius.circular(dunePanelRadius),
+        ),
       ),
     ),
     navigationDrawerTheme: NavigationDrawerThemeData(
@@ -207,7 +335,10 @@ ThemeData deskTheme(Brightness brightness) {
     dialogTheme: DialogThemeData(
       backgroundColor: cardSurface,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      titleTextStyle: typography.headlineSmall,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(dunePanelRadius),
+      ),
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: cardSurface,
