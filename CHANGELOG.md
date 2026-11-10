@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — Creative Studio vertical alignment (not a release)
+
+- Added top/middle/bottom page alignment for the selected object in the Creative Studio inspector, beside the existing left/centre/right actions. It edits the real object position, is undoable, is saved with the project and keeps the project format version unchanged.
+- Aligning an object that is already at the requested position is now a no-op, so repeated alignment (including the existing horizontal actions) no longer adds empty undo entries. Alignment uses the unrotated bounding box.
+- Verified in this environment with Flutter 3.47.8 / Dart 3.13.7: `flutter analyze --no-pub` reported no issues and `flutter test --no-pub test/design_engine_test.dart test/design_editor_widgets_test.dart` passed all 17 tests. No Android build, signing or device check was performed; this is not a release.
+
 ## Unreleased — Dune Phosphate interface palette (not a release)
 
 - Replaced the Slate Coral colour tokens with **Dune Phosphate**: warm sand and paper neutrals, phosphate teal as the working accent (deeper in light, brighter in dark), date-fruit terracotta for emphasis, and studio tones mixed from the same sand, mineral and clay family.

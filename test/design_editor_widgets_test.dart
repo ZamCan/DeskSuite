@@ -56,4 +56,57 @@ void main() {
     expect(controller.selected!.visible, isFalse);
     expect(find.byTooltip('Show object'), findsOneWidget);
   });
+
+  testWidgets('inspector aligns the real layer vertically on the page', (
+    tester,
+  ) async {
+    final document = DesignDocument(
+      id: 'align_project',
+      name: 'Align test',
+      widthMm: 100,
+      heightMm: 100,
+      updatedAt: DateTime.utc(2026),
+      elements: [
+        DesignElement(
+          id: 'shape_1',
+          kind: ElementKind.rectangle,
+          x: 10,
+          y: 10,
+          width: 30,
+          height: 20,
+        ),
+      ],
+    );
+    final controller = DesignController(document)..select('shape_1');
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ObjectInspector(
+            controller: controller,
+            onEditText: () {},
+            onFillPhotoSlot: () {},
+            onDelete: () {},
+          ),
+        ),
+      ),
+    );
+
+    Future<void> tapTool(String tooltip) async {
+      final finder = find.byTooltip(tooltip);
+      await tester.ensureVisible(finder);
+      await tester.pump();
+      await tester.tap(finder);
+      await tester.pump();
+    }
+
+    await tapTool('Middle of page');
+    expect(controller.selected!.y, closeTo(40, 0.0001));
+    await tapTool('Align object bottom');
+    expect(controller.selected!.y, closeTo(80, 0.0001));
+    await tapTool('Align object top');
+    expect(controller.selected!.y, 0);
+    expect(controller.selected!.x, 10, reason: 'horizontal position kept');
+  });
 }

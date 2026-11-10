@@ -7,6 +7,9 @@ import '../core/ids.dart';
 import 'design_document.dart';
 import 'geometry.dart';
 
+/// Vertical placement of an object relative to the page.
+enum PageVerticalAlignment { top, middle, bottom }
+
 /// Snapshot-based history; a drag is one undoable command, not hundreds.
 class DesignController extends ChangeNotifier {
   DesignController(this.document, {this.onChanged});
@@ -183,15 +186,41 @@ class DesignController extends ChangeNotifier {
     _commit(document.copyWith(elements: items));
   }
 
+  /// Move the selected object's unrotated bounding box. Does nothing, and adds
+  /// no undo entry, when the object is already at the requested position.
+  void _placeSelected({double? x, double? y}) {
+    final item = selected;
+    if (item == null) return;
+    final nextX = x ?? item.x;
+    final nextY = y ?? item.y;
+    if ((nextX - item.x).abs() < 0.001 && (nextY - item.y).abs() < 0.001) {
+      return;
+    }
+    updateSelected((e) => e.copyWith(x: nextX, y: nextY));
+  }
+
   void alignHorizontal(TextAlignment alignment) {
-    updateSelected(
-      (e) => e.copyWith(
-        x: switch (alignment) {
-          TextAlignment.left => 0,
-          TextAlignment.center => (document.widthMm - e.width) / 2,
-          TextAlignment.right => document.widthMm - e.width,
-        },
-      ),
+    final item = selected;
+    if (item == null) return;
+    _placeSelected(
+      x: switch (alignment) {
+        TextAlignment.left => 0.0,
+        TextAlignment.center => (document.widthMm - item.width) / 2,
+        TextAlignment.right => document.widthMm - item.width,
+      },
+    );
+  }
+
+  /// Align the selected object to the top, middle or bottom of the page.
+  void alignVertical(PageVerticalAlignment alignment) {
+    final item = selected;
+    if (item == null) return;
+    _placeSelected(
+      y: switch (alignment) {
+        PageVerticalAlignment.top => 0.0,
+        PageVerticalAlignment.middle => (document.heightMm - item.height) / 2,
+        PageVerticalAlignment.bottom => document.heightMm - item.height,
+      },
     );
   }
 

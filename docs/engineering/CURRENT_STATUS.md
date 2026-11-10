@@ -1,5 +1,11 @@
 # DeskSuite — current engineering status
 
+## Creative Studio vertical alignment — 2026-11-06
+
+- `DesignController.alignVertical` places the selected object at the top, middle or bottom of the page, with three matching inspector buttons beside the horizontal alignment row. It edits the real object position, participates in undo/redo and persists in `.dsdesign` without a format-version change.
+- Page alignment returns the document unchanged when the object is already in place, so repeated alignment no longer pushes empty undo entries; alignment uses the unrotated bounding box, so rotated objects are aligned by their box rather than their visual extent.
+- Verified in this environment with Flutter 3.47.8 / Dart 3.13.7: `flutter analyze --no-pub` (no issues) and `flutter test --no-pub test/design_engine_test.dart test/design_editor_widgets_test.dart` (17 tests passed, including vertical geometry, undo/redo, persistence and the inspector action). No Android build or device check was performed.
+
 **Updated:** 2026-11-01. This is a source and CI status note, not a signed or device-verified release. The earlier detailed capability inventory below is retained as the last consolidated engineering snapshot; consult the newer [repository audit](REPOSITORY_AUDIT_2026-11-01.md) for the 2026-11-01 source-tree review and [master product engineering plan](MASTER_PRODUCT_ENGINEERING_PLAN.md) for the governing architecture and workspace requirements.
 
 ## Dune Phosphate palette — 2026-11-10

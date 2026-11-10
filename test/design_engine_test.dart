@@ -126,6 +126,52 @@ void main() {
     expect(controller.selected!.opacity, 0.5);
   });
 
+  test('vertical alignment is page-relative and undoable', () {
+    final controller = DesignController(sample());
+    addTearDown(controller.dispose);
+    controller.select('text_1'); // 30 mm tall on a 297 mm page, x = 10
+
+    controller.alignVertical(PageVerticalAlignment.top);
+    expect(controller.selected!.y, 0);
+    controller.alignVertical(PageVerticalAlignment.middle);
+    expect(controller.selected!.y, closeTo(133.5, 0.0001));
+    controller.alignVertical(PageVerticalAlignment.bottom);
+    expect(controller.selected!.y, closeTo(267, 0.0001));
+    expect(controller.selected!.x, 10, reason: 'horizontal position kept');
+
+    final reopened = DesignDocument.decode(controller.document.encode());
+    expect(reopened.elements.first.y, closeTo(267, 0.0001));
+
+    controller.undo();
+    expect(controller.selected!.y, closeTo(133.5, 0.0001));
+    controller.redo();
+    expect(controller.selected!.y, closeTo(267, 0.0001));
+  });
+
+  test('aligning an object that is already in place adds no undo entry', () {
+    final controller = DesignController(sample());
+    addTearDown(controller.dispose);
+
+    // Nothing selected: no edit and no history.
+    controller.alignVertical(PageVerticalAlignment.middle);
+    controller.alignHorizontal(TextAlignment.center);
+    expect(controller.canUndo, isFalse);
+
+    controller.select('text_1');
+    controller.alignVertical(PageVerticalAlignment.top);
+    controller.alignVertical(PageVerticalAlignment.top);
+    controller.alignHorizontal(TextAlignment.left);
+    controller.alignHorizontal(TextAlignment.left);
+
+    // Only the two real moves are undoable, one step each.
+    controller.undo();
+    expect(controller.selected!.x, 10);
+    expect(controller.selected!.y, 0);
+    controller.undo();
+    expect(controller.selected!.y, 20);
+    expect(controller.canUndo, isFalse);
+  });
+
   test(
     'rejects invalid versions, dangerous identifiers and bad dimensions',
     () {
