@@ -31,7 +31,7 @@ import 'workspace/file_gateway.dart';
 
 const ink = Color(0xFF15243A);
 const paper = Color(0xFFF3F7FC);
-const accent = Color(0xFF1C58AC);
+const accent = Color(0xFF14807A);
 const muted = Color(0xFF596B81);
 
 class LocalStore {
@@ -2221,7 +2221,9 @@ class _BusinessPageState extends State<BusinessPage> {
         });
       }
     } catch (error) {
-      note('Could not save the shop currency. The file was not changed: $error');
+      note(
+        'Could not save the shop currency. The file was not changed: $error',
+      );
     }
   }
 
@@ -2327,7 +2329,9 @@ class _BusinessPageState extends State<BusinessPage> {
       await _load();
       if (mounted) note('Business backup restored.');
     } catch (error) {
-      note('Could not restore this backup. Stored files were not intentionally changed: $error');
+      note(
+        'Could not restore this backup. Stored files were not intentionally changed: $error',
+      );
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -2375,24 +2379,27 @@ class _BusinessPageState extends State<BusinessPage> {
       note('Could not read the shop currency, so the sale was not recorded.');
       return;
     }
-    final lines = await showDialog<List<CartSaleLineRequest>>(
+    final draft = await showDialog<_SaleDraft>(
       context: context,
       builder: (_) =>
           _NewSaleDialog(catalogue: current.products, currency: shopCurrency),
     );
-    if (lines == null || !mounted) return;
+    if (draft == null || !mounted) return;
     setState(() => busy = true);
     try {
       final outcome = await repository.recordCartSale(
-        lines: lines,
+        lines: draft.lines,
         currency: shopCurrency,
+        paymentMethod: draft.paymentMethod,
       );
       if (mounted) setState(() => snapshot = outcome.snapshot);
       if (mounted) {
+        final paidWith = salePaymentMethodLabel(draft.paymentMethod);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Sale recorded · ${outcome.receipt(shopName: widget.shopName).formattedTotal} · ${outcome.sale.items.length} item(s)',
+              'Sale recorded · ${outcome.receipt(shopName: widget.shopName).formattedTotal} · ${outcome.sale.items.length} item(s)'
+              '${paidWith == null ? '' : ' · $paidWith'}',
             ),
             action: SnackBarAction(
               label: 'Receipt',
@@ -2404,6 +2411,45 @@ class _BusinessPageState extends State<BusinessPage> {
       await _reloadSales();
     } catch (error) {
       note('Could not record the sale. No change was made: $error');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  /// Refunds part or all of a stored sale. Only the chosen units return to
+  /// stock, and the receipt keeps the refund in its log.
+  Future<void> refundStoredSale(SaleRecord record) async {
+    if (busy || record.isRefunded) return;
+    final draft = await showDialog<_RefundDraft>(
+      context: context,
+      builder: (_) => _RefundSaleDialog(record: record),
+    );
+    if (draft == null || !mounted) return;
+    setState(() => busy = true);
+    try {
+      final outcome = await repository.refundSaleLines(
+        number: record.number,
+        lines: draft.lines,
+        reason: draft.reason,
+      );
+      if (mounted) setState(() => snapshot = outcome.snapshot);
+      await _reloadSales();
+      if (mounted) {
+        final units = draft.lines.fold(0, (sum, line) => sum + line.quantity);
+        final amount = draft.lines.fold(
+          0,
+          (sum, line) =>
+              sum + record.unitPriceFor(line.productId) * line.quantity,
+        );
+        note(
+          'Receipt ${record.receiptNumber} '
+          '${outcome.sale.isRefunded ? 'refunded in full' : 'partially refunded'} · '
+          '$units unit(s) returned · '
+          '${formatGroupedMoney(amount, currency: record.currency)}',
+        );
+      }
+    } catch (error) {
+      note('Could not refund this sale. No change was made: $error');
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -2421,6 +2467,8 @@ class _BusinessPageState extends State<BusinessPage> {
         shopName: widget.shopName,
         currency: record.currency,
         lines: record.toLines(),
+        paymentMethod: record.paymentMethod,
+        refundSummary: record.refundSummary,
       );
       final bytes = await buildReceiptPdf(receipt);
       final printed = await (widget.printer ?? const SystemPrintGateway())
@@ -2516,7 +2564,8 @@ class _BusinessPageState extends State<BusinessPage> {
           const SizedBox(height: 10),
           Metric(
             label: 'Stock value at listed prices',
-            value: '$shopCurrency ${formatMinorAmount(current.stockValueMinor)}',
+            value:
+                '$shopCurrency ${formatMinorAmount(current.stockValueMinor)}',
             icon: Icons.payments_outlined,
           ),
           const SizedBox(height: 14),
@@ -2542,7 +2591,10 @@ class _BusinessPageState extends State<BusinessPage> {
                   children: [
                     const Text(
                       'Shop settings',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
@@ -2553,8 +2605,7 @@ class _BusinessPageState extends State<BusinessPage> {
                       isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'Receipt currency',
-                        helperText:
-                            'Labels receipts only. Prices stay in one currency; no rates are fetched.',
+                        helperText: 'Labels receipts only. Prices stay in one currency; no rates are fetched.',
                         border: OutlineInputBorder(),
                       ),
                       items: [
@@ -2634,7 +2685,8 @@ class _BusinessPageState extends State<BusinessPage> {
                   ),
                   trailing: IconButton(
                     tooltip: 'Record one unit sold',
-                    onPressed: !busy && product.stock > 0 && settingsError == null
+                    onPressed:
+                        !busy && product.stock > 0 && settingsError == null
                         ? () => sell(product)
                         : null,
                     icon: const Icon(Icons.point_of_sale_outlined),
@@ -2712,16 +2764,30 @@ class _BusinessPageState extends State<BusinessPage> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         subtitle: Text(
-                          '${_receiptTimestamp(record)} · '
-                          '${record.isCartSale ? '${record.items.length} products' : '1 product'}'
-                          ' · ${record.priceTier}',
+                          _receiptSubtitle(record),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        trailing: IconButton(
-                          tooltip: 'Reprint receipt',
-                          onPressed: busy ? null : () => reprintStoredReceipt(record),
-                          icon: const Icon(Icons.print_outlined),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: 'Reprint receipt',
+                              onPressed: busy
+                                  ? null
+                                  : () => reprintStoredReceipt(record),
+                              icon: const Icon(Icons.print_outlined),
+                            ),
+                            if (!record.isRefunded)
+                              IconButton(
+                                key: ValueKey('refund-sale-${record.number}'),
+                                tooltip: 'Refund sale',
+                                onPressed: busy
+                                    ? null
+                                    : () => refundStoredSale(record),
+                                icon: const Icon(Icons.undo_rounded),
+                              ),
+                          ],
                         ),
                       ),
                     ),
@@ -2738,18 +2804,189 @@ class _BusinessPageState extends State<BusinessPage> {
         ],
         const SizedBox(height: 14),
         InfoNote(
-          text: 'Sales and itemised baskets are recorded on this device with their receipts kept automatically; store also stays offline. A backup bundles the catalogue, receipts and settings into one file you can keep anywhere, including a cloud drive. Still missing: refunds, discounts, payment methods, supplier records, expenses, profit reports and tax-compliant invoicing.',
+          text: 'Sales and itemised baskets are recorded on this device with their receipts kept automatically, and the shop stays offline. A sale can record how the customer paid (cash, mobile money, card or bank transfer); quick one-tap sales leave it unrecorded. Refunding a receipt returns units to stock, either all of what is left or only some of its lines, and keeps the refund in the receipt log. A backup bundles the catalogue, receipts and settings into one file you can keep anywhere, including a cloud drive. Still missing: discounts, supplier records, expenses, profit reports and tax-compliant invoicing.',
         ),
       ],
     );
   }
 
-  String _receiptTimestamp(SaleRecord record) {
-    final moment = record.soldAt.toLocal();
-    String two(int value) => value.toString().padLeft(2, '0');
-    return '${moment.year}-${two(moment.month)}-${two(moment.day)} '
-        '${two(moment.hour)}:${two(moment.minute)}';
+  String _receiptTimestamp(SaleRecord record) =>
+      formatSaleTimestamp(record.soldAt);
+
+  /// The stored-receipt line: what was sold, how it was paid and what has
+  /// already been refunded, all from the record itself.
+  String _receiptSubtitle(SaleRecord record) {
+    final payment = salePaymentMethodLabel(record.paymentMethod);
+    final lines = record.lineItems.length;
+    final products = lines == 1 ? '1 product' : '$lines products';
+    final refund = record.isRefunded
+        ? ' · refunded'
+        : record.isPartiallyRefunded
+        ? ' · ${record.unitsRefunded} of ${record.totalUnits} refunded'
+        : '';
+    return '${_receiptTimestamp(record)} · $products · ${record.priceTier}'
+        '${payment == null ? '' : ' · $payment'}$refund';
   }
+}
+
+class _RefundSaleDialog extends StatefulWidget {
+  const _RefundSaleDialog({required this.record});
+  final SaleRecord record;
+  @override
+  State<_RefundSaleDialog> createState() => _RefundSaleDialogState();
+}
+
+class _RefundSaleDialogState extends State<_RefundSaleDialog> {
+  final note = TextEditingController();
+
+  @override
+  void dispose() {
+    note.dispose();
+    super.dispose();
+  }
+
+  /// Units to give back per product. It starts at everything still standing,
+  /// so a full void stays one tap and a partial refund is a few decrements.
+  late final picked = {...widget.record.remainingUnitsByProduct};
+
+  int get _units => picked.values.fold(0, (sum, value) => sum + value);
+
+  int get _amountMinor => picked.entries.fold(
+    0,
+    (sum, entry) => sum + widget.record.unitPriceFor(entry.key) * entry.value,
+  );
+
+  void _step(String productId, int delta) {
+    final remaining = widget.record.remainingUnitsFor(productId);
+    final next = (picked[productId] ?? 0) + delta;
+    if (next < 0 || next > remaining) return;
+    setState(() {
+      if (next == 0) {
+        picked.remove(productId);
+      } else {
+        picked[productId] = next;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final record = widget.record;
+    return AlertDialog(
+      title: const Text('Refund this sale?'),
+      content: SizedBox(
+        width: 340,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Receipt ${record.receiptNumber} · '
+                '${formatGroupedMoney(record.totalMinor, currency: record.currency)} · '
+                '${record.remainingUnits} of ${record.totalUnits} unit(s) still '
+                'standing',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Only the units you choose return to stock. The refund is kept in '
+                'the receipt log and cannot be undone from the app.',
+              ),
+              const SizedBox(height: 6),
+              for (final item in record.lineItems)
+                if (record.remainingUnitsFor(item.productId) > 0)
+                  ListTile(
+                    key: ValueKey('refund-line-${item.productId}'),
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      item.productName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      '${picked[item.productId] ?? 0} of '
+                      '${record.remainingUnitsFor(item.productId)} '
+                      '${item.unitLabel}(s) · '
+                      '${formatGroupedMoney(item.unitPriceMinor, currency: record.currency)} each',
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          key: ValueKey('refund-dec-${item.productId}'),
+                          tooltip: 'Refund one ${item.unitLabel} fewer',
+                          onPressed: (picked[item.productId] ?? 0) == 0
+                              ? null
+                              : () => _step(item.productId, -1),
+                          icon: const Icon(Icons.remove_circle_outline),
+                        ),
+                        IconButton(
+                          key: ValueKey('refund-inc-${item.productId}'),
+                          tooltip: 'Refund one ${item.unitLabel} more',
+                          onPressed:
+                              (picked[item.productId] ?? 0) >=
+                                  record.remainingUnitsFor(item.productId)
+                              ? null
+                              : () => _step(item.productId, 1),
+                          icon: const Icon(Icons.add_circle_outline),
+                        ),
+                      ],
+                    ),
+                  ),
+              const SizedBox(height: 6),
+              Text(
+                'Refund value: '
+                '${formatGroupedMoney(_amountMinor, currency: record.currency)}'
+                ' · $_units unit(s)',
+                key: const Key('refund-total'),
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                key: const Key('refund-reason'),
+                controller: note,
+                maxLength: 200,
+                decoration: const InputDecoration(
+                  labelText: 'Reason (optional)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          key: const Key('confirm-refund'),
+          onPressed: _units == 0
+              ? null
+              : () => Navigator.pop(
+                  context,
+                  _RefundDraft([
+                    for (final entry in picked.entries)
+                      RefundLineRequest(
+                        productId: entry.key,
+                        quantity: entry.value,
+                      ),
+                  ], note.text.trim()),
+                ),
+          child: Text(_units == 0 ? 'Refund' : 'Refund $_units unit(s)'),
+        ),
+      ],
+    );
+  }
+}
+
+/// What the refund dialog chose: per-line units and the optional note.
+class _RefundDraft {
+  const _RefundDraft(this.lines, this.reason);
+  final List<RefundLineRequest> lines;
+  final String? reason;
 }
 
 class _ProductDraft {
@@ -2887,9 +3124,7 @@ class _AddProductDialogState extends State<_AddProductDialog> {
               validator: (v) {
                 if (wholesalePrice.text.trim().isEmpty) return null;
                 final value = int.tryParse(v ?? '');
-                return value == null ||
-                        value < 1 ||
-                        value > maxSaleQuantity
+                return value == null || value < 1 || value > maxSaleQuantity
                     ? 'Enter a quantity between 1 and $maxSaleQuantity'
                     : null;
               },
@@ -2954,6 +3189,9 @@ class _NewSaleDialog extends StatefulWidget {
 class _NewSaleDialogState extends State<_NewSaleDialog> {
   final search = TextEditingController();
   final cart = <String, _CartEntry>{};
+
+  /// `null` means the operator did not record how the customer paid.
+  String? payment;
 
   @override
   void dispose() {
@@ -3037,8 +3275,9 @@ class _NewSaleDialogState extends State<_NewSaleDialog> {
                               child: Text('Wholesale'),
                             ),
                         ],
-                        onChanged: (tier) =>
-                            setState(() => entry.wholesale = tier == 'wholesale'),
+                        onChanged: (tier) => setState(
+                          () => entry.wholesale = tier == 'wholesale',
+                        ),
                       ),
                     ),
                     Text(
@@ -3178,6 +3417,30 @@ class _NewSaleDialogState extends State<_NewSaleDialog> {
               ),
             ),
             const SizedBox(height: 8),
+            DropdownButtonFormField<String?>(
+              key: const Key('sale-payment'),
+              initialValue: payment,
+              isExpanded: true,
+              isDense: true,
+              decoration: const InputDecoration(
+                labelText: 'Payment method',
+                helperText: 'Recorded on the stored receipt.',
+                border: OutlineInputBorder(),
+              ),
+              items: [
+                const DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text('Not recorded'),
+                ),
+                for (final method in salePaymentMethods)
+                  DropdownMenuItem<String?>(
+                    value: method,
+                    child: Text(salePaymentMethodLabel(method)!),
+                  ),
+              ],
+              onChanged: (method) => setState(() => payment = method),
+            ),
+            const SizedBox(height: 8),
             Text(
               'Total: $currency ${formatMinorAmount(_totalMinor)} · $_itemCount item(s)',
               key: const Key('cart-total'),
@@ -3197,20 +3460,27 @@ class _NewSaleDialogState extends State<_NewSaleDialog> {
               ? null
               : () => Navigator.pop(
                   context,
-                  [
+                  _SaleDraft([
                     for (final entry in cart.values)
                       CartSaleLineRequest(
                         productId: entry.product.id,
                         quantity: entry.quantity,
                         wholesale: entry.wholesale,
                       ),
-                  ],
+                  ], payment),
                 ),
           child: const Text('Complete sale'),
         ),
       ],
     );
   }
+}
+
+/// What the new-sale dialog assembled: the basket and how it was paid.
+class _SaleDraft {
+  const _SaleDraft(this.lines, this.paymentMethod);
+  final List<CartSaleLineRequest> lines;
+  final String? paymentMethod;
 }
 
 class _BackupRestoreDialog extends StatelessWidget {

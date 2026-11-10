@@ -1,32 +1,38 @@
 import 'package:flutter/material.dart';
 
-/// DeskSuite Slate Coral design system.
-/// The original brand asset and deskTheme / BrandMark interfaces are retained.
-const ink = Color(0xff0f172a);
-const surface = Color(0xff1e293b);
-const elevated = Color(0xff273449);
-const accent = Color(0xffff6b5b);
-const accentDeep = Color(0xffe8505f);
-const paper = Color(0xfff1f5f9);
-const muted = Color(0xff94a3b8);
-const line = Color(0x14ffffff);
+/// DeskSuite Dune Phosphate design system.
+///
+/// Warm dune sand and paper carry the neutrals; phosphate teal is the working
+/// accent and date-fruit terracotta is reserved for emphasis. Both palettes are
+/// deliberate, and every text pairing here is checked by `brand_theme_test`.
+/// The original brand asset and the deskTheme / BrandMark interfaces are kept.
+const ink = Color(0xff211d16);
+const surface = Color(0xff2a251d);
+const elevated = Color(0xff352f25);
+const accent = Color(0xff14807a);
+const accentDeep = Color(0xff0d5f5a);
+const paper = Color(0xfff6f0e4);
+const muted = Color(0xff9c9484);
+const line = Color(0x1affffff);
 const deskSuiteBrandAsset = 'assets/brand/desksuite-mark.png';
 
-const coralGradient = LinearGradient(
+const duneGradient = LinearGradient(
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
-  colors: [Color(0xffff8a5b), accentDeep],
+  colors: [Color(0xff2fa79b), accentDeep],
 );
 
+/// Studio tones are mixed from the same sand, mineral and clay family so every
+/// workspace still reads as one product in light and dark themes.
 class SectionTones {
-  static const scan = Color(0xffff6b5b);
-  static const pdf = Color(0xfff45b78);
-  static const photo = Color(0xfff5b84a);
-  static const text = Color(0xff3cc6d0);
-  static const docs = Color(0xff6aa0ff);
-  static const create = Color(0xffe56bd0);
-  static const print = Color(0xff4fd09a);
-  static const business = Color(0xffc9d860);
+  static const scan = Color(0xffc2601f);
+  static const pdf = Color(0xffa84a33);
+  static const photo = Color(0xffcf9a3a);
+  static const text = Color(0xff14807a);
+  static const docs = Color(0xff3f7f93);
+  static const create = Color(0xff8b5f96);
+  static const print = Color(0xff4f7a5b);
+  static const business = Color(0xff8a7b39);
 }
 
 BoxDecoration toneChip(Color tone, {double radius = 12}) => BoxDecoration(
@@ -37,42 +43,50 @@ BoxDecoration toneChip(Color tone, {double radius = 12}) => BoxDecoration(
 
 ThemeData deskTheme(Brightness brightness) {
   final dark = brightness == Brightness.dark;
-  final background = dark ? ink : const Color(0xfff8fafc);
-  final cardSurface = dark ? surface : Colors.white;
-  final raised = dark ? elevated : const Color(0xffe9eef5);
-  final foreground = dark ? paper : ink;
-  final subtle = dark ? muted : const Color(0xff526174);
-  final border = dark ? line : const Color(0xffdbe3ed);
-  final primary = dark ? accent : const Color(0xffc43f38);
-  final onPrimary = dark ? ink : Colors.white;
-  final scheme = ColorScheme.fromSeed(
-    seedColor: accent,
-    brightness: brightness,
-  ).copyWith(
-    primary: primary,
-    onPrimary: onPrimary,
-    secondary: dark ? elevated : const Color(0xffe8edf5),
-    onSecondary: foreground,
-    surface: cardSurface,
-    onSurface: foreground,
-    outline: border,
-    error: dark ? const Color(0xfff2555a) : const Color(0xffb42332),
-    surfaceContainerHighest: raised,
-  );
+  final background = dark ? const Color(0xff171410) : paper;
+  final cardSurface = dark ? surface : const Color(0xfffffdf7);
+  final raised = dark ? elevated : const Color(0xffece2cf);
+  final foreground = dark ? const Color(0xfff3eada) : ink;
+  final subtle = dark ? muted : const Color(0xff6d6555);
+  final border = dark ? line : const Color(0xffe2d7c3);
+  final primary = dark ? const Color(0xff4fc3b4) : accentDeep;
+  final onPrimary = dark ? const Color(0xff10231f) : Colors.white;
+  final scheme = ColorScheme.fromSeed(seedColor: accent, brightness: brightness)
+      .copyWith(
+        primary: primary,
+        onPrimary: onPrimary,
+        secondary: dark ? elevated : const Color(0xffe7dcc6),
+        onSecondary: foreground,
+        surface: cardSurface,
+        onSurface: foreground,
+        outline: border,
+        error: dark ? const Color(0xfff08a7a) : const Color(0xffa3341f),
+        surfaceContainerHighest: raised,
+      );
   final base = ThemeData(useMaterial3: true, brightness: brightness).textTheme;
-  final typography = base.apply(
-    bodyColor: foreground,
-    displayColor: foreground,
-    fontFamily: 'DeskSuiteSans',
-  ).copyWith(
-    headlineMedium: base.headlineMedium?.copyWith(
-      fontWeight: FontWeight.w700, letterSpacing: -.5, color: foreground),
-    titleMedium: base.titleMedium?.copyWith(
-      fontWeight: FontWeight.w700, color: foreground),
-    labelSmall: base.labelSmall?.copyWith(
-      letterSpacing: 2, fontWeight: FontWeight.w700, color: subtle),
-    bodySmall: base.bodySmall?.copyWith(color: subtle),
-  );
+  final typography = base
+      .apply(
+        bodyColor: foreground,
+        displayColor: foreground,
+        fontFamily: 'DeskSuiteSans',
+      )
+      .copyWith(
+        headlineMedium: base.headlineMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -.5,
+          color: foreground,
+        ),
+        titleMedium: base.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: foreground,
+        ),
+        labelSmall: base.labelSmall?.copyWith(
+          letterSpacing: 2,
+          fontWeight: FontWeight.w700,
+          color: subtle,
+        ),
+        bodySmall: base.bodySmall?.copyWith(color: subtle),
+      );
   final rounded = RoundedRectangleBorder(
     borderRadius: BorderRadius.circular(12),
   );
@@ -174,12 +188,16 @@ ThemeData deskTheme(Brightness brightness) {
     ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith(
-        (states) => states.contains(WidgetState.selected) ? onPrimary : subtle),
+        (states) => states.contains(WidgetState.selected) ? onPrimary : subtle,
+      ),
       trackColor: WidgetStateProperty.resolveWith(
-        (states) => states.contains(WidgetState.selected) ? primary : raised),
+        (states) => states.contains(WidgetState.selected) ? primary : raised,
+      ),
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
-      color: primary, linearTrackColor: raised),
+      color: primary,
+      linearTrackColor: raised,
+    ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       backgroundColor: dark ? raised : ink,
@@ -189,9 +207,7 @@ ThemeData deskTheme(Brightness brightness) {
     dialogTheme: DialogThemeData(
       backgroundColor: cardSurface,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: cardSurface,
@@ -218,9 +234,8 @@ class BrandMark extends StatelessWidget {
       errorBuilder: (context, error, stackTrace) => Container(
         width: size,
         height: size,
-        decoration: const BoxDecoration(gradient: coralGradient),
-        child: Icon(Icons.description_outlined,
-          size: size * .55, color: ink),
+        decoration: const BoxDecoration(gradient: duneGradient),
+        child: Icon(Icons.description_outlined, size: size * .55, color: ink),
       ),
     ),
   );

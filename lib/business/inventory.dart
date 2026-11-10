@@ -143,6 +143,30 @@ class InventoryProduct {
       extraFields: extraFields,
     );
   }
+
+  /// Returns [quantity] units to stock when a sale is refunded.
+  InventoryProduct restoreUnits(int quantity) {
+    if (quantity < 1 || quantity > maxSaleQuantity) {
+      throw const FormatException('Invalid refund quantity.');
+    }
+    if (stock + quantity > maxStockCount) {
+      throw StateError('Stock would exceed its limit.');
+    }
+    if (sold < quantity) {
+      throw StateError('The sold counter would become negative.');
+    }
+    return InventoryProduct(
+      id: id,
+      name: name,
+      priceMinor: priceMinor,
+      wholesalePriceMinor: wholesalePriceMinor,
+      wholesaleMinQuantity: wholesaleMinQuantity,
+      unitLabel: unitLabel,
+      stock: stock + quantity,
+      sold: sold - quantity,
+      extraFields: extraFields,
+    );
+  }
 }
 
 class InventorySnapshot {
@@ -259,6 +283,7 @@ class InventoryRepository {
     int quantity = 1,
     String currency = 'TSh',
     bool wholesale = false,
+    String? paymentMethod,
   }) => _transaction(() async {
     if (!isSafeId(id)) {
       throw const FormatException('Invalid product identifier.');
@@ -302,6 +327,7 @@ class InventoryRepository {
       currency: currency,
       unitLabel: product.unitLabel,
       priceTier: wholesale ? 'wholesale' : 'retail',
+      paymentMethod: paymentMethod,
     );
     if (record.number > 999999) {
       throw StateError(
@@ -340,6 +366,7 @@ class InventoryRepository {
   Future<SaleOutcome> recordCartSale({
     required List<CartSaleLineRequest> lines,
     String currency = 'TSh',
+    String? paymentMethod,
   }) => _transaction(() async {
     if (lines.isEmpty) {
       throw const FormatException('A sale needs at least one item.');
@@ -352,9 +379,7 @@ class InventoryRepository {
     if (!isSupportedBusinessCurrency(currency)) {
       throw const FormatException('Choose a supported shop currency.');
     }
-    final requested = lines
-        .map((line) => line.productId)
-        .toSet();
+    final requested = lines.map((line) => line.productId).toSet();
     if (requested.length != lines.length) {
       throw const FormatException(
         'Each catalogue product may appear once in a sale. Use its quantity field instead.',
@@ -369,7 +394,9 @@ class InventoryRepository {
     for (final line in lines) {
       final product = byId[line.productId];
       if (product == null) {
-        throw StateError('A product in this sale is no longer in the catalogue.');
+        throw StateError(
+          'A product in this sale is no longer in the catalogue.',
+        );
       }
       if (line.quantity < 1 || line.quantity > maxSaleQuantity) {
         throw const FormatException('Invalid sale quantity.');
@@ -422,6 +449,7 @@ class InventoryRepository {
       unitLabel: items.first.unitLabel,
       priceTier: items.first.priceTier,
       items: items,
+      paymentMethod: paymentMethod,
     );
     if (record.number > 999999) {
       throw StateError(
@@ -430,8 +458,7 @@ class InventoryRepository {
     }
     record.toLines(); // Reject an unprintable line before the stock write.
     final next = [
-      for (final product in current.products)
-        updates[product.id] ?? product,
+      for (final product in current.products) updates[product.id] ?? product,
     ];
     final previousText = current.encodeJson();
     final snapshot = await _save(next);
@@ -457,8 +484,121 @@ class InventoryRepository {
     return SaleOutcome(snapshot: snapshot, sale: record);
   });
 
+  /// Voids the rest of a stored sale: every unit still standing returns to
+  /// catalogue stock, the sold counter is reduced and the receipt is marked
+  /// refunded in full.
+  ///
+  /// The refund is resolved and validated in full before either file changes,
+  /// and a failed sales-log write rolls the catalogue back. As with
+  /// [recordSale], an interruption between the two writes can still leave them
+  /// inconsistent; this is not a transactional POS ledger.
+  Future<RefundOutcome> refundSale({required int number, String? reason}) =>
+      _refund(number: number, requested: null, reason: reason);
+
+  /// Gives back [lines] units of a stored sale and leaves the rest standing.
+  ///
+  /// Every line is checked against what is still on the receipt before any
+  /// stock changes, so a refund can never return more units than were sold or
+  /// touch a product that is not on the receipt.
+  Future<RefundOutcome> refundSaleLines({
+    required int number,
+    required List<RefundLineRequest> lines,
+    String? reason,
+  }) async {
+    if (lines.isEmpty) {
+      throw const FormatException('Choose at least one unit to refund.');
+    }
+    final requested = <String, int>{};
+    for (final line in lines) {
+      if (requested.containsKey(line.productId)) {
+        throw const FormatException(
+          'Each product may appear once in a refund. Use its quantity instead.',
+        );
+      }
+      requested[line.productId] = line.quantity;
+    }
+    return _refund(number: number, requested: requested, reason: reason);
+  }
+
+  /// The one refund path: [requested] is null for a full void of whatever
+  /// remains, or the exact units to give back per product for a partial one.
+  Future<RefundOutcome> _refund({
+    required int number,
+    required Map<String, int>? requested,
+    String? reason,
+  }) => _transaction(() async {
+    if (number < 1 || number > 999999) {
+      throw const FormatException('Invalid receipt number.');
+    }
+    final trimmed = reason?.trim();
+    if (trimmed != null && trimmed.length > maxRefundNoteLength) {
+      throw const FormatException('Keep the refund note under 200 characters.');
+    }
+    final current = await load();
+    final pending = List.of(await loadSales());
+    final index = pending.indexWhere((sale) => sale.number == number);
+    if (index < 0) {
+      throw StateError('Receipt $number is not in the stored sales log.');
+    }
+    final sale = pending[index];
+    if (sale.isRefunded) {
+      throw StateError('Receipt $number is already refunded in full.');
+    }
+    // The receipt refuses unknown products, zero units and any line above
+    // what is still standing before this touches either file.
+    final refunded = sale.withRefund(
+      at: DateTime.now(),
+      quantities: requested ?? sale.remainingUnitsByProduct,
+      reason: trimmed,
+    );
+    final next = [...current.products];
+    for (final entry in refunded.refunds.last.quantities.entries) {
+      final at = next.indexWhere((product) => product.id == entry.key);
+      if (at < 0) {
+        throw StateError(
+          'A product on receipt $number is no longer in the catalogue. Add it back before refunding.',
+        );
+      }
+      next[at] = next[at].restoreUnits(entry.value);
+    }
+    final previousText = current.encodeJson();
+    final snapshot = await _save(next);
+    final log = List.of(pending)..[index] = refunded;
+    try {
+      await files.writeText(
+        'sales.json',
+        jsonEncode(log.map((entry) => entry.toJson()).toList()),
+      );
+    } catch (error) {
+      try {
+        await files.writeText('products.json', previousText);
+      } catch (_) {
+        throw StateError(
+          'The sales log and stock rollback both failed. Check the local records and backups before continuing.',
+        );
+      }
+      throw StateError('The refund was not recorded: $error');
+    }
+    return RefundOutcome(snapshot: snapshot, sale: refunded);
+  });
+
   Future<InventorySnapshot> recordOneUnit(String id) async =>
       (await recordSale(id: id)).snapshot;
+}
+
+/// The stock after a refund and the refunded sale record.
+class RefundOutcome {
+  const RefundOutcome({required this.snapshot, required this.sale});
+  final InventorySnapshot snapshot;
+  final SaleRecord sale;
+}
+
+/// One requested refund line: which product on the receipt, and how many of
+/// its sold units to give back.
+class RefundLineRequest {
+  const RefundLineRequest({required this.productId, required this.quantity});
+  final String productId;
+  final int quantity;
 }
 
 /// One requested cart line: which product, how many, and which price tier.
@@ -488,5 +628,7 @@ class SaleOutcome {
         shopName: shopName,
         currency: sale.currency,
         lines: sale.toLines(),
+        paymentMethod: sale.paymentMethod,
+        refundSummary: sale.refundSummary,
       );
 }

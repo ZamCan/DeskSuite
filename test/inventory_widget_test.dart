@@ -60,6 +60,7 @@ class FakeSalesRepository extends InventoryRepository {
     int quantity = 1,
     String currency = 'TSh',
     bool wholesale = false,
+    String? paymentMethod,
   }) async {
     _product = _product.recordUnits(quantity);
     final sale = SaleRecord(
@@ -72,6 +73,7 @@ class FakeSalesRepository extends InventoryRepository {
       currency: currency,
       unitLabel: _product.unitLabel,
       priceTier: wholesale ? 'wholesale' : 'retail',
+      paymentMethod: paymentMethod,
     );
     return SaleOutcome(snapshot: InventorySnapshot([_product]), sale: sale);
   }

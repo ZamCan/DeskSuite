@@ -30,6 +30,30 @@ Future<void> waitUntil(
   fail('Timed out after ${timeout.inSeconds}s waiting for the app.');
 }
 
+/// Scrolls a lazy page while real asynchronous work settles until [target] is
+/// built, then brings it into view. [reveal] alone cannot do this: the child a
+/// test needs may not exist until a later file read completes.
+Future<void> revealWhenLoaded(
+  WidgetTester tester,
+  Finder target, {
+  Duration timeout = const Duration(seconds: 30),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (DateTime.now().isBefore(deadline)) {
+    await tester.pump(const Duration(milliseconds: 30));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 10)),
+    );
+    if (target.evaluate().isNotEmpty) {
+      await tester.ensureVisible(target.first);
+      await tester.pump();
+      return;
+    }
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -300));
+  }
+  fail('Timed out waiting for the target widget to be built.');
+}
+
 /// Fake inventory repository: the stocks and tiers behave like the real
 /// model, but nothing is written to disk from the widget test.
 class _BasketRepository extends InventoryRepository {
@@ -58,6 +82,9 @@ class _BasketRepository extends InventoryRepository {
   List<CartSaleLineRequest>? lastCart;
   String? lastCurrency;
   String? lastSingleCurrency;
+  String? lastPaymentMethod;
+  List<RefundLineRequest>? lastRefundLines;
+  int? lastRefundNumber;
 
   @override
   Future<InventorySnapshot> load() async => InventorySnapshot(products);
@@ -73,15 +100,21 @@ class _BasketRepository extends InventoryRepository {
     int quantity = 1,
     String currency = 'TSh',
     bool wholesale = false,
+    String? paymentMethod,
   }) async {
     lastSingleCurrency = currency;
-    return _record(lines: [
-      CartSaleLineRequest(
-        productId: id,
-        quantity: quantity,
-        wholesale: wholesale,
-      ),
-    ], currency: currency);
+    lastPaymentMethod = paymentMethod;
+    return _record(
+      lines: [
+        CartSaleLineRequest(
+          productId: id,
+          quantity: quantity,
+          wholesale: wholesale,
+        ),
+      ],
+      currency: currency,
+      paymentMethod: paymentMethod,
+    );
   }
 
   /// Captures the whole basket as the page assembled it.
@@ -89,27 +122,62 @@ class _BasketRepository extends InventoryRepository {
   Future<SaleOutcome> recordCartSale({
     required List<CartSaleLineRequest> lines,
     String currency = 'TSh',
+    String? paymentMethod,
   }) async {
     lastCart = lines;
     lastCurrency = currency;
-    return _record(lines: lines, currency: currency);
+    lastPaymentMethod = paymentMethod;
+    return _record(
+      lines: lines,
+      currency: currency,
+      paymentMethod: paymentMethod,
+    );
+  }
+
+  /// Captures the refund the page asked for, without touching any files.
+  @override
+  Future<RefundOutcome> refundSaleLines({
+    required int number,
+    required List<RefundLineRequest> lines,
+    String? reason,
+  }) async {
+    lastRefundNumber = number;
+    lastRefundLines = lines;
+    final record = sales.firstWhere((sale) => sale.number == number);
+    final quantities = {
+      for (final line in lines) line.productId: line.quantity,
+    };
+    for (final entry in quantities.entries) {
+      final at = products.indexWhere((product) => product.id == entry.key);
+      products[at] = products[at].restoreUnits(entry.value);
+    }
+    final refunded = record.withRefund(
+      at: DateTime(2026, 11, 10, 12),
+      quantities: quantities,
+      reason: reason,
+    );
+    sales[sales.indexOf(record)] = refunded;
+    return RefundOutcome(snapshot: InventorySnapshot(products), sale: refunded);
   }
 
   Future<SaleOutcome> _record({
     required List<CartSaleLineRequest> lines,
     required String currency,
+    String? paymentMethod,
   }) async {
     final items = <SaleItem>[];
     for (final line in lines) {
-      var product =
-          products.singleWhere((candidate) => candidate.id == line.productId);
+      var product = products.singleWhere(
+        (candidate) => candidate.id == line.productId,
+      );
       final unitPriceMinor = line.wholesale
           ? product.wholesalePriceMinor!
           : product.priceMinor;
       product = product.recordUnits(line.quantity);
       products[products.indexWhere(
-        (candidate) => candidate.id == line.productId,
-      )] = product;
+            (candidate) => candidate.id == line.productId,
+          )] =
+          product;
       items.add(
         SaleItem(
           productId: product.id,
@@ -132,6 +200,7 @@ class _BasketRepository extends InventoryRepository {
       unitLabel: items.first.unitLabel,
       priceTier: items.first.priceTier,
       items: items,
+      paymentMethod: paymentMethod,
     );
     sales.add(sale);
     return SaleOutcome(snapshot: InventorySnapshot(products), sale: sale);
@@ -165,7 +234,9 @@ void main() {
 
   setUp(() async {
     dataDir = await Directory.systemTemp.createTemp('desksuite_basket_ui_');
-    settingsDir = await Directory.systemTemp.createTemp('desksuite_basket_cfg_');
+    settingsDir = await Directory.systemTemp.createTemp(
+      'desksuite_basket_cfg_',
+    );
     settingsFiles = LocalFileStore(() async => settingsDir);
     repository = _BasketRepository();
     printer = _CapturePrinter();
@@ -209,6 +280,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('cart-inc-pen')));
     await tester.pumpAndSettle();
+    await reveal(tester, find.byKey(const Key('cart-add-paper')));
     await tester.tap(find.byKey(const Key('cart-add-paper')));
     await tester.pumpAndSettle();
     await reveal(tester, find.byKey(const Key('cart-tier-paper')));
@@ -228,10 +300,12 @@ void main() {
 
     // The repository received exactly the assembled basket.
     expect(repository.lastCart!.length, 2);
-    final penLine = repository.lastCart!
-        .firstWhere((line) => line.productId == 'pen');
-    final paperLine = repository.lastCart!
-        .firstWhere((line) => line.productId == 'paper');
+    final penLine = repository.lastCart!.firstWhere(
+      (line) => line.productId == 'pen',
+    );
+    final paperLine = repository.lastCart!.firstWhere(
+      (line) => line.productId == 'paper',
+    );
     expect(penLine.quantity, 2);
     expect(penLine.wholesale, isFalse);
     expect(paperLine.quantity, 1);
@@ -260,15 +334,17 @@ void main() {
     // The seeded USD setting is real file IO; without runAsync the fake-async
     // test zone would suspend it forever (the ten-minute widget timeout).
     await tester.runAsync(() async {
-      await BusinessSettingsRepository(
-        settingsFiles,
-      ).save(const BusinessSettings(currency: 'USD'));
+      await BusinessSettingsRepository(settingsFiles)
+          .save(const BusinessSettings(currency: 'USD'));
     });
     await pumpPage(tester);
 
     // Stock value and product price lines use the saved currency instead of
     // the default 'TSh'.
-    await settleUntil(tester, find.textContaining('Stock value at listed prices'));
+    await settleUntil(
+      tester,
+      find.textContaining('Stock value at listed prices'),
+    );
     await settleUntil(tester, find.textContaining('USD 250.00'));
     // The product row is below the fold on a 360x720 phone, so the lazy list
     // has not built it yet; scroll it into view instead of pumping for it.
@@ -309,6 +385,206 @@ void main() {
     await settleUntil(tester, find.textContaining('Sale recorded'));
     await settleUntil(tester, find.textContaining('KSh 15.00'));
     expect(repository.lastSingleCurrency, 'KSh');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('refunding a stored receipt returns stock after confirmation', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    // The real repository and private files back this flow, so the assertion
+    // covers the stored state and not only the widget tree. The stored files
+    // are seeded directly: a store queue created inside the fake-async zone
+    // would only drain while the test pumps.
+    await tester.runAsync(() async {
+      await File('${dataDir.path}/products.json').writeAsString(
+        '[{"id":"pen","name":"Blue pen","priceMinor":1500,'
+        '"unitLabel":"piece","stock":8,"sold":2}]',
+      );
+      await File('${dataDir.path}/sales.json').writeAsString(
+        '[{"number":1,"productId":"pen","productName":"Blue pen",'
+        '"quantity":2,"unitPriceMinor":1500,'
+        '"soldAt":"2026-10-31T09:15:00.000","currency":"TSh",'
+        '"unitLabel":"piece","priceTier":"retail"}]',
+      );
+    });
+    final realRepository = InventoryRepository(
+      LocalFileStore(() async => dataDir),
+    );
+    const saleNumber = 1;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: BusinessPage(
+            repository: realRepository,
+            settings: BusinessSettingsRepository(settingsFiles),
+            printer: printer,
+            shopName: 'Mussa Stationery',
+          ),
+        ),
+      ),
+    );
+    await settleUntil(tester, find.byKey(const Key('new-sale')));
+
+    // The catalogue loads first and the stored receipts follow, so scroll the
+    // lazy page while real file I/O settles until the receipt is built.
+    final refundButton = find.byKey(ValueKey('refund-sale-$saleNumber'));
+    await revealWhenLoaded(tester, refundButton);
+    await tester.tap(refundButton);
+    await tester.pumpAndSettle();
+    expect(find.text('Refund this sale?'), findsOneWidget);
+
+    // Cancelling changes nothing: the sale stands and stock stays sold.
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Refund this sale?'), findsNothing);
+    final untouched = await settledIo(
+      tester,
+      () => realRepository.load(),
+      label: 'the catalogue',
+    );
+    expect(untouched.products.single.stock, 8);
+
+    await tester.tap(refundButton);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('refund-reason')),
+      'Torn cover',
+    );
+    await tester.tap(find.byKey(const Key('confirm-refund')));
+    // The refunded state is only shown after both files are written.
+    await settleUntil(tester, find.textContaining('· refunded'));
+
+    final restored = await settledIo(
+      tester,
+      () => realRepository.load(),
+      label: 'the refunded catalogue',
+    );
+    expect(restored.products.single.stock, 10);
+    expect(restored.products.single.sold, 0);
+    final log = await settledIo(
+      tester,
+      () => realRepository.loadSales(),
+      label: 'the sales log',
+    );
+    expect(log.single.refundReason, 'Torn cover');
+    expect(log.single.isRefunded, isTrue);
+    // The receipt now shows its refunded state and can no longer be refunded.
+    expect(refundButton, findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a new sale records the chosen payment method', (tester) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await pumpPage(tester);
+
+    await tester.tap(find.byKey(const Key('new-sale')));
+    await tester.pumpAndSettle();
+    await reveal(tester, find.byKey(const Key('cart-add-pen')));
+    await tester.tap(find.byKey(const Key('cart-add-pen')));
+    await tester.pumpAndSettle();
+
+    // The operator picks how the customer paid before completing the sale.
+    await reveal(tester, find.byKey(const Key('sale-payment')));
+    await tester.tap(find.byKey(const Key('sale-payment')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cash').last);
+    await tester.pumpAndSettle();
+
+    await reveal(tester, find.byKey(const Key('complete-sale')));
+    await tester.tap(find.byKey(const Key('complete-sale')));
+    await tester.pumpAndSettle();
+    await settleUntil(tester, find.textContaining('Sale recorded'));
+
+    expect(repository.lastPaymentMethod, 'cash');
+    expect(repository.sales.single.paymentMethod, 'cash');
+    // The stored receipt shows the method it actually recorded.
+    await revealWhenLoaded(tester, find.byKey(const Key('stored-receipt-1')));
+    expect(find.textContaining('retail · Cash'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('refunding part of a receipt returns only those units', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    // A real stored receipt of two pens, with the catalogue already sold down.
+    await tester.runAsync(() async {
+      await File('${dataDir.path}/products.json').writeAsString(
+        '[{"id":"pen","name":"Blue pen","priceMinor":1500,'
+        '"unitLabel":"piece","stock":8,"sold":2}]',
+      );
+      await File('${dataDir.path}/sales.json').writeAsString(
+        '[{"number":1,"productId":"pen","productName":"Blue pen",'
+        '"quantity":2,"unitPriceMinor":1500,'
+        '"soldAt":"2026-10-31T09:15:00.000","currency":"TSh",'
+        '"unitLabel":"piece","priceTier":"retail",'
+        '"paymentMethod":"mobile"}]',
+      );
+    });
+    final realRepository = InventoryRepository(
+      LocalFileStore(() async => dataDir),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: BusinessPage(
+            repository: realRepository,
+            settings: BusinessSettingsRepository(settingsFiles),
+            printer: printer,
+            shopName: 'Mussa Stationery',
+          ),
+        ),
+      ),
+    );
+    await settleUntil(tester, find.byKey(const Key('new-sale')));
+
+    final refundButton = find.byKey(const ValueKey('refund-sale-1'));
+    await revealWhenLoaded(tester, refundButton);
+    // The stored receipt shows the payment it was saved with.
+    expect(find.textContaining('· Mobile money'), findsOneWidget);
+    await tester.tap(refundButton);
+    await tester.pumpAndSettle();
+    expect(find.text('Refund this sale?'), findsOneWidget);
+    // Everything still standing starts selected.
+    expect(find.textContaining('Refund value: TSh 30.00'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('refund-dec-pen')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Refund value: TSh 15.00'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('confirm-refund')));
+    await settleUntil(tester, find.textContaining('1 of 2 refunded'));
+
+    final restored = await settledIo(
+      tester,
+      () => realRepository.load(),
+      label: 'the partly refunded catalogue',
+    );
+    expect(restored.products.single.stock, 9);
+    expect(restored.products.single.sold, 1);
+    final log = await settledIo(
+      tester,
+      () => realRepository.loadSales(),
+      label: 'the sales log',
+    );
+    expect(log.single.refunds.single.quantities, {'pen': 1});
+    expect(log.single.isPartiallyRefunded, isTrue);
+    expect(log.single.remainingUnits, 1);
+    // The rest of the receipt can still be refunded later.
+    expect(find.byKey(const ValueKey('refund-sale-1')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

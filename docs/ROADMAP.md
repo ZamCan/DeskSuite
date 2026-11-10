@@ -49,7 +49,9 @@ This roadmap is the short, current action list. The full scope and product requi
 
 - [x] Starter stationery catalogue, local stock counters, recorded sale log and reprintable A5 receipt.
 - [ ] Transactional multi-item basket with stock ledger, stable sale IDs, exact currency arithmetic and rollback/recovery.
-- [ ] Supplier and purchase records, refunds/voids, customer balances, expenses, profit reporting and audit trail.
+- [x] Refunds that restore stock, whole-receipt or line by line, with the refund history kept on the receipt and the sales log kept consistent, including rollback on a failed write.
+- [x] A recorded payment method (cash, mobile money, card, bank transfer) per sale, stored with the receipt and printed on it.
+- [ ] Discounts, supplier and purchase records, customer balances, expenses, profit reporting and audit trail.
 - [ ] Quote/invoice layouts, tax configuration and export/print flows; verify local legal requirements before claiming compliance.
 - [ ] Backup/restore, schema migrations, storage-full and crash tests, with explicit user control over private business data.
 

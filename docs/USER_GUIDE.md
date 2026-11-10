@@ -96,11 +96,25 @@ images, charts, macros, comments, text boxes, number formats and original page l
    grand total, then opens the system print dialog so you can print or save it.
 5. Receipt numbers are sequential and never reused, so a later sale cannot
    overwrite an earlier one.
+6. For a multi-product sale, choose **New sale**, add products with their
+   quantities and price tier, and pick the payment method (cash, mobile money,
+   card or bank transfer) before **Complete sale**. The choice is stored with
+   the receipt and printed on it; leaving it on **Not recorded** is honest, and
+   quick one-tap sales do not record a method.
+7. To refund, choose the refund button on a stored receipt. Every unit still
+   standing starts selected: confirm to refund the whole receipt, or use the
+   minus and plus buttons on a line to give back only some units. The chosen
+   units return to stock, the sold counter drops, and the refund is stored with
+   the receipt and an optional note. A partly refunded receipt keeps its refund
+   button for the units that remain; a fully refunded one loses it and refuses
+   another refund.
 
 What the receipt is not: the page itself says it is an internal sales receipt,
 not a tax invoice or a fiscal receipt. DeskSuite does not compute VAT, does not
-connect to a fiscal device, and does not manage refunds, suppliers or expenses
-yet. Selling more than the stock on hand is refused and changes nothing.
+connect to a fiscal device, does not apply discounts or record suppliers,
+expenses or customer credit, and does not produce a tax-compliant invoice.
+Selling or refunding more than the stock on hand is refused and changes
+nothing.
 
 ## Practise without your own files
 

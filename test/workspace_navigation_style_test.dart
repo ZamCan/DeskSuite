@@ -38,8 +38,12 @@ void main() {
     final otherIcon = tester.widget<Icon>(
       find.descendant(of: otherTile, matching: find.byType(Icon)),
     );
-    expect(selectedIcon.color, accent);
-    expect(otherIcon.color, Theme.of(tester.element(otherTile)).colorScheme.onSurfaceVariant);
+    // The selected icon follows the theme's primary token, which the light
+    // theme deepens for contrast (see brand_theme_test), not the raw accent.
+    final scheme = Theme.of(tester.element(otherTile)).colorScheme;
+    expect(selectedIcon.color, scheme.primary);
+    expect(otherIcon.color, scheme.onSurfaceVariant);
+    expect(selectedIcon.color, isNot(otherIcon.color));
 
     await tester.tap(otherTile);
     await tester.pump();

@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased — Dune Phosphate interface palette (not a release)
+
+- Replaced the Slate Coral colour tokens with **Dune Phosphate**: warm sand and paper neutrals, phosphate teal as the working accent (deeper in light, brighter in dark), date-fruit terracotta for emphasis, and studio tones mixed from the same sand, mineral and clay family.
+- Both themes are deliberately authored palettes rather than one inverted scheme, and every text pairing still passes the existing 4.5:1 contrast check in `test/brand_theme_test.dart`.
+- Removed the last stray cold blue from the Business screen's icon accent so no screen mixes palette families.
+- Added `test/dune_palette_test.dart` to pin the palette intent: teal accent, warm neutral surfaces, distinct opaque studio tones and a real light/dark difference.
+- Verified with Flutter 3.47.8 / Dart 3.13.7: `flutter analyze --no-pub` reported no issues, the theme, navigation, artwork, startup and task-grid tests passed, and the full suite passed. No device or visual review was performed, so the rendered look is not claimed as verified.
+
+## Unreleased — partial refunds and payment methods in Business & POS (not a release)
+
+- Refunds can now be partial. The refund dialog lists every line still standing and starts with all of it selected; the per-line minus and plus buttons return only the units you choose to stock. `refundSaleLines` re-checks each line against what remains, so a refund cannot exceed the units sold, repeat a unit, or touch a product that is not on the receipt.
+- Refund history is stored per receipt in `sales.json` (`refunds`, with per-product quantities, timestamp and optional note) instead of only a single refunded flag. A receipt voided in full by an earlier version still reads as fully refunded, and a stored history that claims more refunded units than were sold is rejected as corrupt rather than trusted.
+- A sale can record its payment method — cash, mobile money, card or bank transfer — stored on the sale, shown on the stored receipt and printed on the A5 receipt as `Paid by …`. Sales recorded before this change, and quick one-tap sales, simply have no method recorded instead of guessing one.
+- The stored-receipt line now shows the payment method, `n of m refunded` for partial refunds, and correct singular/plural product counts.
+- Added engine and widget coverage for partial and accumulated refunds, over-refund refusal, invalid lines, corrupt histories, rollback and payment storage. Verified with Flutter 3.47.8 / Dart 3.13.7: `flutter analyze --no-pub` reported no issues, the focused tests passed, and the full `flutter test --no-pub` suite passed. No Android build, signing or device check was performed; this is not a release.
+
+- A stored receipt can now be refunded in full. Every unit on the receipt returns to catalogue stock, the sold counter drops, and the receipt is marked refunded with an optional note; the refund action disappears and a second refund is refused.
+- Refund data is stored in `sales.json` as optional `refundedAt`/`refundReason` fields, so sale records written by earlier versions decode as not refunded and no format version changed. Refunds run through the same serialized transaction as sales, validate the whole refund before writing, and roll the catalogue back when the sales-log write fails.
+- Refunds of unknown receipts, unknown catalogue products, over-limit stock and notes longer than 200 characters are refused with an actionable message and no changes.
+- Fixed `test/workspace_navigation_style_test.dart`, which still expected the raw accent colour for the selected sidebar icon; the light theme deliberately uses its deeper `colorScheme.primary` for contrast, which `brand_theme_test` already asserts.
+- Added engine and widget coverage for refunds, rollback and legacy sale JSON. Verified with Flutter 3.47.8 / Dart 3.13.7: `flutter analyze --no-pub` reported no issues, the focused tests passed, and the full `flutter test --no-pub` suite passed. No Android build, signing or device check was performed; this is not a release.
+
 ## Unreleased — restore a passing analyzer on main (not a release)
 
 - `flutter analyze` failed on `main` (14 issues, all four CI hosts): `BrandLaunch` gained required `showWelcome`, `workspaceReady` and `onWelcomeCompleted` parameters, but `test/brand_launch_test.dart` still constructed it without them, and `lib/main.dart` used `__` for an unused parameter.
