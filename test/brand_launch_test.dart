@@ -19,6 +19,25 @@ Widget _launch({
 );
 
 void main() {
+  testWidgets('startup shows wordmark then transitions to brand mark', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: _launch()));
+    expect(find.text('DeskSuite'), findsOneWidget);
+    expect(find.byKey(const Key('startup-wordmark')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 650));
+    expect(find.byKey(_surface), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.byKey(_surface), findsNothing);
+    expect(find.text('Ready'), findsOneWidget);
+  });
+
+  testWidgets('startup has no welcome copy or falling stationery', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: _launch(showWelcome: Future<bool>.value(true))));
+    expect(find.text('Welcome to DeskSuite'), findsNothing);
+    expect(find.byType(WorkspaceLoadingView), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('startup covers the workspace, then reveals it', (tester) async {
     await tester.pumpWidget(MaterialApp(home: _launch()));
     expect(find.byKey(_surface), findsOneWidget);
