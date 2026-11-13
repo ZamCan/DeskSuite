@@ -19,6 +19,32 @@ Widget _launch({
 );
 
 void main() {
+  testWidgets('failed workspace initialization does not trap startup', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: _launch(workspaceReady: Future<void>.error(StateError('failed'))),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(_surface), findsNothing);
+    expect(find.text('Ready'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('failed preference read does not trap startup', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: _launch(showWelcome: Future<bool>.error(StateError('failed'))),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(_surface), findsNothing);
+    expect(find.text('Ready'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('startup shows wordmark then transitions to brand mark', (tester) async {
     await tester.pumpWidget(MaterialApp(home: _launch()));
     expect(find.text('DeskSuite'), findsOneWidget);
