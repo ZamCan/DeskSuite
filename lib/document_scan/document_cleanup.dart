@@ -47,14 +47,23 @@ PhotoResult processDocumentCleanup(DocumentCleanupRequest request) {
     numChannels: 4,
     noAnimation: true,
   );
+  final rgba = working.toUint8List();
   cleanDocumentRgbaInPlace(
-    working.toUint8List(),
+    rgba,
     working.width,
     working.height,
     mode: request.mode,
     amount: request.amount,
   );
-  final png = Uint8List.fromList(img.encodePng(working, level: 3));
+  // toUint8List() returns a byte buffer; reconstruct the raster explicitly so
+  // cleanup cannot accidentally encode the unmodified source pixels.
+  final cleaned = img.Image.fromBytes(
+    width: working.width,
+    height: working.height,
+    bytes: rgba.buffer,
+    numChannels: 4,
+  );
+  final png = Uint8List.fromList(img.encodePng(cleaned, level: 3));
   return validateEncodedPhoto(
     png,
     working.width,
