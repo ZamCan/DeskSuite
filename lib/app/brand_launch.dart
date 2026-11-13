@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'startup_view.dart';
 
-/// The Android system splash supplies stage one (the app icon). This Flutter
-/// surface is stage two and stays up only while the local workspace opens.
+/// Android owns the initial system splash. Flutter then reveals the DeskSuite
+/// wordmark and logo while the local workspace initializes.
 class BrandLaunch extends StatefulWidget {
   const BrandLaunch({
     super.key,
@@ -40,12 +40,11 @@ class _BrandLaunchState extends State<BrandLaunch> {
     if (!mounted) return;
     setState(() => _showWelcome = welcome);
 
-    // Keep the second stage perceptible without a fake progress indicator.
-    // If initialization takes longer, the animated stationery continues;
-    // if it is already ready, the minimum is only a brief visual handoff.
+    // Run initialization concurrently with the short wordmark/logo handoff.
+    // Never show a fake progress indicator or delay after readiness and motion.
     await Future.wait<void>([
       readyFuture,
-      Future<void>.delayed(const Duration(milliseconds: 420)),
+      Future<void>.delayed(const Duration(milliseconds: 1050)),
     ]);
     if (!mounted) return;
     if (welcome) {
