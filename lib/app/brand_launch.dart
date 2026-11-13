@@ -36,16 +36,28 @@ class _BrandLaunchState extends State<BrandLaunch> {
   Future<void> _begin() async {
     final welcomeFuture = widget.showWelcome;
     final readyFuture = widget.workspaceReady;
-    final welcome = await welcomeFuture;
+    bool welcome = false;
+    try {
+      welcome = await welcomeFuture;
+    } catch (_) {
+      // A corrupt or inaccessible preference must not block startup.
+    }
     if (!mounted) return;
     setState(() => _showWelcome = welcome);
 
     // Run initialization concurrently with the short wordmark/logo handoff.
     // Never show a fake progress indicator or delay after readiness and motion.
-    await Future.wait<void>([
-      readyFuture,
-      Future<void>.delayed(const Duration(milliseconds: 1050)),
-    ]);
+    final reducedMotion = MediaQuery.disableAnimationsOf(context);
+    try {
+      await Future.wait<void>([
+        readyFuture,
+        if (!reducedMotion)
+          Future<void>.delayed(const Duration(milliseconds: 1050)),
+      ]);
+    } catch (_) {
+      // Initialization errors must be surfaced by the workspace itself,
+      // rather than leaving an unresponsive launch overlay forever.
+    }
     if (!mounted) return;
     if (welcome) {
       // A preference-write failure must never hold the user outside the app.
@@ -69,9 +81,7 @@ class _BrandLaunchState extends State<BrandLaunch> {
           key: const Key('brand-launch-surface'),
           child: AbsorbPointer(
             child: Semantics(
-              label: _showWelcome
-                  ? 'Welcome to DeskSuite'
-                  : 'DeskSuite is opening',
+              label: 'DeskSuite is opening',
               child: AnimatedOpacity(
                 opacity: _resolved ? 0 : 1,
                 duration: const Duration(milliseconds: 180),
