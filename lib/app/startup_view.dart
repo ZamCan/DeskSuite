@@ -50,7 +50,11 @@ class _WorkspaceLoadingViewState extends State<WorkspaceLoadingView>
       color: theme.scaffoldBackgroundColor,
       child: SafeArea(
         child: Center(
-          child: AnimatedBuilder(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Semantics(
+            label: 'DeskSuite is opening',
+            child: ExcludeSemantics(child: AnimatedBuilder(
             animation: _controller,
             builder: (context, _) {
               final progress = reducedMotion ? 1.0 : _controller.value;
@@ -96,6 +100,7 @@ class _WorkspaceLoadingViewState extends State<WorkspaceLoadingView>
                 ),
               );
             },
+          )),
           ),
         ),
       ),
