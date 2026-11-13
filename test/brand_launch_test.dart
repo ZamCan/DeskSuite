@@ -94,8 +94,8 @@ void main() {
     );
     // Reduced motion stops the loading animation, so no frame is scheduled and
     // pumpAndSettle would return before the handoff timer fires. Advance time
-    // explicitly past the 420 ms minimum, then let the fade finish.
-    await tester.pump(const Duration(milliseconds: 500));
+    // explicitly past the 1050 ms handoff, then let the fade finish.
+    await tester.pump(const Duration(milliseconds: 1150));
     await tester.pumpAndSettle();
     expect(find.byKey(_surface), findsNothing);
     expect(find.text('Ready'), findsOneWidget);
