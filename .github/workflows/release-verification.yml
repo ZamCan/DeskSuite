@@ -42,14 +42,24 @@ jobs:
       - name: Run widget and unit tests
         run: flutter test
 
-      - name: Build unsigned release APK for verification
+      - name: Build release-mode APK for verification
         run: flutter build apk --release
 
-      - name: Upload build for inspection
+      - name: Inspect APK signing certificate
+        if: success()
+        run: |
+          APK=build/app/outputs/flutter-apk/app-release.apk
+          test -s "$APK"
+          echo "APK SHA256:"
+          sha256sum "$APK"
+          echo "Signing certificate (informational; NOT release certification):"
+          "${ANDROID_HOME}/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK"
+
+      - name: Upload unverified release-mode build
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: desksuite-unsigned-release-verification
+          name: desksuite-release-mode-unverified
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 7
