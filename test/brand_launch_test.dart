@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:desksuite/app/brand_launch.dart';
 import 'package:desksuite/app/startup_view.dart';
 import 'package:flutter/material.dart';
@@ -22,11 +24,11 @@ void main() {
   testWidgets('failed workspace initialization does not trap startup', (
     tester,
   ) async {
+    final ready = Completer<void>();
     await tester.pumpWidget(
-      MaterialApp(
-        home: _launch(workspaceReady: Future<void>.error(StateError('failed'))),
-      ),
+      MaterialApp(home: _launch(workspaceReady: ready.future)),
     );
+    ready.completeError(StateError('failed'));
     await tester.pumpAndSettle();
     expect(find.byKey(_surface), findsNothing);
     expect(find.text('Ready'), findsOneWidget);
@@ -34,11 +36,34 @@ void main() {
   });
 
   testWidgets('failed preference read does not trap startup', (tester) async {
+    final welcome = Completer<bool>();
+    await tester.pumpWidget(
+      MaterialApp(home: _launch(showWelcome: welcome.future)),
+    );
+    welcome.completeError(StateError('failed'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(_surface), findsNothing);
+    expect(find.text('Ready'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('workspace errors are handled while preferences are pending', (
+    tester,
+  ) async {
+    final ready = Completer<void>();
+    final welcome = Completer<bool>();
     await tester.pumpWidget(
       MaterialApp(
-        home: _launch(showWelcome: Future<bool>.error(StateError('failed'))),
+        home: _launch(
+          workspaceReady: ready.future,
+          showWelcome: welcome.future,
+        ),
       ),
     );
+    ready.completeError(StateError('storage unavailable'));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    welcome.complete(false);
     await tester.pumpAndSettle();
     expect(find.byKey(_surface), findsNothing);
     expect(find.text('Ready'), findsOneWidget);
@@ -147,7 +172,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('first run shows the welcome and records it exactly once', (
+  testWidgets('first run records the launch preference exactly once', (
     tester,
   ) async {
     var completed = 0;
@@ -168,7 +193,7 @@ void main() {
           .showWelcome,
       isTrue,
     );
-    expect(completed, 0, reason: 'recorded only after the welcome has run');
+    expect(completed, 0, reason: 'recorded only after the launch has run');
 
     await tester.pumpAndSettle();
     expect(completed, 1);

@@ -35,7 +35,12 @@ class _BrandLaunchState extends State<BrandLaunch> {
 
   Future<void> _begin() async {
     final welcomeFuture = widget.showWelcome;
-    final readyFuture = widget.workspaceReady;
+    // Observe errors before waiting for preferences: initialization may fail
+    // while the preference read is still pending. The workspace owns retry UI.
+    final readyFuture = widget.workspaceReady.then<void>(
+      (_) {},
+      onError: (Object error, StackTrace stack) {},
+    );
     bool welcome = false;
     try {
       welcome = await welcomeFuture;
