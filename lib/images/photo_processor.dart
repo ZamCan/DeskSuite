@@ -187,10 +187,19 @@ PhotoResult processPhoto(PhotoRequest request) {
         numChannels: 4,
         noAnimation: true,
       );
+      final rgba = image.toUint8List();
       reduceImpulseNoiseRgbaInPlace(
-        image.toUint8List(),
+        rgba,
         image.width,
         image.height,
+      );
+      // Reconstruct from processed bytes; do not rely on toUint8List()
+      // returning a mutable view of the image's internal pixel storage.
+      image = img.Image.fromBytes(
+        width: image.width,
+        height: image.height,
+        bytes: rgba.buffer,
+        numChannels: 4,
       );
     case PhotoAction.resize:
       final requestedWidth = request.width;
